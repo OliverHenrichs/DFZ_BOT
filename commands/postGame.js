@@ -10,7 +10,9 @@ module.exports = async (message, state, client) => {
 	}
 
 	// get roles
-	[res, numbers, errormsg] = mH.getNumbersFromMessage(message, 5, 0, 4);
+	const minRole = 1;
+	const maxRole = 4;
+	[res, numbers, errormsg] = mH.getNumbersFromMessage(message, 5, minRole, maxRole);
 	if(!res) {
 		return message.reply(errormsg);
 	}

@@ -28,4 +28,4 @@ client.login(process.env.BOT_TOKEN)
 const writer = () => {
 	serializer.writeState(client._state, process.env.SAVEFILE)
 };
-//setInterval(writer, 15000);
+setInterval(writer, 15000);

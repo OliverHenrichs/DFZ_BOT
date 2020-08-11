@@ -23,8 +23,10 @@ module.exports = async (message, state) => {
 		
 
 	// add user
-	uH.addUser(message, state, 
+	uH.addUser(	message, 
+				state, 
 				message.author.username, 
+				message.author.id, 
 				Array.from(positions), 
 				rM.findRole(message, rM.beginnerRoles));
 

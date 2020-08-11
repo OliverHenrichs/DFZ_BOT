@@ -8,11 +8,6 @@ module.exports = (message, state, client) => {
 		return;
 	}
 
-
-	    
-
-
-
 	var userTable = lM.getCurrentUsersAsTable(state);
 	if(userTable == undefined) {
 		message.reply("No signups so far.");

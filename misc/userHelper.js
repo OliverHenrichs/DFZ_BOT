@@ -1,13 +1,16 @@
 const locker = require("../misc/lock")
+const rM = require("./roleManagement")
 
 module.exports = {
-    addUser: function (message, state, name, positions, tier) {
+    addUser: function (message, state, name, id, positions, tier) {
         // create user
         var user = {};
         user.name = name;
+        user.id = id;
         user.positions = Array.from(positions);
         user.tier = {}
         user.tier.id = tier.id;
+        user.tier.number = rM.getNumberFromBeginnerRole(tier.id)
         user.tier.name = tier.name;
 
         // add to state
