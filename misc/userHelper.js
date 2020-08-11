@@ -8,6 +8,7 @@ module.exports = {
         user.name = name;
         user.id = id;
         user.positions = Array.from(positions);
+        user.positions.sort();
         user.tier = {}
         user.tier.id = tier.id;
         user.tier.number = rM.getNumberFromBeginnerRole(tier.id)
