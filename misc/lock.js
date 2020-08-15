@@ -10,9 +10,7 @@ module.exports = {
 		@param cb optional callback function you want to run
 	*/
     acquireWriteLock: function (f, cb) {
-        lock.acquireWrite("botLock", f, {}).then(cb).catch (err => {
-			console.log("Timeout after 5000 in acquireWriteLock")
-		});
+        lock.acquireWrite("botLock", f, {}).then(cb)
 	},
 	
 	/**

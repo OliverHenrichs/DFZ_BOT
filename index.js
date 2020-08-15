@@ -11,7 +11,6 @@ client._state.lobby = {};
 // load bot state
 serializer.loadState(client, process.env.SAVEFILE)
 
-console.log(client._state)
 // read message directory
 fs.readdir("./events/", (err, files) => {
 	files.forEach(file => {

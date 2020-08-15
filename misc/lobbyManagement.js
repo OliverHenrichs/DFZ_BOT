@@ -1,6 +1,7 @@
 const locker = require("../misc/lock")
 const eC = require("../misc/answerEmbedding")
 const sT = require("string-table")
+const uH = require("../misc/userHelper")
 
 function isToday (someDate) {
     const today = new Date();
@@ -13,7 +14,6 @@ function getPositionalUserTable(users, position, mention=false) {
     if(users.length == 0) {
         return undefined;
     }
-
 
     // setup fields for embedding
     var tableBase = [
@@ -50,16 +50,18 @@ function getPositionalUserTable(users, position, mention=false) {
     return tableBase;
 }
 
+function addToUserTable(tableBase, user, mention=false) {
+    {
+        tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +user.id + ">") : user.name);
+        tableBase[1].value = tableBase[1].value + "\r\n" +user.positions.join(", ");
+        tableBase[2].value = tableBase[2].value + "\r\n" +user.tier.name;
+    }
+}
+
 function getUserTable(users, mention=false) {
     if(users.length == 0) {
         return undefined;
     }
-
-    // var tableHead = 
-    // {
-    //     name: 'Side',
-    //     value: 'Radiant'
-    // };
 
     // setup fields for embedding
     var tableBase = [
@@ -82,9 +84,7 @@ function getUserTable(users, mention=false) {
 
 
     users.forEach(usr => {
-        tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +usr.id + ">") : usr.name);
-        tableBase[1].value = tableBase[1].value + "\r\n" +usr.positions.join(", ");
-        tableBase[2].value = tableBase[2].value + "\r\n" +usr.tier.name;
+        addToUserTable(tableBase, usr, mention);
     });
 
     //tableBase.unshift(tableHead);
@@ -104,9 +104,70 @@ function getCurrentUsersAsTable(state, mention=false) {
     return userTable;
 }
 
+function getTeamTable(assignedUsers, mention=false) {
+    
+    var tableBase = [
+        {
+            name: 'Side',
+            value: 'Radiant'
+        },
+        {
+            name: 'Name',
+            value: '',
+            inline: true,
+        },
+        {
+            name: 'Position',
+            value: '',
+            inline: true,
+        },
+        {
+            name: 'Tier',
+            value: '',
+            inline: true,
+        },
+        {
+            name: 'Side',
+            value: 'Dire'
+        },
+        {
+            name: 'Name',
+            value: '',
+            inline: true,
+        },
+        {
+            name: 'Position',
+            value: '',
+            inline: true,
+        },
+        {
+            name: 'Tier',
+            value: '',
+            inline: true,
+        }
+    ];
+
+    
+    Object.keys(assignedUsers).forEach((position) => {
+        var players = assignedUsers[position];
+        var radiantPlayer = players[0];
+        tableBase[1].value = tableBase[1].value + "\r\n" + (mention ? ("<@" +radiantPlayer.id + ">") : radiantPlayer.name);
+        tableBase[2].value = tableBase[2].value + "\r\n" + position;
+        tableBase[3].value = tableBase[3].value + "\r\n" +radiantPlayer.tier.name;
+        
+        var direPlayer = players[1];
+        tableBase[5].value = tableBase[5].value + "\r\n" + (mention ? ("<@" +direPlayer.id + ">") : direPlayer.name);
+        tableBase[6].value = tableBase[6].value + "\r\n" + position;
+        tableBase[7].value = tableBase[7].value + "\r\n" +direPlayer.tier.name;
+    });
+
+    return tableBase;
+}
+
 // lobby management
 module.exports = {
-    hasLobby: function (state) {
+    hasLobby: function (state) 
+    {
         var lobbyExists = false;
         locker.acquireReadLock(function() {
             if(state.lobby != undefined && isToday(state.lobby.date)){
@@ -116,7 +177,8 @@ module.exports = {
         return lobbyExists;
     },
 
-    createLobby: function (state, numbers) {
+    createLobby: function (state, numbers) 
+    {
         locker.acquireWriteLock(function() {
             // override / create lobby
             state.lobby = {
@@ -130,50 +192,44 @@ module.exports = {
 
     getCurrentUsersAsTable: getCurrentUsersAsTable,
 
-    getCurrentUsersWithPositionAsTable: function (state, position) {
-        var userTable ={}
-        var filteredUsers=[];
-        var filteredSortedUsers=[];
-        locker.acquireReadLock(function() {
-            filteredUsers = state.lobby.users.filter(user => user.positions.includes(position));
-            filteredSortedUsers = filteredUsers.sort((a,b) => b.tier.number - a.tier.number)
-        });
-        
-        userTable = getPositionalUserTable(filteredSortedUsers, position);
-
-        return userTable;
+    getCurrentUsersWithPositionAsTable: function (state, position) 
+    {
+        var users = uH.filterAndSortByPositionAndTier(state, position);
+        return getPositionalUserTable(users, position);
     },
 
-    createLobbyPost: function(state, client) {    
+    createLobbyPost: function(state, client) 
+    {    
         var userSets = [];
         var userSet = [];
         
         locker.acquireReadLock(function() {
             for (let i = 0; i < state.lobby.users.length; i++) { // add in batches of 10
-                if(i%10 == 0 && i != 0)
+                userSet.push(state.lobby.users[i]);
+                
+                if(i%9 == 0 && i != 0)
                 {
                     userSets.push(userSet);
                     userSet = [];
                 }
-                    
-                userSet.push(state.lobby.users[i]);
             }
         });
 
-        if (userSet.length != 0) // incomplete user set
-            userSets.push(userSet);
+        userSets.forEach(us => {
 
-        userSets.forEach(userSet => {
-            userSet.sort((a, b) => {
-                return b.tier.number - a.tier.number
-            });
-
-            // TODO matchmaking
+            var teams = uH.createTeams(us);
             
-            const _embed = eC.generateEmbedding("Lobby is up", "Name: 'Ask your'\r\n PW :'Coach'", "", 'success', getUserTable(userSet, true));
+            const _embed = eC.generateEmbedding("Lobby is up", "Name: 'Ask your'\r\n PW :'Coach'", "", 'success', getTeamTable(teams, true));
             const channel = client.channels.get(process.env.LOBBY_SIGNUP_CHANNEL_ID);
             channel.send({embed: _embed});
 
         });
+
+        if (userSet.length != 0) // bench
+        {
+            const _embed = eC.generateEmbedding("Bench is today full of high potentials", "", "", 'success', getUserTable(userSet, true));
+            const channel = client.channels.get(process.env.LOBBY_SIGNUP_CHANNEL_ID);
+            channel.send({embed: _embed});
+        }
     }
 }

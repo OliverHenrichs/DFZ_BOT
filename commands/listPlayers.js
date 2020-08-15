@@ -23,7 +23,7 @@ module.exports = (message, state, client) => {
 
 	
 	const _embed = eC.generateEmbedding("List of users signed up for tonight's lobby", "", "", 'success', userTable);
-	const channel = client.channels.get(process.env.LOBBY_SIGNUP_CHANNEL_ID);
-	channel.send({embed: _embed});
+	//const channel = client.channels.get(process.env.LOBBY_SIGNUP_CHANNEL_ID);
+	message.reply({embed: _embed});
 
 }
