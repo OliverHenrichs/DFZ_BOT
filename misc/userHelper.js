@@ -262,8 +262,8 @@ module.exports = {
     // debug output
     printUsers: function (state) 
     {
+        console.log("All Users:");
         locker.acquireReadLock(function() {
-            console.log("All Users:");
             state.lobby.users.forEach(element => {
                 console.log(element.name + ": " + element.positions.join(", ") + " @" + element.tier.name);
             });
