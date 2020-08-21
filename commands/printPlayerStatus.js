@@ -1,3 +1,4 @@
+const c = require("../misc/constants")
 const userHelper = require("../misc/userHelper")
 const locker = require("../misc/lock")
 const lM = require("../misc/lobbyManagement")
@@ -7,10 +8,10 @@ module.exports = (message, state) => {
 		var channelLobbies = state.lobbies[message.channel.id];
 		var users = [];
 
-		var lobbyTypeNames = Object.keys(lM.lobbyTypes);
+		var lobbyTypeNames = Object.keys(c.lobbyTypes);
 		// get status from all channel lobbies
 		lobbyTypeNames.forEach(lobbyType => {
-			var lobby = channelLobbies[lM.lobbyTypes[lobbyType]];
+			var lobby = channelLobbies[c.lobbyTypes[lobbyType]];
 			if(lobby.users != undefined)
 			{
 				users.push(userHelper.getUser(lobby, message.author.username));

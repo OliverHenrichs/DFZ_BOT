@@ -1,21 +1,22 @@
+const c = require("../misc/constants")
 const eC = require("../misc/answerEmbedding")
 const lM = require("../misc/lobbyManagement");
 const mH = require("../misc/messageHelper");
 
 
 function createMMRListUserTable(state, channel) {
-	return lM.getCurrentUsersAsTable(state.lobbies[channel][lM.lobbyTypes.mmr]);
+	return lM.getCurrentUsersAsTable(state.lobbies[channel][c.lobbyTypes.mmr]);
 }
 
 function createPositionalUserTable(state, channel) {
-	var userTable = lM.getCurrentUsersAsTable(state.lobbies[channel][lM.lobbyTypes.inhouse]);
+	var userTable = lM.getCurrentUsersAsTable(state.lobbies[channel][c.lobbyTypes.inhouse]);
 	if(userTable == undefined) {
 		return userTable;
 	}
 
 	for(let position = 1; position < 6; position++)
 	{
-		posUserTable = lM.getCurrentUsersWithPositionAsTable(state.lobbies[channel][lM.lobbyTypes.inhouse], position);
+		posUserTable = lM.getCurrentUsersWithPositionAsTable(state.lobbies[channel][c.lobbyTypes.inhouse], position);
 		if(posUserTable != undefined)
 			userTable = userTable.concat(posUserTable);
 	}
@@ -25,15 +26,15 @@ function createPositionalUserTable(state, channel) {
 module.exports = (message, state) => {
 	
 	var args = mH.getArguments(message);
-	if(args.length == 0 || Object.keys(lM.lobbyTypes).find((key) => key == args[0]) == undefined)
+	if(args.length == 0 || Object.keys(c.lobbyTypes).find((key) => key == args[0]) == undefined)
 	{
-		message.reply("Proper format is !list <lobbyType> with <lobbyType> = '" + Object.keys(lM.lobbyTypes).join("' or '") + "'.");
+		message.reply("Proper format is !list <lobbyType> with <lobbyType> = '" + Object.keys(c.lobbyTypes).join("' or '") + "'.");
 		return;
 	}
 
 	var lobbyType = args[0];
 
-	if(!lM.hasLobby(state, message.channel.id, lM.lobbyTypes[lobbyType]))
+	if(!lM.hasLobby(state, message.channel.id, c.lobbyTypes[lobbyType]))
 	{
 		message.reply("no open lobby of type " + lobbyType + " yet.");
 		return;
@@ -42,11 +43,11 @@ module.exports = (message, state) => {
 	var userTable = [];
 
 	// get user tables by lobby type
-	if(lM.lobbyTypes[lobbyType] == lM.lobbyTypes.mmr)
+	if(c.lobbyTypes[lobbyType] == c.lobbyTypes.mmr)
 	{
 		userTable = createMMRListUserTable(state, message.channel.id);
 
-	} else if(lM.lobbyTypes[lobbyType] == lM.lobbyTypes.inhouse)
+	} else if(c.lobbyTypes[lobbyType] == c.lobbyTypes.inhouse)
 	{
 		userTable = createPositionalUserTable(state, message.channel.id);
 	}

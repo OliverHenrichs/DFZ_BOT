@@ -1,3 +1,4 @@
+const c = require("../misc/constants")
 const locker = require("../misc/lock")
 const rM = require("./roleManagement")
 
@@ -43,6 +44,181 @@ filterByPosition = function(users, position)
     };
 
     return users.filter(_filter);
+},
+
+getPlayersPerPosition = function(openUsers) {
+    // get players per position
+    var playersPerPosition = [];
+    for(let position = 1; position < 6; position++)
+    {
+        playersPerPosition.push({pos: position, users: filterByPosition(openUsers, position)});
+    }
+
+    // sort to get 'tightest' positions (least amount of players) come first
+    playersPerPosition.sort((a,b) => {
+        return a.users.length - b.users.length;
+    });
+
+    return playersPerPosition;
+}
+
+createInhouseTeams = function(playerPositionMap, openUsers)
+{
+    // now sort by tier
+    openUsers.sort(tier_sorter);
+
+    var playersPerPosition = getPlayersPerPosition(openUsers);
+
+    while (true)
+    {
+        // we're finished cause there are no more positions to fill
+        if(playersPerPosition.length == 0)
+            break;
+
+        // take position with fewest available players
+        var pos = playersPerPosition[0].pos;
+        var players = playersPerPosition[0].users;
+
+        // not enough players want to play this position, but we gotta make do
+        if(players.length < 2)
+        {
+            if(openUsers.length < 2)
+            {
+                // that should not happen, number of players < 10 or something
+                console.log("Did not have enough players to fill lobby, aborting");
+                break;
+            }
+
+            if(players.length == 0)
+            {
+                // we have no players for any of the remaining positions => just fill from remaining player pool
+                playerPositionMap[pos] = [openUsers[0], openUsers[1]];
+            } else {
+                // we have one player for this position => fill from remaining player pool, try to take same tier
+                var other = openUsers.find(user => (user.id != players[0].id) && (user.tier.id == players[0].tier.id));
+                
+                // if we didnt find one from same tier, we take first player that is not this player
+                if(other == undefined)
+                    other = openUsers.find(user => (user.id != players[0].id));
+                
+                // assign and move on
+                playerPositionMap[pos] = [players[0], other];
+            }
+        } else {
+            // enough players want to play this position
+            var found = false;
+            var last = players[0];
+
+            // add players to this position
+            for( let i = 1; i < players.length; i++)
+            {
+                if (players[i].tier.id == last.tier.id)
+                {
+                    // second player of tier => assign position
+                    playerPositionMap[pos] = [players[i], last];
+                    found=true;
+                    break;
+                }
+
+                last = players[i];
+            }
+
+            // we didnt find two same-tier-players, but we have enough players for the position, then just take the first two
+            if(!found)
+            {
+                playerPositionMap[pos] = [players[0], players[1]];
+            }
+        }
+
+        // cleanup for next iteration
+
+        // position is finished, so get rid of it
+        playersPerPosition.shift();
+
+        // get ids
+        var id1=playerPositionMap[pos][0].id;
+        var id2=playerPositionMap[pos][1].id;
+
+        // remove newly assigned players for the remaining positions
+        playersPerPosition.forEach(players => {
+            players.users = players.users.filter((usr)=>{
+                if(usr.id == id1 || usr.id == id2)
+                    return false;
+                return true;
+            });
+        })
+
+        // re-sort the positional player arrays
+        playersPerPosition.sort((a,b) => {
+            return a.users.length - b.users.length;
+        });
+
+        // remove newly assigned players from openUsers
+        openUsers = openUsers.filter((usr)=>{
+            if(usr.id == playerPositionMap[pos][0].id || usr.id == playerPositionMap[pos][1].id)
+                return false;
+            return true;
+        });
+    }
+},
+
+createnNonCompetitionTeams = function(playerPositionMap, openUsers) 
+{
+    var playersPerPosition = getPlayersPerPosition(openUsers);
+    while (true)
+    {
+        // we're finished cause there are no more positions to fill
+        if(playersPerPosition.length == 0)
+            break;
+
+        if(openUsers.length < 1)
+        {
+            console.log("Did not have enough players to fill lobby, aborting");
+            break;
+        }
+
+        // we're finished cause there are no more positions to fill
+        if(playersPerPosition.length == 0)
+            break;
+
+        // take position with fewest available players
+        var pos = playersPerPosition[0].pos;
+        var players = playersPerPosition[0].users;
+
+        if(players.length >= 1)
+            playerPositionMap[pos] = players[0];
+        else 
+            playerPositionMap[pos] = openUsers[0];
+
+        // cleanup for next iteration
+
+        // position is finished, so get rid of it
+        playersPerPosition.shift();
+
+        // get ids
+        var id=playerPositionMap[pos].id;
+
+        // remove newly assigned players for the remaining positions
+        playersPerPosition.forEach(players => {
+            players.users = players.users.filter((usr)=>{
+                if(usr.id == id)
+                    return false;
+                return true;
+            });
+        })
+
+        // re-sort the positional player arrays
+        playersPerPosition.sort((a,b) => {
+            return a.users.length - b.users.length;
+        });
+
+        // remove newly assigned players from openUsers
+        openUsers = openUsers.filter((usr)=>{
+            if(usr.id == playerPositionMap[pos].id)
+                return false;
+            return true;
+        });
+    }
 },
 
 module.exports = {
@@ -144,7 +320,7 @@ module.exports = {
         return filteredUsers;
     },
 
-    createTeams: function(users)
+    createTeams: function(users, lobbyType)
     {
         // result
         var playerPositionMap = {};
@@ -155,111 +331,12 @@ module.exports = {
         // randomize users to not have e.g. first person to subscribe be pos 1 guaranteed etc.
         shuffle(openUsers);
 
-        // now sort by tier
-        openUsers.sort(tier_sorter);
-
-        // get players per position
-        var playersPerPosition = [];
-        for(let position = 1; position < 6; position++)
+        if(lobbyType == c.lobbyTypes.inhouse)
         {
-            playersPerPosition.push({pos: position, users: filterByPosition(openUsers, position)});
-        }
-
-        // sort to get 'tightest' positions (least amount of players) come first
-        playersPerPosition.sort((a,b) => {
-            return a.users.length - b.users.length;
-        });
-
-        while (true)
+            createInhouseTeams(playerPositionMap, openUsers);
+        } else if (lobbyType == c.lobbyTypes.mmr)
         {
-            // we're finished cause there are no more positions to fill
-            if(playersPerPosition.length == 0)
-                break;
-
-            // take position with fewest available players
-            var pos = playersPerPosition[0].pos;
-            var players = playersPerPosition[0].users;
-
-            // not enough players want to play this position, but we gotta make do
-            if(players.length < 2)
-            {
-                if(openUsers.length < 2)
-                {
-                    // that should not happen, number of players < 10 or something
-                    console.log("Something went terribly wrong here");
-                    break;
-                }
-
-                if(players.length == 0)
-                {
-                    // we have no players for any of the remaining positions => just fill from remaining player pool
-                    playerPositionMap[pos] = [openUsers[0], openUsers[1]];
-                } else {
-                    // we have one player for this position => fill from remaining player pool, try to take same tier
-                    var other = openUsers.find(user => (user.id != players[0].id) && (user.tier.id == players[0].tier.id));
-                    
-                    // if we didnt find one from same tier, we take first player that is not this player
-                    if(other == undefined)
-                        other = openUsers.find(user => (user.id != players[0].id));
-                    
-                    // assign and move on
-                    playerPositionMap[pos] = [players[0], other];
-                }
-            } else {
-                // enough players want to play this position
-                var found = false;
-                var last = players[0];
-    
-                // add players to this position
-                for( let i = 1; i < players.length; i++)
-                {
-                    if (players[i].tier.id == last.tier.id)
-                    {
-                        // second player of tier => assign position
-                        playerPositionMap[pos] = [players[i], last];
-                        found=true;
-                        break;
-                    }
-    
-                    last = players[i];
-                }
-    
-                // we didnt find two same-tier-players, but we have enough players for the position, then just take the first two
-                if(!found)
-                {
-                    playerPositionMap[pos] = [players[0], players[1]];
-                }
-            }
-
-            // cleanup for next iteration
-
-            // position is finished, so get rid of it
-            playersPerPosition.shift();
-
-            // get ids
-            var id1=playerPositionMap[pos][0].id;
-            var id2=playerPositionMap[pos][1].id;
-
-            // remove newly assigned players for the remaining positions
-            playersPerPosition.forEach(players => {
-                players.users = players.users.filter((usr)=>{
-                    if(usr.id == id1 || usr.id == id2)
-                        return false;
-                    return true;
-                });
-            })
-
-            // re-sort the positional player arrays
-            playersPerPosition.sort((a,b) => {
-                return a.users.length - b.users.length;
-            });
-
-            // remove newly assigned players from openUsers
-            openUsers = openUsers.filter((usr)=>{
-                if(usr.id == playerPositionMap[pos][0].id || usr.id == playerPositionMap[pos][1].id)
-                    return false;
-                return true;
-            });
+            createnNonCompetitionTeams(playerPositionMap, openUsers);
         }
 
         return playerPositionMap;

@@ -1,3 +1,4 @@
+const c = require("../misc/constants")
 const eC = require("../misc/answerEmbedding")
 const mH = require("../misc/messageHelper")
 const rM = require("../misc/roleManagement")
@@ -9,12 +10,12 @@ function postLobby(message, state){
 	if(type == undefined)
 		return;
 
-	if(type == lM.lobbyTypes.inhouse)
+	if(type == c.lobbyTypes.inhouse)
 	{
-		postLobby_int(message, state, lM.lobbyTypes.inhouse, "Inhouse", "Commands \r\n '!join inhouse 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw inhouse' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
-	} else if(type == lM.lobbyTypes.mmr)
+		postLobby_int(message, state, c.lobbyTypes.inhouse, "Inhouse", "Commands \r\n '!join inhouse 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw inhouse' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+	} else if(type == c.lobbyTypes.mmr)
 	{
-		postLobby_int(message, state, lM.lobbyTypes.mmr, "MMR", "Commands \r\n '!join mmr' to join (replace with your positions) \r\n '!withdraw mmr' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+		postLobby_int(message, state, c.lobbyTypes.mmr, "MMR", "Commands \r\n '!join mmr' to join (replace with your positions) \r\n '!withdraw mmr' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
 	}
 }
 

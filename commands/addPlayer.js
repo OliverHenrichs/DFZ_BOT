@@ -3,8 +3,9 @@ const mH = require("../misc/messageHelper")
 const locker = require("../misc/lock")
 const lM = require("../misc/lobbyManagement")
 const uH = require("../misc/userHelper")
+const c = require("../misc/constants")
 
-var formatString = "\n Proper format is e.g. '!join inhouse 1,3,4' or '!join mmr 1' or '!join inhouse 5,2' or any other combination \n allowed numbers: 1,2,3,4,5 \n allowed lobby types: '"+Object.keys(lM.lobbyTypes).join("', '")+"'";
+var formatString = "\n Proper format is e.g. '!join inhouse 1,3,4' or '!join mmr 1' or '!join inhouse 5,2' or any other combination \n allowed numbers: 1,2,3,4,5 \n allowed lobby types: '"+Object.keys(c.lobbyTypes).join("', '")+"'";
 
 module.exports = async (message, state) => {
 

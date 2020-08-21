@@ -1,7 +1,7 @@
 
 const Discord = require('discord.js');
 
-var colormap = new Map([["success", '#00FF00'], ["failure", '#FF0000'], ["warning", '#FFFF00']]);
+var colormap = new Map([["success", "#00FF00"], ["failure", '#FF0000'], ["warning", '#FFFF00']]);
 module.exports = {
     generateEmbedding: function (_title, _text, _footer, _type, table = []) {
         return  {

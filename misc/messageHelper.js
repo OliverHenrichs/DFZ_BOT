@@ -1,4 +1,4 @@
-const lM = require("../misc/lobbyManagement")
+const c = require("../misc/constants")
 
 /**
     Check if player positions are a non-empty subset of {1,2,3,4,5}
@@ -109,19 +109,19 @@ function getLobbyType(message) {
 
 	if(args.length == 0 || args == "")
 	{
-		message.reply("no lobby type given. \r\n Lobby types are (" + Object.keys(lM.lobbyTypes).join(", ") + ")");
+		message.reply("no lobby type given. \r\n Lobby types are (" + Object.keys(c.lobbyTypes).join(", ") + ")");
 		return undefined;
 	}
 
 	var type = args[0];
-    var lobbyType = Object.keys(lM.lobbyTypes).find(t => {return t==type;})
+    var lobbyType = Object.keys(c.lobbyTypes).find(t => {return t==type;})
 	if(lobbyType == undefined)
 	{
-		message.reply("Invalid lobby type. Lobby types are " + Object.keys(lM.lobbyTypes).join(", "));
+		message.reply("Invalid lobby type. Lobby types are " + Object.keys(c.lobbyTypes).join(", "));
 		return undefined;
     }
     
-    return lM.lobbyTypes[lobbyType];
+    return c.lobbyTypes[lobbyType];
 }
 
 module.exports.checkNumbers = checkNumbers;

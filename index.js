@@ -6,20 +6,20 @@ const client = new Discord.Client()
 
 const serializer = require("./misc/serializeHelper")
 const cM = require("./misc/ChannelManagement")
-const lM = require("./misc/lobbyManagement")
+const c = require("./misc/constants")
 
 // setup bot state
 client._state = {};
 client._state.lobbies = {};
 cM.botChannels.forEach(channel => {
 	client._state.lobbies[channel] = {};
-	Object.values(lM.lobbyTypes).forEach(type =>{
+	Object.values(c.lobbyTypes).forEach(type =>{
 		client._state.lobbies[channel][type] = {};
 	});
 });
 
 // load bot state
-//serializer.loadState(client, process.env.SAVEFILE)
+serializer.loadState(client, process.env.SAVEFILE)
 
 // read message directory
 fs.readdir("./events/", (err, files) => {

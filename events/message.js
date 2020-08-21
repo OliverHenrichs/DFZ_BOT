@@ -1,3 +1,4 @@
+const c = require("../misc/constants")
 const addPlayer = require("../commands/addPlayer")
 const correctPlayer = require("../commands/correctPlayer")
 const withdrawPlayer = require("../commands/withdrawPlayer")
@@ -35,10 +36,10 @@ module.exports = async (client, message) => {
 	// player messages
 	if (roleManagement.findRole(message, roleManagement.beginnerRoles) != undefined) {
 		if (content.startsWith("!join mmr")) {
-			return addPlayer(message, client._state, lM.lobbyTypes.mmr)
+			return addPlayer(message, client._state, c.lobbyTypes.mmr)
 		}
 		if (content.startsWith("!join inhouse")) {
-			return addPlayer(message, client._state, lM.lobbyTypes.inhouse)
+			return addPlayer(message, client._state, c.lobbyTypes.inhouse)
 		}
 		if (content.startsWith("!withdraw")) {
 			return withdrawPlayer(message, client._state)
@@ -60,10 +61,10 @@ module.exports = async (client, message) => {
 			return postGame.postLobby(message, client._state)
 		}
 		if (content.startsWith("!start")) {
-			return startGame(message, client._state, client)
+			return startGame(message, client._state)
 		}
 		if (content.startsWith("!f_start")) {
-			return startGame(message, client._state, client, true)
+			return startGame(message, client._state, true)
 		}
 		if (content.startsWith("!list")) {
 			return listPlayers(message, client._state)
