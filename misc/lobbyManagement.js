@@ -6,7 +6,7 @@ const uH = require("../misc/userHelper")
 function isToday (someDate) {
     const today = new Date();
     var d1 = someDate;
-    var d2 =  today.toISOString().substring(0, 9);
+    var d2 =  today.toISOString().substring(0, 10);
     return d1 == d2;
 }
 
@@ -92,11 +92,11 @@ function getUserTable(users, mention=false) {
     return tableBase;
 }
 
-function getCurrentUsersAsTable(state, mention=false) {
+function getCurrentUsersAsTable(lobby, mention=false) {
     var userTable = [];
     
     locker.acquireReadLock(function() {
-        userTable = getUserTable(state.lobby.users, mention);
+            userTable = getUserTable(lobby.users, mention);
     }, () => {
         console.log("lock released in getCurrentUsersAsTable");
     });
@@ -166,46 +166,56 @@ function getTeamTable(assignedUsers, mention=false) {
 
 // lobby management
 module.exports = {
-    hasLobby: function (state) 
+    lobbyTypes: {inhouse:1,mmr:2},
+
+    hasLobby: function (state, channel, type) 
     {
         var lobbyExists = false;
         locker.acquireReadLock(function() {
-            if(state.lobby != undefined && isToday(state.lobby.date)){
+            var lobby = state.lobbies[channel][type];
+            if(lobby != undefined && isToday(lobby.date)){
                 lobbyExists = true;
             }
-	    });
+	    }, () => {
+            console.log("lock released in hasLobby");
+        });
         return lobbyExists;
     },
 
-    createLobby: function (state, numbers) 
+    createLobby: function (state, channel, type, numbers, time) 
     {
         locker.acquireWriteLock(function() {
             // override / create lobby
-            state.lobby = {
-                date: new Date().toISOString().substring(0, 9),
+            state.lobbies[channel][type] = {
+                date: new Date().toISOString().substring(0, 10),
+                time: time,
                 users: [],
                 tiers: numbers, // roles
                 locked: false
               };
+        }, function() {
+            console.log("lock released in createLobby");
         });
     },
 
     getCurrentUsersAsTable: getCurrentUsersAsTable,
 
-    getCurrentUsersWithPositionAsTable: function (state, position) 
+    getCurrentUsersWithPositionAsTable: function (lobby, position) 
     {
-        var users = uH.filterAndSortByPositionAndTier(state, position);
+        var users = uH.filterAndSortByPositionAndTier(lobby, position);
         return getPositionalUserTable(users, position);
     },
 
-    createLobbyPost: function(state, client) 
+    createLobbyPost: function(state, client, channel, type) 
     {    
         var userSets = [];
         var userSet = [];
         
+
         locker.acquireReadLock(function() {
-            for (let i = 0; i < state.lobby.users.length; i++) { // add in batches of 10
-                userSet.push(state.lobby.users[i]);
+            var lobby = state.lobbies[channel][type]
+            for (let i = 0; i < lobby.users.length; i++) { // add in batches of 10
+                userSet.push(lobby.users[i]);
                 
                 if(i%9 == 0 && i != 0)
                 {
@@ -213,6 +223,8 @@ module.exports = {
                     userSet = [];
                 }
             }
+        }, () => {
+            console.log("lock released in createLobbyPost");
         });
 
         userSets.forEach(us => {

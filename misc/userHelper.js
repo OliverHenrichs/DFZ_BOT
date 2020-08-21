@@ -46,7 +46,7 @@ filterByPosition = function(users, position)
 },
 
 module.exports = {
-    addUser: function (message, state, name, id, positions, tier)
+    addUser: function (message, lobby, name, id, positions, tier)
     {
         // create user
         var user = {};
@@ -61,16 +61,18 @@ module.exports = {
 
         // add to state
         locker.acquireWriteLock(function() {
-            state.lobby.users.push(user);	
-            message.reply("Added you, for tonight's game for positions " + user.positions.join(", "))	
+            lobby.users.push(user);	
+            message.reply("added you, for tonight's game for positions " + user.positions.join(", "))	
+        }, function() {
+            console.log("lock released in addUser");
         });
     },
 
-    userExists: function (state, username) 
+    userExists: function (lobby, username) 
     {
         var found = false;
         locker.acquireReadLock(function() {
-            found = state.lobby.users.find(element => element.name == username) != undefined;
+            found = lobby.users.find(element => element.name == username) != undefined;
         },() => {
             console.log("lock released in userExists");
             console.log("Found = " + found);
@@ -79,11 +81,11 @@ module.exports = {
         return found;
     },
 
-    getUserIndex: function (state, username) 
+    getUserIndex: function (lobby, username) 
     {
         var index = -1;
         locker.acquireReadLock(function() {
-            index = state.lobby.users.findIndex(element => element.name == username);
+            index = lobby.users.findIndex(element => element.name == username);
         },() => {
             console.log("lock released in getUserIndex");
             console.log("index = " + index);
@@ -92,11 +94,11 @@ module.exports = {
         return index;
     },
 
-    getUser: function (state, username) 
+    getUser: function (lobby, username) 
     {
         var _user = undefined;
         locker.acquireReadLock(function() {
-            _user = state.lobby.users.find(element => element.name == username);
+            _user = lobby.users.find(element => element.name == username);
         },() => {
             console.log("lock released in getUser");
             console.log("index = " + _user);
@@ -105,11 +107,11 @@ module.exports = {
         return _user;
     },
 
-    getUserByIndex: function (state, userIndex) 
+    getUserByIndex: function (lobby, userIndex) 
     {
         var _user = undefined;
         locker.acquireReadLock(function() {
-            _user = state.lobby.users.find(element => element.id == userIndex);
+            _user = lobby.users.find(element => element.id == userIndex);
         },() => {
             console.log("lock released in getUser");
             console.log("index = " + _user);
@@ -118,22 +120,26 @@ module.exports = {
         return _user;
     },
 
-    filterAndSortAllUsers: function(state, filter, sorter)
+    filterAndSortAllUsers: function(lobby, filter, sorter)
     {
         var filteredUsers=[];
         locker.acquireReadLock(function() {
-            filteredUsers = filterAndSortUsers_int(state.lobby.users, filter, sorter);
+            filteredUsers = filterAndSortUsers_int(lobby.users, filter, sorter);
+        }, () => {
+            console.log("lock released in filterAndSortAllUsers");
         });
         return filteredUsers;
     },
 
     filterAndSortUsers: filterAndSortUsers_int,
 
-    filterAndSortByPositionAndTier: function(state, position) 
+    filterAndSortByPositionAndTier: function(lobby, position) 
     {
         var filteredUsers=[];
         locker.acquireReadLock(function() {
-            filteredUsers = filterAndSortByPositionAndTier_int(state.lobby.users, position);
+            filteredUsers = filterAndSortByPositionAndTier_int(lobby.users, position);
+        }, () => {
+            console.log("lock released in filterAndSortByPositionAndTier");
         });
         return filteredUsers;
     },
@@ -260,11 +266,11 @@ module.exports = {
     },
 
     // debug output
-    printUsers: function (state) 
+    printUsers: function (lobby) 
     {
         console.log("All Users:");
         locker.acquireReadLock(function() {
-            state.lobby.users.forEach(element => {
+            lobby.users.forEach(element => {
                 console.log(element.name + ": " + element.positions.join(", ") + " @" + element.tier.name);
             });
         },() => {

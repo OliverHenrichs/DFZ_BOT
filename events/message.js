@@ -8,6 +8,7 @@ const postGame = require("../commands/postGame")
 const startGame = require("../commands/startGame")
 const roleManagement = require("../misc/RoleManagement")
 const channelManagement = require("../misc/ChannelManagement")
+const lM = require("../misc/lobbyManagement")
 
 const PREFIX = '!';
 
@@ -19,7 +20,7 @@ module.exports = async (client, message) => {
 
 	// Ignore messages outside of bot channels
 	if (!channelManagement.isWatchingChannel(message.channel.id, channelManagement.botChannels)) {
-		await message.reply("I only listen to messages in the lobby signup channel.");
+		await message.reply("I only listen to messages in the channels " + channelManagement.channelStrings);
 		return;
 	}
 
@@ -33,8 +34,11 @@ module.exports = async (client, message) => {
 
 	// player messages
 	if (roleManagement.findRole(message, roleManagement.beginnerRoles) != undefined) {
-		if (content.startsWith("!join")) {
-			return addPlayer(message, client._state)
+		if (content.startsWith("!join mmr")) {
+			return addPlayer(message, client._state, lM.lobbyTypes.mmr)
+		}
+		if (content.startsWith("!join inhouse")) {
+			return addPlayer(message, client._state, lM.lobbyTypes.inhouse)
 		}
 		if (content.startsWith("!withdraw")) {
 			return withdrawPlayer(message, client._state)
@@ -53,7 +57,7 @@ module.exports = async (client, message) => {
 	// admin messages
 	if (roleManagement.findRole(message, roleManagement.adminRoles) != undefined) {
 		if (content.startsWith("!post")) {
-			return postGame(message, client._state, client)
+			return postGame.postLobby(message, client._state)
 		}
 		if (content.startsWith("!start")) {
 			return startGame(message, client._state, client)
@@ -62,7 +66,7 @@ module.exports = async (client, message) => {
 			return startGame(message, client._state, client, true)
 		}
 		if (content.startsWith("!list")) {
-			return listPlayers(message, client._state, client)
+			return listPlayers(message, client._state)
 		}
 		if (content.startsWith("!clear")) {
 			return clearPlayers(message, client._state)

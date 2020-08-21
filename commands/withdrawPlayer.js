@@ -1,27 +1,32 @@
 const locker = require("../misc/lock")
 const userHelper = require("../misc/userHelper")
 const lM = require("../misc/lobbyManagement")
+const mH = require("../misc/messageHelper")
 
 module.exports = async (message, state) => {
 
-	// check existing lobby
-	if(!lM.hasLobby(state)) {
-		return message.reply("No lobby scheduled for today, yet.");
-	}
-
-	var idx = userHelper.getUserIndex(state, message.author.username);
-	if (idx == -1) {
-		await message.reply("No joined player found under your username; You have not even signed up :P");
+	var type = mH.getLobbyType(message);
+	if(type == undefined)
 		return;
+
+	if(!lM.hasLobby(state, message.channel.id, type)) {
+		return message.reply("no lobby scheduled for today yet.");
+	}
+	var lobby = state.lobbies[message.channel.id][type];
+
+	// find user
+	var idx = userHelper.getUserIndex(lobby, message.author.username);
+	if (idx == -1) {
+		return message.reply("no joined player found under your username.\r\n You have not signed up yet.");
 	} 
 
 	// remove user
 	locker.acquireWriteLock(function() {
-		state.lobby.users.splice(idx,1);
+		lobby.users.splice(idx,1);
 	}, function() {
-		console.log("lock released");
+		console.log("lock released in withdrawPlayer");
 	});
-	await message.reply("You successfully withdrew your signup.");
+	await message.reply("you successfully withdrew your signup.");
 
-	userHelper.printUsers(state);
+	userHelper.printUsers(state.lobbies[message.channel.id][type]);
 }
