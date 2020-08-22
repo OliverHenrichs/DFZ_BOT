@@ -3,6 +3,12 @@ const lM = require("../misc/lobbyManagement")
 const mH = require("../misc/messageHelper")
 const locker = require("../misc/lock")
 
+/**
+ * Handles a coach's call to !start. Creates a lobby post
+ * @param {*} message coach's message
+ * @param {*} state bot state
+ * @param {*} force Force game start even if not enough players are signed up. Tries to still matchmake where possible
+ */
 module.exports = async (message, state, force=false) => {
 
 	var type = mH.getLobbyType(message);
@@ -10,8 +16,7 @@ module.exports = async (message, state, force=false) => {
 		return;
 
 	var channel = message.channel.id;
-
-	if(!lM.hasLobby(state, channel, type)) {
+	if(lM.getLobby(state, channel, type) == undefined) {
 		return message.reply("no lobby has been created yet");
 	}
 	

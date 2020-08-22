@@ -3,27 +3,44 @@ const eC = require("../misc/answerEmbedding")
 const lM = require("../misc/lobbyManagement");
 const mH = require("../misc/messageHelper");
 
-
+/**
+ * Creates user table for unranked or botbash games
+ * @param {*} state bot state
+ * @param {*} channel channel in which the lobby resides
+ */
 function createMMRListUserTable(state, channel) {
-	return lM.getCurrentUsersAsTable(state.lobbies[channel][c.lobbyTypes.mmr]);
+	var lobby = lM.getLobby(state, channel, c.lobbyTypes.mmr);
+	return lM.getCurrentUsersAsTable(lobby);
 }
 
+/**
+ * Creates user table sorted by positions for inhouse lobbies
+ * @param {*} state bot state
+ * @param {*} channel channel in which the lobby resides
+ */
 function createPositionalUserTable(state, channel) {
-	var userTable = lM.getCurrentUsersAsTable(state.lobbies[channel][c.lobbyTypes.inhouse]);
+	var lobby = lM.getLobby(state, channel, c.lobbyTypes.inhouse);
+
+	var userTable = lM.getCurrentUsersAsTable(lobby);
 	if(userTable == undefined) {
 		return userTable;
 	}
 
 	for(let position = 1; position < 6; position++)
 	{
-		posUserTable = lM.getCurrentUsersWithPositionAsTable(state.lobbies[channel][c.lobbyTypes.inhouse], position);
+		posUserTable = lM.getCurrentUsersWithPositionAsTable(lobby, position);
 		if(posUserTable != undefined)
 			userTable = userTable.concat(posUserTable);
 	}
 	return userTable;
 }
 
-module.exports = (message, state) => {
+/**
+ * Handles coach's call to !list. Lists all players of all lobbies in the message's channel
+ * @param {*} message message that caused the call to this handler
+ * @param {*} state bot state
+ */
+module.exports = async (message, state) => {
 	
 	var args = mH.getArguments(message);
 	if(args.length == 0 || Object.keys(c.lobbyTypes).find((key) => key == args[0]) == undefined)
@@ -34,9 +51,9 @@ module.exports = (message, state) => {
 
 	var lobbyType = args[0];
 
-	if(!lM.hasLobby(state, message.channel.id, c.lobbyTypes[lobbyType]))
+	if(lM.getLobby(state, message.channel.id, c.lobbyTypes[lobbyType]) == undefined)
 	{
-		message.reply("no open lobby of type " + lobbyType + " yet.");
+		message.reply("no open "+c.getLobbyNameByType(lobbyType)+ " lobby yet.");
 		return;
 	}
 
@@ -57,6 +74,6 @@ module.exports = (message, state) => {
 		return;
 	}
 
-	const _embed = eC.generateEmbedding("List of users signed up for tonight's " + lobbyType + " lobby", "", "", 'success', userTable);
+	const _embed = eC.generateEmbedding("List of users signed up for tonight's " + c.getLobbyNameByType(lobbyType) + " lobby", "", "", 'success', userTable);
 	message.reply({embed: _embed});
 }

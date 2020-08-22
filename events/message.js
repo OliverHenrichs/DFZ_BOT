@@ -1,4 +1,3 @@
-const c = require("../misc/constants")
 const addPlayer = require("../commands/addPlayer")
 const correctPlayer = require("../commands/correctPlayer")
 const withdrawPlayer = require("../commands/withdrawPlayer")
@@ -9,10 +8,15 @@ const postGame = require("../commands/postGame")
 const startGame = require("../commands/startGame")
 const roleManagement = require("../misc/RoleManagement")
 const channelManagement = require("../misc/ChannelManagement")
-const lM = require("../misc/lobbyManagement")
 
 const PREFIX = '!';
 
+/**
+ * Main message handler 
+ * Filters messages and calls all command subroutines 
+ * @param {*} client discord client
+ * @param {*} message message to handle 
+ */
 module.exports = async (client, message) => {
 	// Ignore messages from self
 	if (message.author.id === process.env.BOT_ID) {
@@ -20,7 +24,7 @@ module.exports = async (client, message) => {
 	}
 
 	// Ignore messages outside of bot channels
-	if (!channelManagement.isWatchingChannel(message.channel.id, channelManagement.botChannels)) {
+	if (!channelManagement.isWatchingChannel(message.channel.id)) {
 		await message.reply("I only listen to messages in the channels " + channelManagement.channelStrings);
 		return;
 	}
@@ -35,11 +39,8 @@ module.exports = async (client, message) => {
 
 	// player messages
 	if (roleManagement.findRole(message, roleManagement.beginnerRoles) != undefined) {
-		if (content.startsWith("!join mmr")) {
-			return addPlayer(message, client._state, c.lobbyTypes.mmr)
-		}
-		if (content.startsWith("!join inhouse")) {
-			return addPlayer(message, client._state, c.lobbyTypes.inhouse)
+		if (content.startsWith("!join")) {
+			return addPlayer(message, client._state)
 		}
 		if (content.startsWith("!withdraw")) {
 			return withdrawPlayer(message, client._state)

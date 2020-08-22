@@ -4,7 +4,12 @@ const mH = require("../misc/messageHelper")
 const rM = require("../misc/roleManagement")
 const lM = require("../misc/lobbyManagement")
 
-function postLobby(message, state){
+/**
+ * Checks if lobby exists and posts lobby post depending on lobby type
+ * @param {*} message coaches message that triggered the lobby post
+ * @param {*} state bot state
+ */
+async function postLobby(message, state) {
 	
 	var type = mH.getLobbyType(message);
 	if(type == undefined)
@@ -12,17 +17,25 @@ function postLobby(message, state){
 
 	if(type == c.lobbyTypes.inhouse)
 	{
-		postLobby_int(message, state, c.lobbyTypes.inhouse, "Inhouse", "Commands \r\n '!join inhouse 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw inhouse' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+		postLobby_int(message, state, c.lobbyTypes.inhouse, c.getLobbyNameByType(c.lobbyTypes.inhouse), "Commands \r\n '!join inhouse 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw inhouse' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
 	} else if(type == c.lobbyTypes.mmr)
 	{
-		postLobby_int(message, state, c.lobbyTypes.mmr, "MMR", "Commands \r\n '!join mmr' to join (replace with your positions) \r\n '!withdraw mmr' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+		postLobby_int(message, state, c.lobbyTypes.mmr, c.getLobbyNameByType(c.lobbyTypes.mmr), "Commands \r\n '!join mmr' to join (replace with your positions) \r\n '!withdraw mmr' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
 	}
 }
 
+/**
+ * Internal function that creates the embedding for the lobby post
+ * @param {*} message coaches message that triggered the lobby post
+ * @param {*} state bot state
+ * @param {*} lobbyType type of lobby
+ * @param {*} lobbyTypeName print name of lobby
+ * @param {*} footer String to append to embedding
+ */
 function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	var channel = message.channel.id;
 
-	if(lM.hasLobby(state, channel, lobbyType)) {
+	if(lM.getLobby(state, channel, lobbyType) != undefined) {
 		return message.reply("already created a lobby of type "+ lobbyTypeName +" today, in channel <#" + message.channel.id + "> won't override");
 	}
 
@@ -45,8 +58,9 @@ function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 
 	// send embedding to lobby signup-channel
 	var roles = rM.getRolesFromNumbers(numbers);
-	const _embed = eC.generateEmbedding("We host an " + lobbyTypeName + " lobby at " + time, "for " + rM.getRoleStrings(roles), footer, 'success');
+	const _embed = eC.generateEmbedding("We host a " + lobbyTypeName + " lobby at " + time, "for " + rM.getRoleStrings(roles), footer, 'success');
 	message.channel.send({embed: _embed});
+
 }
 
 module.exports = {

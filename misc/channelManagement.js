@@ -1,10 +1,18 @@
+const bc = [process.env.BOT_LISTENING_CHANNEL_1, process.env.BOT_LISTENING_CHANNEL_2]
+const cs = "<#" + process.env.BOT_LISTENING_CHANNEL_1 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_2 + ">"
+
 // channel management
 module.exports = {
     // classes of roles
-    botChannels: [process.env.BOT_LISTENING_CHANNEL_1, process.env.BOT_LISTENING_CHANNEL_2],
-    channelStrings: "<#" + process.env.BOT_LISTENING_CHANNEL_1 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_2 + ">",
+    botChannels: bc,
+    channelStrings: cs,
 
-    isWatchingChannel: function (channelId, channelIds) {
-        return channelIds.includes(channelId);
+    /**
+     * checks 
+     * @param {string} channelId 
+     * @param {[string]} channelIds 
+     */
+    isWatchingChannel: function (channelId) {
+        return bc.includes(channelId);
     }
 }

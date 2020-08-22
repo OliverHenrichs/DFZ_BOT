@@ -3,16 +3,21 @@ const userHelper = require("../misc/userHelper")
 const lM = require("../misc/lobbyManagement")
 const mH = require("../misc/messageHelper")
 
+/**
+ * Handles a user's call to !withdraw. Withdraws the player if format is correct
+ * @param {*} message user's message
+ * @param {*} state bot state
+ */
 module.exports = async (message, state) => {
 
 	var type = mH.getLobbyType(message);
 	if(type == undefined)
 		return;
 
-	if(!lM.hasLobby(state, message.channel.id, type)) {
+	var lobby = lM.getLobby(state, message.channel.id, type)
+	if(lobby == undefined) {
 		return message.reply("no lobby scheduled for today yet.");
 	}
-	var lobby = state.lobbies[message.channel.id][type];
 
 	// find user
 	var idx = userHelper.getUserIndex(lobby, message.author.username);
@@ -28,5 +33,5 @@ module.exports = async (message, state) => {
 	});
 	await message.reply("you successfully withdrew your signup.");
 
-	userHelper.printUsers(state.lobbies[message.channel.id][type]);
+	userHelper.printLobbyUsers(state, message.channel.id, type);
 }

@@ -3,6 +3,11 @@ const locker = require("../misc/lock")
 const eC = require("../misc/answerEmbedding")
 const uH = require("../misc/userHelper")
 
+/**
+ *  Checks given Date and returns true if it is today
+ *  @return true if it is today
+ *  @param someDate given date
+ */
 function isToday (someDate) {
     const today = new Date();
     var d1 = someDate;
@@ -10,6 +15,13 @@ function isToday (someDate) {
     return d1 == d2;
 }
 
+/**
+ *  returns user table for a specific position
+ *  @return array of table entries
+ *  @param users array of users
+ *  @param position position of users
+ *  @param mention if true mentions the users in the table
+ */
 function getPositionalUserTable(users, position, mention=false) {
     if(users.length == 0) {
         return undefined;
@@ -30,13 +42,9 @@ function getPositionalUserTable(users, position, mention=false) {
     ];
 
     // fill fields
-    locker.acquireReadLock(function() {
-        users.forEach(usr => {
-            tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +usr.id + ">") : usr.name);
-            tableBase[1].value = tableBase[1].value + "\r\n" +usr.tier.name;
-        });
-        }, () => {
-            console.log("lock released in getCurrentUsersAsTable");
+    users.forEach(usr => {
+        tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +usr.id + ">") : usr.name);
+        tableBase[1].value = tableBase[1].value + "\r\n" +usr.tier.name;
     });
 
     // get header
@@ -50,6 +58,12 @@ function getPositionalUserTable(users, position, mention=false) {
     return tableBase;
 }
 
+/**
+ *  adds user + position + tier to table
+ *  @param tableBase table to which data is added
+ *  @param user user to add
+ *  @param mention if true mentions the user in the table
+ */
 function addToUserTable(tableBase, user, mention=false) {
     {
         tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +user.id + ">") : user.name);
@@ -58,6 +72,12 @@ function addToUserTable(tableBase, user, mention=false) {
     }
 }
 
+/**
+ *  returns a table of users
+ *  @param tableBase table to which data is added
+ *  @param users array of users
+ *  @param mention if true mentions the users in the table
+ */
 function getUserTable(users, mention=false) {
     if(users.length == 0) {
         return undefined;
@@ -92,6 +112,12 @@ function getUserTable(users, mention=false) {
     return tableBase;
 }
 
+/**
+ *  adds user + position + tier to table
+ *  @param tableBase table to which data is added
+ *  @param users user to add
+ *  @param mention if true mentions the user in the table
+ */
 function getCurrentUsersAsTable(lobby, mention=false) {
     var userTable = [];
     
@@ -104,6 +130,14 @@ function getCurrentUsersAsTable(lobby, mention=false) {
     return userTable;
 }
 
+/**
+ *  adds user + position + tier to team table
+ *  @param tableBase table to which data is added
+ *  @param index table index at which data is added
+ *  @param player user to add
+ *  @param position position of user to add
+ *  @param mention if true mentions the user in the table
+ */
 function addUserToTeam(tableBase, index, player, position, mention)
 {
     tableBase[index].value = tableBase[index].value + "\r\n" + (mention ? ("<@" +player.id + ">") : player.name);
@@ -111,6 +145,12 @@ function addUserToTeam(tableBase, index, player, position, mention)
     tableBase[index+2].value = tableBase[index+2].value + "\r\n" +player.tier.name;
 }
 
+/**
+ *  Creates a table for a match given assigned users
+ *  @param assignedUsers field where for each position players are assigned
+ *  @param lobbyType type of lobby to determine table shape
+ *  @param mention if true mentions the users in the table
+ */
 function getTeamTable(assignedUsers, lobbyType, mention=false) {
     if(lobbyType == c.lobbyTypes.inhouse)
     {
@@ -196,21 +236,38 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
 
 // lobby management
 module.exports = {
-    hasLobby: function (state, channel, type) 
+
+    /**
+     *  Checks if lobby exists and is of today, returns lobby if and undefined if not
+     *  @return undefined if above condition is not fulfilled, else returns the lobby
+     *  @param state bot state
+     *  @param channel message channel
+     *  @param type lobby type
+     */
+    getLobby: function (state, channel, type) 
     {
-        var lobbyExists = false;
+        var lobby =  {};
         locker.acquireReadLock(function() {
-            var lobby = state.lobbies[channel][type];
-            if(lobby != undefined && isToday(lobby.date)){
-                lobbyExists = true;
+            lobby = state.lobbies[channel][type];
+            if(!isToday(lobby.date)){
+                lobby = undefined;
             }
 	    }, () => {
             console.log("lock released in hasLobby");
         });
-        return lobbyExists;
+        return lobby;
     },
 
-    createLobby: function (state, channel, type, numbers, time) 
+    /**
+     *  Create lobby in given channel and of given type at given time
+     *  @return undefined if above condition is not fulfilled
+     *  @param state bot state
+     *  @param channel message channel
+     *  @param type lobby type
+     *  @param roles allowed Beginner roles
+     *  @param time time of lobby
+     */
+    createLobby: function (state, channel, type, roles, time) 
     {
         locker.acquireWriteLock(function() {
             // override / create lobby
@@ -218,7 +275,7 @@ module.exports = {
                 date: new Date().toISOString().substring(0, 10),
                 time: time,
                 users: [],
-                tiers: numbers, // roles
+                tiers: roles, // roles
                 locked: false
               };
         }, function() {
@@ -228,12 +285,25 @@ module.exports = {
 
     getCurrentUsersAsTable: getCurrentUsersAsTable,
 
+    /**
+     *  Creates a table containing a list of players wanting to play given position in given lobby yet
+     *  @param lobby lobby to be checked
+     *  @param position position to be checked
+     *  @return table containing all players that fit the criterion
+     */
     getCurrentUsersWithPositionAsTable: function (lobby, position) 
     {
         var users = uH.filterAndSortByPositionAndTier(lobby, position);
         return getPositionalUserTable(users, position);
     },
 
+    /**
+     *  Creates an embedding for a starting lobby
+     *  @param state state of bot
+     *  @param channel channel in which lobby resides
+     *  @param type type of lobby
+     *  @param playersPerLobby how many players per lobby (will create multiple lobbies if e.g. more than 2x the neccessary players showed up. Rest go to bench).
+     */
     createLobbyPost: function(state, channel, type, playersPerLobby) 
     {    
         var userSets = [];

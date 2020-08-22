@@ -5,6 +5,12 @@ const lobbyTypePlayerCount = {inhouse:10, mmr:5, botbash:5}
 module.exports = {
     lobbyTypes: lobbyTypes,
     lobbyTypePlayerCount: lobbyTypePlayerCount,
+
+    /**
+     * Returns lobby name for usage in communication strings
+     * @param {*} lobbyType given lobby type
+     * @return communication string according to lobby type
+     */
     getLobbyNameByType: function(lobbyType) {
         switch (lobbyType)
         {

@@ -6,6 +6,7 @@ const rM = require("./roleManagement")
  * Shuffles array in place.
  * thx @ https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
  * @param {Array} a items An array containing the items.
+ * @param return the shuffled array
  */
 function shuffle(a) {
     var j, x, i;
@@ -16,42 +17,71 @@ function shuffle(a) {
         a[j] = x;
     }
     return a;
-}
+};
 
-tier_sorter = function (a,b) {
+/**
+ * compares two users by tier
+ * @param {*} a user a
+ * @param {*} b user b
+ */
+function tier_sorter(a,b) {
     return b.tier.number - a.tier.number;
 };
 
-filterAndSortUsers_int =  function(users, filter, sorter) 
+/**
+ * Filters and sorts users 
+ * @param {*} users 
+ * @param {*} filter 
+ * @param {*} sorter 
+ * @return filtered and sorted array of users
+ */
+function filterAndSortUsers_int(users, filter, sorter) 
 {
     var filteredUsers=users.filter(filter);
     return filteredUsers.sort(sorter);
-},
+};
 
-filterAndSortByPositionAndTier_int = function(users, position)
+/**
+ * Filters users by position and sorts the filtered users by tier
+ * @param {*} users 
+ * @param {*} position 
+ * @return filtered array of users
+ */
+function filterAndSortByPositionAndTier_int(users, position)
 {
     var _filter = (user) => {
         return user.positions.includes(position);
     };
 
     return filterAndSortUsers_int(users, _filter, tier_sorter);
-},
+};
 
-filterByPosition = function(users, position)
+/**
+ * Filters users by position
+ * @param {*} users 
+ * @param {*} position 
+ * @return filtered array of users
+ */
+function filterByPosition(users, position)
 {
     var _filter = (user) => {
         return user.positions.includes(position);
     };
 
     return users.filter(_filter);
-},
+}
 
-getPlayersPerPosition = function(openUsers) {
+/**
+ * Returns an array of positions with all players having that position in each of the arrays
+ * @param {*} _users given users
+ * @return array of positions; each entry has position and the respective users that want to play it
+ */
+function getPlayersPerPosition(_users) {
     // get players per position
     var playersPerPosition = [];
     for(let position = 1; position < 6; position++)
     {
-        playersPerPosition.push({pos: position, users: filterByPosition(openUsers, position)});
+        playersPerPosition.push({pos: position, users: filterByPosition(_users, position)});
     }
 
     // sort to get 'tightest' positions (least amount of players) come first
@@ -343,15 +373,15 @@ module.exports = {
     },
 
     // debug output
-    printUsers: function (lobby) 
+    printLobbyUsers: function (state, channelId, lobbyType) 
     {
         console.log("All Users:");
         locker.acquireReadLock(function() {
-            lobby.users.forEach(element => {
+            state.lobbies[channelId][lobbyType].users.forEach(element => {
                 console.log(element.name + ": " + element.positions.join(", ") + " @" + element.tier.name);
             });
         },() => {
-            console.log("lock released in printUsers");
+            console.log("lock released in printLobbyUsers");
         });
     }
 }

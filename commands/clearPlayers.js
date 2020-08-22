@@ -2,25 +2,30 @@ const locker = require("../misc/lock")
 const mH = require("../misc/messageHelper")
 const lM = require("../misc/lobbyManagement")
 
-
+/**
+ * Handles a coach's call to !clear. Clears all players from given lobby
+ * @param {*} message message that triggered this call
+ * @param {*} state bot state
+ */
 module.exports = async (message, state) => {
+	// message must provide lobby type
 	var type = mH.getLobbyType(message);
 	if(type == undefined)
 		return;
 
-	var channel = message.channel.id;
-
-	if(!lM.hasLobby(state, channel, type))
-	{
-		message.reply("There is no lobby created for channel <#" + message.channel.id + "> and type '" + type + "'");
-		return;
+	// get lobby
+	var channelId = message.channel.id
+	var lobby = lM.getLobby(state, channelId, type)
+	if(lobby == undefined) {
+		return message.reply("there is no lobby created for channel <#" + channelId + "> and type '" + type + "'");
 	}
 
+	// clear users
 	locker.acquireWriteLock(function() {
-		state.lobbies[channel][type].users= [];
+		state.lobbies[channelId][type].users= [];
 	}, function() {
 		console.log("lock released in clearPlayers");
 	});
 	
-	await message.reply("Cleared all users from lobby");
+	await message.reply("cleared all users from lobby");
 }

@@ -21,7 +21,7 @@ cM.botChannels.forEach(channel => {
 // load bot state
 serializer.loadState(client, process.env.SAVEFILE)
 
-// read message directory
+// setup reading messages
 fs.readdir("./events/", (err, files) => {
 	files.forEach(file => {
 		const eventHandler = require(`./events/${file}`)
