@@ -2,6 +2,7 @@ const c = require("../misc/constants")
 const locker = require("../misc/lock")
 const eC = require("../misc/answerEmbedding")
 const uH = require("../misc/userHelper")
+const Discord = require("discord.js")
 
 /**
  *  Checks given Date and returns true if it is today
@@ -248,7 +249,12 @@ module.exports = {
         var lobby =  {};
         locker.acquireReadLock(function() {
             lobby = state.lobbies[channel][type];
-            if(!isToday(lobby.date)){
+            if(lobby == undefined)
+            {
+                return;
+            }
+            if(!isToday(lobby.date))
+            {
                 lobby = undefined;
             }
 	    }, () => {
@@ -266,7 +272,7 @@ module.exports = {
      *  @param roles allowed Beginner roles
      *  @param time time of lobby
      */
-    createLobby: function (state, channel, type, roles, time) 
+    createLobby: function (state, channel, type, roles, time, messageID) 
     {
         locker.acquireWriteLock(function() {
             // override / create lobby
@@ -275,11 +281,60 @@ module.exports = {
                 time: time,
                 users: [],
                 tiers: roles, // roles
-                locked: false
+                messageId : messageID
               };
         }, function() {
             console.log("lock released in createLobby");
         });
+    },
+
+    removeLobby: function(state, channel, type)
+    {
+        locker.acquireWriteLock(function() {
+            // override / create lobby
+            state.lobbies[channel][type] = undefined;
+        }, function() {
+            console.log("lock released in removeLobby");
+        });
+    },
+
+    /**
+     *  Update lobby post to account for current lobby state
+     *  @param lobby bot state
+     *  @param channel message channel
+     */
+    updateLobbyPost: async function(lobby, channel)
+    {
+        // fetch message
+        const message = await channel.fetchMessage(lobby.messageId);
+        old_embed = message.embeds[0];
+
+        // generate new embed
+        var new_embed =   new Discord.RichEmbed(old_embed);
+        new_embed.fields = getCurrentUsersAsTable(lobby);
+        
+        // update embed
+        message.edit(new_embed);
+    },
+
+    /**
+     *  Update lobby post to account for cancellation of lobby
+     *  @param lobby bot state
+     *  @param channel message channel
+     */
+    cancelLobbyPost: async function(lobby, channel)
+    {
+        // fetch message
+        const message = await channel.fetchMessage(lobby.messageId);
+        old_embed = message.embeds[0];
+
+        // generate new embed
+        var new_embed =   new Discord.RichEmbed(old_embed)
+                             .setTitle("[⛔ Lobby cancelled! 😢]\n~~" + old_embed.title + "~~");
+        new_embed.fields = undefined;
+        
+        // update embed
+        message.edit(new_embed);
     },
 
     getCurrentUsersAsTable: getCurrentUsersAsTable,

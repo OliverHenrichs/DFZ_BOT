@@ -34,7 +34,6 @@ function createPositionalUserTable(state, channel) {
 	}
 	return userTable;
 }
-
 /**
  * Handles coach's call to !list. Lists all players of all lobbies in the message's channel
  * @param {*} message message that caused the call to this handler
@@ -48,7 +47,7 @@ module.exports = async (message, state) => {
 
 	if(lM.getLobby(state, message.channel.id, type) == undefined)
 	{
-		return mH.reactNegative(message, "No open "+c.getLobbyNameByType(type)+ " lobby yet.");
+		return mH.reactNeutral(message, "No open "+c.getLobbyNameByType(type)+ " lobby yet.");
 	}
 
 	var userTable;

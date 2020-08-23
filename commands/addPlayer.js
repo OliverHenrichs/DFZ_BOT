@@ -41,6 +41,9 @@ module.exports = async (message, state) => {
 				Array.from(positions), 
 				rM.findRole(message, rM.beginnerRoles));
 
+	// update lobby post
+	lM.updateLobbyPost(lobby,message.channel);
+
 	// debug print
 	uH.printLobbyUsers(state, message.channel.id, type);
 }

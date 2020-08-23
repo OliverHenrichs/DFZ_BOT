@@ -4,10 +4,13 @@ const withdrawPlayer = require("../commands/withdrawPlayer")
 const clearPlayers = require("../commands/clearPlayers")
 const printPlayerStatus = require("../commands/printPlayerStatus")
 const listPlayers = require("../commands/listPlayers")
-const postGame = require("../commands/postGame")
-const startGame = require("../commands/startGame")
+const postLobby = require("../commands/postLobby")
+const startLobby = require("../commands/startLobby")
 const roleManagement = require("../misc/RoleManagement")
 const channelManagement = require("../misc/ChannelManagement")
+const removeLobby = require("../commands/removeLobby")
+const mH = require("../misc/messageHelper")
+const helpUser = require("../misc/helpUser")
 
 const PREFIX = '!';
 
@@ -34,12 +37,14 @@ module.exports = async (client, message) => {
 
 	// Ignore messages outside of bot channels
 	if (!channelManagement.isWatchingChannel(message.channel.id)) {
-		await message.reply("I only listen to messages in the channels " + channelManagement.channelStrings);
-		return;
+		return mH.reactNegative(message, "I only listen to messages in the channels " + channelManagement.channelStrings);
 	}
 
 	// player messages
 	if (roleManagement.findRole(message, roleManagement.beginnerRoles) != undefined) {
+		if (content.startsWith("!help")) {
+			return helpUser(message);
+		}
 		if (content.startsWith("!join")) {
 			return addPlayer(message, client._state)
 		}
@@ -52,21 +57,24 @@ module.exports = async (client, message) => {
 		if (content.startsWith("!status")) {
 			return printPlayerStatus(message, client._state)
 		}
-	} else if (content.startsWith("!join") || content.startsWith("!withdraw") || content.startsWith("!correct") || content.startsWith("!status")) {
-		await message.reply("Only Beginner Tiers 1,2,3 are eligible for this command.");
-		return;
+	} else if (	content.startsWith("!join") || 
+				content.startsWith("!withdraw") || 
+				content.startsWith("!correct") || 
+				content.startsWith("!status") || 
+				content.startsWith("!help")) {
+		return mH.reactNegative(message, "Only Beginner Tiers 1,2,3 are eligible for this command.");
 	}
 
 	// admin messages
 	if (roleManagement.findRole(message, roleManagement.adminRoles) != undefined) {
 		if (content.startsWith("!post")) {
-			return postGame.postLobby(message, client._state)
+			return postLobby(message, client._state)
 		}
 		if (content.startsWith("!start")) {
-			return startGame(message, client._state)
+			return startLobby(message, client._state)
 		}
 		if (content.startsWith("!f_start")) {
-			return startGame(message, client._state, true)
+			return startLobby(message, client._state, true)
 		}
 		if (content.startsWith("!list")) {
 			return listPlayers(message, client._state)
@@ -74,8 +82,15 @@ module.exports = async (client, message) => {
 		if (content.startsWith("!clear")) {
 			return clearPlayers(message, client._state)
 		}
-	} else if (content.startsWith("!list") || content.startsWith("!clear")) {
-		await message.reply("Only coaches and admins are eligible for this command.");
-		return;
+		if (content.startsWith("!cancel")) {
+			return removeLobby(message, client._state)
+		}
+	} else if (	content.startsWith("!post") || 
+				content.startsWith("!start") || 
+				content.startsWith("!f_start") || 
+				content.startsWith("!list") || 
+				content.startsWith("!clear") || 
+				content.startsWith("!cancel")) {
+		return mH.reactNegative(message, "Only coaches and admins are eligible for this command.");
 	}
 }

@@ -7,7 +7,7 @@ const locker = require("../misc/lock")
  * Handles a coach's call to !start. Creates a lobby post
  * @param {*} message coach's message
  * @param {*} state bot state
- * @param {*} force Force game start even if not enough players are signed up. Tries to still matchmake where possible
+ * @param {boolean} force Force game start even if not enough players are signed up. Tries to still matchmake where possible
  */
 module.exports = async (message, state, force=false) => {
 
