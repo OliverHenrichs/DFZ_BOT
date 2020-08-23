@@ -16,13 +16,13 @@ module.exports = async (message, state) => {
 
 	var lobby = lM.getLobby(state, message.channel.id, type)
 	if(lobby == undefined) {
-		return message.reply("no lobby scheduled for today yet.");
+		return mH.reactNegative(message, "There is no lobby created for channel <#" + message.channel.id + "> and type '" + type + "'");
 	}
 
 	// find user
 	var idx = userHelper.getUserIndex(lobby, message.author.username);
 	if (idx == -1) {
-		return message.reply("no joined player found under your username.\r\n You have not signed up yet.");
+		return mH.reactNegative(message, "No joined player found under your username.\r\n You have not signed up yet.");
 	} 
 
 	// remove user
@@ -30,8 +30,8 @@ module.exports = async (message, state) => {
 		lobby.users.splice(idx,1);
 	}, function() {
 		console.log("lock released in withdrawPlayer");
+		return mH.reactPositive(message, "You successfully withdrew your signup.");
 	});
-	await message.reply("you successfully withdrew your signup.");
 
 	userHelper.printLobbyUsers(state, message.channel.id, type);
 }

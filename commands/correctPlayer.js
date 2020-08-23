@@ -17,32 +17,29 @@ module.exports = async (message, state) => {
 	if(type == undefined)
 		return;
 
-	var lobby = lM.getLobby(state, channel, type);
+	var lobby = lM.getLobby(state, message.channel.id, type);
 	if(lobby == undefined) {
-		return message.reply("no open lobby of type " + lobbyType + " yet.");
+		return mH.reactNegative(message, "There is no lobby created for channel <#" + message.channel.id + "> and type '" + type + "'");
 	}
 
 	// check existing users 
 	var user = userHelper.getUser(lobby, message.author.username);
 	if(user == undefined)
 	{
-		await message.reply("you did not sign up yet, therefore I cannot correct your positioning choice. Use '!join'-command to sign up.");
-		return;
+		return mH.reactNegative(message, "you did not sign up yet, therefore I cannot correct your positioning choice. Use '!join'-command to sign up.");
 	}
 
 	// check positions
 	[res, positions, errormsg] = mH.getNumbersFromMessage(message, 1);
 	if (!res) {
-		await message.reply(errormsg + formatString);
-		return;
+		return mH.reactNegative(message, errormsg + formatString);
 	}
 
 	// correct user
 	locker.acquireWriteLock(function () {
 		user.positions = Array.from(positions);
-		message.reply("your signup positions now read " + user.positions.join(", "));
 	}, function() {
-		console.log("lock released in correctPlayer");
+		return mH.reactPositive(message, "your signup positions now read " + user.positions.join(", "));
 	});
 
 	userHelper.printLobbyUsers(state, message.channel.id, type);

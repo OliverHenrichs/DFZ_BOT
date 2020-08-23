@@ -1,6 +1,49 @@
 const c = require("../misc/constants")
 
 /**
+ * Reacts to message using reply and emoji
+ * @param {message} message message to be replied to
+ * @param {string} reply string containing reply message
+ * @param {string} emoji emoji to react with
+ */
+function reactMessage(message, reply, emoji)
+{
+    message.react(emoji);
+    if(reply != "" ) message.author.send("`"+message.content+"`\n"+emoji+" "+ reply);
+}
+
+/**
+ * Creates a negative reaction
+ * @param {message} message message to react to
+ * @param {string} reply string reply
+ */
+function reactNegative(message, reply = "")
+{
+    reactMessage(message, reply, '⛔');
+}
+
+/**
+ * Creates a neutral reaction
+ * @param {message} message message to react to
+ * @param {string} reply string reply
+ */
+function reactNeutral(message, reply = "")
+{
+    reactMessage(message, reply, '😐');
+}
+
+
+/**
+ * Creates a positive reaction
+ * @param {message} message message to react to
+ * @param {string} reply string reply
+ */
+function reactPositive(message, reply = "")
+{
+    reactMessage(message, reply, '✅');
+}
+
+/**
     Check if player positions are a non-empty subset of {1,2,3,4,5}
     @param positions map of positions to be checked for correctness
     @param min min number value
@@ -57,6 +100,11 @@ function getNumbersFromMessage(message, index, min=0, max=5) {
     return [checkResult[0], uniqueNumbers, checkResult[1]];
 }
 
+/**
+ * Validates that time string has form xxam, xam, xpm xxpm (x in 0,..,9)
+ * @param {string} timeString input string
+ * @return true if validator succeeds
+ */
 function validateTime(timeString)
 {
     // check length
@@ -81,6 +129,11 @@ function validateTime(timeString)
     return true;
 }
 
+/**
+ * Takes time part out of message by splitting and taking the part at index, then validates and returns the time
+ * @param {*} message message containing the time
+ * @param {*} index position of time in the message
+ */
 function getTimeFromMessage(message, index)
 {
     var args = getArguments(message);
@@ -109,7 +162,7 @@ function getLobbyType(message) {
 
 	if(args.length == 0 || args == "")
 	{
-		message.reply("no lobby type given. \r\n Lobby types are (" + Object.keys(c.lobbyTypes).join(", ") + ")");
+        reactNegative(message, "no lobby type given. \r\n Lobby types are (" + Object.keys(c.lobbyTypes).join(", ") + ")")
 		return undefined;
 	}
 
@@ -117,13 +170,16 @@ function getLobbyType(message) {
     var lobbyType = Object.keys(c.lobbyTypes).find(t => {return t==type;})
 	if(lobbyType == undefined)
 	{
-		message.reply("Invalid lobby type. Lobby types are " + Object.keys(c.lobbyTypes).join(", "));
+        reactNegative(message, "Invalid lobby type. Lobby types are " + Object.keys(c.lobbyTypes).join(", "))
 		return undefined;
     }
     
     return c.lobbyTypes[lobbyType];
 }
 
+module.exports.reactNeutral = reactNeutral;
+module.exports.reactNegative = reactNegative;
+module.exports.reactPositive = reactPositive;
 module.exports.checkNumbers = checkNumbers;
 module.exports.getNumbersFromMessage = getNumbersFromMessage;
 module.exports.getArguments = getArguments;

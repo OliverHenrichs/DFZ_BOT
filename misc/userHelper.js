@@ -1,6 +1,7 @@
 const c = require("../misc/constants")
 const locker = require("../misc/lock")
 const rM = require("./roleManagement")
+const mH = require("./messageHelper")
 
 /**
  * Shuffles array in place.
@@ -252,7 +253,7 @@ createnNonCompetitionTeams = function(playerPositionMap, openUsers)
 },
 
 module.exports = {
-    addUser: function (message, lobby, name, id, positions, tier)
+    addUser: function (message, lobby, type, name, id, positions, tier)
     {
         // create user
         var user = {};
@@ -268,9 +269,9 @@ module.exports = {
         // add to state
         locker.acquireWriteLock(function() {
             lobby.users.push(user);	
-            message.reply("added you, for tonight's game for positions " + user.positions.join(", "))	
         }, function() {
             console.log("lock released in addUser");
+            mH.reactPositive(message, "added you for tonight's "+ c.getLobbyNameByType(type) +" lobby for positions " + user.positions.join(", "));
         });
     },
 

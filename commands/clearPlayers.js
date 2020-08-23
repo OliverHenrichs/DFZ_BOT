@@ -17,7 +17,7 @@ module.exports = async (message, state) => {
 	var channelId = message.channel.id
 	var lobby = lM.getLobby(state, channelId, type)
 	if(lobby == undefined) {
-		return message.reply("there is no lobby created for channel <#" + channelId + "> and type '" + type + "'");
+		return mH.reactNegative(message, "There is no lobby created for channel <#" + channelId + "> and type '" + type + "'");
 	}
 
 	// clear users
@@ -25,7 +25,6 @@ module.exports = async (message, state) => {
 		state.lobbies[channelId][type].users= [];
 	}, function() {
 		console.log("lock released in clearPlayers");
+		return mH.reactPositive(message, "cleared all users from lobby");
 	});
-	
-	await message.reply("cleared all users from lobby");
 }

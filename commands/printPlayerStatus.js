@@ -1,6 +1,7 @@
 const c = require("../misc/constants")
 const userHelper = require("../misc/userHelper")
 const locker = require("../misc/lock")
+const mH = require("../misc/messageHelper")
 
 
 /**
@@ -46,9 +47,8 @@ module.exports = async (message, state) => {
 	}
 
 	if(statusTexts.length == 0)
-		message.reply("you are not signed up");
+		return mH.reactNeutral(message, "You are not signed up");
 	else{
-		message.reply("you are signed up for the following lobbies:\r\n" + statusTexts.join("\r\n"));
+		return mH.reactPositive(message, "you are signed up for the following lobbies:\r\n" + statusTexts.join("\r\n"));
 	}
-	
 }

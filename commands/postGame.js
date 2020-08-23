@@ -36,7 +36,7 @@ function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	var channel = message.channel.id;
 
 	if(lM.getLobby(state, channel, lobbyType) != undefined) {
-		return message.reply("already created a lobby of type "+ lobbyTypeName +" today, in channel <#" + message.channel.id + "> won't override");
+		return mH.reactNegative(message, "Cannot override already created lobby of type "+ lobbyTypeName +" in channel <#" + message.channel.id + ">");
 	}
 
 	// get roles
@@ -44,13 +44,13 @@ function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	const maxRole = 4;
 	[res, numbers, errormsg] = mH.getNumbersFromMessage(message, 1, minRole, maxRole);
 	if(!res) {
-		return message.reply(errormsg);
+		return mH.reactNegative(message, errormsg);
 	}
 
 	// get time
 	[res, time, errormsg] = mH.getTimeFromMessage(message, 2);
 	if(!res) {
-		return message.reply(errormsg);
+		return mH.reactNegative(message, errormsg);
 	}
 
 	// create lobby
@@ -58,7 +58,9 @@ function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 
 	// send embedding to lobby signup-channel
 	var roles = rM.getRolesFromNumbers(numbers);
-	const _embed = eC.generateEmbedding("We host a " + lobbyTypeName + " lobby at " + time, "for " + rM.getRoleStrings(roles), footer, 'success');
+	const _embed = eC.generateEmbedding("We host a " + lobbyTypeName + " lobby at " + time, "for " + rM.getRoleStrings(roles), footer);
+	
+	mH.reactPositive(message);
 	message.channel.send({embed: _embed});
 
 }

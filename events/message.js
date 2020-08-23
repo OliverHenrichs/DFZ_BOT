@@ -18,6 +18,15 @@ const PREFIX = '!';
  * @param {*} message message to handle 
  */
 module.exports = async (client, message) => {
+	
+	// Get content
+	const content = message.content;
+
+	// Ignore any message that doesn't start with the correct prefix.
+	if (!content.startsWith(PREFIX)) {
+		return;
+	}
+
 	// Ignore messages from self
 	if (message.author.id === process.env.BOT_ID) {
 		return;
@@ -27,14 +36,6 @@ module.exports = async (client, message) => {
 	if (!channelManagement.isWatchingChannel(message.channel.id)) {
 		await message.reply("I only listen to messages in the channels " + channelManagement.channelStrings);
 		return;
-	}
-
-	// Get content
-	const content = message.content;
-  
-	// Ignore any message that doesn't start with the correct prefix.
-	if (!content.startsWith(PREFIX)) {
-	  return;
 	}
 
 	// player messages
@@ -74,7 +75,7 @@ module.exports = async (client, message) => {
 			return clearPlayers(message, client._state)
 		}
 	} else if (content.startsWith("!list") || content.startsWith("!clear")) {
-		await message.reply("Only Coaches and Admins are eligible for this command.");
+		await message.reply("Only coaches and admins are eligible for this command.");
 		return;
 	}
 }

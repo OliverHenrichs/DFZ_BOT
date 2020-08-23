@@ -17,7 +17,7 @@ module.exports = async (message, state, force=false) => {
 
 	var channel = message.channel.id;
 	if(lM.getLobby(state, channel, type) == undefined) {
-		return message.reply("no lobby has been created yet");
+		return mH.reactNegative(message, "There is no lobby created for channel <#" + channel + "> and type '" + type + "'");
 	}
 	
 	var key = Object.keys(c.lobbyTypes).find( typeKey => c.lobbyTypes[typeKey] == type);
@@ -30,10 +30,10 @@ module.exports = async (message, state, force=false) => {
 		console.log("lock released in startGame");
 	});
 
-
-    if(lessThan && !force)
-         return message.reply("There are fewer than " + playersPerLobby + " players signed up. Cannot start yet");
+	if(lessThan && !force)
+		return mH.reactNegative(message, "There are fewer than " + playersPerLobby + " players signed up. Cannot start yet");
 
 	// create lobby
 	lM.createLobbyPost(state, message.channel, type, playersPerLobby);
+	mH.reactPositive(message);
 }

@@ -41,39 +41,27 @@ function createPositionalUserTable(state, channel) {
  * @param {*} state bot state
  */
 module.exports = async (message, state) => {
-	
-	var args = mH.getArguments(message);
-	if(args.length == 0 || Object.keys(c.lobbyTypes).find((key) => key == args[0]) == undefined)
-	{
-		message.reply("Proper format is !list <lobbyType> with <lobbyType> = '" + Object.keys(c.lobbyTypes).join("' or '") + "'.");
+
+	var type = mH.getLobbyType(message);
+	if(type == undefined)
 		return;
+
+	if(lM.getLobby(state, message.channel.id, type) == undefined)
+	{
+		return mH.reactNegative(message, "No open "+c.getLobbyNameByType(type)+ " lobby yet.");
 	}
 
-	var lobbyType = args[0];
-
-	if(lM.getLobby(state, message.channel.id, c.lobbyTypes[lobbyType]) == undefined)
-	{
-		message.reply("no open "+c.getLobbyNameByType(lobbyType)+ " lobby yet.");
-		return;
-	}
-
-	var userTable = [];
+	var userTable;
 
 	// get user tables by lobby type
-	if(c.lobbyTypes[lobbyType] == c.lobbyTypes.mmr)
+	if(type == c.lobbyTypes.mmr)
 	{
 		userTable = createMMRListUserTable(state, message.channel.id);
-
-	} else if(c.lobbyTypes[lobbyType] == c.lobbyTypes.inhouse)
+	} else if(type == c.lobbyTypes.inhouse)
 	{
 		userTable = createPositionalUserTable(state, message.channel.id);
 	}
 
-	if(userTable == undefined) {
-		message.reply("Opened " + lobbyType + " lobby open, but no signups so far.");
-		return;
-	}
-
-	const _embed = eC.generateEmbedding("List of users signed up for tonight's " + c.getLobbyNameByType(lobbyType) + " lobby", "", "", 'success', userTable);
-	message.reply({embed: _embed});
+	mH.reactPositive(message);
+	message.reply({embed: eC.generateEmbedding("List of users signed up for tonight's " + c.getLobbyNameByType(type) + " lobby", "", "", userTable)});
 }

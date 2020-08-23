@@ -102,7 +102,6 @@ function getUserTable(users, mention=false) {
         }
     ];
 
-
     users.forEach(usr => {
         addToUserTable(tableBase, usr, mention);
     });
@@ -119,7 +118,7 @@ function getUserTable(users, mention=false) {
  *  @param mention if true mentions the user in the table
  */
 function getCurrentUsersAsTable(lobby, mention=false) {
-    var userTable = [];
+    var userTable;
     
     locker.acquireReadLock(function() {
             userTable = getUserTable(lobby.users, mention);
@@ -328,23 +327,24 @@ module.exports = {
         {
             if (userSet.length != 0) // Not enough players but forced
             {
-                const _embed = eC.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", 'success', getUserTable(userSet, true));
+                const _embed = eC.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", getUserTable(userSet, true));
                 channel.send({embed: _embed});
                 return;
             }
         }
 
+        var counter = 0;
         userSets.forEach(us => {
             var teams = uH.createTeams(us,type);
             var teamTable = getTeamTable(teams, type, true);
             
-            const _embed = eC.generateEmbedding(c.getLobbyNameByType(type) + " lobby can start now with the following players", "", "", 'success', teamTable);
+            const _embed = eC.generateEmbedding(c.getLobbyNameByType(type) + " lobby #" + (++counter) + (counter == 1 ? " starts now " : " starts later "), "", "", teamTable);
             channel.send({embed: _embed});
         });
 
         if (userSet.length != 0) // bench
         {
-            const _embed = eC.generateEmbedding("Today's bench", "", "", 'success', getUserTable(userSet, true));
+            const _embed = eC.generateEmbedding("Today's bench", "", "", getUserTable(userSet, true));
             channel.send({embed: _embed});
         }
     }
