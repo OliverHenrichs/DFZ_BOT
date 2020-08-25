@@ -2,16 +2,26 @@ require("dotenv").config()
 const Discord = require("discord.js")
 const fs = require("fs")
 const client = new Discord.Client()
+
+
 const serializer = require("./misc/serializeHelper")
+const cM = require("./misc/ChannelManagement")
+const c = require("./misc/constants")
 
 // setup bot state
 client._state = {};
-client._state.lobby = {};
+client._state.lobbies = {};
+cM.botChannels.forEach(channel => {
+	client._state.lobbies[channel] = {};
+	Object.values(c.lobbyTypes).forEach(type =>{
+		client._state.lobbies[channel][type] = {};
+	});
+});
 
 // load bot state
 serializer.loadState(client, process.env.SAVEFILE)
 
-// read message directory
+// setup reading messages
 fs.readdir("./events/", (err, files) => {
 	files.forEach(file => {
 		const eventHandler = require(`./events/${file}`)

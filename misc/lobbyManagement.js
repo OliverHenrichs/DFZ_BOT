@@ -1,15 +1,28 @@
+const c = require("../misc/constants")
 const locker = require("../misc/lock")
 const eC = require("../misc/answerEmbedding")
-const sT = require("string-table")
 const uH = require("../misc/userHelper")
+const Discord = require("discord.js")
 
+/**
+ *  Checks given Date and returns true if it is today
+ *  @return true if it is today
+ *  @param someDate given date
+ */
 function isToday (someDate) {
     const today = new Date();
     var d1 = someDate;
-    var d2 =  today.toISOString().substring(0, 9);
+    var d2 =  today.toISOString().substring(0, 10);
     return d1 == d2;
 }
 
+/**
+ *  returns user table for a specific position
+ *  @return array of table entries
+ *  @param users array of users
+ *  @param position position of users
+ *  @param mention if true mentions the users in the table
+ */
 function getPositionalUserTable(users, position, mention=false) {
     if(users.length == 0) {
         return undefined;
@@ -30,13 +43,9 @@ function getPositionalUserTable(users, position, mention=false) {
     ];
 
     // fill fields
-    locker.acquireReadLock(function() {
-        users.forEach(usr => {
-            tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +usr.id + ">") : usr.name);
-            tableBase[1].value = tableBase[1].value + "\r\n" +usr.tier.name;
-        });
-        }, () => {
-            console.log("lock released in getCurrentUsersAsTable");
+    users.forEach(usr => {
+        tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +usr.id + ">") : usr.name);
+        tableBase[1].value = tableBase[1].value + "\r\n" +usr.tier.name;
     });
 
     // get header
@@ -50,6 +59,12 @@ function getPositionalUserTable(users, position, mention=false) {
     return tableBase;
 }
 
+/**
+ *  adds user + position + tier to table
+ *  @param tableBase table to which data is added
+ *  @param user user to add
+ *  @param mention if true mentions the user in the table
+ */
 function addToUserTable(tableBase, user, mention=false) {
     {
         tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +user.id + ">") : user.name);
@@ -58,6 +73,12 @@ function addToUserTable(tableBase, user, mention=false) {
     }
 }
 
+/**
+ *  returns a table of users
+ *  @param tableBase table to which data is added
+ *  @param users array of users
+ *  @param mention if true mentions the users in the table
+ */
 function getUserTable(users, mention=false) {
     if(users.length == 0) {
         return undefined;
@@ -82,7 +103,6 @@ function getUserTable(users, mention=false) {
         }
     ];
 
-
     users.forEach(usr => {
         addToUserTable(tableBase, usr, mention);
     });
@@ -92,11 +112,17 @@ function getUserTable(users, mention=false) {
     return tableBase;
 }
 
-function getCurrentUsersAsTable(state, mention=false) {
-    var userTable = [];
+/**
+ *  adds user + position + tier to table
+ *  @param tableBase table to which data is added
+ *  @param users user to add
+ *  @param mention if true mentions the user in the table
+ */
+function getCurrentUsersAsTable(lobby, mention=false) {
+    var userTable;
     
     locker.acquireReadLock(function() {
-        userTable = getUserTable(state.lobby.users, mention);
+            userTable = getUserTable(lobby.users, mention);
     }, () => {
         console.log("lock released in getCurrentUsersAsTable");
     });
@@ -104,32 +130,81 @@ function getCurrentUsersAsTable(state, mention=false) {
     return userTable;
 }
 
-function getTeamTable(assignedUsers, mention=false) {
-    
-    var tableBase = [
-        {
-            name: 'Side',
-            value: 'Radiant'
-        },
-        {
-            name: 'Name',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Position',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Tier',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Side',
-            value: 'Dire'
-        },
+/**
+ *  adds user + position + tier to team table
+ *  @param tableBase table to which data is added
+ *  @param index table index at which data is added
+ *  @param player user to add
+ *  @param position position of user to add
+ *  @param mention if true mentions the user in the table
+ */
+function addUserToTeam(tableBase, index, player, position, mention)
+{
+    tableBase[index].value = tableBase[index].value + "\r\n" + (mention ? ("<@" +player.id + ">") : player.name);
+    tableBase[index+1].value = tableBase[index+1].value + "\r\n" + position;
+    tableBase[index+2].value = tableBase[index+2].value + "\r\n" +player.tier.name;
+}
+
+/**
+ *  Creates a table for a match given assigned users
+ *  @param assignedUsers field where for each position players are assigned
+ *  @param lobbyType type of lobby to determine table shape
+ *  @param mention if true mentions the users in the table
+ */
+function getTeamTable(assignedUsers, lobbyType, mention=false) {
+    if(lobbyType == c.lobbyTypes.inhouse)
+    {
+        var tableBaseInhouse = [
+            {
+                name: 'Side',
+                value: 'Radiant'
+            },
+            {
+                name: 'Name',
+                value: '',
+                inline: true,
+            },
+            {
+                name: 'Position',
+                value: '',
+                inline: true,
+            },
+            {
+                name: 'Tier',
+                value: '',
+                inline: true,
+            },
+            {
+                name: 'Side',
+                value: 'Dire'
+            },
+            {
+                name: 'Name',
+                value: '',
+                inline: true,
+            },
+            {
+                name: 'Position',
+                value: '',
+                inline: true,
+            },
+            {
+                name: 'Tier',
+                value: '',
+                inline: true,
+            }
+        ];
+
+        Object.keys(assignedUsers).forEach((position) => {
+            var players = assignedUsers[position];
+            addUserToTeam(tableBaseInhouse, 1, players[0], position, mention);
+            addUserToTeam(tableBaseInhouse, 5, players[1], position, mention);
+        });
+
+        return tableBaseInhouse;
+    } else if (lobbyType == c.lobbyTypes.mmr)
+    {        
+        var tableBaseMMR = [
         {
             name: 'Name',
             value: '',
@@ -146,89 +221,189 @@ function getTeamTable(assignedUsers, mention=false) {
             inline: true,
         }
     ];
-
     
     Object.keys(assignedUsers).forEach((position) => {
-        var players = assignedUsers[position];
-        var radiantPlayer = players[0];
-        tableBase[1].value = tableBase[1].value + "\r\n" + (mention ? ("<@" +radiantPlayer.id + ">") : radiantPlayer.name);
-        tableBase[2].value = tableBase[2].value + "\r\n" + position;
-        tableBase[3].value = tableBase[3].value + "\r\n" +radiantPlayer.tier.name;
-        
-        var direPlayer = players[1];
-        tableBase[5].value = tableBase[5].value + "\r\n" + (mention ? ("<@" +direPlayer.id + ">") : direPlayer.name);
-        tableBase[6].value = tableBase[6].value + "\r\n" + position;
-        tableBase[7].value = tableBase[7].value + "\r\n" +direPlayer.tier.name;
+        var player = assignedUsers[position];
+        addUserToTeam(tableBaseMMR, 0, player, position, mention);
     });
 
-    return tableBase;
+    return tableBaseMMR;
+        
+    }
+
+    return [];
 }
 
 // lobby management
 module.exports = {
-    hasLobby: function (state) 
+
+    /**
+     *  Checks if lobby exists and is of today, returns lobby if and undefined if not
+     *  @return undefined if above condition is not fulfilled, else returns the lobby
+     *  @param state bot state
+     *  @param channel message channel
+     *  @param type lobby type
+     */
+    getLobby: function (state, channel, type) 
     {
-        var lobbyExists = false;
+        var lobby =  {};
         locker.acquireReadLock(function() {
-            if(state.lobby != undefined && isToday(state.lobby.date)){
-                lobbyExists = true;
+            lobby = state.lobbies[channel][type];
+            if(lobby == undefined)
+            {
+                return;
             }
-	    });
-        return lobbyExists;
+            if(!isToday(lobby.date))
+            {
+                lobby = undefined;
+            }
+	    }, () => {
+            console.log("lock released in hasLobby");
+        });
+        return lobby;
     },
 
-    createLobby: function (state, numbers) 
+    /**
+     *  Create lobby in given channel and of given type at given time
+     *  @return undefined if above condition is not fulfilled
+     *  @param state bot state
+     *  @param channel message channel
+     *  @param type lobby type
+     *  @param roles allowed Beginner roles
+     *  @param time time of lobby
+     *  @param time timezone of lobby
+     */
+    createLobby: function (state, channel, type, roles, time, timezone, messageID) 
     {
         locker.acquireWriteLock(function() {
             // override / create lobby
-            state.lobby = {
-                date: new Date().toISOString().substring(0, 9),
+            state.lobbies[channel][type] = {
+                date: new Date().toISOString().substring(0, 10),
+                time: time,
+                timezone: timezone,
                 users: [],
-                tiers: numbers, // roles
-                locked: false
+                tiers: roles, // roles
+                messageId : messageID
               };
+        }, function() {
+            console.log("lock released in createLobby");
         });
+    },
+
+    removeLobby: function(state, channel, type)
+    {
+        locker.acquireWriteLock(function() {
+            // override / create lobby
+            state.lobbies[channel][type] = undefined;
+        }, function() {
+            console.log("lock released in removeLobby");
+        });
+    },
+
+    /**
+     *  Update lobby post to account for current lobby state
+     *  @param lobby bot state
+     *  @param channel message channel
+     */
+    updateLobbyPost: async function(lobby, channel)
+    {
+        locker.acquireWriteLockLobbyPost(async function() {
+            // fetch message
+            const message = await channel.fetchMessage(lobby.messageId);
+            old_embed = message.embeds[0];
+    
+            // generate new embed
+            var new_embed =   new Discord.RichEmbed(old_embed);
+            new_embed.fields = getCurrentUsersAsTable(lobby);
+            
+            // update embed
+            await message.edit(new_embed);
+        });
+    },
+
+    /**
+     *  Update lobby post to account for cancellation of lobby
+     *  @param lobby bot state
+     *  @param channel message channel
+     */
+    cancelLobbyPost: async function(lobby, channel)
+    {
+        // fetch message
+        const message = await channel.fetchMessage(lobby.messageId);
+        old_embed = message.embeds[0];
+
+        // generate new embed
+        var new_embed =   new Discord.RichEmbed(old_embed)
+                             .setTitle("[⛔ Lobby cancelled! 😢]\n~~" + old_embed.title + "~~");
+        new_embed.fields = undefined;
+        
+        // update embed
+        message.edit(new_embed);
     },
 
     getCurrentUsersAsTable: getCurrentUsersAsTable,
 
-    getCurrentUsersWithPositionAsTable: function (state, position) 
+    /**
+     *  Creates a table containing a list of players wanting to play given position in given lobby yet
+     *  @param lobby lobby to be checked
+     *  @param position position to be checked
+     *  @return table containing all players that fit the criterion
+     */
+    getCurrentUsersWithPositionAsTable: function (lobby, position) 
     {
-        var users = uH.filterAndSortByPositionAndTier(state, position);
+        var users = uH.filterAndSortByPositionAndTier(lobby, position);
         return getPositionalUserTable(users, position);
     },
 
-    createLobbyPost: function(state, client) 
+    /**
+     *  Creates an embedding for a starting lobby
+     *  @param state state of bot
+     *  @param channel channel in which lobby resides
+     *  @param type type of lobby
+     *  @param playersPerLobby how many players per lobby (will create multiple lobbies if e.g. more than 2x the neccessary players showed up. Rest go to bench).
+     */
+    createLobbyPost: function(state, channel, type, playersPerLobby) 
     {    
         var userSets = [];
         var userSet = [];
-        
+
         locker.acquireReadLock(function() {
-            for (let i = 0; i < state.lobby.users.length; i++) { // add in batches of 10
-                userSet.push(state.lobby.users[i]);
+            var lobby = state.lobbies[channel.id][type]
+            for (let i = 0; i < lobby.users.length; i++) { // add in batches of lobbyTypePlayerCount
+                userSet.push(lobby.users[i]);
                 
-                if(i%9 == 0 && i != 0)
+                if((i+1)%(playersPerLobby) == 0)
                 {
                     userSets.push(userSet);
                     userSet = [];
                 }
             }
+        }, () => {
+            console.log("lock released in createLobbyPost");
         });
 
+        if(userSets.length == 0)
+        {
+            if (userSet.length != 0) // Not enough players but forced
+            {
+                const _embed = eC.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", getUserTable(userSet, true));
+                channel.send({embed: _embed});
+                return;
+            }
+        }
+
+        var counter = 0;
         userSets.forEach(us => {
-
-            var teams = uH.createTeams(us);
+            var teams = uH.createTeams(us,type);
+            var teamTable = getTeamTable(teams, type, true);
             
-            const _embed = eC.generateEmbedding("Lobby is up", "Name: 'Ask your'\r\n PW :'Coach'", "", 'success', getTeamTable(teams, true));
-            const channel = client.channels.get(process.env.LOBBY_SIGNUP_CHANNEL_ID);
+            const _embed = eC.generateEmbedding(c.getLobbyNameByType(type) + " lobby #" + (++counter) + (counter == 1 ? " starts now " : " starts later "), "", "", teamTable);
             channel.send({embed: _embed});
-
         });
 
         if (userSet.length != 0) // bench
         {
-            const _embed = eC.generateEmbedding("Bench is today full of high potentials", "", "", 'success', getUserTable(userSet, true));
-            const channel = client.channels.get(process.env.LOBBY_SIGNUP_CHANNEL_ID);
+            const _embed = eC.generateEmbedding("Today's bench", "", "", getUserTable(userSet, true));
             channel.send({embed: _embed});
         }
     }

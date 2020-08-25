@@ -12,7 +12,8 @@
     "dot-prop": "^5.2.0",
     "dotenv": "^8.2.0",
     "readwrite-lock": "^1.0.5",
-    "string-table": "^0.1.5"
+    "string-table": "^0.1.5",
+    "timezone-support": "^2.0.2"
   },
   "devDependencies": {
     "nodemon": "^1.19.4"

@@ -20,6 +20,16 @@ module.exports = {
 	*/
     acquireReadLock: function (f, cb) {
 		lock.acquireRead("botLock", f, {}).then(cb)
-	}
+	},
+
+	/**
+		write locks lobby post changes
+		@param f function you want to run
+		@param cb optional callback function you want to run
+	*/
+    acquireWriteLockLobbyPost: function (f, cb) {
+        lock.acquireWrite("postLock", f, {}).then(cb)
+	},
+
 }
 
