@@ -23,7 +23,7 @@ module.exports = async (message, state) => {
 	// get status from all channel lobbies
 	lobbyTypeNames.forEach(lobbyType => {
 		var lobby = channelLobbies[c.lobbyTypes[lobbyType]];
-		if(lobby.users != undefined)
+		if(lobby != undefined && lobby.users != undefined && lobby.users.length > 0)
 		{
 			users.push(userHelper.getUser(lobby, message.author.username));
 		}

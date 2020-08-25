@@ -17,9 +17,9 @@ module.exports = {
             case lobbyTypes.inhouse:
                 return "5v5"
             case lobbyTypes.mmr:
-                return "Unranked"
-            case lobbyTypes.inhouse:
-                return "Botbash"
+                return "5 man unranked"
+            case lobbyTypes.botbash:
+                return "botbash"
         }
     } 
 }

@@ -17,7 +17,7 @@ module.exports = async (message, state, force=false) => {
 
 	var channel = message.channel.id;
 	if(lM.getLobby(state, channel, type) == undefined) {
-		return mH.reactNegative(message, "There is no lobby created for channel <#" + channel + "> and type '" + type + "'");
+		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
 	}
 	
 	var key = Object.keys(c.lobbyTypes).find( typeKey => c.lobbyTypes[typeKey] == type);

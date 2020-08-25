@@ -10,7 +10,8 @@ const roleManagement = require("../misc/RoleManagement")
 const channelManagement = require("../misc/ChannelManagement")
 const removeLobby = require("../commands/removeLobby")
 const mH = require("../misc/messageHelper")
-const helpUser = require("../misc/helpUser")
+const helpUser = require("../commands/helpUser")
+const timeZone = require("../commands/lobbyTime")
 
 const PREFIX = '!';
 
@@ -57,16 +58,22 @@ module.exports = async (client, message) => {
 		if (content.startsWith("!status")) {
 			return printPlayerStatus(message, client._state)
 		}
+		if (content.startsWith("!time")) {
+			return timeZone(message, client._state);
+		}
 	} else if (	content.startsWith("!join") || 
 				content.startsWith("!withdraw") || 
 				content.startsWith("!correct") || 
-				content.startsWith("!status") || 
-				content.startsWith("!help")) {
+				content.startsWith("!status")) 
+	{
 		return mH.reactNegative(message, "Only Beginner Tiers 1,2,3 are eligible for this command.");
 	}
 
 	// admin messages
 	if (roleManagement.findRole(message, roleManagement.adminRoles) != undefined) {
+		if (content.startsWith("!help")) {
+			return helpUser(message);
+		}
 		if (content.startsWith("!post")) {
 			return postLobby(message, client._state)
 		}
@@ -84,6 +91,9 @@ module.exports = async (client, message) => {
 		}
 		if (content.startsWith("!cancel")) {
 			return removeLobby(message, client._state)
+		}
+		if (content.startsWith("!time")) {
+			return timeZone(message, client._state);
 		}
 	} else if (	content.startsWith("!post") || 
 				content.startsWith("!start") || 

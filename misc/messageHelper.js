@@ -1,4 +1,6 @@
 const c = require("../misc/constants")
+const tZ = require("../misc/timeZone")
+
 
 /**
  * Reacts to message using reply and emoji
@@ -101,35 +103,6 @@ function getNumbersFromMessage(message, index, min=0, max=5) {
 }
 
 /**
- * Validates that time string has form xxam, xam, xpm xxpm (x in 0,..,9)
- * @param {string} timeString input string
- * @return true if validator succeeds
- */
-function validateTime(timeString)
-{
-    // check length
-    var l = timeString.length;
-    if(l != 3 && l != 4)
-        return false;
-
-    // check hour
-    var hour = -1;
-    var ampm ="";
-    if (l == 3)
-    {
-        hour = parseInt(timeString[0], 10)
-        ampm = timeString.substring(1,3);
-    } else {
-        hour = parseInt(timeString.substring(0, 2))
-        ampm = timeString.substring(2,4);
-    }
-    if((hour == NaN || hour < 0 || hour > 12) || (ampm != "am" && ampm != "pm"))
-        return false;
-
-    return true;
-}
-
-/**
  * Takes time part out of message by splitting and taking the part at index, then validates and returns the time
  * @param {*} message message containing the time
  * @param {*} index position of time in the message
@@ -138,17 +111,10 @@ function getTimeFromMessage(message, index)
 {
     var args = getArguments(message);
 
-    if(args.length <= index)
-        return [false, "", "you need to provide a valid full hour time (e.g. 9pm, 6am, ...) in your post"];
+    if(args.length <= index + 1)
+        return [false, "", "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post"];
 
-    // get time
-    var timeString = args[index];
-    if(!validateTime(timeString))
-    {
-        return [false, "", "you need to provide a valid full hour time (e.g. 9pm, 6am, ...) in your post"];
-    }
-    
-    return [true, timeString, ""];
+    return tZ.createLobbyTime(args[index], args[index+1]);
 }
 
 function getArguments(message) {

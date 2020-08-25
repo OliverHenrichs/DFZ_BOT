@@ -21,7 +21,7 @@ module.exports = async (message, state) => {
 	// check existing lobby
 	var lobby = lM.getLobby(state, message.channel.id, type);
 	if(lobby == undefined) 
-	return mH.reactNegative(message, "There is no lobby created for channel <#" + message.channel.id + "> and type '" + type + "'");
+	return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
 	
 	// check existing user
 	if(uH.userExists(lobby, message.author.username)) 

@@ -17,14 +17,16 @@ module.exports = async (message, state) => {
 	var channelId = message.channel.id
 	var lobby = lM.getLobby(state, channelId, type)
 	if(lobby == undefined) {
-		return mH.reactNegative(message, "There is no lobby created for channel <#" + channelId + "> and type '" + type + "'");
+		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
 	}
 
 	// clear users
 	locker.acquireWriteLock(function() {
-		state.lobbies[channelId][type].users= [];
+		lobby.users = [];
 	}, function() {
 		console.log("lock released in clearPlayers");
+
+		lM.updateLobbyPost(lobby,message.channel);
 		return mH.reactPositive(message, "cleared all users from lobby");
 	});
 }

@@ -1,12 +1,36 @@
+const c = require("../misc/constants")
 const rM = require("../misc/RoleManagement")
 const aE = require("../misc/answerEmbedding")
 
 
-function addHelpToTable(tableBase, command, functionality, example) {
-    tableBase[0].value = command;
-    tableBase[1].value = functionality;
-    tableBase[2].value = "Example: " + example;
+function addHelpToTable(embed, short, command, functionality, example) {
+    // table for embed
+    var tableBase = [
+        {
+            name: short,
+            value: '',
+            inline: true
+        },
+        {
+            name: 'Example',
+            value: '',
+            inline: true,
+        },
+        {
+            name: 'Function',
+            value: '',
+            inline: true
+        }
+    ];
 
+    tableBase[0].value += command + "\n";
+    tableBase[1].value += example + "\n";
+    tableBase[2].value += functionality + "\n";
+
+    if(embed.fields.length == 0)
+        embed.fields = tableBase;
+    else 
+        embed.fields = embed.fields.concat(tableBase);
 }
 
 /**
@@ -14,92 +38,79 @@ function addHelpToTable(tableBase, command, functionality, example) {
  * 
  */
 module.exports = async (message) => {
-
-    // table for embed
-    var tableBase = [
-        {
-            name: 'Command',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Function',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Example',
-            value: '',
-            inline: true,
-        }
-    ];
-
     // create embed
-    embed = aE.generateEmbedding("Bot commands", "", "");
+    var _embed = aE.generateEmbedding("Bot commands", "", "");
 
     // help beginner commands
-	if (roleManagement.findRole(message, roleManagement.beginnerRoles) != undefined) {
-        addHelpToTable( tableBase, 
+	if (rM.findRole(message, rM.beginnerRoles) != undefined) {
+        addHelpToTable( _embed, "join", 
             "!join <lobbytype> <positions>", 
             "Joins an open lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ") + "\n Allowed positions are 1,2,3,4,5",
-            "'!join " + Object.keys(c.lobbyTypes) + "1,2'" );
+            "!join " + Object.keys(c.lobbyTypes)[0] + " 1,2" );
                 
-        addHelpToTable( tableBase, 
+        addHelpToTable( _embed, "withdraw", 
             "!withdraw <lobbytype>", 
             "Withdraws from a lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "'!withdraw " + Object.keys(c.lobbyTypes));
+            "!withdraw " + Object.keys(c.lobbyTypes)[1]);
             
-        addHelpToTable( tableBase, 
+        addHelpToTable( _embed, "correct", 
             "!correct <lobbytype> <positions>", 
             "Adjusts the positions you want to play in a lobby after you joined.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ")+ "\n Allowed positions are 1,2,3,4,5",
-            "'!correct " + Object.keys(c.lobbyTypes)+ "3,5,4'");
+            "!correct " + Object.keys(c.lobbyTypes)[2]+ " 3,5,4");
 
-        addHelpToTable( tableBase, 
+        addHelpToTable( _embed, "status", 
             "!status", 
             "Gives you the status of your assignment to lobbies in the current channel",
-            "'!status");
+            "!status");
+            
+        addHelpToTable( _embed, "time", 
+            "!time <lobbytype> <timezone>", 
+            "Shows you the time of the lobby in your timezone",
+            "!time " + Object.keys(c.lobbyTypes)[2]+ " EST");
 
-        addHelpToTable( tableBase, 
+        addHelpToTable( _embed, "help", 
             "!help", 
             "Shows you the info you are looking at right now 😉",
-            "'!help");
-    }
+            "!help");
+}
     
     // help admin commands
-	if (roleManagement.findRole(message, roleManagement.beginnerRoles) != undefined) {
-
-	// } else if (	content.startsWith("!post") || 
-    // content.startsWith("!start") || 
-    // content.startsWith("!f_start") || 
-    // content.startsWith("!list") || 
-    // content.startsWith("!clear") || 
-    // content.startsWith("!cancel")) {
-        addHelpToTable( tableBase, 
-            "!join <lobbytype> <positions>", 
-            "Joins an open lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ") + "\n Allowed positions are 1,2,3,4,5",
-            "'!join " + Object.keys(c.lobbyTypes) + "1,2'" );
+    else if (rM.findRole(message, rM.adminRoles) != undefined) 
+    {
+        addHelpToTable( _embed, "post", 
+            "!post <lobbytype> <tiers> <time> <timezone>", 
+            "Creates a lobby in this channel.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ")+"\n Allowed tiers: 1,2,3,4\n time format: 1-12am/pm \n timezone: CET, ... check https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
+            "!post " + Object.keys(c.lobbyTypes)[1]+" 1,2 9pm GMT+2");
+        addHelpToTable( _embed, "start", 
+            "!start <lobbytype>", 
+            "Starts the scheduled lobby in this channel.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
+            "!start " + Object.keys(c.lobbyTypes)[0]);
                 
-        addHelpToTable( tableBase, 
-            "!withdraw <lobbytype>", 
-            "Withdraws from a lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "'!withdraw " + Object.keys(c.lobbyTypes));
+        addHelpToTable( _embed, "f_start", 
+            "!f_start <lobbytype>", 
+            "Same as start, but also works if there are not enough players",
+            "!f_start " + Object.keys(c.lobbyTypes)[1]);
             
-        addHelpToTable( tableBase, 
-            "!correct <lobbytype> <positions>", 
-            "Adjusts the positions you want to play in a lobby after you joined.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ")+ "\n Allowed positions are 1,2,3,4,5",
-            "'!correct " + Object.keys(c.lobbyTypes)+ "3,5,4'");
+        addHelpToTable( _embed, "list", 
+            "!list <lobbytype>", 
+            "List current players for the given lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
+            "!list " + Object.keys(c.lobbyTypes)[0]);
 
-        addHelpToTable( tableBase, 
-            "!status", 
-            "Gives you the status of your assignment to lobbies in the current channel",
-            "'!status");
+        addHelpToTable( _embed, "clear", 
+            "!clear <lobbytype>", 
+            "Resets lobby by clearing all players.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
+            "'!clear " + Object.keys(c.lobbyTypes)[0]);
 
-        addHelpToTable( tableBase, 
-            "!help", 
-            "Shows you the info you are looking at right now 😉",
-            "'!help");
+        addHelpToTable( _embed, "time", 
+            "!time <lobbytype> <timezone>", 
+            "Shows you the time of the lobby in your timezone",
+            "!time " + Object.keys(c.lobbyTypes)[2]+ " EST");
+
+        addHelpToTable( _embed, "cancel", 
+            "!cancel <lobbytype>", 
+            "Cancels the lobby. \n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
+            "!cancel" + Object.keys(c.lobbyTypes)[0]);
     }
 
-    embed.fields = tableBase;
-
+    message.author.send({embed: _embed});
 }

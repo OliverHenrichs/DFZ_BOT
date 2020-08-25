@@ -17,7 +17,8 @@ module.exports = {
             fields: table,
             footer: {
                 text: _footer
-            }
+            },
+            timestamp: new Date()
         };
         
     }

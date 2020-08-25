@@ -271,14 +271,16 @@ module.exports = {
      *  @param type lobby type
      *  @param roles allowed Beginner roles
      *  @param time time of lobby
+     *  @param time timezone of lobby
      */
-    createLobby: function (state, channel, type, roles, time, messageID) 
+    createLobby: function (state, channel, type, roles, time, timezone, messageID) 
     {
         locker.acquireWriteLock(function() {
             // override / create lobby
             state.lobbies[channel][type] = {
                 date: new Date().toISOString().substring(0, 10),
                 time: time,
+                timezone: timezone,
                 users: [],
                 tiers: roles, // roles
                 messageId : messageID
@@ -305,16 +307,18 @@ module.exports = {
      */
     updateLobbyPost: async function(lobby, channel)
     {
-        // fetch message
-        const message = await channel.fetchMessage(lobby.messageId);
-        old_embed = message.embeds[0];
-
-        // generate new embed
-        var new_embed =   new Discord.RichEmbed(old_embed);
-        new_embed.fields = getCurrentUsersAsTable(lobby);
-        
-        // update embed
-        message.edit(new_embed);
+        locker.acquireWriteLockLobbyPost(async function() {
+            // fetch message
+            const message = await channel.fetchMessage(lobby.messageId);
+            old_embed = message.embeds[0];
+    
+            // generate new embed
+            var new_embed =   new Discord.RichEmbed(old_embed);
+            new_embed.fields = getCurrentUsersAsTable(lobby);
+            
+            // update embed
+            await message.edit(new_embed);
+        });
     },
 
     /**

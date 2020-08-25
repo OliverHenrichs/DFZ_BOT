@@ -3,6 +3,7 @@ const eC = require("../misc/answerEmbedding")
 const mH = require("../misc/messageHelper")
 const rM = require("../misc/roleManagement")
 const lM = require("../misc/lobbyManagement")
+const tZ = require("../misc/timeZone")
 
 /**
  * Internal function that creates the embedding for the lobby post
@@ -28,7 +29,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	}
 
 	// get time
-	[res, time, errormsg] = mH.getTimeFromMessage(message, 2);
+	[res, time, timezone, errormsg] = await mH.getTimeFromMessage(message, 2);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}
@@ -36,14 +37,14 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 
 	// send embedding post to lobby signup-channel
 	var roles = rM.getRolesFromNumbers(numbers);
-	const _embed = eC.generateEmbedding("We host a " + lobbyTypeName + " lobby at " + time, "for " + rM.getRoleStrings(roles), footer);
+	const _embed = eC.generateEmbedding("We host a " + lobbyTypeName + " lobby at " + time.getHours() +":00" + " " + timezone.name, "for " + rM.getRoleStrings(roles), footer);
 	const lobbyPostMessage = await message.channel.send({embed: _embed});
 
 	// pin message to channel
 	lobbyPostMessage.pin();
 
 	// create lobby data in state
-	lM.createLobby(state, channel, lobbyType, Array.from(numbers), time, lobbyPostMessage.id);
+	lM.createLobby(state, channel, lobbyType, Array.from(numbers), time, timezone, lobbyPostMessage.id);
 	
 	// react to message
 	mH.reactPositive(message);
@@ -66,5 +67,8 @@ module.exports = async (message, state) => {
 	} else if(type == c.lobbyTypes.mmr)
 	{
 		postLobby_int(message, state, c.lobbyTypes.mmr, c.getLobbyNameByType(c.lobbyTypes.mmr), "Commands \r\n '!join mmr 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw mmr' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+	}else if(type == c.lobbyTypes.botbash)
+	{
+		postLobby_int(message, state, c.lobbyTypes.botbash, c.getLobbyNameByType(c.lobbyTypes.botbash), "Commands \r\n '!join mmr 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw mmr' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
 	}
 }

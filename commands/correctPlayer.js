@@ -19,7 +19,7 @@ module.exports = async (message, state) => {
 
 	var lobby = lM.getLobby(state, message.channel.id, type);
 	if(lobby == undefined) {
-		return mH.reactNegative(message, "There is no lobby created for channel <#" + message.channel.id + "> and type '" + type + "'");
+		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
 	}
 
 	// check existing users 
@@ -41,6 +41,9 @@ module.exports = async (message, state) => {
 	}, function() {
 		return mH.reactPositive(message, "your signup positions now read " + user.positions.join(", "));
 	});
+	
+	// update lobby post
+	lM.updateLobbyPost(lobby, message.channel);
 
 	userHelper.printLobbyUsers(state, message.channel.id, type);
 }
