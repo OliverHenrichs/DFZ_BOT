@@ -29,7 +29,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	}
 
 	// get time
-	[res, time, timezone, errormsg] = await mH.getTimeFromMessage(message, 2);
+	[res, date, errormsg] = await mH.getTimeFromMessage(message, 2);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}
@@ -37,14 +37,14 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 
 	// send embedding post to lobby signup-channel
 	var roles = rM.getRolesFromNumbers(numbers);
-	const _embed = eC.generateEmbedding("We host a " + lobbyTypeName + " lobby at " + time.getHours() +":00" + " " + timezone.name, "for " + rM.getRoleStrings(roles), footer);
+	const _embed = eC.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.weekDays[date.dayOfWeek] + ", "+tZ.months[date.month]+" "+ date.day +" at " + date.hours +":00" + " " + date.zone.abbreviation, "for " + rM.getRoleStrings(roles), footer);
 	const lobbyPostMessage = await message.channel.send({embed: _embed});
 
 	// pin message to channel
 	lobbyPostMessage.pin();
 
 	// create lobby data in state
-	lM.createLobby(state, channel, lobbyType, Array.from(numbers), time, timezone, lobbyPostMessage.id);
+	lM.createLobby(state, channel, lobbyType, Array.from(numbers), date, lobbyPostMessage.id);
 	
 	// react to message
 	mH.reactPositive(message);

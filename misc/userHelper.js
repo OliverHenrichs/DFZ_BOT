@@ -295,7 +295,6 @@ module.exports = {
             index = lobby.users.findIndex(element => element.name == username);
         },() => {
             console.log("lock released in getUserIndex");
-            console.log("index = " + index);
         });
 
         return index;
@@ -308,7 +307,6 @@ module.exports = {
             _user = lobby.users.find(element => element.name == username);
         },() => {
             console.log("lock released in getUser");
-            console.log("index = " + _user);
         });
 
         return _user;
@@ -321,7 +319,6 @@ module.exports = {
             _user = lobby.users.find(element => element.id == userIndex);
         },() => {
             console.log("lock released in getUser");
-            console.log("index = " + _user);
         });
 
         return _user;

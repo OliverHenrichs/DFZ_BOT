@@ -2,19 +2,8 @@ const c = require("../misc/constants")
 const locker = require("../misc/lock")
 const eC = require("../misc/answerEmbedding")
 const uH = require("../misc/userHelper")
+const tZ = require("../misc/timeZone")
 const Discord = require("discord.js")
-
-/**
- *  Checks given Date and returns true if it is today
- *  @return true if it is today
- *  @param someDate given date
- */
-function isToday (someDate) {
-    const today = new Date();
-    var d1 = someDate;
-    var d2 =  today.toISOString().substring(0, 10);
-    return d1 == d2;
-}
 
 /**
  *  returns user table for a specific position
@@ -253,10 +242,6 @@ module.exports = {
             {
                 return;
             }
-            if(!isToday(lobby.date))
-            {
-                lobby = undefined;
-            }
 	    }, () => {
             console.log("lock released in hasLobby");
         });
@@ -270,17 +255,15 @@ module.exports = {
      *  @param channel message channel
      *  @param type lobby type
      *  @param roles allowed Beginner roles
-     *  @param time time of lobby
-     *  @param time timezone of lobby
+     *  @param date date of lobby
+     *  @param messageID ref to lobby-message to alter it
      */
-    createLobby: function (state, channel, type, roles, time, timezone, messageID) 
+    createLobby: function (state, channel, type, roles, date, messageID) 
     {
         locker.acquireWriteLock(function() {
             // override / create lobby
             state.lobbies[channel][type] = {
-                date: new Date().toISOString().substring(0, 10),
-                time: time,
-                timezone: timezone,
+                date: date,
                 users: [],
                 tiers: roles, // roles
                 messageId : messageID

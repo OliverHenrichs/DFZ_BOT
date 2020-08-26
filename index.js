@@ -13,9 +13,6 @@ client._state = {};
 client._state.lobbies = {};
 cM.botChannels.forEach(channel => {
 	client._state.lobbies[channel] = {};
-	Object.values(c.lobbyTypes).forEach(type =>{
-		client._state.lobbies[channel][type] = {};
-	});
 });
 
 // load bot state

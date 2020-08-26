@@ -8,6 +8,20 @@ const weekDays = {  1:"Monday",
                     6:"Saturday", 
                     7:"Sunday" }
 
+const months = {
+    1:"Jan",
+    2:"Feb",
+    3:"Mar",
+    4:"Apr",
+    5:"May",
+    6:"Jun",
+    7:"Jul",
+    8:"Aug",
+    9:"Sep",
+    10:"Oct",
+    11:"Nov",
+    12:"Dec"
+}
 /**
  * Validates that time string has form xxam, xam, xpm xxpm (x in 0,..,9)
  * @param {string} timeString input string
@@ -42,36 +56,70 @@ function validateTime(timeString)
     return timeString;
 }
 
+Date.prototype.addMinutes = function(h) {
+    this.setTime(this.getTime() + (h*60*1000));
+    return this;
+}
+
 module.exports = {
+    weekDays: weekDays,
+    months:months,
+    
     createLobbyTime: async function(time, timezone) {
         // get time
         var _time = validateTime(time);
         if(_time == undefined)
         {
-            return [false, undefined, undefined, "you need to provide a valid full hour time (e.g. 9pm, 6am, ...) in your post"];
+            return [false, undefined, "you need to provide a valid full hour time (e.g. 9pm, 6am, ...) in your post"];
         }
 
         // get timezone
         var res = true;
         var zone = await tZ.findTimeZone(timezone);
         if(!res)
-            return [false, undefined, undefined, "you need to provide a valid time zone (e.g. CET, Asia/Shanghai, EST ...) in your post"];
+            return [false, undefined, "you need to provide a valid time zone (e.g. CET, Asia/Shanghai, EST ...) in your post"];
 
-        
+        /*
+         * following is a crude hack because Date()'s locale screws with timezone-support
+         * artificially creating a time that fits the 
+        */
+
+        // use today's date
         var date = new Date();
-        var res_date = new Date(date.getFullYear(), date.getMonth(), date.getDate(), _time, 0, 0, 0, zone.name);
-        return [true, res_date, zone, ""];
+
+        // get offset to user's time zone
+        var tZoffset = tZ.getUTCOffset(date, zone);
+        
+        // add offset hour to get time of author
+        date.addMinutes(-tZoffset.offset);
+
+        // check if time is in the past
+        if(date.getHours() > _time)
+            return [false, undefined, "Time is in the past, it is now " + date.toLocaleString()]
+        
+        // create date at wanted UTC time (user time + user time offset)
+        var actualDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), _time+tZoffset.offset/60, 0, 0, 0));
+
+        // convert to timezone-support::time
+        var shortDate = tZ.convertDateToTime(actualDate);
+        // fix the time zone ...
+        shortDate.zone = tZoffset;
+        // and the hour value
+        shortDate.hours = _time;
+
+        return [true, shortDate, ""];
     },
 
-    getUserLobbyTime: async function(lobbyTime, timezone) {
+    getUserLobbyTime: async function(date, timezone) {
         
         var error =""
         try {
             // find user zone
             const userzone = await tZ.findTimeZone(timezone)
-            const lobbyDate = new Date(lobbyTime);
             // calculate zoned time
-            var zonedtime = await tZ.getZonedTime(lobbyDate, userzone)
+            var unixTime = await tZ.getUnixTime(date)
+            var bla = new Date(unixTime);
+            var zonedtime = await tZ.getZonedTime(unixTime, userzone)
         } catch(err) {
             error = err.message;
         };

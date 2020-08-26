@@ -24,7 +24,7 @@ module.exports = async (message, state) => {
     if(args.length < 2)
         return mH.reactNegative(message, "Specify timezone, e.g. !time <lobbytype> EST");
 
-    [res, msg] = await tZ.getUserLobbyTime(lobby.time, args[1]);
+    [res, msg] = await tZ.getUserLobbyTime(lobby.date, args[1]);
     if(!res)
         return mH.reactNegative(message, msg);
 

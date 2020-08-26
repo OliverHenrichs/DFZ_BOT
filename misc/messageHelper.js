@@ -8,10 +8,17 @@ const tZ = require("../misc/timeZone")
  * @param {string} reply string containing reply message
  * @param {string} emoji emoji to react with
  */
-function reactMessage(message, reply, emoji)
+async function reactMessage(message, reply, emoji)
 {
     message.react(emoji);
-    if(reply != "" ) message.author.send("`"+message.content+"`\n"+emoji+" "+ reply);
+    if(reply == "" ) 
+        return;
+
+    try {
+        await message.author.send("`"+message.content+"`\n"+emoji+" "+ reply);
+    } catch(err) {
+        message.reply("Cannot send messages to you. Enable direct messages in privacy settings to receive bot replies.");
+    };
 }
 
 /**
