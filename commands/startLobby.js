@@ -35,5 +35,9 @@ module.exports = async (message, state, force=false) => {
 
 	// create lobby
 	lM.createLobbyPost(state, message.channel, type, playersPerLobby);
+
+	// remove lobby -> no more joins
+	lM.removeLobby(state, message.channel.id, type);
+	
 	mH.reactPositive(message);
 }
