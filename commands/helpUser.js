@@ -1,6 +1,7 @@
 const c = require("../misc/constants")
 const rM = require("../misc/RoleManagement")
 const aE = require("../misc/answerEmbedding")
+const mH = require("../misc/messageHelper")
 
 
 function addHelpToTable(embed, short, command, functionality, example) {
@@ -113,4 +114,5 @@ module.exports = async (message) => {
     }
 
     message.author.send({embed: _embed});
+    mH.reactPositive(message, "");
 }

@@ -74,10 +74,22 @@ module.exports = {
         }
 
         // get timezone
+        var changed = false;
+        if(timezone.startsWith("GMT")) {
+            changed = true;
+            var original = timezone;
+            timezone = "Etc/" + timezone;
+        }
         var res = true;
-        var zone = await tZ.findTimeZone(timezone);
+        var error = "";
+        try {
+            var zone = await tZ.findTimeZone(timezone);
+        } catch(err) {
+            res = false;
+            error = err.message;
+        };
         if(!res)
-            return [false, undefined, "you need to provide a valid time zone (e.g. CET, Asia/Shanghai, EST ...) in your post"];
+            return [false, undefined, error];
 
         /*
          * following is a crude hack because Date()'s locale screws with timezone-support
@@ -89,7 +101,10 @@ module.exports = {
 
         // get offset to user's time zone
         var tZoffset = tZ.getUTCOffset(date, zone);
-        
+        if(changed) { // fix time zone name for GMT+x
+            tZoffset.abbreviation = original;
+        }
+
         // add offset hour to get time of author
         date.addMinutes(-tZoffset.offset);
 
