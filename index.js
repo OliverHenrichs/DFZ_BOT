@@ -11,12 +11,15 @@ const c = require("./misc/constants")
 // setup bot state
 client._state = {};
 client._state.lobbies = {};
-cM.botChannels.forEach(channel => {
-	client._state.lobbies[channel] = {};
-});
+
 
 // load bot state
-serializer.loadState(client, process.env.SAVEFILE)
+if(!serializer.loadState(client, process.env.SAVEFILE))
+{
+	cM.botChannels.forEach(channel => {
+		client._state.lobbies[channel] = {};
+	});
+}
 
 // setup reading messages
 fs.readdir("./events/", (err, files) => {

@@ -11,6 +11,7 @@ const tZ = require("../misc/timeZone")
 async function reactMessage(message, reply, emoji)
 {
     message.react(emoji);
+    message.delete(5000);
     if(reply == "" ) 
         return;
 

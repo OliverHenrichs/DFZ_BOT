@@ -29,8 +29,19 @@ module.exports = {
 		@param cb optional callback function you want to run
 	*/
     loadState: function (client, file) {
-        var data = fs.readFileSync(file);
+        var failed = false;
+        var fileContents;
+        try {
+        fileContents = fs.readFileSync(file);
+        } catch (err) {
+            failed = true;
+        }
+
+        if(failed)
+            return false;
+
         client._state = JSON.parse(data);
+        return true;
     }
 }
 
