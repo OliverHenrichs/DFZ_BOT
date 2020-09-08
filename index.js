@@ -5,7 +5,7 @@ const client = new Discord.Client()
 
 
 const serializer = require("./misc/serializeHelper")
-const cM = require("./misc/ChannelManagement")
+const cM = require("./misc/channelManagement")
 const c = require("./misc/constants")
 
 // setup bot state
