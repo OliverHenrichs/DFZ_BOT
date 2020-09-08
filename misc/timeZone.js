@@ -93,34 +93,35 @@ module.exports = {
 
         /*
          * following is a crude hack because Date()'s locale screws with timezone-support
-         * artificially creating a time that fits the 
         */
 
         // use today's date
         var date = new Date();
+
+        // get its hours
+        var currentUTCHour = date.getUTCHours();
 
         // get offset to user's time zone
         var tZoffset = tZ.getUTCOffset(date, zone);
         if(changed) { // fix time zone name for GMT+x
             tZoffset.abbreviation = original;
         }
-
-        // add offset hour to get time of author
-        date.addMinutes(-tZoffset.offset);
-
-        // check if time is in the past
-        if(date.getHours() > _time)
-            return [false, undefined, "Time is in the past, it is now " + date.toLocaleString()]
         
-        // create date at wanted UTC time (user time + user time offset)
-        var actualDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), _time+tZoffset.offset/60, 0, 0, 0));
+        // get utc hour of user's time
+        var utcHour = _time + tZoffset.offset/60
+
+
+        // check if that hour has already past today
+        if(currentUTCHour >= utcHour)
+            return [false, undefined, "Time is in the past, it is now " + date.toUTCString() + ", your scheduled time is . If you want to set up a lobby for tomorrow - do it tomorrow :-)"]
+        
+        // create date at wanted UTC time
+        var actualDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), utcHour, 0, 0, 0));
 
         // convert to timezone-support::time
         var shortDate = tZ.convertDateToTime(actualDate);
         // fix the time zone ...
         shortDate.zone = tZoffset;
-        // and the hour value
-        shortDate.hours = _time;
 
         return [true, shortDate, ""];
     },
@@ -133,7 +134,6 @@ module.exports = {
             const userzone = await tZ.findTimeZone(timezone)
             // calculate zoned time
             var unixTime = await tZ.getUnixTime(date)
-            var bla = new Date(unixTime);
             var zonedtime = await tZ.getZonedTime(unixTime, userzone)
         } catch(err) {
             error = err.message;

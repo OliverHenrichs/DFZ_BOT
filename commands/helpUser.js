@@ -42,6 +42,11 @@ module.exports = async (message) => {
     // create embed
     var _embed = aE.generateEmbedding("Bot commands", "", "");
 
+    addHelpToTable( _embed, "help", 
+    "!help / !helpme", 
+    "Shows you the info you are looking at right now 😉\n Use !helpme to avoid also getting a message from MEE6-bot.",
+    "!help");
+
     // help beginner commands
 	if (rM.findRole(message, rM.beginnerRoles) != undefined) {
         addHelpToTable( _embed, "join", 
@@ -68,11 +73,6 @@ module.exports = async (message) => {
             "!time <lobbytype> <timezone>", 
             "Shows you the time of the lobby in your timezone",
             "!time " + Object.keys(c.lobbyTypes)[2]+ " EST");
-
-        addHelpToTable( _embed, "help", 
-            "!help", 
-            "Shows you the info you are looking at right now 😉",
-            "!help");
 }
     
     // help admin commands
