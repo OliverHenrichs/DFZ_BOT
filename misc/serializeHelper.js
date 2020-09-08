@@ -40,7 +40,15 @@ module.exports = {
         if(failed)
             return false;
 
-        client._state = JSON.parse(fileContents);
+        try {
+            client._state = JSON.parse(fileContents);
+        } catch (err) {
+            failed = true;
+        }
+        
+        if(failed)
+            return false;
+
         return true;
     }
 }
