@@ -1,5 +1,5 @@
 const c = require("../misc/constants")
-const rM = require("../misc/RoleManagement")
+const rM = require("../misc/roleManagement")
 const aE = require("../misc/answerEmbedding")
 const mH = require("../misc/messageHelper")
 
