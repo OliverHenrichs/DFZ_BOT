@@ -65,7 +65,7 @@ module.exports = {
     weekDays: weekDays,
     months:months,
     
-    createLobbyTime: async function(time, timezone) {
+    createLobbyTime: async function(time, timezone, tomorrow) {
         // get time
         var _time = validateTime(time);
         if(_time == undefined)
@@ -110,16 +110,16 @@ module.exports = {
         // get utc hour of user's time
         var utcHour = _time + tZoffset.offset/60
 
+        // create date at wanted UTC time
+        var lobbyDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + (tomorrow ? 1 : 0), utcHour, 0, 0, 0));
 
         // check if that hour has already past today
-        if(currentUTCHour >= utcHour)
-            return [false, undefined, "Time is in the past, it is now " + date.toUTCString() + ", your scheduled time is . If you want to set up a lobby for tomorrow - do it tomorrow :-)"]
+        if(date >= lobbyDate)
+            return [false, undefined, "Time is in the past (or tomorrow...). If you want to set up a lobby for tomorrow - do it tomorrow :-)"]
         
-        // create date at wanted UTC time
-        var actualDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), utcHour, 0, 0, 0));
 
         // convert to timezone-support::time
-        var shortDate = tZ.convertDateToTime(actualDate);
+        var shortDate = tZ.convertDateToTime(lobbyDate);
         // fix the time zone ...
         shortDate.zone = tZoffset;
 
