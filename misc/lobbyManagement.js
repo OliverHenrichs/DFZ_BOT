@@ -297,7 +297,7 @@ module.exports = {
     
             // generate new embed
             var new_embed =   new Discord.RichEmbed(old_embed);
-            new_embed.fields = getCurrentUsersAsTable(lobby);
+            new_embed.fields = getCurrentUsersAsTable(lobby, true);
             
             // update embed
             await message.edit(new_embed);
