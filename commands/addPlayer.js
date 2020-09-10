@@ -4,7 +4,7 @@ const lM = require("../misc/lobbyManagement")
 const uH = require("../misc/userHelper")
 const c = require("../misc/constants")
 
-var formatString = "\n Proper format is e.g. '!join inhouse 1,3,4' or '!join mmr 1' or '!join inhouse 5,2' or any other combination \n allowed numbers: 1,2,3,4,5 \n allowed lobby types: '"+Object.keys(c.lobbyTypes).join("', '")+"'";
+var formatString = "\n Proper format is e.g. '!join inhouse 1,3,4' or '!join unranked 1' or '!join inhouse 5,2' or any other combination \n allowed numbers: 1,2,3,4,5 \n allowed lobby types: '"+Object.keys(c.lobbyTypes).join("', '")+"'";
 
 /**
  * Handles a user's call to !join. Adds user to lobby given the message's lobby type and its channel id

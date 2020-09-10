@@ -9,7 +9,7 @@ const mH = require("../misc/messageHelper");
  * @param {*} channel channel in which the lobby resides
  */
 function createMMRListUserTable(state, channel) {
-	var lobby = lM.getLobby(state, channel, c.lobbyTypes.mmr);
+	var lobby = lM.getLobby(state, channel, c.lobbyTypes.unranked);
 	return lM.getCurrentUsersAsTable(lobby);
 }
 
@@ -53,7 +53,7 @@ module.exports = async (message, state) => {
 	var userTable;
 
 	// get user tables by lobby type
-	if(type == c.lobbyTypes.mmr)
+	if(type == c.lobbyTypes.unranked || type == c.lobbyTypes.botbash)
 	{
 		userTable = createMMRListUserTable(state, message.channel.id);
 	} else if(type == c.lobbyTypes.inhouse)

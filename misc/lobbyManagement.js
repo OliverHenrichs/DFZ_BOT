@@ -191,7 +191,7 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
         });
 
         return tableBaseInhouse;
-    } else if (lobbyType == c.lobbyTypes.mmr || lobbyType == c.lobbyTypes.botbash)
+    } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash)
     {        
         var tableBaseMMR = [
         {

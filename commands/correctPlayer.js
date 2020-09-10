@@ -4,7 +4,7 @@ const mH = require("../misc/messageHelper")
 const userHelper = require("../misc/userHelper")
 const lM = require("../misc/lobbyManagement")
 
-var formatString = "\n Proper format is e.g. '!correct inhouse 1,3,4' or '!correct mmr 1' or '!correct inhouse 5,2' or any other combination.\n allowed numbers: 1,2,3,4,5\n allowed lobby types: '"+Object.keys(c.lobbyTypes).join("', '")+"'";
+var formatString = "\n Proper format is e.g. '!correct inhouse 1,3,4' or '!correct unranked 1' or '!correct inhouse 5,2' or any other combination.\n allowed numbers: 1,2,3,4,5\n allowed lobby types: '"+Object.keys(c.lobbyTypes).join("', '")+"'";
 
 /**
  * Handles user calls to !correct. Changes player position according to user wishes

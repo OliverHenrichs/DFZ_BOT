@@ -64,11 +64,11 @@ module.exports = async (message, state) => {
 	if(type == c.lobbyTypes.inhouse)
 	{
 		postLobby_int(message, state, c.lobbyTypes.inhouse, c.getLobbyNameByType(c.lobbyTypes.inhouse), "Commands \r\n '!join inhouse 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw inhouse' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
-	} else if(type == c.lobbyTypes.mmr)
+	} else if(type == c.lobbyTypes.unranked)
 	{
-		postLobby_int(message, state, c.lobbyTypes.mmr, c.getLobbyNameByType(c.lobbyTypes.mmr), "Commands \r\n '!join mmr 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw mmr' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+		postLobby_int(message, state, c.lobbyTypes.unranked, c.getLobbyNameByType(c.lobbyTypes.unranked), "Commands \r\n '!join unranked 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw unranked' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
 	}else if(type == c.lobbyTypes.botbash)
 	{
-		postLobby_int(message, state, c.lobbyTypes.botbash, c.getLobbyNameByType(c.lobbyTypes.botbash), "Commands \r\n '!join mmr 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw mmr' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+		postLobby_int(message, state, c.lobbyTypes.botbash, c.getLobbyNameByType(c.lobbyTypes.botbash), "Commands \r\n '!join unranked 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw unranked' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
 	}
 }

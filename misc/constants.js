@@ -1,6 +1,6 @@
 
-const lobbyTypes = {inhouse:1, mmr:2, botbash:3}
-const lobbyTypePlayerCount = {inhouse:10, mmr:5, botbash:5}
+const lobbyTypes = {inhouse:1, unranked:2, botbash:3}
+const lobbyTypePlayerCount = {inhouse:10, unranked:5, botbash:5}
 
 module.exports = {
     lobbyTypes: lobbyTypes,
@@ -16,7 +16,7 @@ module.exports = {
         {
             case lobbyTypes.inhouse:
                 return "5v5"
-            case lobbyTypes.mmr:
+            case lobbyTypes.unranked:
                 return "5 man unranked"
             case lobbyTypes.botbash:
                 return "botbash"
