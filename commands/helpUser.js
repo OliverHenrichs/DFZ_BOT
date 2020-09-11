@@ -107,10 +107,10 @@ module.exports = async (message) => {
             "Shows you the time of the lobby in your timezone",
             "!time " + Object.keys(c.lobbyTypes)[2]+ " EST");
 
-        addHelpToTable( _embed, "cancel", 
-            "!cancel <lobbytype>", 
+        addHelpToTable( _embed, "remove", 
+            "!remove <lobbytype>", 
             "Cancels the lobby. \n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "!cancel" + Object.keys(c.lobbyTypes)[0]);
+            "!remove" + Object.keys(c.lobbyTypes)[0]);
     }
 
     message.author.send({embed: _embed});

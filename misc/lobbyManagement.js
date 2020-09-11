@@ -1,8 +1,7 @@
 const c = require("../misc/constants")
 const locker = require("../misc/lock")
-const eC = require("../misc/answerEmbedding")
+const aE = require("../misc/answerEmbedding")
 const uH = require("../misc/userHelper")
-const tZ = require("../misc/timeZone")
 const Discord = require("discord.js")
 
 /**
@@ -211,13 +210,12 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
         }
     ];
     
-    Object.keys(assignedUsers).forEach((position) => {
-        var player = assignedUsers[position];
-        addUserToTeam(tableBaseMMR, 0, player, position, mention);
-    });
+        Object.keys(assignedUsers).forEach((position) => {
+            var player = assignedUsers[position];
+            addUserToTeam(tableBaseMMR, 0, player, position, mention);
+        });
 
-    return tableBaseMMR;
-        
+        return tableBaseMMR;
     }
 
     return [];
@@ -369,7 +367,7 @@ module.exports = {
         {
             if (userSet.length != 0) // Not enough players but forced
             {
-                const _embed = eC.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", getUserTable(userSet, true));
+                const _embed = aE.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", getUserTable(userSet, true));
                 channel.send({embed: _embed});
                 return;
             }
@@ -380,13 +378,13 @@ module.exports = {
             var teams = uH.createTeams(us,type);
             var teamTable = getTeamTable(teams, type, true);
             
-            const _embed = eC.generateEmbedding(c.getLobbyNameByType(type) + " lobby #" + (++counter) + (counter == 1 ? " starts now " : " starts later "), "", "", teamTable);
+            const _embed = aE.generateEmbedding(c.getLobbyNameByType(type) + " lobby #" + (++counter) + (counter == 1 ? " starts now " : " starts later "), "", "", teamTable);
             channel.send({embed: _embed});
         });
 
         if (userSet.length != 0) // bench
         {
-            const _embed = eC.generateEmbedding("Today's bench", "", "", getUserTable(userSet, true));
+            const _embed = aE.generateEmbedding("Today's bench", "", "", getUserTable(userSet, true));
             channel.send({embed: _embed});
         }
     }
