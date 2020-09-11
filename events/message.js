@@ -89,7 +89,7 @@ module.exports = async (client, message) => {
 		if (content.startsWith("!clear")) {
 			return clearPlayers(message, client._state)
 		}
-		if (content.startsWith("!remove")) {
+		if (content.startsWith("!undo")) {
 			return removeLobby(message, client._state)
 		}
 		if (content.startsWith("!time")) {
@@ -100,7 +100,7 @@ module.exports = async (client, message) => {
 				content.startsWith("!f_start") || 
 				content.startsWith("!list") || 
 				content.startsWith("!clear") || 
-				content.startsWith("!remove")) {
+				content.startsWith("!undo")) {
 		return mH.reactNegative(message, "Only coaches and admins are eligible for this command.");
 	}
 }
