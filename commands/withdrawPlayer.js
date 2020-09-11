@@ -21,7 +21,7 @@ module.exports = async (message, state) => {
 	}
 
 	// find user
-	var idx = userHelper.getUserIndex(lobby, message.author.username);
+	var idx = userHelper.getUserIndex(lobby, message.author.id);
 	if (idx == -1) {
 		return mH.reactNegative(message, "No joined player found under your username.\r\n You have not signed up yet.");
 	} 

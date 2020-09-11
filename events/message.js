@@ -42,7 +42,7 @@ module.exports = async (client, message) => {
 	}
 
 	// player messages
-	if (roleManagement.findRole(message, roleManagement.beginnerRoles) != undefined) {
+	if (roleManagement.findRole(message.member, roleManagement.beginnerRoles) != undefined) {
 		if (content.startsWith("!help") || content.startsWith("!helpme")) {
 			return helpUser(message);
 		}
@@ -70,7 +70,7 @@ module.exports = async (client, message) => {
 	}
 
 	// admin messages
-	if (roleManagement.findRole(message, roleManagement.adminRoles) != undefined) {
+	if (roleManagement.findRole(message.member, roleManagement.adminRoles) != undefined) {
 		if (content.startsWith("!help") || content.startsWith("!helpme")) {
 			return helpUser(message);
 		}

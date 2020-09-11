@@ -223,6 +223,32 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
 
 // lobby management
 module.exports = {
+    
+    /**
+     *  Searches state in channel for lobby by checking for the right message ID
+     *  @return undefined if not found, else returns the lobby
+     *  @param state bot state
+     *  @param channelId message channel id
+     *  @param messageId message ID
+     */
+    findLobbyByMessage: function(state, channelId, messageId)
+    {
+        var lobby =  {};
+        locker.acquireReadLock(function() {
+            // check all lobby types in channel, for each that you find check if message id fits;
+            for (var key in c.lobbyTypes){
+                lobby = state.lobbies[channelId][c.lobbyTypes[key]];
+                if(lobby == undefined)
+                    continue;
+                if(lobby.messageId === messageId)
+                    return;
+                lobby = undefined;
+            }
+	    }, () => {
+            console.log("lock released in findLobbyByMessage");
+        });
+        return lobby;
+    },
 
     /**
      *  Checks if lobby exists and is of today, returns lobby if and undefined if not

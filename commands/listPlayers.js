@@ -1,5 +1,5 @@
 const c = require("../misc/constants")
-const eC = require("../misc/answerEmbedding")
+const aE = require("../misc/answerEmbedding")
 const lM = require("../misc/lobbyManagement");
 const mH = require("../misc/messageHelper");
 
@@ -62,5 +62,5 @@ module.exports = async (message, state) => {
 	}
 
 	mH.reactPositive(message);
-	message.reply({embed: eC.generateEmbedding("List of users signed up for tonight's " + c.getLobbyNameByType(type) + " lobby", "", "", userTable)});
+	message.author.send({embed: aE.generateEmbedding("List of users signed up for tonight's " + c.getLobbyNameByType(type) + " lobby", "", "", userTable)});
 }

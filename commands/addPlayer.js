@@ -24,7 +24,7 @@ module.exports = async (message, state) => {
 	return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
 	
 	// check existing user
-	if(uH.userExists(lobby, message.author.username)) 
+	if(uH.userExists(lobby, message.author.id)) 
 		return mH.reactNegative(message, "you have already signed up for that lobby");
 
 	// check positions
@@ -32,18 +32,17 @@ module.exports = async (message, state) => {
 	if(!res)
 		return mH.reactNegative(message, errormsg + formatString);
 		
+
 	// add user
-	uH.addUser(	message, 
-				lobby, 
-				type,
+	var posArray = Array.from(positions);
+	uH.addUser(	lobby,
 				message.author.username, 
 				message.author.id, 
-				Array.from(positions), 
-				rM.findRole(message, rM.beginnerRoles));
+				posArray, 
+				rM.findRole(message.member, rM.beginnerRoles));
+
+	mH.reactPositive(message, "added you for tonight's "+ c.getLobbyNameByType(type) +" lobby for positions " + posArray.join(", "));
 
 	// update lobby post
 	lM.updateLobbyPost(lobby,message.channel);
-
-	// debug print
-	uH.printLobbyUsers(state, message.channel.id, type);
 }

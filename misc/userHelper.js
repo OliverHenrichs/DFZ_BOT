@@ -253,13 +253,13 @@ createnNonCompetitionTeams = function(playerPositionMap, openUsers)
 },
 
 module.exports = {
-    addUser: function (message, lobby, type, name, id, positions, tier)
+    addUser: function (lobby, name, id, positions, tier)
     {
         // create user
         var user = {};
         user.name = name;
         user.id = id;
-        user.positions = Array.from(positions);
+        user.positions = positions;
         user.positions.sort();
         user.tier = {};
         user.tier.id = tier.id;
@@ -271,28 +271,26 @@ module.exports = {
             lobby.users.push(user);	
         }, function() {
             console.log("lock released in addUser");
-            mH.reactPositive(message, "added you for tonight's "+ c.getLobbyNameByType(type) +" lobby for positions " + user.positions.join(", "));
         });
     },
 
-    userExists: function (lobby, username) 
+    userExists: function (lobby, userId) 
     {
         var found = false;
         locker.acquireReadLock(function() {
-            found = lobby.users.find(element => element.name == username) != undefined;
+            found = lobby.users.find(element => element.id == userId) != undefined;
         },() => {
             console.log("lock released in userExists");
-            console.log("Found = " + found);
         });
 
         return found;
     },
 
-    getUserIndex: function (lobby, username) 
+    getUserIndex: function (lobby, userId) 
     {
         var index = -1;
         locker.acquireReadLock(function() {
-            index = lobby.users.findIndex(element => element.name == username);
+            index = lobby.users.findIndex(user => user.id == userId);
         },() => {
             console.log("lock released in getUserIndex");
         });
@@ -300,11 +298,11 @@ module.exports = {
         return index;
     },
 
-    getUser: function (lobby, username) 
+    getUser: function (lobby, userId) 
     {
         var _user = undefined;
         locker.acquireReadLock(function() {
-            _user = lobby.users.find(element => element.name == username);
+            _user = lobby.users.find(element => element.id == userId);
         },() => {
             console.log("lock released in getUser");
         });

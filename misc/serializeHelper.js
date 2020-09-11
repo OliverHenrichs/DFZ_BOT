@@ -16,8 +16,7 @@ module.exports = {
             json = JSON.stringify(state);
         }, () => {
             fs.writeFile(file, json, (err) => {
-                if (err) throw err;
-                console.log('State has been saved!');    
+                if (err) throw err; 
             });
         })
     },

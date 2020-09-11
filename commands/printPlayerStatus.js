@@ -25,7 +25,7 @@ module.exports = async (message, state) => {
 		var lobby = channelLobbies[c.lobbyTypes[lobbyType]];
 		if(lobby != undefined && lobby.users != undefined && lobby.users.length > 0)
 		{
-			users.push(userHelper.getUser(lobby, message.author.username));
+			users.push(userHelper.getUser(lobby, message.author.id));
 		}
 	});
 

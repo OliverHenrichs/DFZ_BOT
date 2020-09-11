@@ -1,7 +1,7 @@
 const c = require("../misc/constants")
 const locker = require("../misc/lock")
 const mH = require("../misc/messageHelper")
-const userHelper = require("../misc/userHelper")
+const uH = require("../misc/userHelper")
 const lM = require("../misc/lobbyManagement")
 
 var formatString = "\n Proper format is e.g. '!correct inhouse 1,3,4' or '!correct unranked 1' or '!correct inhouse 5,2' or any other combination.\n allowed numbers: 1,2,3,4,5\n allowed lobby types: '"+Object.keys(c.lobbyTypes).join("', '")+"'";
@@ -23,7 +23,7 @@ module.exports = async (message, state) => {
 	}
 
 	// check existing users 
-	var user = userHelper.getUser(lobby, message.author.username);
+	var user = uH.getUser(lobby, message.author.id);
 	if(user == undefined)
 	{
 		return mH.reactNegative(message, "you did not sign up yet, therefore I cannot correct your positioning choice. Use '!join'-command to sign up.");
@@ -44,6 +44,4 @@ module.exports = async (message, state) => {
 	
 	// update lobby post
 	lM.updateLobbyPost(lobby, message.channel);
-
-	userHelper.printLobbyUsers(state, message.channel.id, type);
 }

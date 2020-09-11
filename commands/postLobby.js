@@ -1,5 +1,5 @@
 const c = require("../misc/constants")
-const eC = require("../misc/answerEmbedding")
+const aE = require("../misc/answerEmbedding")
 const mH = require("../misc/messageHelper")
 const rM = require("../misc/roleManagement")
 const lM = require("../misc/lobbyManagement")
@@ -37,19 +37,30 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 
 	// send embedding post to lobby signup-channel
 	var roles = rM.getRolesFromNumbers(numbers);
-	const _embed = eC.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.weekDays[date.dayOfWeek] + ", "+tZ.months[date.month]+" "+ date.day +" at " + date.hours +":00" + " " + date.zone.abbreviation, "for " + rM.getRoleStrings(roles), footer);
+	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.weekDays[date.dayOfWeek] + ", "+tZ.months[date.month]+" "+ date.day +" at " + date.hours +":00" + " " + date.zone.abbreviation, "for " + rM.getRoleStrings(roles), footer);
 	const lobbyPostMessage = await message.channel.send({embed: _embed});
 
 	// pin message to channel
 	lobbyPostMessage.pin();
 
-	// create lobby data in state
-	lM.createLobby(state, channel, lobbyType, Array.from(numbers), date, lobbyPostMessage.id);
-	
+	// add emojis
+	try {
+		for(let idx = 0; idx < c.reactionTypes.length; idx++)
+		{
+			lobbyPostMessage.react(c.reactionTypes[idx]);	
+		}
+	} catch (error) {
+		console.error('One of the emojis failed to react.');
+	}
+
 	// react to message
 	mH.reactPositive(message);
 
+	// create lobby data in state
+	lM.createLobby(state, channel, lobbyType, Array.from(numbers), date, lobbyPostMessage.id);
 }
+
+var reactionString = "React to the numbers below to join the lobby at the positions you want.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
@@ -63,12 +74,12 @@ module.exports = async (message, state) => {
 
 	if(type == c.lobbyTypes.inhouse)
 	{
-		postLobby_int(message, state, c.lobbyTypes.inhouse, c.getLobbyNameByType(c.lobbyTypes.inhouse), "Commands \r\n '!join inhouse 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw inhouse' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+		postLobby_int(message, state, c.lobbyTypes.inhouse, c.getLobbyNameByType(c.lobbyTypes.inhouse), reactionString);
 	} else if(type == c.lobbyTypes.unranked)
 	{
-		postLobby_int(message, state, c.lobbyTypes.unranked, c.getLobbyNameByType(c.lobbyTypes.unranked), "Commands \r\n '!join unranked 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw unranked' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+		postLobby_int(message, state, c.lobbyTypes.unranked, c.getLobbyNameByType(c.lobbyTypes.unranked), reactionString);
 	}else if(type == c.lobbyTypes.botbash)
 	{
-		postLobby_int(message, state, c.lobbyTypes.botbash, c.getLobbyNameByType(c.lobbyTypes.botbash), "Commands \r\n '!join unranked 1,2,3,4,5' to join (replace with your positions) \r\n '!withdraw unranked' to withdraw from the match (you can rejoin)\r\n '!status' to retrieve player status");
+		postLobby_int(message, state, c.lobbyTypes.botbash, c.getLobbyNameByType(c.lobbyTypes.botbash), reactionString);
 	}
 }

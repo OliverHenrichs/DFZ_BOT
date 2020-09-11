@@ -12,7 +12,6 @@ const c = require("./misc/constants")
 client._state = {};
 client._state.lobbies = {};
 
-
 // load bot state
 if(!serializer.loadState(client, process.env.SAVEFILE))
 {

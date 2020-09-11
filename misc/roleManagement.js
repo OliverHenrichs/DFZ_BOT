@@ -10,19 +10,14 @@ module.exports = {
 	/**
 		Check if message sender has at least one of the roles given by rolesToCheck
 		@param rolesToCheck list of role names to be checked against
-		@param message the message's sender is being checked for having certain rolesToCheck
+		@param member the guild member who is being checked for having certain roles
 		@return the found role or undefined if it didn't find one
 	*/
-	findRole: function (message, rolesToCheck) {
+	findRole: function (member, rolesToCheck) {
 		if (rolesToCheck.length === 0) {
 			return undefined;
 		}
-
-		if (message.member == undefined) {
-			return undefined;
-		}
-
-		return message.member.roles.find(role => rolesToCheck.includes(role.id));
+		return member.roles.find(role => rolesToCheck.includes(role.id));
 	},
 
 	/**
