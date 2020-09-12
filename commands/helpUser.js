@@ -110,7 +110,7 @@ module.exports = async (message) => {
         addHelpToTable( _embed, "remove", 
             "!undo <lobbytype>", 
             "Cancels the lobby. \n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "!undo" + Object.keys(c.lobbyTypes)[0]);
+            "!undo " + Object.keys(c.lobbyTypes)[0]);
     }
 
     message.author.send({embed: _embed});
