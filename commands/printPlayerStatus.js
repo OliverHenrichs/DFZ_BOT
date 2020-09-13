@@ -1,6 +1,5 @@
 const c = require("../misc/constants")
 const userHelper = require("../misc/userHelper")
-const locker = require("../misc/lock")
 const mH = require("../misc/messageHelper")
 
 
@@ -10,12 +9,9 @@ const mH = require("../misc/messageHelper")
  * @param {*} state current state of the bot
  */
 module.exports = async (message, state) => {
-	var channelLobbies = [];
-	locker.acquireReadLock(function() {
-		channelLobbies = state.lobbies[message.channel.id];
-	}, () => {
-		console.log("lock released in printPlayerStatus");
-	});
+	var channelLobbies = state.lobbies[message.channel.id];
+	if(channelLobbies === undefined)
+		return mH.reactNeutral(message, "No lobbies in this channel");
 
 	var users = [];
 	var lobbyTypeNames = Object.keys(c.lobbyTypes);
@@ -29,7 +25,6 @@ module.exports = async (message, state) => {
 		}
 	});
 
-	var isSignedUp = false;
 	var statusTexts = [];
 	for (let i = 0; i < users.length; i++)
 	{
@@ -37,7 +32,6 @@ module.exports = async (message, state) => {
 		if(user == undefined)
 			continue;
 
-		isSignedUp = true;
 		var text = "Lobby type " + lobbyTypeNames[i];
 		if(user.positions != undefined && user.positions.length != 0)
 		{

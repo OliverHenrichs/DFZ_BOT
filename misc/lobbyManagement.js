@@ -221,6 +221,30 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
     return [];
 }
 
+/**
+ * Updates message embedding to fit new title / pin status
+ * @param {string} messageId message ID of the message that we want to change
+ * @param {*} channel the message's channel
+ * @param {string} titleUpdate new title
+ * @param {boolean} unpin true to unpin message
+ */
+async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unpin=true) 
+{
+    // fetch message
+    const message = await channel.fetchMessage(messageId);
+    if(unpin === true)
+        message.unpin();
+
+    // generate new embed
+    old_embed = message.embeds[0];
+    var new_embed =   new Discord.RichEmbed(old_embed)
+                            .setTitle(titleUpdate +"\n~~" + old_embed.title + "~~");
+    new_embed.fields = undefined;
+    
+    // update embed
+    message.edit(new_embed);
+}
+
 // lobby management
 module.exports = {
     
@@ -238,7 +262,7 @@ module.exports = {
             // check all lobby types in channel, for each that you find check if message id fits;
             for (var key in c.lobbyTypes){
                 lobby = state.lobbies[channelId][c.lobbyTypes[key]];
-                if(lobby == undefined)
+                if(lobby === undefined)
                     continue;
                 if(lobby.messageId === messageId)
                     return;
@@ -259,13 +283,11 @@ module.exports = {
      */
     getLobby: function (state, channel, type) 
     {
-        var lobby =  {};
+        var lobby = undefined;
         locker.acquireReadLock(function() {
-            lobby = state.lobbies[channel][type];
-            if(lobby == undefined)
-            {
+            if(state.lobbies[channel] == undefined)
                 return;
-            }
+            lobby = state.lobbies[channel][type];
 	    }, () => {
             console.log("lock released in hasLobby");
         });
@@ -329,23 +351,23 @@ module.exports = {
     },
 
     /**
+     * Indicate that lobby has started
+     * @param {*} lobby lobby
+     * @param {*} channel message channel
+     */
+    finishLobbyPost: async function(lobby, channel)
+    {
+        updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Lobby started already! 😎]")
+    },
+    
+    /**
      *  Update lobby post to account for cancellation of lobby
-     *  @param lobby bot state
+     *  @param lobby lobby
      *  @param channel message channel
      */
     cancelLobbyPost: async function(lobby, channel)
     {
-        // fetch message
-        const message = await channel.fetchMessage(lobby.messageId);
-        old_embed = message.embeds[0];
-
-        // generate new embed
-        var new_embed =   new Discord.RichEmbed(old_embed)
-                             .setTitle("[⛔ Lobby cancelled! 😢]\n~~" + old_embed.title + "~~");
-        new_embed.fields = undefined;
-        
-        // update embed
-        message.edit(new_embed);
+        updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Lobby cancelled! 😢]")
     },
 
     getCurrentUsersAsTable: getCurrentUsersAsTable,

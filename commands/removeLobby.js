@@ -18,10 +18,7 @@ module.exports = async (message, state) => {
         return mH.reactNegative(message, "No open "+c.getLobbyNameByType(type)+ " lobby yet.");
     }
     
-    const lobbyPost = await message.channel.fetchMessage(lobby.messageId);
-    lobbyPost.unpin();
     lM.cancelLobbyPost(lobby, message.channel);
-    
 	lM.removeLobby(state, message.channel.id, type);
     mH.reactPositive(message, "Removed " + c.getLobbyNameByType(type) + " lobby");
 }

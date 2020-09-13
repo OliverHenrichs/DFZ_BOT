@@ -16,7 +16,7 @@ const tZ = require("../misc/timeZone")
 async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	var channel = message.channel.id;
 
-	if(lM.getLobby(state, channel, lobbyType) != undefined) {
+	if(lM.getLobby(state, channel, lobbyType) !== undefined) {
 		return mH.reactNegative(message, "Cannot override already created lobby of type "+ lobbyTypeName +" in channel <#" + message.channel.id + ">");
 	}
 

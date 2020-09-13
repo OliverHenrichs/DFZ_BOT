@@ -1,4 +1,4 @@
-const bc = [process.env.BOT_LISTENING_CHANNEL_1, process.env.BOT_LISTENING_CHANNEL_2]
+const bc = [process.env.BOT_LISTENING_CHANNEL_1, process.env.BOT_LISTENING_CHANNEL_2, process.env.BOT_LISTENING_CHANNEL_3]
 const cs = "<#" + process.env.BOT_LISTENING_CHANNEL_1 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_2 + ">"
 
 // channel management

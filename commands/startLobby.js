@@ -15,9 +15,11 @@ module.exports = async (message, state, force=false) => {
 	if(type == undefined)
 		return;
 
-	var channel = message.channel.id;
-	if(lM.getLobby(state, channel, type) == undefined) {
-		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
+	var channel = message.channel;
+	var channelId = channel.id;
+	var lobby = lM.getLobby(state, channelId, type);
+	if(lobby === undefined) {
+		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + channelId + ">");
 	}
 	
 	var key = Object.keys(c.lobbyTypes).find( typeKey => c.lobbyTypes[typeKey] == type);
@@ -25,7 +27,7 @@ module.exports = async (message, state, force=false) => {
 
 	var lessThan = false;
     locker.acquireReadLock(function() {
-		lessThan = state.lobbies[channel][type].users.length < playersPerLobby;
+		lessThan = lobby.users.length < playersPerLobby;
 	}, () => {
 		console.log("lock released in startGame");
 	});
@@ -33,11 +35,12 @@ module.exports = async (message, state, force=false) => {
 	if(lessThan && !force)
 		return mH.reactNegative(message, "There are fewer than " + playersPerLobby + " players signed up. Cannot start yet");
 
-	// create lobby post
-	lM.createLobbyPost(state, message.channel, type, playersPerLobby);
+	// create lobby start post
+	lM.createLobbyPost(state, channel, type, playersPerLobby);
 
-	// remove lobby -> no more joins
-	lM.removeLobby(state, message.channel.id, type);
+	// update lobby post and remove lobby
+    lM.finishLobbyPost(lobby, message.channel);
+	lM.removeLobby(state, channel.id, type);
 	
 	mH.reactPositive(message);
 }

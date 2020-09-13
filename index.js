@@ -18,6 +18,12 @@ if(!serializer.loadState(client, process.env.SAVEFILE))
 	cM.botChannels.forEach(channel => {
 		client._state.lobbies[channel] = {};
 	});
+} else {
+	// in case a channel is missing, add it here
+	cM.botChannels.forEach(channel => {
+		if(client._state.lobbies[channel] === undefined)
+			client._state.lobbies[channel] = {};
+	});
 }
 
 // setup reading messages

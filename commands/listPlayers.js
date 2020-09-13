@@ -4,16 +4,6 @@ const lM = require("../misc/lobbyManagement");
 const mH = require("../misc/messageHelper");
 
 /**
- * Creates user table for unranked or botbash games
- * @param {*} state bot state
- * @param {*} channel channel in which the lobby resides
- */
-function createMMRListUserTable(state, channel) {
-	var lobby = lM.getLobby(state, channel, c.lobbyTypes.unranked);
-	return lM.getCurrentUsersAsTable(lobby);
-}
-
-/**
  * Creates user table sorted by positions for inhouse lobbies
  * @param {*} state bot state
  * @param {*} channel channel in which the lobby resides
@@ -43,23 +33,17 @@ module.exports = async (message, state) => {
 
 	var type = mH.getLobbyType(message);
 	if(type == undefined)
-		return;
+		return mH.reactNegative(message, "Provide a  lobby type. Valid lobby types are " + Object.keys(c.lobbyTypes).join("', '") + ".");
 
 	if(lM.getLobby(state, message.channel.id, type) == undefined)
-	{
 		return mH.reactNeutral(message, "No open "+c.getLobbyNameByType(type)+ " lobby yet.");
-	}
-
-	var userTable;
 
 	// get user tables by lobby type
+	var userTable;
 	if(type == c.lobbyTypes.unranked || type == c.lobbyTypes.botbash)
-	{
-		userTable = createMMRListUserTable(state, message.channel.id);
-	} else if(type == c.lobbyTypes.inhouse)
-	{
+		userTable = lM.getCurrentUsersAsTable(lobby);
+	else if(type == c.lobbyTypes.inhouse)
 		userTable = createPositionalUserTable(state, message.channel.id);
-	}
 
 	mH.reactPositive(message);
 	message.author.send({embed: aE.generateEmbedding("List of users signed up for tonight's " + c.getLobbyNameByType(type) + " lobby", "", "", userTable)});
