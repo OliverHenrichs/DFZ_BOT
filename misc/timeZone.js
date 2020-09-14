@@ -56,6 +56,45 @@ function validateTime(timeString)
     return timeString;
 }
 
+/**
+ * gets time zone from time zone name
+ * @param {*} timezoneName 
+ */
+async function findTimeZone(timezoneName)
+{
+
+    /*
+    * POSIX-Definition causes GMT+X to be GMT-X and vice versa... 
+    * In order to not confuse the user we exchange + and - here ;-)
+    */
+    if(timezoneName.startsWith("GMT")) 
+    {
+        if(timezoneName.length>3)
+        {
+            var sign = timezoneName[3];
+            if(sign == "+")
+                timezoneName = "Etc/GMT-" + timezoneName.substr(4);
+            else if(sign == "-")
+                timezoneName = "Etc/GMT+" + timezoneName.substr(4);
+        } else {
+            timezoneName = "Etc/" + timezoneName;
+        }
+    }
+    
+    var res = true;
+    var error = "";
+    try {
+        var zone = await tZ.findTimeZone(timezoneName);
+    } catch(err) {
+        res = false;
+        error = err.message;
+    };
+    if(!res)
+        return [undefined, error];
+
+    return [zone, ""];
+}
+
 module.exports = {
     weekDays: weekDays,
     months:months,
@@ -68,40 +107,11 @@ module.exports = {
             return [false, undefined, timezoneName, "you need to provide a valid full hour time (e.g. 9pm, 6am, ...) in your post"];
         }
 
-        // find timezone
-        var handleGMTTimeZoneName = false;
-        if(timezoneName.startsWith("GMT")) {
-            var original = timezoneName;
-            handleGMTTimeZoneName = true;
-
-            if(timezoneName.length>3)
-            {
-                var sign = timezoneName[3];
-                if(sign == "+")
-                    timezoneName = "Etc/GMT-" + timezoneName.substr(4);
-                else if(sign == "-")
-                    timezoneName = "Etc/GMT+" + timezoneName.substr(4);
-            } else {
-                timezoneName = "Etc/" + timezoneName;
-            }
-        }
-        var res = true;
-        var error = "";
-        try {
-            var zone = await tZ.findTimeZone(timezoneName);
-        } catch(err) {
-            res = false;
-            error = err.message;
-        };
-        if(!res)
+        // get time zone
+        [zone, error] = findTimeZone(timezoneName)
+        if(zone == undefined)
             return [false, undefined, timezoneName, error];
 
-        if(handleGMTTimeZoneName===true) {
-            timezoneName = original;
-        }
-        /*
-         * following is a crude hack because Date()'s locale screws with timezone-support
-        */
         // get 'now'
         var date = new Date();
 
@@ -123,19 +133,22 @@ module.exports = {
         return [true, zonedTime, timezoneName, ""];
     },
 
-    getUserLobbyTime: async function(date, timezone) {
+    getUserLobbyTime: async function(date, timezoneName) {
         
         var error =""
         try {
             // find user zone
-            const userzone = await tZ.findTimeZone(timezone)
+            [userzone, error] = await findTimeZone(timezoneName)
+            if(userzone == undefined)
+                return;
+
             // calculate zoned time 
             var zonedtime = await tZ.getZonedTime(date, userzone)
         } catch(err) {
             error = err.message;
         };
         if(error == "")
-            return [true, weekDays[zonedtime.dayOfWeek] + ", " + zonedtime.hours + ":00 " + timezone]
+            return [true, weekDays[zonedtime.dayOfWeek] + ", " + zonedtime.hours + ":00 " + timezoneName]
 
         return [false, error]
     },
