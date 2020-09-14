@@ -56,56 +56,57 @@ function validateTime(timeString)
     return timeString;
 }
 
-Date.prototype.addMinutes = function(h) {
-    this.setTime(this.getTime() + (h*60*1000));
-    return this;
-}
-
 module.exports = {
     weekDays: weekDays,
     months:months,
     
-    createLobbyTime: async function(time, timezone, tomorrow) {
+    createLobbyTime: async function(time, timezoneName, tomorrow) {
         // get time
         var _time = validateTime(time);
         if(_time == undefined)
         {
-            return [false, undefined, "you need to provide a valid full hour time (e.g. 9pm, 6am, ...) in your post"];
+            return [false, undefined, timezoneName, "you need to provide a valid full hour time (e.g. 9pm, 6am, ...) in your post"];
         }
 
-        // get timezone
-        var changed = false;
-        if(timezone.startsWith("GMT")) {
-            changed = true;
-            var original = timezone;
-            timezone = "Etc/" + timezone;
+        // find timezone
+        var handleGMTTimeZoneName = false;
+        if(timezoneName.startsWith("GMT")) {
+            var original = timezoneName;
+            handleGMTTimeZoneName = true;
+
+            if(timezoneName.length>3)
+            {
+                var sign = timezoneName[3];
+                if(sign == "+")
+                    timezoneName = "Etc/GMT-" + timezoneName.substr(4);
+                else if(sign == "-")
+                    timezoneName = "Etc/GMT+" + timezoneName.substr(4);
+            } else {
+                timezoneName = "Etc/" + timezoneName;
+            }
         }
         var res = true;
         var error = "";
         try {
-            var zone = await tZ.findTimeZone(timezone);
+            var zone = await tZ.findTimeZone(timezoneName);
         } catch(err) {
             res = false;
             error = err.message;
         };
         if(!res)
-            return [false, undefined, error];
+            return [false, undefined, timezoneName, error];
 
+        if(handleGMTTimeZoneName===true) {
+            timezoneName = original;
+        }
         /*
          * following is a crude hack because Date()'s locale screws with timezone-support
         */
-
-        // use today's date
+        // get 'now'
         var date = new Date();
-
-        // get its hours
-        var currentUTCHour = date.getUTCHours();
 
         // get offset to user's time zone
         var tZoffset = tZ.getUTCOffset(date, zone);
-        if(changed) { // fix time zone name for GMT+x
-            tZoffset.abbreviation = original;
-        }
         
         // get utc hour of user's time
         var utcHour = _time + tZoffset.offset/60
@@ -113,17 +114,13 @@ module.exports = {
         // create date at wanted UTC time
         var lobbyDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + (tomorrow ? 1 : 0), utcHour, 0, 0, 0));
 
-        // check if that hour has already past today
+        // check if 'wanted UTC time' has already past 'now'
         if(date >= lobbyDate)
-            return [false, undefined, "Time is in the past (or tomorrow...). If you want to set up a lobby for tomorrow - do it tomorrow :-)"]
+            return [false, undefined, timezoneName, "Time is in the past (or tomorrow...). If you want to set up a lobby for tomorrow - do it tomorrow :-)"]
         
-
-        // convert to timezone-support::time
-        var shortDate = tZ.convertDateToTime(lobbyDate);
-        // fix the time zone ...
-        shortDate.zone = tZoffset;
-
-        return [true, shortDate, ""];
+        // return zoned time
+	    var zonedTime = await tZ.getZonedTime(lobbyDate, zone);
+        return [true, zonedTime, timezoneName, ""];
     },
 
     getUserLobbyTime: async function(date, timezone) {
@@ -132,9 +129,8 @@ module.exports = {
         try {
             // find user zone
             const userzone = await tZ.findTimeZone(timezone)
-            // calculate zoned time
-            var unixTime = await tZ.getUnixTime(date)
-            var zonedtime = await tZ.getZonedTime(unixTime, userzone)
+            // calculate zoned time 
+            var zonedtime = await tZ.getZonedTime(date, userzone)
         } catch(err) {
             error = err.message;
         };
@@ -142,5 +138,10 @@ module.exports = {
             return [true, weekDays[zonedtime.dayOfWeek] + ", " + zonedtime.hours + ":00 " + timezone]
 
         return [false, error]
+    },
+
+    getZonedTime: async function(date, timezone) {
+        return await tZ.getZonedTime(date, timezone)
     }
+
 }

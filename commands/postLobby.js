@@ -28,16 +28,15 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 		return mH.reactNegative(message, errormsg);
 	}
 
-	// get time
-	[res, date, errormsg] = await mH.getTimeFromMessage(message, 2);
+	// get zoned time
+	[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, 2);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}
 
-
 	// send embedding post to lobby signup-channel
 	var roles = rM.getRolesFromNumbers(numbers);
-	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.weekDays[date.dayOfWeek] + ", "+tZ.months[date.month]+" "+ date.day +" at " + date.hours +":00" + " " + date.zone.abbreviation, "for " + rM.getRoleStrings(roles), footer);
+	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.weekDays[zonedTime.dayOfWeek] + ", "+tZ.months[zonedTime.month]+" "+ zonedTime.day +" at " + zonedTime.hours +":00 " + zoneName, "for " + rM.getRoleStrings(roles), footer);
 	const lobbyPostMessage = await message.channel.send({embed: _embed});
 
 	// pin message to channel
@@ -57,7 +56,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	mH.reactPositive(message);
 
 	// create lobby data in state
-	lM.createLobby(state, channel, lobbyType, Array.from(numbers), date, lobbyPostMessage.id);
+	lM.createLobby(state, channel, lobbyType, Array.from(numbers), zonedTime.epoch, lobbyPostMessage.id);
 }
 
 var reactionString = "React to the numbers below to join the lobby at the positions you want.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."

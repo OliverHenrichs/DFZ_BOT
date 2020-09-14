@@ -71,8 +71,8 @@ module.exports = async (message) => {
             
         addHelpToTable( _embed, "time", 
             "!time <lobbytype> <timezone>", 
-            "Shows you the time of the lobby in your timezone",
-            "!time " + Object.keys(c.lobbyTypes)[2]+ " EST");
+            "Shows you the time of the lobby in your timezone. Check https://kevinnovak.github.io/Time-Zone-Picker/ to find your time zone name.",
+            "!time " + Object.keys(c.lobbyTypes)[2]+ " Asia/Manila");
 }
     
     // help admin commands
@@ -104,8 +104,8 @@ module.exports = async (message) => {
 
         addHelpToTable( _embed, "time", 
             "!time <lobbytype> <timezone>", 
-            "Shows you the time of the lobby in your timezone",
-            "!time " + Object.keys(c.lobbyTypes)[2]+ " EST");
+            "Shows you the time of the lobby in your timezone. Check https://kevinnovak.github.io/Time-Zone-Picker/ to find your time zone name.",
+            "!time " + Object.keys(c.lobbyTypes)[2]+ " Asia/Manila");
 
         addHelpToTable( _embed, "remove", 
             "!undo <lobbytype>", 
