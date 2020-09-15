@@ -69,7 +69,7 @@ async function findTimeZone(timezoneName)
     */
     if(timezoneName.startsWith("GMT")) 
     {
-        if(timezoneName.length>3)
+        if(timezoneName.length>4)
         {
             var sign = timezoneName[3];
             if(sign == "+")
