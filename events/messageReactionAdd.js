@@ -39,13 +39,17 @@ module.exports = async (client, reaction, user) => {
     {
         // get guild member (has role)
         const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
+        // get role
+        var role = rM.findRole(guildMember, rM.beginnerRoles);
+        if(role === undefined || role === null)
+            return;
 
         // add user
         uH.addUser( lobby,
                     user.username, 
                     user.id, 
-                    [position], 
-                    rM.findRole(guildMember, rM.beginnerRoles)
+                    [position],
+                    role
         );
     } else {
         // add position
