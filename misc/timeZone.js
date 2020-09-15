@@ -31,29 +31,29 @@ function validateTime(timeString)
 {
     // check length
     var l = timeString.length;
-    if(l != 3 && l != 4)
-        return undefined;
+    if(l != 6 && l != 7)
+        return [undefined, undefined];
 
     // check hour
     var hour = -1;
     var ampm ="";
-    if (l == 3)
+    if (l == 6)
     {
-        hour = parseInt(timeString[0], 10)
-        ampm = timeString.substring(1,3);
+        hour = parseInt(timeString[0])
+        minute = parseInt(timeString.substring(2, 4))
+        ampm = timeString.substring(4);
     } else {
         hour = parseInt(timeString.substring(0, 2))
-        ampm = timeString.substring(2,4);
+        minute = parseInt(timeString.substring(3, 5))
+        ampm = timeString.substring(5);
     }
-    if((hour == NaN || hour < 0 || hour > 12) || (ampm != "am" && ampm != "pm"))
-        return undefined;
+    if((hour == NaN || hour < 0 || hour > 12) || (ampm != "am" && ampm != "pm") || (minute == NaN || minute < 0 || minute > 59))
+        return [undefined, undefined];
 
     if(ampm != "pm" || hour == 12)
-        timeString = hour;
+        return [hour, minute];
     else 
-        timeString = hour+12;
-    
-    return timeString;
+        return [hour+12, minute];
 }
 
 /**
@@ -101,11 +101,9 @@ module.exports = {
     
     createLobbyTime: async function(time, timezoneName, tomorrow) {
         // get time
-        var _time = validateTime(time);
-        if(_time == undefined)
-        {
-            return [false, undefined, timezoneName, "you need to provide a valid full hour time (e.g. 9pm, 6am, ...) in your post"];
-        }
+        [hour, minute] = validateTime(time);
+        if(hour === undefined || minute === undefined)
+            return [false, undefined, timezoneName, "you need to provide a valid time (e.g. 9:30pm, 6:44am, ...) in your post"];
 
         // get time zone
         [zone, error] = await findTimeZone(timezoneName);
@@ -119,10 +117,10 @@ module.exports = {
         var tZoffset = tZ.getUTCOffset(date, zone);
         
         // get utc hour of user's time
-        var utcHour = _time + tZoffset.offset/60
+        var utcHour = hour + tZoffset.offset/60
 
         // create date at wanted UTC time
-        var lobbyDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + (tomorrow ? 1 : 0), utcHour, 0, 0, 0));
+        var lobbyDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + (tomorrow ? 1 : 0), utcHour, minute, 0, 0));
 
         // check if 'wanted UTC time' has already past 'now'
         if(date >= lobbyDate)
