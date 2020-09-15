@@ -108,8 +108,8 @@ module.exports = {
         }
 
         // get time zone
-        [zone, error] = findTimeZone(timezoneName)
-        if(zone == undefined)
+        [zone, error] = await findTimeZone(timezoneName);
+        if(zone === undefined)
             return [false, undefined, timezoneName, error];
 
         // get 'now'
