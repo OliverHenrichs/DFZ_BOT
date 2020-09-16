@@ -17,11 +17,11 @@ module.exports = {
         switch (lobbyType)
         {
             case lobbyTypes.inhouse:
-                return "5v5"
+                return "Inhouse"
             case lobbyTypes.unranked:
-                return "5 man unranked"
+                return "Unranked"
             case lobbyTypes.botbash:
-                return "botbash"
+                return "Botbash"
         }
     },
 

@@ -1,12 +1,14 @@
 const tZ = require('timezone-support')
 
-const weekDays = {  0:"Sunday",
-                    1:"Monday", 
-                    2:"Tuesday", 
-                    3:"Wednesday", 
-                    4:"Thursday", 
-                    5:"Friday", 
-                    6:"Saturday"}
+const weekDays = {  
+    0:"Sunday",
+    1:"Monday", 
+    2:"Tuesday", 
+    3:"Wednesday", 
+    4:"Thursday", 
+    5:"Friday", 
+    6:"Saturday"
+}
 
 const months = {
     1:"Jan",
@@ -22,6 +24,7 @@ const months = {
     11:"Nov",
     12:"Dec"
 }
+
 /**
  * Validates that time string has form xxam, xam, xpm xxpm (x in 0,..,9)
  * @param {string} timeString input string
@@ -62,7 +65,6 @@ function validateTime(timeString)
  */
 async function findTimeZone(timezoneName)
 {
-
     /*
     * POSIX-Definition causes GMT+X to be GMT-X and vice versa... 
     * In order to not confuse the user we exchange + and - here ;-)
@@ -131,8 +133,8 @@ module.exports = {
         return [true, zonedTime, timezoneName, ""];
     },
 
-    getUserLobbyTime: async function(date, timezoneName) {
-        
+    getUserLobbyTime: async function(date, timezoneName) 
+    {
         var error =""
         try {
             // find user zone
