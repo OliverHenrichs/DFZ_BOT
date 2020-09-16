@@ -53,11 +53,11 @@ function getPositionalUserTable(users, position, mention=false) {
  *  @param user user to add
  *  @param mention if true mentions the user in the table
  */
-function addToUserTable(tableBase, user, mention=false) {
+function addToUserTable(tableBase, user, startIndex = 0, mention=false) {
     {
-        tableBase[0].value = tableBase[0].value + "\r\n" + (mention ? ("<@" +user.id + ">") : user.name);
-        tableBase[1].value = tableBase[1].value + "\r\n" +user.positions.join(", ");
-        tableBase[2].value = tableBase[2].value + "\r\n" +user.tier.name;
+        tableBase[startIndex].value = tableBase[startIndex].value + "\r\n" + (mention ? ("<@" +user.id + ">") : user.name);
+        tableBase[startIndex+1].value = tableBase[startIndex+1].value + "\r\n" +user.positions.join(", ");
+        tableBase[startIndex+2].value = tableBase[startIndex+2].value + "\r\n" +user.tier.name;
     }
 }
 
@@ -65,9 +65,10 @@ function addToUserTable(tableBase, user, mention=false) {
  *  returns a table of users
  *  @param tableBase table to which data is added
  *  @param users array of users
+ *  @param playersPerLobby how many players fit in the lobby? rest is bench; value of -1 will allow any number
  *  @param mention if true mentions the users in the table
  */
-function getUserTable(users, mention=false) {
+function getUserTable(users, playersPerLobby=-1, mention=false) {
     if(users.length == 0) {
         return undefined;
     }
@@ -91,12 +92,47 @@ function getUserTable(users, mention=false) {
         }
     ];
 
+    var tableBench = [
+        {
+            name: 'Bench',
+            value: 'If people leave, you get pushed up'
+        },
+        {
+            name: 'Name',
+            value: '',
+            inline: true,
+        },
+        {
+            name: 'Position',
+            value: '',
+            inline: true,
+        },
+        {
+            name: 'Tier',
+            value: '',
+            inline: true,
+        }
+    ]
+
+    var startIndexPlayers = 0;
+    var startIndexBench = 1;
+
+    var usrIndex = 0;
     users.forEach(usr => {
-        addToUserTable(tableBase, usr, mention);
+
+        if(usrIndex++ < playersPerLobby || playersPerLobby === -1)
+            addToUserTable(tableBase, usr, startIndexPlayers, mention);
+        else
+            addToUserTable(tableBench, usr, startIndexBench, mention);
     });
 
-    //tableBase.unshift(tableHead);
-
+    if(usrIndex > playersPerLobby && playersPerLobby !== -1)
+    {
+        var finalTable = tableBase.concat(tableBench);
+        return finalTable;
+    }
+        
+    
     return tableBase;
 }
 
@@ -108,9 +144,12 @@ function getUserTable(users, mention=false) {
  */
 function getCurrentUsersAsTable(lobby, mention=false) {
     var userTable;
+
+    var key = Object.keys(c.lobbyTypes).find(typeKey => c.lobbyTypes[typeKey] == lobby.type);
+    var playersPerLobby = c.lobbyTypePlayerCount[key];
     
     locker.acquireReadLock(function() {
-            userTable = getUserTable(lobby.users, mention);
+            userTable = getUserTable(lobby.users, playersPerLobby, mention);
     }, () => {
         console.log("lock released in getCurrentUsersAsTable");
     });
@@ -239,7 +278,7 @@ async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unp
     old_embed = message.embeds[0];
     var new_embed =   new Discord.RichEmbed(old_embed)
                             .setTitle(titleUpdate +"\n~~" + old_embed.title + "~~");
-    new_embed.fields = undefined;
+    //new_embed.fields = undefined;
     
     // update embed
     message.edit(new_embed);
@@ -309,6 +348,7 @@ module.exports = {
         locker.acquireWriteLock(function() {
             // override / create lobby
             state.lobbies[channel][type] = {
+                type: type,
                 date: date,
                 users: [],
                 tiers: roles, // roles
@@ -415,7 +455,7 @@ module.exports = {
         {
             if (userSet.length != 0) // Not enough players but forced
             {
-                const _embed = aE.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", getUserTable(userSet, true));
+                const _embed = aE.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", getUserTable(userSet, playersPerLobby, true));
                 channel.send({embed: _embed});
                 return;
             }
@@ -432,7 +472,7 @@ module.exports = {
 
         if (userSet.length != 0) // bench
         {
-            const _embed = aE.generateEmbedding("Today's bench", "", "", getUserTable(userSet, true));
+            const _embed = aE.generateEmbedding("Today's bench", "", "", getUserTable(userSet, -1, true));
             channel.send({embed: _embed});
         }
     }
