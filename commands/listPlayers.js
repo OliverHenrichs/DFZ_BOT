@@ -47,5 +47,5 @@ module.exports = async (message, state) => {
 
 	mH.reactPositive(message);
 	message.author.send({embed: aE.generateEmbedding("List of users signed up for tonight's " + c.getLobbyNameByType(type) + " lobby", "", "", userTable)});
-
+//
 }
