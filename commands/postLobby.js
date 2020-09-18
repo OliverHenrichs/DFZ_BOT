@@ -66,7 +66,8 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	lM.createLobby(state, message.channel.id, lobbyType, Array.from(numbers), zonedTime.epoch, lobbyPostMessage.id);
 }
 
-var reactionString = "React to the numbers below to join the lobby at the positions you want.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."
+var reactionStringBeginner = "React to the numbers below to join the lobby at the ingame positions you want.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."
+var reactionStringTryout = "React to the numbers below to join the lobby at the ingame positions you want.\nIf you don't know what ingame positions are, just press any of them.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
@@ -78,5 +79,8 @@ module.exports = async (message, state) => {
 	if(type == undefined)
 		return;
 
-	postLobby_int(message, state, type, c.getLobbyNameByType(type), reactionString);
+	if(type == c.lobbyTypes.tryout)
+		postLobby_int(message, state, type, c.getLobbyNameByType(type), reactionStringTryout);
+	else
+		postLobby_int(message, state, type, c.getLobbyNameByType(type), reactionStringBeginner);
 }
