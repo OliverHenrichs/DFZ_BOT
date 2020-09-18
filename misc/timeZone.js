@@ -97,6 +97,11 @@ async function findTimeZone(timezoneName)
     return [zone, ""];
 }
 
+function getTimeString(zonedTime)
+{
+    return weekDays[zonedTime.dayOfWeek] + ", "+ months[zonedTime.month] +" "+ zonedTime.day + " at " + zonedTime.hours + ":" + (zonedTime.minutes < 10 ? "0"+ zonedTime.minutes : zonedTime.minutes);
+}
+
 module.exports = {
     weekDays: weekDays,
     months:months,
@@ -105,7 +110,7 @@ module.exports = {
         // get time
         [hour, minute] = validateTime(time);
         if(hour === undefined || minute === undefined)
-            return [false, undefined, timezoneName, "you need to provide a valid time (e.g. 9:30pm, 6:44am, ...) in your post"];
+            return [false, undefined, timezoneName, "you need to provide a valid time (e.g. 9:30pm, 6:04am, ...) in your post"];
 
         // get time zone
         [zone, error] = await findTimeZone(timezoneName);
@@ -148,13 +153,14 @@ module.exports = {
             error = err.message;
         };
         if(error == "")
-            return [true, weekDays[zonedtime.dayOfWeek] + ", " + zonedtime.hours + ":00 " + timezoneName]
+            return [true, getTimeString(zonedtime) + " " + timezoneName]
 
         return [false, error]
     },
 
     getZonedTime: async function(date, timezone) {
         return await tZ.getZonedTime(date, timezone)
-    }
+    }, 
 
+    getTimeString: getTimeString
 }

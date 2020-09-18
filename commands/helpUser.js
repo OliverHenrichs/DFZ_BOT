@@ -80,8 +80,8 @@ module.exports = async (message) => {
     {
         addHelpToTable( _embed, "post", 
             "!post <lobbytype> <tiers> <time> <timezone>", 
-            "Creates a lobby in this channel.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ")+"\n Allowed tiers: 1,2,3,4\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://en.wikipedia.org/wiki/List_of_tz_database_time_zones or https://kevinnovak.github.io/Time-Zone-Picker/",
-            "!post " + Object.keys(c.lobbyTypes)[1]+" 1,2 9:55pm GMT+2 \n!post " + Object.keys(c.lobbyTypes)[2]+" 4,3 7:00am Europe/Moscow");
+            "Creates a lobby in this channel.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ")+"\n Allowed tiers: 1,2,3,4; Give no tiers for lobby type 'tryout'.\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://en.wikipedia.org/wiki/List_of_tz_database_time_zones or https://kevinnovak.github.io/Time-Zone-Picker/",
+            "!post " + Object.keys(c.lobbyTypes)[1]+" 1,2 9:55pm GMT+2 \n!post " + Object.keys(c.lobbyTypes)[2]+" 4,3 7:00am Europe/Moscow \n !post " + Object.keys(c.lobbyTypes)[3]+" 9:55pm America/New_York");
         addHelpToTable( _embed, "start", 
             "!start <lobbytype>", 
             "Starts the scheduled lobby in this channel.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),

@@ -43,7 +43,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 
 	// send embedding post to lobby signup-channel
 	var roles = rM.getRolesFromNumbers(numbers);
-	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.weekDays[zonedTime.dayOfWeek] + ", "+tZ.months[zonedTime.month]+" "+ zonedTime.day +" at " + zonedTime.hours +":" + (zonedTime.minutes < 10 ? "0"+ zonedTime.minutes : zonedTime.minutes)+ " " + zoneName, "for " + rM.getRoleStrings(roles), footer);
+	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName, "for " + rM.getRoleStrings(roles), footer);
 	const lobbyPostMessage = await message.channel.send({embed: _embed});
 
 	// pin message to channel
