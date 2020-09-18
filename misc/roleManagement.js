@@ -1,5 +1,5 @@
 
-const beginnerRoles = [process.env.Tryout, process.env.TIER_1, process.env.TIER_2, process.env.TIER_3, process.env.TIER_4];
+const beginnerRoles = [process.env.TRYOUT, process.env.TIER_1, process.env.TIER_2, process.env.TIER_3, process.env.TIER_4];
 
 // role management
 module.exports = {
@@ -28,7 +28,7 @@ module.exports = {
 		var roles = [];
 		numbers.forEach(num => {
 			if(num == 0)
-				roles.push(process.env.Tryout)
+				roles.push(process.env.TRYOUT)
 			else if(num == 1)
 				roles.push(process.env.TIER_1)
 			else if(num == 2)
