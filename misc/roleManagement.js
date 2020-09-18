@@ -73,5 +73,5 @@ module.exports = {
 		return roles.map((tier) => {
 			return `<@&${tier}>`;
 		  }).join(' ');
-	}
+	}	
 }
