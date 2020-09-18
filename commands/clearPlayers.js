@@ -8,17 +8,10 @@ const lM = require("../misc/lobbyManagement")
  * @param {*} state bot state
  */
 module.exports = async (message, state) => {
-	// message must provide lobby type
-	var type = mH.getLobbyType(message);
-	if(type == undefined)
+	
+	[lobby, type] = mH.getLobbyAndType(state, message)
+	if(lobby == undefined || type == undefined)
 		return;
-
-	// get lobby
-	var channelId = message.channel.id
-	var lobby = lM.getLobby(state, channelId, type)
-	if(lobby == undefined) {
-		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
-	}
 
 	// clear users
 	locker.acquireWriteLock(function() {

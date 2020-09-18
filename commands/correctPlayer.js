@@ -13,14 +13,9 @@ var formatString = "\n Proper format is e.g. '!correct inhouse 1,3,4' or '!corre
  */
 module.exports = async (message, state) => {
 	
-	var type = mH.getLobbyType(message);
-	if(type == undefined)
+	[lobby, type] = mH.getLobbyAndType(state, message)
+	if(lobby == undefined || type == undefined)
 		return;
-
-	var lobby = lM.getLobby(state, message.channel.id, type);
-	if(lobby == undefined) {
-		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
-	}
 
 	// check existing users 
 	var user = uH.getUser(lobby, message.author.id);

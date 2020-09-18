@@ -11,14 +11,9 @@ const c = require("../misc/constants")
  */
 module.exports = async (message, state) => {
 
-	var type = mH.getLobbyType(message);
-	if(type == undefined)
+	[lobby, type] = mH.getLobbyAndType(state, message)
+	if(lobby == undefined || type == undefined)
 		return;
-
-	var lobby = lM.getLobby(state, message.channel.id, type)
-	if(lobby == undefined) {
-		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
-	}
 
 	// find user
 	var idx = userHelper.getUserIndex(lobby, message.author.id);

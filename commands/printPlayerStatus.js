@@ -13,7 +13,7 @@ module.exports = async (message, state) => {
 	if(channelLobbies === undefined)
 		return mH.reactNeutral(message, "No lobbies in this channel");
 
-	var users = [];
+	var users = {};
 	var lobbyTypeNames = Object.keys(c.lobbyTypes);
 
 	// get status from all channel lobbies
@@ -21,14 +21,14 @@ module.exports = async (message, state) => {
 		var lobby = channelLobbies[c.lobbyTypes[lobbyType]];
 		if(lobby != undefined && lobby.users != undefined && lobby.users.length > 0)
 		{
-			users.push(userHelper.getUser(lobby, message.author.id));
+			users[lobbyType]=userHelper.getUser(lobby, message.author.id);
 		}
 	});
 
 	var statusTexts = [];
-	for (let i = 0; i < users.length; i++)
+	for (let i = 0; i < lobbyTypeNames.length; i++)
 	{
-		var user = users[i];
+		var user = users[lobbyTypeNames[i]];
 		if(user == undefined)
 			continue;
 
