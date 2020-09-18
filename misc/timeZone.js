@@ -50,7 +50,7 @@ function validateTime(timeString)
         minute = parseInt(timeString.substring(3, 5))
         ampm = timeString.substring(5);
     }
-    if((hour == NaN || hour < 0 || hour > 12) || (ampm != "am" && ampm != "pm") || (minute == NaN || minute < 0 || minute > 59))
+    if((isNaN(hour) || isNaN(minute)) || (ampm != "am" && ampm != "pm") || (hour < 0 || hour > 12) || (minute < 0 || minute > 59))
         return [undefined, undefined];
 
     if(ampm != "pm" || hour == 12)

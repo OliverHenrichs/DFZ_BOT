@@ -360,7 +360,7 @@ module.exports = {
         if(lobbyType == c.lobbyTypes.inhouse)
         {
             createInhouseTeams(playerPositionMap, openUsers);
-        } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash)
+        } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash|| lobbyType == c.lobbyTypes.tryout)
         {
             createnNonCompetitionTeams(playerPositionMap, openUsers);
         }

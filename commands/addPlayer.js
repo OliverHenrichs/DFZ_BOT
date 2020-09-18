@@ -13,16 +13,10 @@ var formatString = "\n Proper format is e.g. '!join inhouse 1,3,4' or '!join unr
  */
 module.exports = async (message, state) => {
 
-	// check type
-	var type = mH.getLobbyType(message);
-	if(type == undefined)
+	[lobby, type] = mH.getLobbyAndType(state, message)
+	if(lobby == undefined || type == undefined)
 		return;
-
-	// check existing lobby
-	var lobby = lM.getLobby(state, message.channel.id, type);
-	if(lobby == undefined) 
-	return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + message.channel.id + ">");
-	
+		
 	// check existing user
 	if(uH.userExists(lobby, message.author.id)) 
 		return mH.reactNegative(message, "you have already signed up for that lobby");

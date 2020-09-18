@@ -1,4 +1,5 @@
 const c = require("../misc/constants")
+const lM = require("../misc/lobbyManagement")
 const tZ = require("../misc/timeZone")
 
 
@@ -154,6 +155,19 @@ function getLobbyType(message) {
     return c.lobbyTypes[lobbyType];
 }
 
+function getLobbyAndType(state, message)
+{
+    var type = getLobbyType(message);
+	if(type == undefined)
+		reactNegative(message, "Provide a lobby type. Valid lobby types are " + Object.keys(c.lobbyTypes).join("', '") + ".");
+
+	var lobby = lM.getLobby(state, message.channel.id, type)
+	if(lobby == undefined)
+		reactNeutral(message, "No open "+c.getLobbyNameByType(type)+ " lobby yet.");
+
+    return [lobby, type];
+}
+
 module.exports.reactNeutral = reactNeutral;
 module.exports.reactNegative = reactNegative;
 module.exports.reactPositive = reactPositive;
@@ -161,4 +175,5 @@ module.exports.checkNumbers = checkNumbers;
 module.exports.getNumbersFromMessage = getNumbersFromMessage;
 module.exports.getArguments = getArguments;
 module.exports.getLobbyType = getLobbyType;
+module.exports.getLobbyAndType = getLobbyAndType;
 module.exports.getTimeFromMessage = getTimeFromMessage;

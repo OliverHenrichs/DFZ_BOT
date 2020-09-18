@@ -14,29 +14,36 @@ const tZ = require("../misc/timeZone")
  * @param {*} footer String to append to embedding
  */
 async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
-	var channel = message.channel.id;
-
-	if(lM.getLobby(state, channel, lobbyType) !== undefined) {
+	
+	if(lM.getLobby(state, message.channel.id, lobbyType) !== undefined) {
 		return mH.reactNegative(message, "Cannot override already created lobby of type "+ lobbyTypeName +" in channel <#" + message.channel.id + ">");
 	}
 
-	// get roles
-	const minRole = 1;
-	const maxRole = 4;
-	[res, numbers, errormsg] = mH.getNumbersFromMessage(message, 1, minRole, maxRole);
-	if(!res) {
-		return mH.reactNegative(message, errormsg);
+	if(lobbyType == c.lobbyTypes.tryout)
+		numbers = [0];
+	else 
+	{
+		// get roles
+		const minRole = 1;
+		const maxRole = 4;
+		[res, numbers, errormsg] = mH.getNumbersFromMessage(message, 1, minRole, maxRole);
+		if(!res) {
+			return mH.reactNegative(message, errormsg);
+		}
 	}
 
 	// get zoned time
-	[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, 2);
+	if(lobbyType == c.lobbyTypes.tryout)
+		[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, 1);
+	else 
+		[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, 2);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}
 
 	// send embedding post to lobby signup-channel
 	var roles = rM.getRolesFromNumbers(numbers);
-	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.weekDays[zonedTime.dayOfWeek] + ", "+tZ.months[zonedTime.month]+" "+ zonedTime.day +" at " + zonedTime.hours +":" + zonedTime.minutes + " " + zoneName, "for " + rM.getRoleStrings(roles), footer);
+	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.weekDays[zonedTime.dayOfWeek] + ", "+tZ.months[zonedTime.month]+" "+ zonedTime.day +" at " + zonedTime.hours +":" + (zonedTime.minutes < 10 ? "0"+ zonedTime.minutes : zonedTime.minutes)+ " " + zoneName, "for " + rM.getRoleStrings(roles), footer);
 	const lobbyPostMessage = await message.channel.send({embed: _embed});
 
 	// pin message to channel
@@ -56,7 +63,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	mH.reactPositive(message);
 
 	// create lobby data in state
-	lM.createLobby(state, channel, lobbyType, Array.from(numbers), zonedTime.epoch, lobbyPostMessage.id);
+	lM.createLobby(state, message.channel.id, lobbyType, Array.from(numbers), zonedTime.epoch, lobbyPostMessage.id);
 }
 
 var reactionString = "React to the numbers below to join the lobby at the positions you want.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."
@@ -71,14 +78,5 @@ module.exports = async (message, state) => {
 	if(type == undefined)
 		return;
 
-	if(type == c.lobbyTypes.inhouse)
-	{
-		postLobby_int(message, state, c.lobbyTypes.inhouse, c.getLobbyNameByType(c.lobbyTypes.inhouse), reactionString);
-	} else if(type == c.lobbyTypes.unranked)
-	{
-		postLobby_int(message, state, c.lobbyTypes.unranked, c.getLobbyNameByType(c.lobbyTypes.unranked), reactionString);
-	}else if(type == c.lobbyTypes.botbash)
-	{
-		postLobby_int(message, state, c.lobbyTypes.botbash, c.getLobbyNameByType(c.lobbyTypes.botbash), reactionString);
-	}
+	postLobby_int(message, state, type, c.getLobbyNameByType(type), reactionString);
 }

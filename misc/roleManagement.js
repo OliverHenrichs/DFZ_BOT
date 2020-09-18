@@ -28,6 +28,8 @@ module.exports = {
 	getRolesFromNumbers: function (numbers) {
 		var roles = [];
 		numbers.forEach(num => {
+			if(num == 0)
+				roles.push(process.env.Tryout)
 			if(num == 1)
 				roles.push(process.env.TIER_1)
 			else if(num == 2)

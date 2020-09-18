@@ -8,15 +8,9 @@ const locker = require("../misc/lock")
  * @param {*} state bot state
  */
 module.exports = async (message, state) => {
-	var type = mH.getLobbyType(message);
-	if(type == undefined)
+    [lobby, type] = mH.getLobbyAndType(state, message)
+	if(lobby == undefined || type == undefined)
 		return;
-
-    var lobby = lM.getLobby(state, message.channel.id, type);
-    if(lobby == undefined)
-    {
-        return mH.reactNegative(message, "No open "+c.getLobbyNameByType(type)+ " lobby yet.");
-    }
     
     lM.cancelLobbyPost(lobby, message.channel);
 	lM.removeLobby(state, message.channel.id, type);

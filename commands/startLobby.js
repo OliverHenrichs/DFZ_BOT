@@ -11,16 +11,9 @@ const locker = require("../misc/lock")
  */
 module.exports = async (message, state, force=false) => {
 
-	var type = mH.getLobbyType(message);
-	if(type == undefined)
+	[lobby, type] = mH.getLobbyAndType(state, message)
+	if(lobby == undefined || type == undefined)
 		return;
-
-	var channel = message.channel;
-	var channelId = channel.id;
-	var lobby = lM.getLobby(state, channelId, type);
-	if(lobby === undefined) {
-		return mH.reactNegative(message, "There is no " + c.getLobbyNameByType(type) + " lobby created for channel <#" + channelId + ">");
-	}
 	
 	var key = Object.keys(c.lobbyTypes).find( typeKey => c.lobbyTypes[typeKey] == type);
 	var playersPerLobby = c.lobbyTypePlayerCount[key];
@@ -36,11 +29,11 @@ module.exports = async (message, state, force=false) => {
 		return mH.reactNegative(message, "There are fewer than " + playersPerLobby + " players signed up. Cannot start yet");
 
 	// create lobby start post
-	lM.createLobbyPost(state, channel, type, playersPerLobby);
+	lM.createLobbyPost(state, message.channel, type, playersPerLobby);
 
 	// update lobby post and remove lobby
     lM.finishLobbyPost(lobby, message.channel);
-	lM.removeLobby(state, channel.id, type);
+	lM.removeLobby(state, message.channel.id, type);
 	
 	mH.reactPositive(message);
 }

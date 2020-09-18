@@ -229,32 +229,32 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
         });
 
         return tableBaseInhouse;
-    } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash)
+    } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash || lobbyType == c.lobbyTypes.tryout)
     {        
-        var tableBaseMMR = [
-        {
-            name: 'Name',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Position',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Tier',
-            value: '',
-            inline: true,
-        }
-    ];
+        var tableBase = [
+            {
+                name: 'Name',
+                value: '',
+                inline: true,
+            },
+            {
+                name: 'Position',
+                value: '',
+                inline: true,
+            },
+            {
+                name: 'Tier',
+                value: '',
+                inline: true,
+            }
+        ];
     
         Object.keys(assignedUsers).forEach((position) => {
             var player = assignedUsers[position];
-            addUserToTeam(tableBaseMMR, 0, player, position, mention);
+            addUserToTeam(tableBase, 0, player, position, mention);
         });
 
-        return tableBaseMMR;
+        return tableBase;
     }
 
     return [];
