@@ -1,6 +1,5 @@
 
-
-const beginnerRoles = [process.env.TIER_1, process.env.TIER_2, process.env.TIER_3, process.env.TIER_4];
+const beginnerRoles = [process.env.Tryout, process.env.TIER_1, process.env.TIER_2, process.env.TIER_3, process.env.TIER_4];
 
 // role management
 module.exports = {
@@ -30,7 +29,7 @@ module.exports = {
 		numbers.forEach(num => {
 			if(num == 0)
 				roles.push(process.env.Tryout)
-			if(num == 1)
+			else if(num == 1)
 				roles.push(process.env.TIER_1)
 			else if(num == 2)
 				roles.push(process.env.TIER_2)
@@ -42,7 +41,6 @@ module.exports = {
 				console.log("current number " + num + " is not corresponding to a role");
 		});
 
-		var uniqueNumbers = new Set(numbers);
 		return roles;
 	},
 
@@ -55,12 +53,14 @@ module.exports = {
 		
 		switch (role) {
 			case beginnerRoles[0]:
-				return 1;
+				return 0;
 			case beginnerRoles[1]:
-				return 2;
+				return 1;
 			case beginnerRoles[2]:
-				return 3;
+				return 2;
 			case beginnerRoles[3]:
+				return 3;
+			case beginnerRoles[4]:
 				return 4;
 
 		}
