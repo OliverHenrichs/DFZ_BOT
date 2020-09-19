@@ -1,7 +1,5 @@
 const c = require("../misc/constants")
-const locker = require("../misc/lock")
 const rM = require("./roleManagement")
-const mH = require("./messageHelper")
 
 /**
  * Shuffles array in place.
@@ -266,84 +264,40 @@ module.exports = {
         user.tier.number = rM.getNumberFromBeginnerRole(tier.id);
         user.tier.name = tier.name;
 
-        // add to state
-        locker.acquireWriteLock(function() {
-            lobby.users.push(user);	
-        }, function() {
-            console.log("lock released in addUser");
-        });
+        // add to lobby
+        lobby.users.push(user);	
     },
 
     userExists: function (lobby, userId) 
     {
-        var found = false;
-        locker.acquireReadLock(function() {
-            found = lobby.users.find(element => element.id == userId) != undefined;
-        },() => {
-            console.log("lock released in userExists");
-        });
-
-        return found;
+        return lobby.users.find(element => element.id == userId) !== undefined;
     },
 
     getUserIndex: function (lobby, userId) 
     {
-        var index = -1;
-        locker.acquireReadLock(function() {
-            index = lobby.users.findIndex(user => user.id == userId);
-        },() => {
-            console.log("lock released in getUserIndex");
-        });
-
-        return index;
+        return lobby.users.findIndex(user => user.id == userId);
     },
 
     getUser: function (lobby, userId) 
     {
-        var _user = undefined;
-        locker.acquireReadLock(function() {
-            _user = lobby.users.find(element => element.id == userId);
-        },() => {
-            console.log("lock released in getUser");
-        });
-
-        return _user;
+        return lobby.users.find(element => element.id == userId);
     },
 
     getUserByIndex: function (lobby, userIndex) 
     {
-        var _user = undefined;
-        locker.acquireReadLock(function() {
-            _user = lobby.users.find(element => element.id == userIndex);
-        },() => {
-            console.log("lock released in getUser");
-        });
-
-        return _user;
+        return lobby.users.find(element => element.id == userIndex);;
     },
 
     filterAndSortAllUsers: function(lobby, filter, sorter)
     {
-        var filteredUsers=[];
-        locker.acquireReadLock(function() {
-            filteredUsers = filterAndSortUsers_int(lobby.users, filter, sorter);
-        }, () => {
-            console.log("lock released in filterAndSortAllUsers");
-        });
-        return filteredUsers;
+        return filterAndSortUsers_int(lobby.users, filter, sorter);
     },
 
     filterAndSortUsers: filterAndSortUsers_int,
 
     filterAndSortByPositionAndTier: function(lobby, position) 
     {
-        var filteredUsers=[];
-        locker.acquireReadLock(function() {
-            filteredUsers = filterAndSortByPositionAndTier_int(lobby.users, position);
-        }, () => {
-            console.log("lock released in filterAndSortByPositionAndTier");
-        });
-        return filteredUsers;
+        return filterAndSortByPositionAndTier_int(lobby.users, position);
     },
 
     createTeams: function(users, lobbyType)
@@ -372,12 +326,8 @@ module.exports = {
     printLobbyUsers: function (state, channelId, lobbyType) 
     {
         console.log("All Users:");
-        locker.acquireReadLock(function() {
-            state.lobbies[channelId][lobbyType].users.forEach(element => {
-                console.log(element.name + ": " + element.positions.join(", ") + " @" + element.tier.name);
-            });
-        },() => {
-            console.log("lock released in printLobbyUsers");
+        state.lobbies[channelId][lobbyType].users.forEach(element => {
+            console.log(element.name + ": " + element.positions.join(", ") + " @" + element.tier.name);
         });
     }
 }

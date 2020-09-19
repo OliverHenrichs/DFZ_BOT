@@ -20,8 +20,8 @@ module.exports = {
 	},
 
 	/**
-		takes a sequence of numbers and returns the respective role names for numbers 1-4
-		@param number list of numbers, e.g. [1,2,3,4]
+		takes a sequence of numbers and returns the respective role names for numbers 0-4
+		@param number list of numbers, e.g. [0,1,2,3,4]
 		@return list of roles corresponding to given numbers
 	*/
 	getRolesFromNumbers: function (numbers) {

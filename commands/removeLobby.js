@@ -1,7 +1,7 @@
 const c = require("../misc/constants")
 const lM = require("../misc/lobbyManagement")
 const mH = require("../misc/messageHelper")
-const locker = require("../misc/lock")
+
 /**
  * Checks if lobby exists and removes lobby depending on lobby type
  * @param {*} message coaches message that triggered the lobby post
