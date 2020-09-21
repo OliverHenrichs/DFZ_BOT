@@ -1,4 +1,3 @@
-const locker = require("../misc/lock")
 const mH = require("../misc/messageHelper")
 const lM = require("../misc/lobbyManagement")
 
@@ -14,12 +13,8 @@ module.exports = async (message, state) => {
 		return;
 
 	// clear users
-	locker.acquireWriteLock(function() {
-		lobby.users = [];
-	}, function() {
-		console.log("lock released in clearPlayers");
+	lobby.users = [];
+	lM.updateLobbyPost(lobby,message.channel);
 
-		lM.updateLobbyPost(lobby,message.channel);
-		return mH.reactPositive(message, "cleared all users from lobby");
-	});
+	return mH.reactPositive(message, "cleared all users from lobby");
 }

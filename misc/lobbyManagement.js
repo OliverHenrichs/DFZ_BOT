@@ -1,5 +1,6 @@
 const c = require("../misc/constants")
-const locker = require("../misc/lock")
+const cM = require("../misc/channelManagement")
+const g = require("../misc/generics")
 const aE = require("../misc/answerEmbedding")
 const uH = require("../misc/userHelper")
 const Discord = require("discord.js")
@@ -148,11 +149,7 @@ function getCurrentUsersAsTable(lobby, mention=false) {
     var key = Object.keys(c.lobbyTypes).find(typeKey => c.lobbyTypes[typeKey] == lobby.type);
     var playersPerLobby = c.lobbyTypePlayerCount[key];
     
-    locker.acquireReadLock(function() {
-            userTable = getUserTable(lobby.users, playersPerLobby, mention);
-    }, () => {
-        console.log("lock released in getCurrentUsersAsTable");
-    });
+    userTable = getUserTable(lobby.users, playersPerLobby, mention);
 
     return userTable;
 }
@@ -296,20 +293,18 @@ module.exports = {
      */
     findLobbyByMessage: function(state, channelId, messageId)
     {
-        var lobby =  {};
-        locker.acquireReadLock(function() {
-            // check all lobby types in channel, for each that you find check if message id fits;
-            for (var key in c.lobbyTypes){
-                lobby = state.lobbies[channelId][c.lobbyTypes[key]];
-                if(lobby === undefined)
-                    continue;
-                if(lobby.messageId === messageId)
-                    return;
-                lobby = undefined;
-            }
-	    }, () => {
-            console.log("lock released in findLobbyByMessage");
-        });
+        var lobby = undefined;
+
+        // check all lobby types in channel, for each found check if its message id fits;
+        for (var key in c.lobbyTypes){
+            lobby = state.lobbies[channelId][c.lobbyTypes[key]];
+            if(lobby === undefined)
+                continue;
+            if(lobby.messageId === messageId)
+                break;
+            lobby = undefined;
+        }
+
         return lobby;
     },
 
@@ -322,15 +317,10 @@ module.exports = {
      */
     getLobby: function (state, channel, type) 
     {
-        var lobby = undefined;
-        locker.acquireReadLock(function() {
-            if(state.lobbies[channel] == undefined)
-                return;
-            lobby = state.lobbies[channel][type];
-	    }, () => {
-            console.log("lock released in hasLobby");
-        });
-        return lobby;
+        if(state.lobbies[channel] !== undefined)
+            return state.lobbies[channel][type];
+            
+        return undefined;
     },
 
     /**
@@ -345,28 +335,19 @@ module.exports = {
      */
     createLobby: function (state, channel, type, roles, date, messageID) 
     {
-        locker.acquireWriteLock(function() {
-            // override / create lobby
-            state.lobbies[channel][type] = {
-                type: type,
-                date: date,
-                users: [],
-                tiers: roles, // roles
-                messageId : messageID
-              };
-        }, function() {
-            console.log("lock released in createLobby");
-        });
+        // override / create lobby
+        state.lobbies[channel][type] = {
+            type: type,
+            date: date,
+            users: [],
+            tiers: roles, // roles
+            messageId : messageID
+          };
     },
 
     removeLobby: function(state, channel, type)
     {
-        locker.acquireWriteLock(function() {
-            // override / create lobby
-            state.lobbies[channel][type] = undefined;
-        }, function() {
-            console.log("lock released in removeLobby");
-        });
+        state.lobbies[channel][type] = undefined;
     },
 
     /**
@@ -376,17 +357,62 @@ module.exports = {
      */
     updateLobbyPost: async function(lobby, channel)
     {
-        locker.acquireWriteLockLobbyPost(async function() {
-            // fetch message
-            const message = await channel.fetchMessage(lobby.messageId);
-            old_embed = message.embeds[0];
+        // fetch message
+        const message = await channel.fetchMessage(lobby.messageId);
+        old_embed = message.embeds[0];
+
+        // generate new embed
+        var new_embed = new Discord.RichEmbed(old_embed);
+        new_embed.fields = getCurrentUsersAsTable(lobby, true);
+        
+        // update embed
+        await message.edit(new_embed);
+    },
+
+    /**
+     *  Update lobby time of each lobby post
+     *  @param lobby bot state
+     *  @param channels bots message channels on the server
+     */
+    updateLobbyTimes: async function(channels, lobbies)
+    {
+        g.asyncForEach(cM.botChannels, async channelId => {
+            // get channel
+            var channel = channels.find(chan => { return chan.id == channelId});
+            if(!channel)
+                return;
     
-            // generate new embed
-            var new_embed =   new Discord.RichEmbed(old_embed);
-            new_embed.fields = getCurrentUsersAsTable(lobby, true);
-            
-            // update embed
-            await message.edit(new_embed);
+            // go through lobby types
+            await g.asyncForEach(Object.keys(c.lobbyTypes), async key =>  {
+                // get lobby
+                var lobby = lobbies[channelId][c.lobbyTypes[key]];
+                if(lobby === undefined)
+                    return;
+    
+                // update lobby time
+                
+                // fetch message
+                const message = await channel.fetchMessage(lobby.messageId);
+                old_embed = message.embeds[0];
+
+                // remove old time 
+                var description = old_embed.description.split('\n');
+                if(description.length > 1) 
+                    description.pop();
+
+                // get new time
+                var remainingMs = lobby.date - Date.now();
+                var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+                var hours = Math.floor((remainingMs / (1000 * 60 * 60)) % 24);
+                description.push("Time to lobby: " + hours + "h " + minutes + "min");
+
+                // generate new embed
+                var new_embed =   new Discord.RichEmbed(old_embed);
+                new_embed.description = description.join('\n');
+                
+                // update embed
+                await message.edit(new_embed);
+            });
         });
     },
 
@@ -436,20 +462,16 @@ module.exports = {
         var userSets = [];
         var userSet = [];
 
-        locker.acquireReadLock(function() {
-            var lobby = state.lobbies[channel.id][type]
-            for (let i = 0; i < lobby.users.length; i++) { // add in batches of lobbyTypePlayerCount
-                userSet.push(lobby.users[i]);
-                
-                if((i+1)%(playersPerLobby) == 0)
-                {
-                    userSets.push(userSet);
-                    userSet = [];
-                }
+        var lobby = state.lobbies[channel.id][type]
+        for (let i = 0; i < lobby.users.length; i++) { // add in batches of lobbyTypePlayerCount
+            userSet.push(lobby.users[i]);
+            
+            if((i+1)%(playersPerLobby) == 0)
+            {
+                userSets.push(userSet);
+                userSet = [];
             }
-        }, () => {
-            console.log("lock released in createLobbyPost");
-        });
+        }
 
         if(userSets.length == 0)
         {

@@ -1,24 +1,20 @@
 const c = require("../misc/constants")
-const locker = require("../misc/lock")
+const g = require("../misc/generics")
 const rM = require("./roleManagement")
-const mH = require("./messageHelper")
 
 /**
- * Shuffles array in place.
- * thx @ https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
- * @param {Array} a items An array containing the items.
- * @param return the shuffled array
+ * Swap two array elements in place
+ * thx @ https://stackoverflow.com/questions/872310/javascript-swap-array-elements
+ * @param x first item index
+ * @param y second item index
+ * @return ref to array
  */
-function shuffle(a) {
-    var j, x, i;
-    for (i = a.length - 1; i > 0; i--) {
-        j = Math.floor(Math.random() * (i + 1));
-        x = a[i];
-        a[i] = a[j];
-        a[j] = x;
-    }
-    return a;
-};
+Array.prototype.swap = function (x,y) {
+    var b = this[x];
+    this[x] = this[y];
+    this[y] = b;
+    return this;
+}
 
 /**
  * compares two users by tier
@@ -27,6 +23,15 @@ function shuffle(a) {
  */
 function tier_sorter(a,b) {
     return b.tier.number - a.tier.number;
+};
+
+/**
+* compares two users by tier the other way round
+* @param {*} a user a
+* @param {*} b user b
+*/
+function reverse_tier_sorter(a,b) {
+   return a.tier.number - b.tier.number;
 };
 
 /**
@@ -83,6 +88,10 @@ function getPlayersPerPosition(_users) {
     for(let position = 1; position < 6; position++)
     {
         playersPerPosition.push({pos: position, users: filterByPosition(_users, position)});
+        
+        // randomly reverse order
+        if(g.coinflip()=== true)
+            playersPerPosition[position-1].users.reverse();
     }
 
     // sort to get 'tightest' positions (least amount of players) come first
@@ -96,10 +105,10 @@ function getPlayersPerPosition(_users) {
 createInhouseTeams = function(playerPositionMap, openUsers)
 {
     // now sort by tier
-    openUsers.sort(tier_sorter);
+    openUsers.sort(g.coinflip() === true ? tier_sorter : reverse_tier_sorter);
 
     var playersPerPosition = getPlayersPerPosition(openUsers);
-
+    var skillPoints = {radiant:0, dire:0};
     while (true)
     {
         // we're finished cause there are no more positions to fill
@@ -121,7 +130,7 @@ createInhouseTeams = function(playerPositionMap, openUsers)
             }
 
             if(players.length == 0)
-            {
+            {   
                 // we have no players for any of the remaining positions => just fill from remaining player pool
                 playerPositionMap[pos] = [openUsers[0], openUsers[1]];
             } else {
@@ -161,8 +170,29 @@ createInhouseTeams = function(playerPositionMap, openUsers)
             }
         }
 
-        // cleanup for next iteration
+        // take care of balancing in case of unequal teams
+        
+        // current skill diff in teams
+        var skillDiffTeams = skillPoints.radiant - skillPoints.dire;
+        
+        // skill diff for new players
+        var skillRadiantPlayer = playerPositionMap[pos][0].tier.number;
+        var skillDirePlayer = playerPositionMap[pos][1].tier.number;
+        var skillDiffNewUsers = skillRadiantPlayer-skillDirePlayer;
 
+        if(skillDiffTeams > 0 ) // radiant advantage => put stronger player on dire
+        {
+            if(skillDiffNewUsers > 0) // radiant player is stronger => swap
+                playerPositionMap[pos].swap(0,1);
+        } else { // dire advantage or equal => put stronger player on radiant
+            if(skillDiffNewUsers < 0) // dire player is stronger => swap
+                playerPositionMap[pos].swap(0,1);
+        }
+
+        skillPoints.radiant += playerPositionMap[pos][0].tier.number;
+        skillPoints.dire += playerPositionMap[pos][1].tier.number;
+
+        // cleanup for next iteration
         // position is finished, so get rid of it
         playersPerPosition.shift();
 
@@ -266,84 +296,40 @@ module.exports = {
         user.tier.number = rM.getNumberFromBeginnerRole(tier.id);
         user.tier.name = tier.name;
 
-        // add to state
-        locker.acquireWriteLock(function() {
-            lobby.users.push(user);	
-        }, function() {
-            console.log("lock released in addUser");
-        });
+        // add to lobby
+        lobby.users.push(user);	
     },
 
     userExists: function (lobby, userId) 
     {
-        var found = false;
-        locker.acquireReadLock(function() {
-            found = lobby.users.find(element => element.id == userId) != undefined;
-        },() => {
-            console.log("lock released in userExists");
-        });
-
-        return found;
+        return lobby.users.find(element => element.id == userId) !== undefined;
     },
 
     getUserIndex: function (lobby, userId) 
     {
-        var index = -1;
-        locker.acquireReadLock(function() {
-            index = lobby.users.findIndex(user => user.id == userId);
-        },() => {
-            console.log("lock released in getUserIndex");
-        });
-
-        return index;
+        return lobby.users.findIndex(user => user.id == userId);
     },
 
     getUser: function (lobby, userId) 
     {
-        var _user = undefined;
-        locker.acquireReadLock(function() {
-            _user = lobby.users.find(element => element.id == userId);
-        },() => {
-            console.log("lock released in getUser");
-        });
-
-        return _user;
+        return lobby.users.find(element => element.id == userId);
     },
 
     getUserByIndex: function (lobby, userIndex) 
     {
-        var _user = undefined;
-        locker.acquireReadLock(function() {
-            _user = lobby.users.find(element => element.id == userIndex);
-        },() => {
-            console.log("lock released in getUser");
-        });
-
-        return _user;
+        return lobby.users.find(element => element.id == userIndex);;
     },
 
     filterAndSortAllUsers: function(lobby, filter, sorter)
     {
-        var filteredUsers=[];
-        locker.acquireReadLock(function() {
-            filteredUsers = filterAndSortUsers_int(lobby.users, filter, sorter);
-        }, () => {
-            console.log("lock released in filterAndSortAllUsers");
-        });
-        return filteredUsers;
+        return filterAndSortUsers_int(lobby.users, filter, sorter);
     },
 
     filterAndSortUsers: filterAndSortUsers_int,
 
     filterAndSortByPositionAndTier: function(lobby, position) 
     {
-        var filteredUsers=[];
-        locker.acquireReadLock(function() {
-            filteredUsers = filterAndSortByPositionAndTier_int(lobby.users, position);
-        }, () => {
-            console.log("lock released in filterAndSortByPositionAndTier");
-        });
-        return filteredUsers;
+        return filterAndSortByPositionAndTier_int(lobby.users, position);
     },
 
     createTeams: function(users, lobbyType)
@@ -355,7 +341,7 @@ module.exports = {
         var openUsers = users;
 
         // randomize users to not have e.g. first person to subscribe be pos 1 guaranteed etc.
-        shuffle(openUsers);
+        g.shuffle(openUsers);
 
         if(lobbyType == c.lobbyTypes.inhouse)
         {
@@ -372,12 +358,8 @@ module.exports = {
     printLobbyUsers: function (state, channelId, lobbyType) 
     {
         console.log("All Users:");
-        locker.acquireReadLock(function() {
-            state.lobbies[channelId][lobbyType].users.forEach(element => {
-                console.log(element.name + ": " + element.positions.join(", ") + " @" + element.tier.name);
-            });
-        },() => {
-            console.log("lock released in printLobbyUsers");
+        state.lobbies[channelId][lobbyType].users.forEach(element => {
+            console.log(element.name + ": " + element.positions.join(", ") + " @" + element.tier.name);
         });
     }
 }

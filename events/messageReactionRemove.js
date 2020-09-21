@@ -1,7 +1,5 @@
 const lM = require("../misc/lobbyManagement")
 const uH = require("../misc/userHelper")
-const rM = require("../misc/roleManagement")
-const locker = require("../misc/lock")
 const c = require("../misc/constants")
 
 /**
@@ -38,22 +36,19 @@ module.exports = async (client, reaction, user) => {
     var lobbyUser = uH.getUser(lobby, user.id);
     if(lobbyUser === undefined)
         return;
+   
+    // remove user position
+    lobbyUser.positions = lobbyUser.positions.filter(_position=> {
+        return _position != position;
+    });
 
-    locker.acquireWriteLock(function () {
-        // remove user position
-        lobbyUser.positions = lobbyUser.positions.filter(_position=> {
-            return _position != position;
-        });
+    // remove user if no positions left
+    if(lobbyUser.positions.length === 0)
+    {
+        var idx = lobby.users.findIndex(_user => _user.id == user.id);
+        lobby.users.splice(idx,1);
+    }
 
-        // remove user if no positions left
-        if(lobbyUser.positions.length === 0)
-        {
-            var idx = lobby.users.findIndex(_user => _user.id == user.id);
-            lobby.users.splice(idx,1);
-        }
-            
-    }, function() {
-        // update lobby post
-        lM.updateLobbyPost(lobby, reaction.message.channel);    
-	});
+    // update lobby post
+    lM.updateLobbyPost(lobby, reaction.message.channel);  
 }

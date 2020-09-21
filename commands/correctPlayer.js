@@ -1,5 +1,4 @@
 const c = require("../misc/constants")
-const locker = require("../misc/lock")
 const mH = require("../misc/messageHelper")
 const uH = require("../misc/userHelper")
 const lM = require("../misc/lobbyManagement")
@@ -31,11 +30,8 @@ module.exports = async (message, state) => {
 	}
 
 	// correct user
-	locker.acquireWriteLock(function () {
-		user.positions = Array.from(positions);
-	}, function() {
-		return mH.reactPositive(message, "your signup positions now read " + user.positions.join(", "));
-	});
+	user.positions = Array.from(positions);
+	mH.reactPositive(message, "your signup positions now read " + user.positions.join(", "));
 	
 	// update lobby post
 	lM.updateLobbyPost(lobby, message.channel);

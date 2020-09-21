@@ -19,11 +19,10 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 		return mH.reactNegative(message, "Cannot override already created lobby of type "+ lobbyTypeName +" in channel <#" + message.channel.id + ">");
 	}
 
-	if(lobbyType == c.lobbyTypes.tryout)
-		numbers = [0];
-	else 
+	var numbers = [0]; // 0 for tryout
+	// get role numbers
+	if(lobbyType !== c.lobbyTypes.tryout)
 	{
-		// get roles
 		const minRole = 1;
 		const maxRole = 4;
 		[res, numbers, errormsg] = mH.getNumbersFromMessage(message, 1, minRole, maxRole);
@@ -33,16 +32,17 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	}
 
 	// get zoned time
-	if(lobbyType == c.lobbyTypes.tryout)
-		[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, 1);
-	else 
-		[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, 2);
+	const tryoutIndex = 1;
+	const otherIndex = 2;
+	[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, lobbyType == c.lobbyTypes.tryout ? tryoutIndex : otherIndex);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}
+	
+	// get roles
+	var roles = rM.getRolesFromNumbers(numbers);
 
 	// send embedding post to lobby signup-channel
-	var roles = rM.getRolesFromNumbers(numbers);
 	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName, "for " + rM.getRoleStrings(roles), footer);
 	const lobbyPostMessage = await message.channel.send({embed: _embed});
 
@@ -50,13 +50,9 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	lobbyPostMessage.pin();
 
 	// add emojis
-	try {
-		for(let idx = 0; idx < c.reactionTypes.length; idx++)
-		{
-			lobbyPostMessage.react(c.reactionTypes[idx]);	
-		}
-	} catch (error) {
-		console.error('One of the emojis failed to react.');
+	for(let idx = 0; idx < c.reactionTypes.length; idx++)
+	{
+		lobbyPostMessage.react(c.reactionTypes[idx]);
 	}
 
 	// react to message

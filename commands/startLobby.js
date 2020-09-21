@@ -1,7 +1,6 @@
 const c = require("../misc/constants")
 const lM = require("../misc/lobbyManagement")
 const mH = require("../misc/messageHelper")
-const locker = require("../misc/lock")
 
 /**
  * Handles a coach's call to !start. Creates a lobby post
@@ -18,12 +17,7 @@ module.exports = async (message, state, force=false) => {
 	var key = Object.keys(c.lobbyTypes).find( typeKey => c.lobbyTypes[typeKey] == type);
 	var playersPerLobby = c.lobbyTypePlayerCount[key];
 
-	var lessThan = false;
-    locker.acquireReadLock(function() {
-		lessThan = lobby.users.length < playersPerLobby;
-	}, () => {
-		console.log("lock released in startGame");
-	});
+	var lessThan = lobby.users.length < playersPerLobby;
 
 	if(lessThan && !force)
 		return mH.reactNegative(message, "There are fewer than " + playersPerLobby + " players signed up. Cannot start yet");

@@ -131,7 +131,7 @@ module.exports = {
 
         // check if 'wanted UTC time' has already past 'now'
         if(date >= lobbyDate)
-            return [false, undefined, timezoneName, "Time is in the past (or tomorrow...). If you want to set up a lobby for tomorrow - do it tomorrow :-)"]
+            return [false, undefined, timezoneName, "Time is in the past (or tomorrow...). If you want to set up a lobby for tomorrow - add 'tomorrow' at the end of the post"]
         
         // return zoned time
 	    var zonedTime = await tZ.getZonedTime(lobbyDate, zone);

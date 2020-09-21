@@ -6,7 +6,7 @@ const client = new Discord.Client()
 
 const serializer = require("./misc/serializeHelper")
 const cM = require("./misc/channelManagement")
-const c = require("./misc/constants")
+const lM = require("./misc/lobbyManagement")
 
 // setup bot state
 client._state = {};
@@ -38,7 +38,13 @@ fs.readdir("./events/", (err, files) => {
 // login
 client.login(process.env.BOT_TOKEN)
 
-// serialize state in case of crash...
+// update lobby timers
+const timeUpdater = async () => {
+	lM.updateLobbyTimes(client.guilds.get(process.env.GUILD).channels, client._state.lobbies);
+};
+setInterval(timeUpdater, 60000);
+
+// update lobby post timer...
 const writer = () => {
 	serializer.writeState(client._state, process.env.SAVEFILE)
 };
