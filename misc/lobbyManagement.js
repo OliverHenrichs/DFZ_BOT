@@ -402,9 +402,16 @@ module.exports = {
 
                 // get new time
                 var remainingMs = lobby.date - Date.now();
-                var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
-                var hours = Math.floor((remainingMs / (1000 * 60 * 60)) % 24);
-                description.push("Time to lobby: " + hours + "h " + minutes + "min");
+                if(remainingMs > 0 )
+                {
+                    var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+                    var hours = Math.floor((remainingMs / (1000 * 60 * 60)));
+                    description.push("Time to lobby: " + (hours > 0  ? hours + "h " : "") + minutes + "min");
+                } else {
+                    var minutes = Math.floor((-remainingMs / (1000 * 60)) % 60);
+                    var hours = Math.floor((-remainingMs / (1000 * 60 * 60)));
+                    description.push("Lobby started " + (hours > 0  ? hours + "h " : "") + minutes + "min ago");
+                }
 
                 // generate new embed
                 var new_embed =   new Discord.RichEmbed(old_embed);
