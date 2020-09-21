@@ -1,4 +1,6 @@
 const c = require("../misc/constants")
+const cM = require("../misc/channelManagement")
+const g = require("../misc/generics")
 const aE = require("../misc/answerEmbedding")
 const uH = require("../misc/userHelper")
 const Discord = require("discord.js")
@@ -360,11 +362,58 @@ module.exports = {
         old_embed = message.embeds[0];
 
         // generate new embed
-        var new_embed =   new Discord.RichEmbed(old_embed);
+        var new_embed = new Discord.RichEmbed(old_embed);
         new_embed.fields = getCurrentUsersAsTable(lobby, true);
         
         // update embed
         await message.edit(new_embed);
+    },
+
+    /**
+     *  Update lobby time of each lobby post
+     *  @param lobby bot state
+     *  @param channels bots message channels on the server
+     */
+    updateLobbyTimes: async function(channels, lobbies)
+    {
+        g.asyncForEach(cM.botChannels, async channelId => {
+            // get channel
+            var channel = channels.find(chan => { return chan.id == channelId});
+            if(!channel)
+                return;
+    
+            // go through lobby types
+            await g.asyncForEach(Object.keys(c.lobbyTypes), async key =>  {
+                // get lobby
+                var lobby = lobbies[channelId][c.lobbyTypes[key]];
+                if(lobby === undefined)
+                    return;
+    
+                // update lobby time
+                
+                // fetch message
+                const message = await channel.fetchMessage(lobby.messageId);
+                old_embed = message.embeds[0];
+
+                // remove old time 
+                var description = old_embed.description.split('\n');
+                if(description.length > 1) 
+                    description.pop();
+
+                // get new time
+                var remainingMs = lobby.date - Date.now();
+                var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+                var hours = Math.floor((remainingMs / (1000 * 60 * 60)) % 24);
+                description.push("Time to lobby: " + hours + "h " + minutes + "min");
+
+                // generate new embed
+                var new_embed =   new Discord.RichEmbed(old_embed);
+                new_embed.description = description.join('\n');
+                
+                // update embed
+                await message.edit(new_embed);
+            });
+        });
     },
 
     /**

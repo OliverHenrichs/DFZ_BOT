@@ -43,6 +43,10 @@ module.exports = async (client, reaction, user) => {
         if(role === undefined || role === null)
             return;
 
+        var roleNumber = rM.getNumberFromBeginnerRole(role.id);
+        if(lobby.tiers.find(tierNumber => tierNumber == roleNumber) === undefined)
+            return;
+
         // add user
         uH.addUser( lobby,
                     user.username, 
