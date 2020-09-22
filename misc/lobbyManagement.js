@@ -345,6 +345,12 @@ module.exports = {
           };
     },
 
+    /**
+     * Removes lobby in backend
+     * @param {*} state bot state
+     * @param {*} channel lobby channel
+     * @param {*} type lobby type
+     */
     removeLobby: function(state, channel, type)
     {
         state.lobbies[channel][type] = undefined;
