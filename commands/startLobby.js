@@ -22,10 +22,8 @@ module.exports = async (message, state, force=false) => {
 	if(lessThan && !force)
 		return mH.reactNegative(message, "There are fewer than " + playersPerLobby + " players signed up. Cannot start yet");
 
-	// create lobby start post
-	lM.createLobbyPost(state, message.channel, type, playersPerLobby);
+	lM.createLobbyStartPost(state, message.channel, type, playersPerLobby);
 
-	// update lobby post and remove lobby
     lM.finishLobbyPost(lobby, message.channel);
 	lM.removeLobby(state, message.channel.id, type);
 	

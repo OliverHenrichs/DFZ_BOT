@@ -22,6 +22,7 @@ function createPositionalUserTable(lobby) {
 	}
 	return userTable;
 }
+
 /**
  * Handles coach's call to !list. Lists all players of all lobbies in the message's channel
  * @param {*} message message that caused the call to this handler

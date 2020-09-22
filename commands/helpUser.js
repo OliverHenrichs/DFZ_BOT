@@ -35,8 +35,7 @@ function addHelpToTable(embed, short, command, functionality, example) {
 }
 
 /**
- * Checks if user is admin or normal user and give helping embedding for each
- * 
+ * Returns available bot commands depending on role
  */
 module.exports = async (message) => {
     // create embed
