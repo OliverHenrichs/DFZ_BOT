@@ -102,6 +102,10 @@ function getPlayersPerPosition(_users) {
     return playersPerPosition;
 }
 
+
+/**
+ * Matchmaking system for beginner tiers
+ */
 createInhouseTeams = function(playerPositionMap, openUsers)
 {
     // now sort by tier
