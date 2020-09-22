@@ -412,9 +412,9 @@ module.exports = {
                     var hours = Math.floor((-remainingMs / (1000 * 60 * 60)));
 
                     // more than 20 hours ago => delete lobby
-                    if(hours >= 2) 
+                    if(hours >= 3) 
                     {
-                        await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]\nWhy is no coach using !start or !f_start? 🙄");
+                        await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]");
                         lobbies[channelId][c.lobbyTypes[key]] = undefined;
                         return;
                     } else {
