@@ -370,9 +370,9 @@ module.exports = {
     },
 
     /**
-     *  Update lobby time of each lobby post
-     *  @param lobby bot state
-     *  @param channels bots message channels on the server
+     *  Update lobby time of each lobby post and delete deprecated lobbies
+     *  @param lobbies available lobbies
+     *  @param channels the bot's message channels on the server
      */
     updateLobbyTimes: async function(channels, lobbies)
     {
@@ -410,7 +410,16 @@ module.exports = {
                 } else {
                     var minutes = Math.floor((-remainingMs / (1000 * 60)) % 60);
                     var hours = Math.floor((-remainingMs / (1000 * 60 * 60)));
-                    description.push("Lobby started " + (hours > 0  ? hours + "h " : "") + minutes + "min ago");
+
+                    // more than 20 hours ago => delete lobby
+                    if(hours >= 20) 
+                    {
+                        await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]\nWhy is no coach using !start or !f_start? 🙄");
+                        lobbies[channelId][c.lobbyTypes[key]] = undefined;
+                        return;
+                    } else {
+                        description.push("Lobby started " + (hours > 0  ? hours + "h " : "") + minutes + "min ago");
+                    }
                 }
 
                 // generate new embed
