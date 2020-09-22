@@ -139,6 +139,10 @@ function getArguments(message) {
     return content;
 }
 
+/**
+ * Derives lobby type from message and reacts based on evaluation
+ * @param {message} message message from which to derive lobby type
+ */
 function getLobbyType(message) {
     var args = getArguments(message);
 
