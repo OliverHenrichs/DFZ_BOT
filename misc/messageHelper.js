@@ -163,6 +163,11 @@ function getLobbyType(message) {
     return c.lobbyTypes[lobbyType];
 }
 
+/**
+ * Convenience fun combining getting lobby and type
+ * @param {*} state bot state
+ * @param {*} message user message
+ */
 function getLobbyAndType(state, message)
 {
     var type = getLobbyType(message);
