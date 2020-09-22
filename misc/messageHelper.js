@@ -129,6 +129,10 @@ function getTimeFromMessage(message, index)
     return tZ.createLobbyTime(args[index], args[index+1], tomorrow);
 }
 
+/**
+ * returns arguments of message of form "command arg1 arg2 ... argN"
+ * @param {message} message 
+ */
 function getArguments(message) {
     var content = message.content.split(" ");
     content.shift();
