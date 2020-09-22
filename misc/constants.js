@@ -27,6 +27,10 @@ module.exports = {
         }
     },
 
+    /**
+     * checks reaction emoji for ingame position
+     * @param {Emoji} reactionEmoji given emoji
+     */
     getReactionEmojiPosition: function(reactionEmoji) {
         var idx = reactionTypes.findIndex(type =>  {
             return reactionEmoji.name === type;
