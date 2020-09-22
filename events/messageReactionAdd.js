@@ -69,6 +69,5 @@ module.exports = async (client, reaction, user) => {
             // update lobby post
             lM.updateLobbyPost(lobby, reaction.message.channel);  
         }
-    }
-      
+    } 
 }

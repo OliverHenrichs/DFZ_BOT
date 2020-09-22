@@ -479,7 +479,7 @@ module.exports = {
      *  @param type type of lobby
      *  @param playersPerLobby how many players per lobby (will create multiple lobbies if e.g. more than 2x the neccessary players showed up. Rest go to bench).
      */
-    createLobbyPost: function(state, channel, type, playersPerLobby) 
+    createLobbyStartPost: function(state, channel, type, playersPerLobby) 
     {    
         var userSets = [];
         var userSet = [];
