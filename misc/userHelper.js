@@ -102,9 +102,10 @@ function getPlayersPerPosition(_users) {
     return playersPerPosition;
 }
 
-
 /**
  * Matchmaking system for beginner tiers
+ * @param {map} playerPositionMap maps players to position
+ * @param {list} openUsers users in the lobby
  */
 createInhouseTeams = function(playerPositionMap, openUsers)
 {
@@ -317,11 +318,6 @@ module.exports = {
     getUser: function (lobby, userId) 
     {
         return lobby.users.find(element => element.id == userId);
-    },
-
-    getUserByIndex: function (lobby, userIndex) 
-    {
-        return lobby.users.find(element => element.id == userIndex);;
     },
 
     filterAndSortAllUsers: function(lobby, filter, sorter)
