@@ -90,7 +90,7 @@ function getPlayersPerPosition(_users) {
         playersPerPosition.push({pos: position, users: filterByPosition(_users, position)});
         
         // randomly reverse order
-        if(g.coinflip()=== true)
+        if(g.coinFlip()=== true)
             playersPerPosition[position-1].users.reverse();
     }
 
@@ -110,7 +110,7 @@ function getPlayersPerPosition(_users) {
 createInhouseTeams = function(playerPositionMap, openUsers)
 {
     // now sort by tier
-    openUsers.sort(g.coinflip() === true ? tier_sorter : reverse_tier_sorter);
+    openUsers.sort(g.coinFlip() === true ? tier_sorter : reverse_tier_sorter);
 
     var playersPerPosition = getPlayersPerPosition(openUsers);
     var skillPoints = {radiant:0, dire:0};
