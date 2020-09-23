@@ -332,12 +332,14 @@ module.exports = {
         return filterAndSortByPositionAndTier_int(lobby.users, position);
     },
 
+    /**
+     * Creates teams based on users and lobby type
+     * @param {list} users 
+     * @param {int} lobbyType
+     */
     createTeams: function(users, lobbyType)
     {
-        // result
         var playerPositionMap = {};
-
-        // make copy
         var openUsers = users;
 
         // randomize users to not have e.g. first person to subscribe be pos 1 guaranteed etc.
@@ -346,20 +348,11 @@ module.exports = {
         if(lobbyType == c.lobbyTypes.inhouse)
         {
             createInhouseTeams(playerPositionMap, openUsers);
-        } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash|| lobbyType == c.lobbyTypes.tryout)
+        } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash || lobbyType == c.lobbyTypes.tryout)
         {
             createnNonCompetitionTeams(playerPositionMap, openUsers);
         }
 
         return playerPositionMap;
-    },
-
-    // debug output
-    printLobbyUsers: function (state, channelId, lobbyType) 
-    {
-        console.log("All Users:");
-        state.lobbies[channelId][lobbyType].users.forEach(element => {
-            console.log(element.name + ": " + element.positions.join(", ") + " @" + element.tier.name);
-        });
     }
 }

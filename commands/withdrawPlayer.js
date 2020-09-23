@@ -24,6 +24,4 @@ module.exports = async (message, state) => {
 	
 	// update lobby post
 	lM.updateLobbyPost(lobby,message.channel);
-
-	userHelper.printLobbyUsers(state, message.channel.id, type);
 }
