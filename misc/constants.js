@@ -2,8 +2,10 @@
 const lobbyTypes = {inhouse:1, unranked:2, botbash:3, tryout: 4}
 const lobbyTypePlayerCount = {inhouse:10, unranked:5, botbash:5, tryout: 5}
 const reactionTypes =['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
+const tryoutReactionEmoji ='✅';
 
 module.exports = {
+    tryoutReactionEmoji: tryoutReactionEmoji,
     reactionTypes: reactionTypes,
     lobbyTypes: lobbyTypes,
     lobbyTypePlayerCount: lobbyTypePlayerCount,
