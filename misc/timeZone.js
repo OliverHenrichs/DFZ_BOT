@@ -53,10 +53,18 @@ function validateTime(timeString)
     if((isNaN(hour) || isNaN(minute)) || (ampm != "am" && ampm != "pm") || (hour < 0 || hour > 12) || (minute < 0 || minute > 59))
         return [undefined, undefined];
 
-    if(ampm != "pm" || hour == 12)
-        return [hour, minute];
-    else 
-        return [hour+12, minute];
+    if(ampm === "am")
+    {
+        if(hour === 12)
+            return [hour-12, minute]; // 12:30 am => 00:30
+        else 
+            return [hour, minute]; // 1am = 1:00, 10am = 10:00
+    } else {
+        if(hour === 12)
+            return [hour, minute]; // 12:30pm = 12:30
+        else
+            return [hour+12, minute]; // 1:00pm = 13:00, 11pm = 23:00
+    } 
 }
 
 /**
