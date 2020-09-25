@@ -28,10 +28,17 @@ module.exports = async (client, reaction, user) => {
     if(lobby == undefined)
         return;
 
-    // get position
-    var position = c.getReactionEmojiPosition(reaction.emoji);
-    if(position === 0)
-        return;
+    var position = '-';
+    if(lobby.type === c.lobbyTypes.tryout)
+    {
+        if(reaction.emoji.name !== c.tryoutReactionEmoji)
+            return;
+    } else {
+        // get position
+        position = c.getReactionEmojiPosition(reaction.emoji);
+        if(position === 0)
+            return;
+    }
 
     // check if it contains user
     if(!uH.userExists(lobby, user.id))

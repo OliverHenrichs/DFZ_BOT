@@ -24,30 +24,48 @@ module.exports = async (client, reaction, user) => {
 
     // find lobby
     var lobby = lM.findLobbyByMessage(client._state, reaction.message.channel.id, reaction.message.id);
-    if(lobby == undefined)
+    if(lobby === undefined)
         return;
 
-    // get position
-    var position = c.getReactionEmojiPosition(reaction.emoji);
-    if(position === 0)
-        return;
+    // check reaction emojis
+    var position = '-';
+    if(lobby.type === c.lobbyTypes.tryout)
+    {
+        if(reaction.emoji.name !== c.tryoutReactionEmoji)
+            return;
+    } else {
+        // get position
+        position = c.getReactionEmojiPosition(reaction.emoji);
+        if(position === 0)
+            return;
+    }
 
     // check if lobby contains user
     var lobbyUser = uH.getUser(lobby, user.id);
     if(lobbyUser === undefined)
         return;
-   
-    // remove user position
-    lobbyUser.positions = lobbyUser.positions.filter(_position=> {
-        return _position != position;
-    });
+    
+    // if positions are relevant, remove positions
+    var removeUser = true;
+    if(lobby.type !== c.lobbyTypes.tryout)
+    {
+        // remove user position
+        lobbyUser.positions = lobbyUser.positions.filter(_position=> {
+            return _position != position;
+        });
+        
+        // do not remove user if some positions are left
+        if(lobbyUser.positions.length !== 0)
+        removeUser = false;
+    }
 
-    // remove user if no positions left
-    if(lobbyUser.positions.length === 0)
+    // remove user if necessary
+    if(removeUser === true)
     {
         var idx = lobby.users.findIndex(_user => _user.id == user.id);
         lobby.users.splice(idx,1);
     }
+
 
     // update lobby post
     lM.updateLobbyPost(lobby, reaction.message.channel);  

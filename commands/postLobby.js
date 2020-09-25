@@ -50,9 +50,16 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	lobbyPostMessage.pin();
 
 	// add emojis
-	for(let idx = 0; idx < c.reactionTypes.length; idx++)
+	if(lobbyType == c.lobbyTypes.tryout)
 	{
-		lobbyPostMessage.react(c.reactionTypes[idx]);
+		lobbyPostMessage.react(c.tryoutReactionEmoji);
+	}
+	else 
+	{
+		for(let idx = 0; idx < c.reactionTypes.length; idx++)
+		{
+			lobbyPostMessage.react(c.reactionTypes[idx]);
+		}  
 	}
 
 	// react to message
@@ -63,7 +70,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 }
 
 var reactionStringBeginner = "React to the numbers below to join the lobby at the ingame positions you want.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."
-var reactionStringTryout = "React to the numbers below to join the lobby at the ingame positions you want.\nIf you don't know what ingame positions are, just press any of them.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."
+var reactionStringTryout = "React to the checkmark below to join the lobby.\nRemove the reaction to withdraw from the lobby."
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
