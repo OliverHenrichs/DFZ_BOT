@@ -40,7 +40,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	}
 	
 	// get roles
-	var roles = rM.getRolesFromNumbers(numbers);
+	var roles = rM.getBeginnerRolesFromNumbers(numbers);
 
 	// send embedding post to lobby signup-channel
 	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName, "for " + rM.getRoleStrings(roles), footer);

@@ -1,10 +1,11 @@
-
 const beginnerRoles = [process.env.TRYOUT, process.env.TIER_1, process.env.TIER_2, process.env.TIER_3, process.env.TIER_4];
+const regionRoleStrings = [process.env.REGION_EU_ROLE, process.env.REGION_NA_ROLE, process.env.REGION_SEA_ROLE];
 
 // role management
 module.exports = {
 	adminRoles: [process.env.COACH],
 	beginnerRoles: beginnerRoles,
+	regionRoleStrings: regionRoleStrings,
 	
 	/**
 		Check if message sender has at least one of the roles given by rolesToCheck
@@ -24,7 +25,7 @@ module.exports = {
 		@param number list of numbers, e.g. [0,1,2,3,4]
 		@return list of roles corresponding to given numbers
 	*/
-	getRolesFromNumbers: function (numbers) {
+	getBeginnerRolesFromNumbers: function (numbers) {
 		var roles = [];
 		numbers.forEach(num => {
 			if(num == 0)
@@ -46,12 +47,11 @@ module.exports = {
 
 	/**
 		Returns number corresponding to role (Beginner Tier 1 => 1, 2 => 2 , ...)
-		@param role given role
+		@param roleId id of given role
 		@return corresponding number
 	*/
-	getNumberFromBeginnerRole: function (role) {
-		
-		switch (role) {
+	getNumberFromBeginnerRole: function (roleId) {
+		switch (roleId) {
 			case beginnerRoles[0]:
 				return 0;
 			case beginnerRoles[1]:
@@ -62,7 +62,24 @@ module.exports = {
 				return 3;
 			case beginnerRoles[4]:
 				return 4;
+		}
+	},
 
+	/**
+	 * Returns prefix of given role for name adjustment
+	 * @param {number} roleId id of regional role to check
+	 * @return corresponding regional prefix
+	 */
+	getRegionalRolePrefix(roleId) {
+		switch (roleId) {
+			case regionRoleStrings[0]:
+				return "[EU] ";
+			case regionRoleStrings[1]:
+				return "[NA] ";
+			case regionRoleStrings[2]:
+				return "[SEA] ";
+			default:
+				return "";
 		}
 	},
 
