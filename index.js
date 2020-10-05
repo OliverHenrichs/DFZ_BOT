@@ -40,7 +40,10 @@ client.login(process.env.BOT_TOKEN)
 
 // update lobby timers
 const timeUpdater = async () => {
-	lM.updateLobbyTimes(client.guilds.get(process.env.GUILD).channels, client._state.lobbies);
+	var guild = client.guilds.get(process.env.GUILD);
+	if(guild === undefined || guild === null)
+		return;
+	lM.updateLobbyTimes(guild.channels, client._state.lobbies);
 };
 setInterval(timeUpdater, 60000);
 
