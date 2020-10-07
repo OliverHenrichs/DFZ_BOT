@@ -9,6 +9,7 @@ const c = require("../misc/constants")
  */
 module.exports = async (client) => {
 	cM.botChannels.forEach(channel => {
+        console.log("Ready at " +  new Date().toLocaleString());
         for (var key in c.lobbyTypes){
             var lobby = lM.getLobby(client._state, channel, c.lobbyTypes[key])
             if(lobby == undefined)
