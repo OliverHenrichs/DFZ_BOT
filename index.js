@@ -36,19 +36,21 @@ fs.readdir("./events/", (err, files) => {
 })
 
 // login
-client.login(process.env.BOT_TOKEN)
+client.login(process.env.BOT_TOKEN).then(() => {
+	// update lobby timers
+	const timeUpdater = async () => {
+		var guild = client.guilds.get(process.env.GUILD);
+		if(guild === undefined || guild === null)
+			return;
+		lM.updateLobbyTimes(guild.channels, client._state.lobbies);
+	};
+	setInterval(timeUpdater, 60000);
 
-// update lobby timers
-const timeUpdater = async () => {
-	var guild = client.guilds.get(process.env.GUILD);
-	if(guild === undefined || guild === null)
-		return;
-	lM.updateLobbyTimes(guild.channels, client._state.lobbies);
-};
-setInterval(timeUpdater, 60000);
-
-// update lobby post timer...
-const writer = () => {
-	serializer.writeState(client._state, process.env.SAVEFILE)
-};
-setInterval(writer, 15000);
+	// update lobby post timer...
+	const writer = () => {
+		serializer.writeState(client._state, process.env.SAVEFILE)
+	};
+	setInterval(writer, 15000);
+}).catch(error => {
+	console.log (error);
+});
