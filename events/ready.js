@@ -8,8 +8,8 @@ const c = require("../misc/constants")
  * @param {*} client discord client
  */
 module.exports = async (client) => {
+    console.log("Ready at " +  new Date().toLocaleString());
 	cM.botChannels.forEach(channel => {
-        console.log("Ready at " +  new Date().toLocaleString());
         for (var key in c.lobbyTypes){
             var lobby = lM.getLobby(client._state, channel, c.lobbyTypes[key])
             if(lobby == undefined)

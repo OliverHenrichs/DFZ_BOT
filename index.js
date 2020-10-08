@@ -1,7 +1,7 @@
 require("dotenv").config()
 const Discord = require("discord.js")
 const fs = require("fs")
-const client = new Discord.Client()
+const client = new Discord.Client({autoReconnect:true});
 
 
 const serializer = require("./misc/serializeHelper")
