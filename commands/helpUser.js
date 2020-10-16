@@ -47,12 +47,7 @@ module.exports = async (message) => {
     "!help");
 
     // help beginner commands
-	if (rM.findRole(message.member, rM.beginnerRoles) != undefined) {
-        addHelpToTable( _embed, "join", 
-            "!join <lobbytype> <positions>", 
-            "Joins an open lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ") + "\n Allowed positions are 1,2,3,4,5",
-            "!join " + Object.keys(c.lobbyTypes)[0] + " 1,2" );
-                
+	if (rM.findRole(message.member, rM.beginnerRoles) != undefined) {              
         addHelpToTable( _embed, "withdraw", 
             "!withdraw <lobbytype>", 
             "Withdraws from a lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),

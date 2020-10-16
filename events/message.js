@@ -1,4 +1,3 @@
-const addPlayer = require("../commands/addPlayer")
 const correctPlayer = require("../commands/correctPlayer")
 const withdrawPlayer = require("../commands/withdrawPlayer")
 const clearPlayers = require("../commands/clearPlayers")
@@ -46,9 +45,6 @@ module.exports = async (client, message) => {
 		if (content.startsWith("!help") || content.startsWith("!helpme")) {
 			return helpUser(message);
 		}
-		if (content.startsWith("!join")) {
-			return addPlayer(message, client._state)
-		}
 		if (content.startsWith("!withdraw")) {
 			return withdrawPlayer(message, client._state)
 		}
@@ -61,8 +57,7 @@ module.exports = async (client, message) => {
 		if (content.startsWith("!time")) {
 			return timeZone(message, client._state);
 		}
-	} else if (	content.startsWith("!join") || 
-				content.startsWith("!withdraw") || 
+	} else if (	content.startsWith("!withdraw") || 
 				content.startsWith("!correct") || 
 				content.startsWith("!status")) 
 	{

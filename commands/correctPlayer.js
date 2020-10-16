@@ -20,7 +20,7 @@ module.exports = async (message, state) => {
 	var user = uH.getUser(lobby, message.author.id);
 	if(user == undefined)
 	{
-		return mH.reactNegative(message, "you did not sign up yet, therefore I cannot correct your positioning choice. Use '!join'-command to sign up.");
+		return mH.reactNegative(message, "you did not sign up yet, therefore I cannot alter your positioning choice");
 	}
 
 	// check positions
