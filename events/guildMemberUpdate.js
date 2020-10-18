@@ -17,8 +17,8 @@ module.exports = async (client, oldMember, newMember) => {
     if(oldMember.roles.size === newMember.roles.size)
         return;
 
-    var oldRole = rM.findRole(oldMember, rM.regionRoleStrings);
-    var newRole = rM.findRole(newMember, rM.regionRoleStrings);
+    var oldRole = rM.findRole(oldMember, rM.regionRoleIDs);
+    var newRole = rM.findRole(newMember, rM.regionRoleIDs);
     if((oldRole === null && newRole === null) || (oldRole !== null && newRole !== null)) 
     {
         // if no roles are defined => role change had nothing to do with regional roles (e.g. tier change)

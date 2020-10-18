@@ -19,54 +19,50 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 		return mH.reactNegative(message, "Cannot override already created lobby of type "+ lobbyTypeName +" in channel <#" + message.channel.id + ">");
 	}
 
-	var numbers = [0]; // 0 for tryout
+	// get region
+	var lobbyRegionRole = mH.getLobbyRegionRoleFromMessage(message, 1);
+	if (lobbyRegionRole === undefined)
+		return mH.reactNegative(message, "Failed to recognize region, has to be any of '" + rM.getRegionalRoleStringsForCommand().join("', '") + "'");
+
+	// get beginner roles / tryout role
+	var beginnerRoleNumbers = [0]; // 0 for tryout
 	// get role numbers
 	if(lobbyType !== c.lobbyTypes.tryout)
 	{
 		const minRole = 1;
 		const maxRole = 4;
-		[res, numbers, errormsg] = mH.getNumbersFromMessage(message, 1, minRole, maxRole);
+		[res, beginnerRoleNumbers, errormsg] = mH.getNumbersFromMessage(message, 2, minRole, maxRole);
 		if(!res) {
 			return mH.reactNegative(message, errormsg);
 		}
 	}
+	var lobbyBeginnerRoles = rM.getBeginnerRolesFromNumbers(beginnerRoleNumbers);
 
 	// get zoned time
-	const tryoutIndex = 1;
-	const otherIndex = 2;
-	[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, lobbyType == c.lobbyTypes.tryout ? tryoutIndex : otherIndex);
+	const tryoutIndex = 2;
+	const allOtherTypesIndex = 3;
+	[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, lobbyType == c.lobbyTypes.tryout ? tryoutIndex : allOtherTypesIndex);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}
-	
-	// get roles
-	var roles = rM.getBeginnerRolesFromNumbers(numbers);
 
 	// send embedding post to lobby signup-channel
-	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName, "for " + rM.getRoleStrings(roles), footer);
-	const lobbyPostMessage = await message.channel.send({embed: _embed});
+	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName,
+										"for " + rM.getRoleMentions(lobbyBeginnerRoles) + "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) ,
+										footer + "\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up.");
+	const lobbyPostMessage = await message.channel.send(rM.getRoleMentions(lobbyBeginnerRoles), {embed: _embed}); // mentioning roles in message again to ping beginners
 
 	// pin message to channel
 	lobbyPostMessage.pin();
 
 	// add emojis
-	if(lobbyType == c.lobbyTypes.tryout)
-	{
-		lobbyPostMessage.react(c.tryoutReactionEmoji);
-	}
-	else 
-	{
-		for(let idx = 0; idx < c.reactionTypes.length; idx++)
-		{
-			lobbyPostMessage.react(c.reactionTypes[idx]);
-		}  
-	}
+	mH.createLobbyPostReactions(lobbyType, lobbyPostMessage);
 
-	// react to message
+	// react to coach's command
 	mH.reactPositive(message);
 
 	// create lobby data in state
-	lM.createLobby(state, message.channel.id, lobbyType, Array.from(numbers), zonedTime.epoch, lobbyPostMessage.id);
+	lM.createLobby(state, message.channel.id, lobbyType, lobbyBeginnerRoles, lobbyRegionRole, zonedTime.epoch, lobbyPostMessage.id);
 }
 
 var reactionStringBeginner = "React to the numbers below to join the lobby at the ingame positions you want.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."

@@ -45,13 +45,18 @@ module.exports = async (client, reaction, user) => {
     {
         // get guild member (has role)
         const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
-        // get role
-        var role = rM.findRole(guildMember, rM.beginnerRoles);
-        if(role === undefined || role === null)
+
+        // get beginner role
+        var beginnerRole = rM.findRole(guildMember, rM.beginnerRoles);
+        if(beginnerRole === undefined || beginnerRole === null)
             return;
 
-        var roleNumber = rM.getNumberFromBeginnerRole(role.id);
-        if(lobby.tiers.find(tierNumber => tierNumber == roleNumber) === undefined)
+        if(lobby.beginnerRoleIds.find(roleId => roleId == beginnerRole.id) === undefined)
+            return;
+
+        // get region role
+        var regionRole = rM.findRole(guildMember, rM.regionRoleIDs);
+        if(regionRole === undefined || regionRole === null)
             return;
 
         // add user
@@ -59,7 +64,8 @@ module.exports = async (client, reaction, user) => {
                     user.username, 
                     user.id, 
                     [position],
-                    role
+                    beginnerRole, 
+                    regionRole
         );
 
         // update lobby post

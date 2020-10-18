@@ -1,11 +1,30 @@
 const beginnerRoles = [process.env.TRYOUT, process.env.TIER_1, process.env.TIER_2, process.env.TIER_3, process.env.TIER_4];
-const regionRoleStrings = [process.env.REGION_EU_ROLE, process.env.REGION_NA_ROLE, process.env.REGION_SEA_ROLE];
+const regionRoleIDs = [process.env.REGION_EU_ROLE, process.env.REGION_NA_ROLE, process.env.REGION_SEA_ROLE];
+
+/**
+* Returns prefix of given role for name adjustment
+* @param {number} roleId id of regional role to check
+* @return corresponding regional prefix
+*/
+function getRegionalRoleString(roleId) 
+{
+	switch (roleId) {
+		case regionRoleIDs[0]:
+			return "EU";
+		case regionRoleIDs[1]:
+			return "NA";
+		case regionRoleIDs[2]:
+			return "SEA";
+		default:
+			return "";
+	}
+};
 
 // role management
 module.exports = {
 	adminRoles: [process.env.COACH],
 	beginnerRoles: beginnerRoles,
-	regionRoleStrings: regionRoleStrings,
+	regionRoleIDs: regionRoleIDs,
 	
 	/**
 		Check if message sender has at least one of the roles given by rolesToCheck
@@ -70,27 +89,57 @@ module.exports = {
 	 * @param {number} roleId id of regional role to check
 	 * @return corresponding regional prefix
 	 */
-	getRegionalRolePrefix(roleId) {
+	getRegionalRolePrefix: function(roleId) {
 		switch (roleId) {
-			case regionRoleStrings[0]:
+			case regionRoleIDs[0]:
 				return "[EU] ";
-			case regionRoleStrings[1]:
+			case regionRoleIDs[1]:
 				return "[NA] ";
-			case regionRoleStrings[2]:
+			case regionRoleIDs[2]:
 				return "[SEA] ";
 			default:
 				return "";
 		}
+	},	
+	
+	getRegionalRoleString: getRegionalRoleString,
+
+	getRegionalRoleStringsForCommand: function() {
+		var res = [];
+		regionRoleIDs.forEach((rid) => res.push(getRegionalRoleString(rid)));
+		return res;
+	},
+
+	getRegionalRoleFromString: function(roleString) {
+		switch (roleString) {
+			case 'EU':
+				return regionRoleIDs[0];
+			case 'NA':
+				return regionRoleIDs[1];
+			case 'SEA':
+				return regionRoleIDs[2];
+			default:
+				return undefined;
+		}
 	},
 
 	/**
-		takes a sequence of roles and returns the role strings
+		takes a sequence of roles and returns the role mention-strings
 		@param roles list of roles
 		@return list of corresponding role strings
 	*/
-	getRoleStrings: function (roles) {
+	getRoleMentions: function (roles) {
 		return roles.map((tier) => {
 			return `<@&${tier}>`;
 		  }).join(' ');
-	}	
+	}, 
+
+	/**
+		returns a mention string of a role id
+		@param role the role id
+		@return string with mention of corresponding role
+	*/
+	getRoleMention: function (role) {
+		return `<@&${role}>`;
+	}
 }

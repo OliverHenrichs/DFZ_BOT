@@ -1,5 +1,6 @@
 const c = require("../misc/constants")
 const lM = require("../misc/lobbyManagement")
+const rM = require("../misc/roleManagement")
 const tZ = require("../misc/timeZone")
 
 
@@ -11,7 +12,7 @@ const tZ = require("../misc/timeZone")
  */
 async function reactMessage(message, reply, emoji)
 {
-    message.react(emoji).then(asdf => message.delete(5000));
+    message.react(emoji).then(() => message.delete(5000));
     
     if(reply == "" ) 
         return;
@@ -43,7 +44,6 @@ function reactNeutral(message, reply = "")
     reactMessage(message, reply, '😐');
 }
 
-
 /**
  * Creates a positive reaction
  * @param {message} message message to react to
@@ -52,6 +52,26 @@ function reactNeutral(message, reply = "")
 function reactPositive(message, reply = "")
 {
     reactMessage(message, reply, '✅');
+}
+
+/**
+ * Creates initial reaction to lobby post for users to react to
+ * @param {int} lobbyType 
+ * @param {message} message 
+ */
+function createLobbyPostReactions(lobbyType, message) 
+{
+	if(lobbyType == c.lobbyTypes.tryout)
+	{
+		message.react(c.tryoutReactionEmoji);
+	}
+	else 
+	{
+		for(let idx = 0; idx < c.reactionTypes.length; idx++)
+		{
+			message.react(c.reactionTypes[idx]);
+		}  
+	}
 }
 
 /**
@@ -84,8 +104,11 @@ function checkNumbers(positions, min=0, max=5) {
 }
 
 /**
+ * Retrieves a sequence of unique numbers from an index of a message split at spaces
  * @param message message containing numbers
- * @param splitter integer value at which the message content must be split in order to retrieve numbers
+ * @param {uint} index index at which the message content must be split in order to retrieve numbers
+ * @param {int} min min allowed number
+ * @param {int} max max allowed number
  * @return [true if success, unique numbers, error message if not success]
  */
 function getNumbersFromMessage(message, index, min=0, max=5) {
@@ -109,6 +132,23 @@ function getNumbersFromMessage(message, index, min=0, max=5) {
     var checkResult = checkNumbers(uniqueNumbers, min=0, max=5);
 
     return [checkResult[0], uniqueNumbers, checkResult[1]];
+}
+
+/**
+ * Retrieves a region from an index of a message split at spaces
+ * message containing regional role
+ * @param {Message} message 
+ * @param {int} index 
+ */
+function getLobbyRegionRoleFromMessage(message, index) 
+{
+    var args = getArguments(message);
+
+    // message to short
+    if(args.length <= index)
+        return undefined;
+    
+    return rM.getRegionalRoleFromString(args[index])
 }
 
 /**
@@ -184,8 +224,10 @@ function getLobbyAndType(state, message)
 module.exports.reactNeutral = reactNeutral;
 module.exports.reactNegative = reactNegative;
 module.exports.reactPositive = reactPositive;
+module.exports.createLobbyPostReactions = createLobbyPostReactions;
 module.exports.checkNumbers = checkNumbers;
 module.exports.getNumbersFromMessage = getNumbersFromMessage;
+module.exports.getLobbyRegionRoleFromMessage = getLobbyRegionRoleFromMessage;
 module.exports.getArguments = getArguments;
 module.exports.getLobbyType = getLobbyType;
 module.exports.getLobbyAndType = getLobbyAndType;

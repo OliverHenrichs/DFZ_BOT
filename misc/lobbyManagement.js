@@ -48,6 +48,13 @@ function getPositionalUserTable(users, position, mention=false) {
     return tableBase;
 }
 
+function addUserWithPositionsToUserTable(tableBase, user, positions, startIndex = 0, mention=false)
+{
+    tableBase[startIndex].value = tableBase[startIndex].value + "\r\n" + (mention ? ("["+user.region.name +"]<@" +user.id + ">") : "["+user.region.name +"]"+user.name);
+    tableBase[startIndex+1].value = tableBase[startIndex+1].value + "\r\n" + positions.join(", ");
+    tableBase[startIndex+2].value = tableBase[startIndex+2].value + "\r\n" + user.tier.name;
+}
+
 /**
  *  adds user + position + tier to table
  *  @param tableBase table to which data is added
@@ -55,11 +62,7 @@ function getPositionalUserTable(users, position, mention=false) {
  *  @param mention if true mentions the user in the table
  */
 function addToUserTable(tableBase, user, startIndex = 0, mention=false) {
-    {
-        tableBase[startIndex].value = tableBase[startIndex].value + "\r\n" + (mention ? ("<@" +user.id + ">") : user.name);
-        tableBase[startIndex+1].value = tableBase[startIndex+1].value + "\r\n" +user.positions.join(", ");
-        tableBase[startIndex+2].value = tableBase[startIndex+2].value + "\r\n" +user.tier.name;
-    }
+    addUserWithPositionsToUserTable(tableBase, user, user.positions, startIndex, mention);
 }
 
 /**
@@ -164,9 +167,7 @@ function getCurrentUsersAsTable(lobby, mention=false) {
  */
 function addUserToTeam(tableBase, index, player, position, mention)
 {
-    tableBase[index].value = tableBase[index].value + "\r\n" + (mention ? ("<@" +player.id + ">") : player.name);
-    tableBase[index+1].value = tableBase[index+1].value + "\r\n" + position;
-    tableBase[index+2].value = tableBase[index+2].value + "\r\n" +player.tier.name;
+    addUserWithPositionsToUserTable(tableBase, player, [position], index, mention)
 }
 
 /**
@@ -329,18 +330,20 @@ module.exports = {
      *  @param state bot state
      *  @param channel message channel
      *  @param type lobby type
-     *  @param roles allowed Beginner roles
+     *  @param beginnerRoles allowed Beginner roles
+     *  @param regionRole allowed Beginner roles
      *  @param date date of lobby
      *  @param messageID ref to lobby-message to alter it
      */
-    createLobby: function (state, channel, type, roles, date, messageID) 
+    createLobby: function (state, channel, type, beginnerRoles, regionRole, date, messageID) 
     {
         // override / create lobby
         state.lobbies[channel][type] = {
             type: type,
             date: date,
             users: [],
-            tiers: roles, // roles
+            beginnerRoleIds: beginnerRoles, // roles
+            regionId: regionRole,
             messageId : messageID
           };
     },
@@ -402,8 +405,9 @@ module.exports = {
                 old_embed = message.embeds[0];
 
                 // remove old time 
+                var startString = "Time to lobby: ";
                 var description = old_embed.description.split('\n');
-                if(description.length > 1) 
+                if(description[description.length - 1].startsWith(startString)) 
                     description.pop();
 
                 // get new time
@@ -412,19 +416,22 @@ module.exports = {
                 {
                     var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
                     var hours = Math.floor((remainingMs / (1000 * 60 * 60)));
-                    description.push("Time to lobby: " + (hours > 0  ? hours + "h " : "") + minutes + "min");
+                    description.push(startString + (hours > 0  ? hours + "h " : "") + minutes + "min");
                 } else {
                     var minutes = Math.floor((-remainingMs / (1000 * 60)) % 60);
                     var hours = Math.floor((-remainingMs / (1000 * 60 * 60)));
 
-                    // more than 20 hours ago => delete lobby
+                    // more than 3 hours ago => delete lobby
                     if(hours >= 3)
                     {
                         await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]");
                         lobbies[channelId][c.lobbyTypes[key]] = undefined;
                         return;
                     } else {
-                        description.push("Lobby started " + (hours > 0  ? hours + "h " : "") + minutes + "min ago");
+                        startString = "Lobby started ";
+                        if(description[description.length - 1].startsWith(startString)) 
+                            description.pop();
+                        description.push(startString + (hours > 0  ? hours + "h " : "") + minutes + "min ago");
                     }
                 }
 

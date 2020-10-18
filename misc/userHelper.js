@@ -288,7 +288,7 @@ createnNonCompetitionTeams = function(playerPositionMap, openUsers)
 },
 
 module.exports = {
-    addUser: function (lobby, name, id, positions, tier)
+    addUser: function (lobby, name, id, positions, beginnerRole, regionRole)
     {
         // create user
         var user = {};
@@ -297,11 +297,28 @@ module.exports = {
         user.positions = positions;
         user.positions.sort();
         user.tier = {};
-        user.tier.id = tier.id;
-        user.tier.number = rM.getNumberFromBeginnerRole(tier.id);
-        user.tier.name = tier.name;
+        user.tier.id = beginnerRole.id;
+        user.tier.number = rM.getNumberFromBeginnerRole(beginnerRole.id);
+        user.tier.name = beginnerRole.name;
+        user.region = {};
+        user.region.id = regionRole.id;
+        user.region.name = regionRole.name;
 
-        // add to lobby
+        // user is from region => append before other regions
+        if(user.region.id === lobby.regionId)
+        {
+            for(let idx = 0; idx<lobby.users.length; idx++)
+            {
+                var curUser = lobby.users[idx];
+                if(curUser.region.id !== lobby.regionId)
+                {
+                    lobby.users.splice(idx, 0, user);
+                    return;
+                }
+            }
+        } 
+
+        // user is not from region or all users are from the lobby region
         lobby.users.push(user);	
     },
 
