@@ -129,21 +129,17 @@ module.exports = {
 
         // get 'now'
         var date = new Date();
-        
-        // get current time in timezone
-        var zonedNowTime = await tZ.getZonedTime(date, zone);
-        
+        // get 'now' in timezone
+        var zonedDate = await tZ.getZonedTime(date, zone);
         // check if hour, minute has already past in their time zone
-        var zonedNowTimeHour = zonedNowTime.hours;
-        var zonedNowTimeMinute = zonedNowTime.minutes;
-        var timeDif = (hour - zonedNowTimeHour)*1000*60*60 + (minute - zonedNowTimeMinute)*1000*60;
+        var timeDif = (hour - zonedDate.hours)*1000*60*60 + (minute - zonedDate.minutes)*1000*60;
         if(timeDif < 0) // go for next day if it did
             timeDif = dayInMs + timeDif;
 
         // create date "in milliseconds since 01.01.1970 00:00"
-        var lobbyDate = new Date(zonedNowTime.epoch + timeDif);
+        var lobbyDate = new Date(zonedDate.epoch + timeDif);
         
-        // return zoned date
+        // return zoned lobby date
 	    var zonedLobbyDate = await tZ.getZonedTime(lobbyDate, zone);
         return [true, zonedLobbyDate, timezoneName, ""];
     },
