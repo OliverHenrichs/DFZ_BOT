@@ -110,6 +110,8 @@ function getTimeString(zonedTime)
     return weekDays[zonedTime.dayOfWeek] + ", "+ months[zonedTime.month] +" "+ zonedTime.day + " at " + zonedTime.hours + ":" + (zonedTime.minutes < 10 ? "0"+ zonedTime.minutes : zonedTime.minutes);
 }
 
+const dayInMs = 24*1000*60*60;
+
 module.exports = {
     weekDays: weekDays,
     months:months,
@@ -127,23 +129,23 @@ module.exports = {
 
         // get 'now'
         var date = new Date();
-
-        // get offset to user's time zone
-        var tZoffset = tZ.getUTCOffset(date, zone);
         
-        // get utc hour of user's time
-        var utcHour = hour + tZoffset.offset/60
-
-        // create date at wanted UTC time
-        var lobbyDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), utcHour, minute, 0, 0));
-
-        // check if 'wanted UTC time' has already past 'now'; add a day if it's in the past.
-        if(date >= lobbyDate)
-            lobbyDate.setDate(lobbyDate.getDate()+1);
+        // get current time in timezone
+        var zonedNowTime = await tZ.getZonedTime(date, zone);
         
-        // return zoned time
-	    var zonedTime = await tZ.getZonedTime(lobbyDate, zone);
-        return [true, zonedTime, timezoneName, ""];
+        // check if hour, minute has already past in their time zone
+        var zonedNowTimeHour = zonedNowTime.hours;
+        var zonedNowTimeMinute = zonedNowTime.minutes;
+        var timeDif = (hour - zonedNowTimeHour)*1000*60*60 + (minute - zonedNowTimeMinute)*1000*60;
+        if(timeDif < 0) // go for next day if it did
+            timeDif = dayInMs + timeDif;
+
+        // create date "in milliseconds since 01.01.1970 00:00"
+        var lobbyDate = new Date(zonedNowTime.epoch + timeDif);
+        
+        // return zoned date
+	    var zonedLobbyDate = await tZ.getZonedTime(lobbyDate, zone);
+        return [true, zonedLobbyDate, timezoneName, ""];
     },
 
     getUserLobbyTime: async function(date, timezoneName) 
