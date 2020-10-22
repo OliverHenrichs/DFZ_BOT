@@ -19,16 +19,18 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 		return mH.reactNegative(message, "Cannot override already created lobby of type "+ lobbyTypeName +" in channel <#" + message.channel.id + ">");
 	}
 
-	// get region
-	var lobbyRegionRole = mH.getLobbyRegionRoleFromMessage(message, 1);
-	if (lobbyRegionRole === undefined)
-		return mH.reactNegative(message, "Failed to recognize region, has to be any of '" + rM.getRegionalRoleStringsForCommand().join("', '") + "'");
+	// tryout 'region' and role
+	var lobbyRegionRole = undefined;
+	var beginnerRoleNumbers = [0];
 
-	// get beginner roles / tryout role
-	var beginnerRoleNumbers = [0]; // 0 for tryout
-	// get role numbers
 	if(lobbyType !== c.lobbyTypes.tryout)
 	{
+		// get region role
+		var lobbyRegionRole = mH.getLobbyRegionRoleFromMessage(message, 1);
+		if (lobbyRegionRole === undefined)
+			return mH.reactNegative(message, "Failed to recognize region, has to be any of '" + rM.getRegionalRoleStringsForCommand().join("', '") + "'");
+
+		// get beginner roles
 		const minRole = 1;
 		const maxRole = 4;
 		[res, beginnerRoleNumbers, errormsg] = mH.getNumbersFromMessage(message, 2, minRole, maxRole);
@@ -36,10 +38,11 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 			return mH.reactNegative(message, errormsg);
 		}
 	}
+
 	var lobbyBeginnerRoles = rM.getBeginnerRolesFromNumbers(beginnerRoleNumbers);
 
 	// get zoned time
-	const tryoutIndex = 2;
+	const tryoutIndex = 1;
 	const allOtherTypesIndex = 3;
 	[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, lobbyType == c.lobbyTypes.tryout ? tryoutIndex : allOtherTypesIndex);
 	if(!res) {
@@ -48,8 +51,8 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 
 	// send embedding post to lobby signup-channel
 	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName,
-										"for " + rM.getRoleMentions(lobbyBeginnerRoles) + "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) ,
-										footer + "\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up.");
+										"for " + rM.getRoleMentions(lobbyBeginnerRoles) + (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"") ,
+										footer + (lobbyType !== c.lobbyTypes.tryout ? ("\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up."):""));
 	const lobbyPostMessage = await message.channel.send(rM.getRoleMentions(lobbyBeginnerRoles), {embed: _embed}); // mentioning roles in message again to ping beginners
 
 	// pin message to channel

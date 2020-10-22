@@ -114,7 +114,7 @@ module.exports = {
     weekDays: weekDays,
     months:months,
     
-    createLobbyTime: async function(time, timezoneName, tomorrow) {
+    createLobbyTime: async function(time, timezoneName) {
         // get time
         [hour, minute] = validateTime(time);
         if(hour === undefined || minute === undefined)
@@ -135,11 +135,11 @@ module.exports = {
         var utcHour = hour + tZoffset.offset/60
 
         // create date at wanted UTC time
-        var lobbyDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + (tomorrow ? 1 : 0), utcHour, minute, 0, 0));
+        var lobbyDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), utcHour, minute, 0, 0));
 
-        // check if 'wanted UTC time' has already past 'now'
+        // check if 'wanted UTC time' has already past 'now'; add a day if it's in the past.
         if(date >= lobbyDate)
-            return [false, undefined, timezoneName, "Time is in the past (or tomorrow...). If you want to set up a lobby for tomorrow - add 'tomorrow' at the end of the post"]
+            lobbyDate.setDate(lobbyDate.getDate()+1);
         
         // return zoned time
 	    var zonedTime = await tZ.getZonedTime(lobbyDate, zone);

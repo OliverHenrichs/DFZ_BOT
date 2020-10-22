@@ -67,15 +67,15 @@ module.exports = async (message) => {
             "!time <lobbytype> <timezone>", 
             "Shows you the time of the lobby in your timezone. Check https://kevinnovak.github.io/Time-Zone-Picker/ to find your time zone name.",
             "!time " + Object.keys(c.lobbyTypes)[2]+ " Asia/Manila");
-}
+    }
     
     // help admin commands
     else if (rM.findRole(message.member, rM.adminRoles) != undefined) 
     {
         addHelpToTable( _embed, "post", 
             "!post <lobbytype> <region> <tiers> <time> <timezone>", 
-            "Creates a lobby in the channel in which you write the command.\n Lobby types: " + Object.keys(c.lobbyTypes).join(", ")+"\n Regions: " + rM.getRegionalRoleStringsForCommand().join(", ")+ "\n Allowed tiers: 1,2,3,4; Give no tiers for lobby type 'tryout'.\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://en.wikipedia.org/wiki/List_of_tz_database_time_zones or https://kevinnovak.github.io/Time-Zone-Picker/",
-            "!post " + Object.keys(c.lobbyTypes)[1]+" EU 1,2 9:55pm GMT+2 \n\n!post " + Object.keys(c.lobbyTypes)[2]+" SEA 4,3 7:00am Asia/Singapore \n\n!post " + Object.keys(c.lobbyTypes)[3]+" NA 9:55pm America/New_York");
+            "Creates a lobby in the channel in which you write the command.\n Lobby types: " + Object.keys(c.lobbyTypes).join(", ")+"\n Regions: " + rM.getRegionalRoleStringsForCommand().join(", ")+ "\n Allowed tiers: 1,2,3,4; Give no tiers nor regions for lobby type 'tryout'.\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://en.wikipedia.org/wiki/List_of_tz_database_time_zones or https://kevinnovak.github.io/Time-Zone-Picker/",
+            "!post " + Object.keys(c.lobbyTypes)[0]+" EU 1,2 9:55pm GMT+2 \n\n!post " + Object.keys(c.lobbyTypes)[1]+" SEA 4,3 10:00am Asia/Singapore \n\n!post " + Object.keys(c.lobbyTypes)[3]+" 9:55pm America/New_York");
         addHelpToTable( _embed, "start", 
             "!start <lobbytype>", 
             "Starts the scheduled lobby in this channel.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),

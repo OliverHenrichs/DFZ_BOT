@@ -163,10 +163,7 @@ function getTimeFromMessage(message, index)
     if(args.length <= index + 1)
         return [false, "", "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post"];
 
-    var tomorrow = false;
-    if(args.length >= index + 2)
-        tomorrow = args[index+2] == "tomorrow"
-    return tZ.createLobbyTime(args[index], args[index+1], tomorrow);
+    return tZ.createLobbyTime(args[index], args[index+1]);
 }
 
 /**
