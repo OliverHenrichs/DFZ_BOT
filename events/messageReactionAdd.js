@@ -45,6 +45,11 @@ module.exports = async (client, reaction, user) => {
     {
         // get guild member (has role)
         const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
+        if(guildMember === undefined || guildMember === null)
+        {
+            await user.send("⛔ You cannot join because you are not a guild member.");
+            return;
+        }
 
         // get beginner role
         var beginnerRole = rM.findRole(guildMember, rM.beginnerRoles);
