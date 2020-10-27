@@ -301,11 +301,14 @@ module.exports = {
         user.tier.number = rM.getNumberFromBeginnerRole(beginnerRole.id);
         user.tier.name = beginnerRole.name;
         user.region = {};
-        user.region.id = regionRole.id;
-        user.region.name = regionRole.name;
+        if(regionRole !== undefined && regionRole !== null)
+        {
+            user.region.id = regionRole.id;
+            user.region.name = regionRole.name;
+        }
 
         // user is from region => append before other regions
-        if(user.region.id === lobby.regionId)
+        if(user.region !== undefined && user.region.id === lobby.regionId)
         {
             for(let idx = 0; idx<lobby.users.length; idx++)
             {
