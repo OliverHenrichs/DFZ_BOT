@@ -45,11 +45,6 @@ module.exports = async (client, reaction, user) => {
     {
         // get guild member (has role)
         const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
-        if(guildMember === undefined || guildMember === null)
-        {
-            await user.send("⛔ You cannot join because you are not a guild member.");
-            return;
-        }
 
         // get beginner role
         var beginnerRole = rM.findRole(guildMember, rM.beginnerRoles);
@@ -67,11 +62,6 @@ module.exports = async (client, reaction, user) => {
 
         // get region role
         var regionRole = rM.findRole(guildMember, rM.regionRoleIDs);
-        if((regionRole === undefined || regionRole === null) && lobby.type !== c.lobbyTypes.tryout)
-        {
-            await user.send("⛔ You cannot join yet. You need to assign to a region in channel #🌐-region-select");
-            return;
-        }
 
         // add user
         uH.addUser( lobby,
