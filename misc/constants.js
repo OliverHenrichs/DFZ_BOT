@@ -1,12 +1,14 @@
 
 const lobbyTypes = {inhouse:1, unranked:2, botbash:3, tryout: 4}
 const lobbyTypePlayerCount = {inhouse:10, unranked:5, botbash:5, tryout: 5}
-const reactionTypes =['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
-const tryoutReactionEmoji ='✅';
+const positionReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
+const tryoutReactionEmoji = '✅';
+const lobbyManagementReactionEmojis =['🔒', '❌'];
 
 module.exports = {
     tryoutReactionEmoji: tryoutReactionEmoji,
-    reactionTypes: reactionTypes,
+    positionReactionEmojis: positionReactionEmojis,
+    lobbyManagementReactionEmojis: lobbyManagementReactionEmojis,
     lobbyTypes: lobbyTypes,
     lobbyTypePlayerCount: lobbyTypePlayerCount,
 
@@ -34,10 +36,22 @@ module.exports = {
      * @param {Emoji} reactionEmoji given emoji
      */
     getReactionEmojiPosition: function(reactionEmoji) {
-        var idx = reactionTypes.findIndex(type =>  {
+        var idx = positionReactionEmojis.findIndex(type =>  {
             return reactionEmoji.name === type;
         });
         
-        return idx+1;
+        return idx+1; // +1 to match pos 1-5 instead of 0-4...
+    },
+
+    isKnownPostitionEmoji: function(reactionEmoji) {
+        return positionReactionEmojis.includes(reactionEmoji.name);
+    },
+
+    isKnownTryoutEmoji: function(reactionEmoji) {
+        return tryoutReactionEmoji === reactionEmoji.name;
+    },
+
+    isKnownLobbyManagementEmoji: function(reactionEmoji) {
+        return lobbyManagementReactionEmojis.includes(reactionEmoji.name);
     }
 }

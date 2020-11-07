@@ -1,12 +1,12 @@
 require("dotenv").config()
 const Discord = require("discord.js")
-const fs = require("fs")
+const fs = 		require("fs")
 const client = new Discord.Client({autoReconnect:true});
 
 
-const serializer = require("./misc/serializeHelper")
-const cM = require("./misc/channelManagement")
-const lM = require("./misc/lobbyManagement")
+const serializer = 	require("./misc/serializeHelper")
+const cM = 			require("./misc/channelManagement")
+const lM = 			require("./misc/lobbyManagement")
 
 // setup bot state
 client._state = {};
@@ -42,7 +42,7 @@ client.login(process.env.BOT_TOKEN).then(() => {
 		var guild = client.guilds.get(process.env.GUILD);
 		if(guild === undefined || guild === null)
 			return;
-		lM.updateLobbyTimes(guild.channels, client._state.lobbies);
+		lM.updateLobbyTimes(guild.channels, client._state);
 	};
 	setInterval(timeUpdater, 60000);
 

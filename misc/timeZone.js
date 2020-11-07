@@ -116,6 +116,11 @@ module.exports = {
     weekDays: weekDays,
     months:months,
     
+    /**
+     * use user given time to derive a UTC time for lobby
+     * @param {string} time time string 
+     * @param {string} timezoneName timezone name 
+     */
     createLobbyTime: async function(time, timezoneName) {
         // get time
         [hour, minute] = validateTime(time);
@@ -144,6 +149,12 @@ module.exports = {
         return [true, zonedLobbyDate, timezoneName, ""];
     },
 
+    /**
+     * returns date transformed in given timezone
+     * @param {*} date date
+     * @param {*} timezoneName name of timezone that we
+     * @return true and time if timezone was found, false and error if not
+     */
     getUserLobbyTime: async function(date, timezoneName) 
     {
         var error =""

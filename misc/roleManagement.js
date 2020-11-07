@@ -36,9 +36,10 @@ module.exports = {
 		if (rolesToCheck.length === 0) {
 			return undefined;
 		}
+
 		return member.roles.find(role => rolesToCheck.includes(role.id));
 	},
-
+	
 	/**
 		takes a sequence of numbers and returns the respective role names for numbers 0-4
 		@param number list of numbers, e.g. [0,1,2,3,4]

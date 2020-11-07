@@ -14,10 +14,6 @@ const tZ = require("../misc/timeZone")
  * @param {*} footer String to append to embedding
  */
 async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
-	
-	if(lM.getLobby(state, message.channel.id, lobbyType) !== undefined) {
-		return mH.reactNegative(message, "Cannot override already created lobby of type "+ lobbyTypeName +" in channel <#" + message.channel.id + ">");
-	}
 
 	// tryout 'region' and role
 	var lobbyRegionRole = undefined;
@@ -52,7 +48,9 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	// send embedding post to lobby signup-channel
 	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName,
 										"for " + rM.getRoleMentions(lobbyBeginnerRoles) + (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"") ,
-										footer + (lobbyType !== c.lobbyTypes.tryout ? ("\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up."):""));
+										footer
+										+ (lobbyType !== c.lobbyTypes.tryout ? ("\n\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up."):"")
+										+ "\n\nCoaches: Lock and start lobby with 🔒, cancel with ❌");
 	const lobbyPostMessage = await message.channel.send(rM.getRoleMentions(lobbyBeginnerRoles), {embed: _embed}); // mentioning roles in message again to ping beginners
 
 	// pin message to channel
@@ -68,8 +66,8 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	lM.createLobby(state, message.channel.id, lobbyType, lobbyBeginnerRoles, lobbyRegionRole, zonedTime.epoch, lobbyPostMessage.id);
 }
 
-var reactionStringBeginner = "React to the numbers below to join the lobby at the ingame positions you want.\nRemove the reaction to remove the position.\nRemove all positions to withdraw from the lobby."
-var reactionStringTryout = "React to the checkmark below to join the lobby.\nRemove the reaction to withdraw from the lobby."
+var reactionStringBeginner = "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\n Click again to remove a position.\nRemove all positions to withdraw from the lobby."
+var reactionStringTryout = "Tryouts: Join lobby by clicking ✅ below.\nClick again to withdraw from the lobby."
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type

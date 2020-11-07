@@ -56,7 +56,7 @@ module.exports = async (client, reaction, user) => {
         
         // do not remove user if some positions are left
         if(lobbyUser.positions.length !== 0)
-        removeUser = false;
+            removeUser = false;
     }
 
     // remove user if necessary

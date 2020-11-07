@@ -1,14 +1,28 @@
 *@Coach The bot received some new features today!*
 
-**DFZ-Bot v0.2 - Changelog**
+**DFZ-Bot v0.3 - Changelog**
 
-1. Removed regions from tryout lobbies. 
-> New command '*!post tryout <time>*', e.g. '*!post tryout 11:59pm Europe/London*'
+1. Multiple lobbies per channel are now allowed.
+> Posting lobbies for later/tomorrow without blocking other coaches is therefore now possible.
 
-2. Changed behaviour of how time works with lobby creation
-> Now, if given time is in the past, it will simply create the lobby at the next day. 
-> Example: Suppose it is 10:15pm in Berlin at the 22nd of october. You sit in Berlin and type '*!post tryout 10:00pm Europe/Berlin*'.
-> Because 10pm already past today, the bot will create a lobby for 10:00pm CET at the **23rd** of october, that is tomorrow.
+2. Reworked bot-lobby interaction for coaches. 
+> Removed all written commands except for  '*!helpme*' and '*!post*'; Introduced two new emojis, 🔒 and ❌, in the lobby post.
+> 
+> 🔒 replaces the commands '*!start*' and '*!f_start*'. Clicking it will start the lobby (if you are a coach) and create the teams. 
+> If there are not enough players, it will simply post a list containing the available players. 
+> You can only use this emoji when the lobby is supposed to start (or at a later time).
+> 
+> ❌ replaces the command '*!undo*'. Clicking it will cancel the lobby.
+> 
+> other commands:
+> '*!clear*': It could be used to remove all players from a lobby. That's not useful.
+> *!list*': It simply displayed a list of current players for a lobby. This is redundant because the lobby post contains such a list.
+
+3. Removed the following player commands: *!correct*', *!withdraw*', *!time*', *!status*'
+> *!correct*' and *!withdraw*' have already been replaced by emojis in the lobby post.
+> *!time*' can be inferred from looking at "Time to lobby.
+> *!status*' can be inferred by looking at the respective (pinned) lobby posts.
+
 
 If you find bugs or have improvement suggestion, please either DM me or mention me in a post in #internal-talk.
 

@@ -1,16 +1,8 @@
-const correctPlayer = require("../commands/correctPlayer")
-const withdrawPlayer = require("../commands/withdrawPlayer")
-const clearPlayers = require("../commands/clearPlayers")
-const printPlayerStatus = require("../commands/printPlayerStatus")
-const listPlayers = require("../commands/listPlayers")
-const postLobby = require("../commands/postLobby")
-const startLobby = require("../commands/startLobby")
-const roleManagement = require("../misc/roleManagement")
-const channelManagement = require("../misc/channelManagement")
-const removeLobby = require("../commands/removeLobby")
+const pL = require("../commands/postLobby")
+const rM = require("../misc/roleManagement")
+const cM = require("../misc/channelManagement")
 const mH = require("../misc/messageHelper")
-const helpUser = require("../commands/helpUser")
-const timeZone = require("../commands/lobbyTime")
+const hU = require("../commands/helpUser")
 
 const PREFIX = '!';
 
@@ -36,66 +28,19 @@ module.exports = async (client, message) => {
 	}
 
 	// Ignore messages outside of bot channels
-	if (!channelManagement.isWatchingChannel(message.channel.id)) {
-		return mH.reactNegative(message, "I only listen to messages in the channels " + channelManagement.channelStrings);
+	if (!cM.isWatchingChannel(message.channel.id)) {
+		return mH.reactNegative(message, "I only listen to messages in the channels " + cM.channelStrings);
 	}
 
-	// player messages
-	if (roleManagement.findRole(message.member, roleManagement.beginnerRoles) != undefined) {
+	// help for admins
+	if (rM.findRole(message.member, rM.adminRoles) != undefined) {
 		if (content.startsWith("!help") || content.startsWith("!helpme")) {
-			return helpUser(message);
-		}
-		if (content.startsWith("!withdraw")) {
-			return withdrawPlayer(message, client._state)
-		}
-		if (content.startsWith("!correct")) {
-			return correctPlayer(message, client._state)
-		}
-		if (content.startsWith("!status")) {
-			return printPlayerStatus(message, client._state)
-		}
-		if (content.startsWith("!time")) {
-			return timeZone(message, client._state);
-		}
-	} else if (	content.startsWith("!withdraw") || 
-				content.startsWith("!correct") || 
-				content.startsWith("!status")) 
-	{
-		return mH.reactNegative(message, "Only Beginner Tiers 1,2,3 are eligible for this command.");
-	}
-
-	// admin messages
-	if (roleManagement.findRole(message.member, roleManagement.adminRoles) != undefined) {
-		if (content.startsWith("!help") || content.startsWith("!helpme")) {
-			return helpUser(message);
+			return hU(message);
 		}
 		if (content.startsWith("!post")) {
-			return postLobby(message, client._state)
+			return pL(message, client._state)
 		}
-		if (content.startsWith("!start")) {
-			return startLobby(message, client._state)
-		}
-		if (content.startsWith("!f_start")) {
-			return startLobby(message, client._state, true)
-		}
-		if (content.startsWith("!list")) {
-			return listPlayers(message, client._state)
-		}
-		if (content.startsWith("!clear")) {
-			return clearPlayers(message, client._state)
-		}
-		if (content.startsWith("!undo")) {
-			return removeLobby(message, client._state)
-		}
-		if (content.startsWith("!time")) {
-			return timeZone(message, client._state);
-		}
-	} else if (	content.startsWith("!post") || 
-				content.startsWith("!start") || 
-				content.startsWith("!f_start") || 
-				content.startsWith("!list") || 
-				content.startsWith("!clear") || 
-				content.startsWith("!undo")) {
-		return mH.reactNegative(message, "Only coaches and admins are eligible for this command.");
+	} else if (	content.startsWith("!post")) {
+		return mH.reactNegative(message, "Only coaches are eligible for this command.");
 	}
 }

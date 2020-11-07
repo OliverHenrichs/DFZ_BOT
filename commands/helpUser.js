@@ -45,68 +45,21 @@ module.exports = async (message) => {
     "!help / !helpme", 
     "Shows you the info you are looking at right now 😉\n Use !helpme to avoid also getting a message from MEE6-bot.",
     "!help");
-
-    // help beginner commands
-	if (rM.findRole(message.member, rM.beginnerRoles) != undefined) {              
-        addHelpToTable( _embed, "withdraw", 
-            "!withdraw <lobbytype>", 
-            "Withdraws from a lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "!withdraw " + Object.keys(c.lobbyTypes)[1]);
-            
-        addHelpToTable( _embed, "correct", 
-            "!correct <lobbytype> <positions>", 
-            "Adjusts the positions you want to play in a lobby after you joined.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", ")+ "\n Allowed positions are 1,2,3,4,5",
-            "!correct " + Object.keys(c.lobbyTypes)[2]+ " 3,5,4");
-
-        addHelpToTable( _embed, "status", 
-            "!status", 
-            "Gives you the status of your assignment to lobbies in the current channel",
-            "!status");
-            
-        addHelpToTable( _embed, "time", 
-            "!time <lobbytype> <timezone>", 
-            "Shows you the time of the lobby in your timezone. Check https://kevinnovak.github.io/Time-Zone-Picker/ to find your time zone name.",
-            "!time " + Object.keys(c.lobbyTypes)[2]+ " Asia/Manila");
-    }
     
     // help admin commands
-    else if (rM.findRole(message.member, rM.adminRoles) != undefined) 
+    if (rM.findRole(message.member, rM.adminRoles) != undefined) 
     {
         addHelpToTable( _embed, "post", 
             "!post <lobbytype> <region> <tiers> <time> <timezone>", 
-            "Creates a lobby in the channel in which you write the command.\n Lobby types: " + Object.keys(c.lobbyTypes).join(", ")+"\n Regions: " + rM.getRegionalRoleStringsForCommand().join(", ")+ "\n Allowed tiers: 1,2,3,4; Give no tiers nor regions for lobby type 'tryout'.\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://en.wikipedia.org/wiki/List_of_tz_database_time_zones or https://kevinnovak.github.io/Time-Zone-Picker/",
+            "Creates a lobby in the channel in which you write the command.\n Lobby types: " + Object.keys(c.lobbyTypes).join(", ")+"\n Regions: " + rM.getRegionalRoleStringsForCommand().join(", ")+ "\n Allowed tiers: 1,2,3,4; Give no tiers nor regions for lobby type 'tryout'.\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",
             "!post " + Object.keys(c.lobbyTypes)[0]+" EU 1,2 9:55pm GMT+2 \n\n!post " + Object.keys(c.lobbyTypes)[1]+" SEA 4,3 10:00am Asia/Singapore \n\n!post " + Object.keys(c.lobbyTypes)[3]+" 9:55pm America/New_York");
-        addHelpToTable( _embed, "start", 
-            "!start <lobbytype>", 
-            "Starts the scheduled lobby in this channel.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "!start " + Object.keys(c.lobbyTypes)[0]);
 
-        addHelpToTable( _embed, "f_start", 
-            "!f_start <lobbytype>", 
-            "Same as start, but also works if there are not enough players",
-            "!f_start " + Object.keys(c.lobbyTypes)[1]);
+        // addHelpToTable( _embed, "time", 
+        //     "!time <lobbytype> <timezone>", 
+        //     "Shows you the scheduled time of the lobby in your timezone. Check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",
+        //     "!time " + Object.keys(c.lobbyTypes)[2]+ " Asia/Manila");
             
-        addHelpToTable( _embed, "list", 
-            "!list <lobbytype>", 
-            "List current players for the given lobby.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "!list " + Object.keys(c.lobbyTypes)[0]);
-
-        addHelpToTable( _embed, "clear", 
-            "!clear <lobbytype>", 
-            "Resets lobby by clearing all players.\n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "'!clear " + Object.keys(c.lobbyTypes)[0]);
-
-        addHelpToTable( _embed, "time", 
-            "!time <lobbytype> <timezone>", 
-            "Shows you the scheduled time of the lobby in your timezone. Check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",
-            "!time " + Object.keys(c.lobbyTypes)[2]+ " Asia/Manila");
-
-        addHelpToTable( _embed, "remove", 
-            "!undo <lobbytype>", 
-            "Cancels the lobby. \n Lobby types are: " + Object.keys(c.lobbyTypes).join(", "),
-            "!undo " + Object.keys(c.lobbyTypes)[0]);
+        message.author.send({embed: _embed});
+        mH.reactPositive(message, "");
     }
-
-    message.author.send({embed: _embed});
-    mH.reactPositive(message, "");
 }

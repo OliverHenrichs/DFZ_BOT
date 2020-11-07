@@ -1,5 +1,4 @@
 const c = require("../misc/constants")
-const lM = require("../misc/lobbyManagement")
 const rM = require("../misc/roleManagement")
 const tZ = require("../misc/timeZone")
 
@@ -67,11 +66,16 @@ function createLobbyPostReactions(lobbyType, message)
 	}
 	else 
 	{
-		for(let idx = 0; idx < c.reactionTypes.length; idx++)
+		for(let idx = 0; idx < c.positionReactionEmojis.length; idx++)
 		{
-			message.react(c.reactionTypes[idx]);
+			message.react(c.positionReactionEmojis[idx]);
 		}  
-	}
+    }
+    
+    for(let idx = 0; idx < c.lobbyManagementReactionEmojis.length; idx++)
+    {
+        message.react(c.lobbyManagementReactionEmojis[idx]);
+    }
 }
 
 /**
@@ -200,24 +204,6 @@ function getLobbyType(message) {
     return c.lobbyTypes[lobbyType];
 }
 
-/**
- * Convenience fun combining getting lobby and type
- * @param {*} state bot state
- * @param {*} message user message
- */
-function getLobbyAndType(state, message)
-{
-    var type = getLobbyType(message);
-	if(type == undefined)
-		reactNegative(message, "Provide a lobby type. Valid lobby types are " + Object.keys(c.lobbyTypes).join("', '") + ".");
-
-	var lobby = lM.getLobby(state, message.channel.id, type)
-	if(lobby == undefined)
-		reactNeutral(message, "No open "+c.getLobbyNameByType(type)+ " lobby yet.");
-
-    return [lobby, type];
-}
-
 module.exports.reactNeutral = reactNeutral;
 module.exports.reactNegative = reactNegative;
 module.exports.reactPositive = reactPositive;
@@ -227,5 +213,4 @@ module.exports.getNumbersFromMessage = getNumbersFromMessage;
 module.exports.getLobbyRegionRoleFromMessage = getLobbyRegionRoleFromMessage;
 module.exports.getArguments = getArguments;
 module.exports.getLobbyType = getLobbyType;
-module.exports.getLobbyAndType = getLobbyAndType;
 module.exports.getTimeFromMessage = getTimeFromMessage;
