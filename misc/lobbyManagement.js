@@ -6,7 +6,7 @@ const g = require("../misc/generics")
 const mH = require("../misc/messageHelper")
 const rM = require("../misc/roleManagement")
 const uH = require("../misc/userHelper")
-const oneMinInMS = 60000;
+const fiveMinInMs = 300000;
 
 /**
  *  returns user table for a specific position
@@ -559,8 +559,8 @@ module.exports = {
     {
         // prevent premature start of lobby
         var timeLeftInMS = lobby.date - new Date();
-        if (timeLeftInMS > oneMinInMS) { // 5min = 300.000 ms
-            user.send("It's not time to start the lobby yet ("+ Math.floor(timeLeftInMS/60000) + " min to go).");
+        if (timeLeftInMS > fiveMinInMs) { // 5min = 300.000 ms
+            user.send("It's not time to start the lobby yet ("+ Math.floor((timeLeftInMS-fiveMinInMs)/60000) + " min to go).");
             return false;
         }
 

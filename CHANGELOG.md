@@ -9,7 +9,7 @@
 > Removed all written commands except for  '*!helpme*' and '*!post*'; Introduced two new emojis, 🔒 and ❌, in the lobby post.
 > 
 > 🔒 replaces the commands '*!start*' and '*!f_start*'. Clicking it will start the lobby (if you are a coach) and create the teams. 
-> If there are not enough players, it will simply post a list containing the available players. 
+> If there are not enough players, the bot will post a list containing the available players. 
 > You can only use this emoji when the lobby is supposed to start (or at a later time).
 > 
 > ❌ replaces the command '*!undo*'. Clicking it will cancel the lobby.

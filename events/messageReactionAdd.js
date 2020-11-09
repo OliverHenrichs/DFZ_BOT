@@ -1,7 +1,9 @@
 const lM = require("../misc/lobbyManagement")
 const uH = require("../misc/userHelper")
 const rM = require("../misc/roleManagement")
+const cM = require("../misc/channelManagement")
 const c = require("../misc/constants");
+const channelManagement = require("../misc/channelManagement");
 
 /**
  * Adds user to lobby or adds position to user in lobby
@@ -143,6 +145,11 @@ module.exports = async (client, reaction, user) => {
     if(reaction.message.channel === undefined)
         return;
 
+    // Ignore messages outside of bot channels
+	if (!cM.isWatchingChannel(reaction.message.channel.id)) {
+		return;
+    }
+    
     // find lobby
     var lobby = lM.findLobbyByMessage(client._state, reaction.message.channel.id, reaction.message.id);
     if(lobby == undefined)

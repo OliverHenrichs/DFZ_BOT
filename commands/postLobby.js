@@ -66,7 +66,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	lM.createLobby(state, message.channel.id, lobbyType, lobbyBeginnerRoles, lobbyRegionRole, zonedTime.epoch, lobbyPostMessage.id);
 }
 
-var reactionStringBeginner = "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\n Click again to remove a position.\nRemove all positions to withdraw from the lobby."
+var reactionStringBeginner = "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\nClick again to remove a position.\nRemove all positions to withdraw from the lobby."
 var reactionStringTryout = "Tryouts: Join lobby by clicking ✅ below.\nClick again to withdraw from the lobby."
 
 /**
