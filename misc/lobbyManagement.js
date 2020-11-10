@@ -288,14 +288,14 @@ async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unp
 /**
  * Removes lobby in backend
  * @param {*} state bot state
- * @param {*} channel lobby channel
+ * @param {*} channelId lobby channel id
  * @param {*} lobby lobby to remove
  */
-function removeLobby(state, channel, lobby)
+function removeLobby(state, channelId, lobby)
 {
-    var index = state.lobbies[channel][lobby.type].findIndex(_lobby => lobby.messageId == _lobby.messageId);
+    var index = state.lobbies[channelId][lobby.type].findIndex(_lobby => lobby.messageId == _lobby.messageId);
     if(index > -1)
-        state.lobbies[channel][lobby.type].splice(index, 1);
+        state.lobbies[channelId][lobby.type].splice(index, 1);
 }
 
 /**
@@ -518,7 +518,7 @@ module.exports = {
                         if(hours >= 3)
                         {
                             await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]");
-                            removeLobby(state, channel, lobby);
+                            removeLobby(state, channel.id, lobby);
                             return;
                         } else {
                             startString = "Lobby started ";
@@ -529,7 +529,7 @@ module.exports = {
                     }
 
                     // generate new embed
-                    var new_embed =   new Discord.RichEmbed(old_embed);
+                    var new_embed = new Discord.RichEmbed(old_embed);
                     new_embed.description = description.join('\n');
                     
                     // update embed
