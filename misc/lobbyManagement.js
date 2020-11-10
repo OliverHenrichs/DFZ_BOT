@@ -361,14 +361,17 @@ async function finishLobbyPost(lobby, channel)
  * @param {*} lobby lobby containing the player to notify
  * @param {*} message message to send to players
  */
-// function notifyPlayers(client, lobby, message)
-// {
-//     for (let i = 0; i < lobby.users.length; i++) {
-//         var user = client.fetchUser(lobby.users[i].id);
-//         if(user !== undefined)
-//             user.send(message);
-//     }
-// }
+function notifyPlayers(client, lobby, playerCount, message)
+{
+    for (let i = 0; i < Math.min(lobby.users.length, playerCount); i++) {
+        client.fetchUser(lobby.users[i].id).then(user => {
+            if(user !== undefined)
+                user.send(message);
+        }).catch(err => 
+            console.log(err)
+        );
+    }
+}
 
 // lobby management
 module.exports = {
@@ -550,12 +553,13 @@ module.exports = {
     
     /**
      * Starts lobby if time is up
+     * @param {*} client discord client
      * @param {*} lobby lobby to start
      * @param {*} user user who wants to start the lobby
      * @param {*} channel channel in which the lobby resides
      * @return true if lobby was started (and can therefore be removed)
      */
-    startLobby: function (lobby, user, channel)
+    startLobby: function (client, lobby, user, channel)
     {
         // prevent premature start of lobby
         var timeLeftInMS = lobby.date - new Date();
@@ -571,10 +575,11 @@ module.exports = {
         // create new post with match-ups
         createLobbyStartPost(lobby, channel, playersPerLobby);
 
+        // notify players 
+        notifyPlayers(client, lobby, playersPerLobby, "Your " + c.getLobbyNameByType(lobby.type) + "-lobby just started! 😎 Please move to the voice channel and await further instructions.");
+
         // delete the lobby and "archive" the lobby post
         finishLobbyPost(lobby, channel);
-
-        //notifyPlayers(lobby);
         
         user.send("🔒 I started the lobby.")
         return true;

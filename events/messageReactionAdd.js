@@ -98,13 +98,13 @@ function handleTryoutEmoji(lobby, user, reaction, role)
 
 /**
  * Checks if player is coach, and if, then removes or starts lobby
- * @param {*} state bot state containing the lobbies
+ * @param {*} client discord client
  * @param {*} lobby lobby in question
  * @param {*} user discord-user
  * @param {*} reaction reaction with which the user reacted
  * @param {*} role role of the user
  */
-function handleLobbyManagementEmoji(state, lobby, user, reaction, role)
+function handleLobbyManagementEmoji(client, lobby, user, reaction, role)
 {
     if(rM.adminRoles.find(roleId => roleId == role.id) === undefined)
     {
@@ -114,13 +114,13 @@ function handleLobbyManagementEmoji(state, lobby, user, reaction, role)
 
     if(reaction.emoji.name === '🔒')
     {
-        if(lM.startLobby(lobby, user, reaction.message.channel))
-            lM.removeLobby(state, reaction.message.channel.id, lobby);
+        if(lM.startLobby(client, lobby, user, reaction.message.channel))
+            lM.removeLobby(client._state, reaction.message.channel.id, lobby);
     }
     else if(reaction.emoji.name ==='❌')
     {
         lM.cancelLobbyPost(lobby, reaction.message.channel);
-        lM.removeLobby(state, reaction.message.channel.id, lobby);
+        lM.removeLobby(client._state, reaction.message.channel.id, lobby);
         user.send("❌ I cancelled the lobby.");
     }
 }
@@ -184,6 +184,6 @@ module.exports = async (client, reaction, user) => {
     // handle lobby management
     if(c.isKnownLobbyManagementEmoji(reaction.emoji))
     {
-        return handleLobbyManagementEmoji(client._state, lobby, user, reaction, role);
+        return handleLobbyManagementEmoji(client, lobby, user, reaction, role);
     }
 }
