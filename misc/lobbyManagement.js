@@ -277,8 +277,12 @@ async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unp
 
     // generate new embed
     old_embed = message.embeds[0];
+    var newEmbedTitle = titleUpdate +"\n~~" + old_embed.title + "~~";
+    if(newEmbedTitle.length > 256)
+        newEmbedTitle = newEmbedTitle.slice(0,256);
+
     var new_embed =   new Discord.RichEmbed(old_embed)
-                            .setTitle(titleUpdate +"\n~~" + old_embed.title + "~~");
+                            .setTitle(newEmbedTitle);
     //new_embed.fields = undefined;
     
     // update embed
