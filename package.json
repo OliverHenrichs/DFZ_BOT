@@ -9,8 +9,9 @@
   "dependencies": {
     "async-lock": "^1.2.4",
     "discord.js": "^11.6.4",
-    "dot-prop": "^5.2.0",
+    "dot-prop": "^5.3.0",
     "dotenv": "^8.2.0",
+    "googleapis": "^65.0.0",
     "readwrite-lock": "^1.0.5",
     "string-table": "^0.1.5",
     "timezone-support": "^2.0.2"
