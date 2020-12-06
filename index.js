@@ -12,6 +12,7 @@ const sM = 			require("./misc/scheduleManagement")
 // setup bot state
 client._state = {};
 client._state.lobbies = {};
+client._state.schedules = [];
 
 // load bot state
 if(!serializer.loadState(client, process.env.SAVEFILE))
@@ -26,6 +27,8 @@ if(!serializer.loadState(client, process.env.SAVEFILE))
 			client._state.lobbies[channel] = {};
 	});
 }
+if(client._state.schedules === undefined)
+	client._state.schedules = [];
 
 // setup reading messages
 fs.readdir("./events/", (err, files) => {
