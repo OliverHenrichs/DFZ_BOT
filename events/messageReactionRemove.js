@@ -1,6 +1,6 @@
 const lM = require("../misc/lobbyManagement")
-const uH = require("../misc/userHelper")
-const c = require("../misc/constants")
+const cM = require("../misc/channelManagement") 
+const sM = require("../misc/scheduleManagement")
 
 /**
  * remove reactions handling
@@ -22,51 +22,10 @@ module.exports = async (client, reaction, user) => {
     if(reaction.message.channel === undefined)
         return;
 
-    // find lobby
-    var lobby = lM.findLobbyByMessage(client._state, reaction.message.channel.id, reaction.message.id);
-    if(lobby === undefined)
-        return;
-
-    // check reaction emojis
-    var position = '-';
-    if(lobby.type === c.lobbyTypes.tryout)
+    if(reaction.message.channel.id === cM.scheduleChannelTryout || reaction.message.channel.id === cM.scheduleChannel5v5)
     {
-        if(reaction.emoji.name !== c.tryoutReactionEmoji)
-            return;
+        sM.removeCoachFromSchedule(client, reaction, user);
     } else {
-        // get position
-        position = c.getReactionEmojiPosition(reaction.emoji);
-        if(position === 0)
-            return;
+        lM.updatePlayerInLobby(client, reaction, user);
     }
-
-    // check if lobby contains user
-    var lobbyUser = uH.getUser(lobby, user.id);
-    if(lobbyUser === undefined)
-        return;
-    
-    // if positions are relevant, remove positions
-    var removeUser = true;
-    if(lobby.type !== c.lobbyTypes.tryout)
-    {
-        // remove user position
-        lobbyUser.positions = lobbyUser.positions.filter(_position=> {
-            return _position != position;
-        });
-        
-        // do not remove user if some positions are left
-        if(lobbyUser.positions.length !== 0)
-            removeUser = false;
-    }
-
-    // remove user if necessary
-    if(removeUser === true)
-    {
-        var idx = lobby.users.findIndex(_user => _user.id == user.id);
-        lobby.users.splice(idx,1);
-    }
-
-
-    // update lobby post
-    lM.updateLobbyPost(lobby, reaction.message.channel);  
 }

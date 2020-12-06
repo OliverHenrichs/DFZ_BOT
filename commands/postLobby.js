@@ -40,7 +40,7 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	// get zoned time
 	const tryoutIndex = 1;
 	const allOtherTypesIndex = 3;
-	[res, zonedTime, zoneName, errormsg] = await mH.getTimeFromMessage(message, lobbyType == c.lobbyTypes.tryout ? tryoutIndex : allOtherTypesIndex);
+	[res, zonedTime, zoneName, errormsg] = mH.getTimeFromMessage(message, lobbyType == c.lobbyTypes.tryout ? tryoutIndex : allOtherTypesIndex);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}

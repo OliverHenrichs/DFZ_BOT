@@ -43,7 +43,7 @@ module.exports = {
         return idx+1; // +1 to match pos 1-5 instead of 0-4...
     },
 
-    isKnownPostitionEmoji: function(reactionEmoji) {
+    isKnownPositionEmoji: function(reactionEmoji) {
         return positionReactionEmojis.includes(reactionEmoji.name);
     },
 

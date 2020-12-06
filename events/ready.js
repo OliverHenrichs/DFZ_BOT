@@ -23,5 +23,29 @@ module.exports = async (client) => {
                 });
             })
           }
-	});
+    });
+
+    if(client._state.schedules !== undefined)
+    {
+        var scheduleChannels = [cM.scheduleChannelTryout, cM.scheduleChannel5v5];
+        scheduleChannels.forEach(channel => {
+
+            var lastMessage = "";
+    
+            for(let i = 0; i < client._state.schedules.length; i++)
+            {
+                var s = client._state.schedules[i];
+                if (lastMessage === s.message)
+                    continue;
+    
+                // TODO add channel to schedule to avoid failed fetching here
+                lastMessage = s.message;
+                client.guilds.get(process.env.GUILD).channels.get(channel).fetchMessage(s.message).then(message => {
+                    
+                }).catch(error => {
+                    // dont matter, we check all channels
+                });
+            }
+        });
+    }
 }

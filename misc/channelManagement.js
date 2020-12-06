@@ -1,9 +1,11 @@
+
 const bc = [process.env.BOT_LISTENING_CHANNEL_1, process.env.BOT_LISTENING_CHANNEL_2, process.env.BOT_LISTENING_CHANNEL_3, process.env.BOT_LISTENING_CHANNEL_4, process.env.BOT_LISTENING_CHANNEL_5]
 const cs = "<#" + process.env.BOT_LISTENING_CHANNEL_1 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_2 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_3 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_4+ ">, <#" + process.env.BOT_LISTENING_CHANNEL_5 + ">"
 
 // channel management
 module.exports = {
-    // classes of roles
+    scheduleChannelTryout: process.env.BOT_SCHEDULE_CHANNEL_TRYOUT,
+    scheduleChannel5v5: process.env.BOT_SCHEDULE_CHANNEL_5V5,
     botChannels: bc,
     channelStrings: cs,
 
@@ -13,6 +15,6 @@ module.exports = {
      * @param {[string]} channelIds 
      */
     isWatchingChannel: function (channelId) {
-        return bc.includes(channelId);
+        return bc.includes(channelId) || channelId === this.scheduleChannelTryout || channelId ===  this.scheduleChannel5v5;
     }
 }

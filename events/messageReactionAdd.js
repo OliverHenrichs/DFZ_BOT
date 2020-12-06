@@ -2,8 +2,8 @@ const lM = require("../misc/lobbyManagement")
 const uH = require("../misc/userHelper")
 const rM = require("../misc/roleManagement")
 const cM = require("../misc/channelManagement")
+const sM = require("../misc/scheduleManagement")
 const c = require("../misc/constants");
-const channelManagement = require("../misc/channelManagement");
 
 /**
  * Adds user to lobby or adds position to user in lobby
@@ -125,31 +125,8 @@ function handleLobbyManagementEmoji(client, lobby, user, reaction, role)
     }
 }
 
-/**
- * add reactions handling
- *
- * @param {*} client discord client
- * @param {*} reaction reaction to handle 
- * @param {*} user user who reacted
- */
-module.exports = async (client, reaction, user) => {
-    // only care for messages from self
-	if (reaction.message.author.id !== process.env.BOT_ID) 
-		return;
-
-    // ignore reactions from self
-    if(user.id === process.env.BOT_ID)
-        return;
-
-    // ignore bot's DMs
-    if(reaction.message.channel === undefined)
-        return;
-
-    // Ignore messages outside of bot channels
-	if (!cM.isWatchingChannel(reaction.message.channel.id)) {
-		return;
-    }
-    
+async function handleLobbyRelatedEmoji(client, reaction, user)
+{
     // find lobby
     var lobby = lM.findLobbyByMessage(client._state, reaction.message.channel.id, reaction.message.id);
     if(lobby == undefined)
@@ -171,7 +148,7 @@ module.exports = async (client, reaction, user) => {
     }
 
     // handle adding users 
-    if(c.isKnownPostitionEmoji(reaction.emoji))
+    if(c.isKnownPositionEmoji(reaction.emoji))
     {
         return handlePositionEmoji(lobby, user, reaction, role, guildMember);
     }
@@ -186,4 +163,35 @@ module.exports = async (client, reaction, user) => {
     {
         return handleLobbyManagementEmoji(client, lobby, user, reaction, role);
     }
+}
+
+/**
+ * add reactions handling
+ *
+ * @param {*} client discord client
+ * @param {*} reaction reaction to handle 
+ * @param {*} user user who reacted
+ */
+module.exports = async (client, reaction, user) => {
+    // only care for messages from self
+	if (reaction.message.author.id !== process.env.BOT_ID) 
+		return;
+
+    // ignore reactions from self
+    if(user.id === process.env.BOT_ID)
+        return;
+
+    // ignore bot's DMs
+    if(reaction.message.channel === undefined)
+        return;
+
+    // Ignore messages outside of bot channels
+	if (!cM.isWatchingChannel(reaction.message.channel.id))
+		return;
+
+    if(reaction.message.channel.id === cM.scheduleChannelTryout || reaction.message.channel.id === cM.scheduleChannel5v5)
+        return await sM.addCoachToSchedule(client, reaction, user);
+     
+    
+    return await handleLobbyRelatedEmoji(client, reaction, user);
 }

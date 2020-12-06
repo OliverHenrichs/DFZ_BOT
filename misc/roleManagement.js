@@ -26,6 +26,11 @@ module.exports = {
 	beginnerRoles: beginnerRoles,
 	regionRoleIDs: regionRoleIDs,
 	
+	isAdminRole: function(role)
+	{
+		return this.adminRoles.find(r => r === role);
+	},
+
 	/**
 		Check if message sender has at least one of the roles given by rolesToCheck
 		@param rolesToCheck list of role names to be checked against

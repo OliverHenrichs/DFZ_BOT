@@ -3,8 +3,6 @@ const c = require("../misc/constants")
 const cM = require("../misc/channelManagement")
 const Discord = require("discord.js")
 const g = require("../misc/generics")
-const mH = require("../misc/messageHelper")
-const rM = require("../misc/roleManagement")
 const uH = require("../misc/userHelper")
 const fiveMinInMs = 300000;
 
@@ -377,7 +375,6 @@ function notifyPlayers(client, lobby, playerCount, message)
     }
 }
 
-// lobby management
 module.exports = {
     
     /**
@@ -587,5 +584,61 @@ module.exports = {
         
         user.send("🔒 I started the lobby.")
         return true;
+    },
+
+    /**
+     * manages removal of reaction in lobby post (position removal or player removal if last position)
+     * @param {*} client discord client
+     * @param {*} reaction reaction that was removed
+     * @param {*} user user who removed the reaction
+     */
+    updatePlayerInLobby: function(client, reaction, user)
+    {
+        // find lobby
+        var lobby = this.findLobbyByMessage(client._state, reaction.message.channel.id, reaction.message.id);
+        if(lobby === undefined)
+            return;
+
+        // check reaction emojis
+        var position = '-';
+        if(lobby.type === c.lobbyTypes.tryout)
+        {
+            if(reaction.emoji.name !== c.tryoutReactionEmoji)
+                return;
+        } else {
+            // get position
+            position = c.getReactionEmojiPosition(reaction.emoji);
+            if(position === 0)
+                return;
+        }
+
+        // check if lobby contains user
+        var lobbyUser = uH.getUser(lobby, user.id);
+        if(lobbyUser === undefined)
+            return;
+        
+        // if positions are relevant, remove positions
+        var removeUser = true;
+        if(lobby.type !== c.lobbyTypes.tryout)
+        {
+            // remove user position
+            lobbyUser.positions = lobbyUser.positions.filter(_position=> {
+                return _position != position;
+            });
+            
+            // do not remove user if some positions are left
+            if(lobbyUser.positions.length !== 0)
+                removeUser = false;
+        }
+
+        // remove user if necessary
+        if(removeUser === true)
+        {
+            var idx = lobby.users.findIndex(_user => _user.id == user.id);
+            lobby.users.splice(idx,1);
+        }
+
+        // update lobby post
+        this.updateLobbyPost(lobby, reaction.message.channel);  
     }
 }

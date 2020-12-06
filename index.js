@@ -7,6 +7,7 @@ const client = new Discord.Client({autoReconnect:true});
 const serializer = 	require("./misc/serializeHelper")
 const cM = 			require("./misc/channelManagement")
 const lM = 			require("./misc/lobbyManagement")
+const sM = 			require("./misc/scheduleManagement")
 
 // setup bot state
 client._state = {};
@@ -37,20 +38,33 @@ fs.readdir("./events/", (err, files) => {
 
 // login
 client.login(process.env.BOT_TOKEN).then(() => {
-	// update lobby timers
+
+	// update lobby posts
 	const timeUpdater = async () => {
 		var guild = client.guilds.get(process.env.GUILD);
 		if(guild === undefined || guild === null)
 			return;
 		lM.updateLobbyTimes(guild.channels, client._state);
 	};
-	setInterval(timeUpdater, 60000);
+	setInterval(timeUpdater, 60000); // once per minute
 
-	// update lobby post timer...
+	// write state to file
 	const writer = () => {
 		serializer.writeState(client._state, process.env.SAVEFILE)
 	};
-	setInterval(writer, 15000);
+	setInterval(writer, 15000);// once per 15 min => this should be in database...
+
+	// update lobby schedule 
+	const scheduleWriter = async () => {
+		
+		var guild = client.guilds.get(process.env.GUILD);
+		if(guild === undefined || guild === null)
+			return;
+		sM.updateSchedules(client._state, guild.channels);
+	}
+	scheduleWriter();
+	setInterval(scheduleWriter, 60*60000); // once per hour
+
 }).catch(error => {
 	console.log (error);
 });

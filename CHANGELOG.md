@@ -1,28 +1,18 @@
 *@Coach The bot received some new features today!*
 
-**DFZ-Bot v0.3 - Changelog**
+**DFZ-Bot v0.4 - Changelog**
 
-1. Multiple lobbies per channel are now allowed.
-> Posting lobbies for later/tomorrow without blocking other coaches is therefore now possible.
+1. Automatic scheduling every sunday.
+> The bot will issue schedule-posts for tryout and 5v5-lobby schedule.
 
-2. Reworked bot-lobby interaction for coaches. 
-> Removed all written commands except for  '*!helpme*' and '*!post*'; Introduced two new emojis, 🔒 and ❌, in the lobby post.
-> 
-> 🔒 replaces the commands '*!start*' and '*!f_start*'. Clicking it will start the lobby (if you are a coach) and create the teams. 
-> If there are not enough players, the bot will post a list containing the available players. 
-> You can only use this emoji when the lobby is supposed to start (or at a later time).
-> 
-> ❌ replaces the command '*!undo*'. Clicking it will cancel the lobby.
-> 
-> other commands:
-> '*!clear*': It could be used to remove all players from a lobby. That's not useful.
-> *!list*': It simply displayed a list of current players for a lobby. This is redundant because the lobby post contains such a list.
+2. Display of coach signup in scheduling posts. 
+> Clicking on the Emojis representing the scheduled lobbies will have the coaches name appear in the list of coaches.
+> If more than the designated number of coaches sign up, then they will be queued and - in case a coach resigns, move up and replace them.
 
-3. Removed the following player commands: *!correct*', *!withdraw*', *!time*', *!status*'
-> *!correct*' and *!withdraw*' have already been replaced by emojis in the lobby post.
-> *!time*' can be inferred from looking at "Time to lobby.
-> *!status*' can be inferred by looking at the respective (pinned) lobby posts.
-
+3. Automatic creation of Google calendar entries.
+> If enough coaches have signed up for a lobby (for tryouts e.g. 1 coach, for 5v5-lobby 2 coaches) then a google calendar entry is created.
+> The calendar entry will update itself to display the coaches that are currently signed up.
+> Links to the calendars will be posted in the announcement-channel.
 
 If you find bugs or have improvement suggestion, please either DM me or mention me in a post in #internal-talk.
 
@@ -59,3 +49,26 @@ If you find bugs or have improvement suggestion, please either DM me or mention 
 > Because 10pm already in the past today, the bot will create a lobby for 10:00pm CET at the **23rd** of october, that is tomorrow.
 
 ==============================================================================================================================================================================================================================
+
+**DFZ-Bot v0.3 - Changelog**
+
+1. Multiple lobbies per channel are now allowed.
+> Posting lobbies for later/tomorrow without blocking other coaches is therefore now possible.
+
+2. Reworked bot-lobby interaction for coaches. 
+> Removed all written commands except for  '*!helpme*' and '*!post*'; Introduced two new emojis, 🔒 and ❌, in the lobby post.
+> 
+> 🔒 replaces the commands '*!start*' and '*!f_start*'. Clicking it will start the lobby (if you are a coach) and create the teams. 
+> If there are not enough players, the bot will post a list containing the available players. 
+> You can only use this emoji when the lobby is supposed to start (or at a later time).
+> 
+> ❌ replaces the command '*!undo*'. Clicking it will cancel the lobby.
+> 
+> other commands:
+> '*!clear*': It could be used to remove all players from a lobby. That's not useful.
+> *!list*': It simply displayed a list of current players for a lobby. This is redundant because the lobby post contains such a list.
+
+3. Removed the following player commands: *!correct*', *!withdraw*', *!time*', *!status*'
+> *!correct*' and *!withdraw*' have already been replaced by emojis in the lobby post.
+> *!time*' can be inferred from looking at "Time to lobby.
+> *!status*' can be inferred by looking at the respective (pinned) lobby posts.
