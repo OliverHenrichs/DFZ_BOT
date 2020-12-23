@@ -8,7 +8,7 @@
 > Example: '*!update 791297808669737001 -tiers 1,2,3*' would've updated DFZ-bot's EU unranked lobby on the 23rd of december at 8pm CET to also allow Tier 3 players, because 791297808669737001 is the associated message ID of the lobby post.<br/>
 > Options to change additional lobby parameters can be implemented if needed.
 
-============================================================================================
+---
 
 **DFZ-Bot v0.4 - Changelog**
 
@@ -27,7 +27,7 @@
 If you find bugs or have improvement suggestion, please either DM me or mention me in a post in #internal-talk.
 
 
-============================================================================================
+---
 
 **DFZ-Bot v0.3 - Changelog**
 
@@ -52,7 +52,7 @@ If you find bugs or have improvement suggestion, please either DM me or mention 
 > *!time*' can be inferred from looking at "Time to lobby.
 > *!status*' can be inferred by looking at the respective (pinned) lobby posts.
 
-============================================================================================
+---
 
 **DFZ-Bot v0.2 - Changelog**
 
@@ -65,7 +65,7 @@ If you find bugs or have improvement suggestion, please either DM me or mention 
 > Example: Suppose it is 10:15pm in Berlin at the 22nd of october. You sit in Berlin and type '*!post tryout 10:00pm Europe/Berlin*'.<br/>
 > Because 10pm already in the past today, the bot will create a lobby for 10:00pm CET at the **23rd** of october, that is tomorrow.
 
-============================================================================================
+---
 
 **DFZ-Bot v0.1 - Changelog**
 
