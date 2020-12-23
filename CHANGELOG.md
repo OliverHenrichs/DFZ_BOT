@@ -1,4 +1,5 @@
 *@Coach The bot received some new features today!*
+
 **DFZ-Bot v0.5 - Changelog**
 
 1. Added update-functionality for lobbies
