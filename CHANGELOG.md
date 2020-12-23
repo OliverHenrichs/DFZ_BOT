@@ -2,10 +2,10 @@
 **DFZ-Bot v0.5 - Changelog**
 
 1. Added update-functionality for lobbies
-> Command reads '*!update <msgId> -tiers <tiers>*'
-> It updates the lobby that is associated with the given message-ID. To get a lobby's message-ID, first activate discord's developer mode in the discord options, then rightclick the lobby post that you want to change and click 'copy ID'.
-> Available options: -tiers <tiers> Give tiers you want to allow in this lobby (e.g. '1,2')
-> Example: '*!update 791297808669737001 -tiers 1,2,3*' would've updated DFZ-bot's EU unranked lobby on the 23rd of december at 8pm CET to also allow Tier 3 players, because 791297808669737001 is the associated message ID of the lobby post.
+> Command reads '*!update <msgId> -tiers <tiers>*'<br/>
+> It updates the lobby that is associated with the given message-ID. To get a lobby's message-ID, first activate discord's developer mode in the discord options, then rightclick the lobby post that you want to change and click 'copy ID'.<br/>
+> Available options: -tiers <tiers> Give tiers you want to allow in this lobby (e.g. '1,2')<br/>
+> Example: '*!update 791297808669737001 -tiers 1,2,3*' would've updated DFZ-bot's EU unranked lobby on the 23rd of december at 8pm CET to also allow Tier 3 players, because 791297808669737001 is the associated message ID of the lobby post.<br/>
 > Options to change additional lobby parameters can be implemented if needed.
 
 ==============================================================================================================================================================================================================================
@@ -15,13 +15,13 @@
 1. Added region to lobby posts
 > The !post command now reads e.g. '*!post inhouse* ***EU*** *1,2 10:00pm CET*' (type the region right after lobby-type)
 > 3 regions possible: EU, NA, SEA
-    
+  
 2. Players from region get pushed up in a lobby.
-> Region refers to the region-role that player is assigned to (EU, NA, SEA). If he/she has multiple region-roles, the first one counts.
-> The idea is that players from the region have priority over other regions because of ping issues and suitable time-slots.
-> 
-> Example 1: If an EU player is the 2nd player to join a SEA-lobby and a SEA-player joins as third, he will be 2nd instead and the EU player pushed to 3rd.
-> Example 2: If there are 12 player waiting in a SEA-lobby, 4 of which are EU and 8 are SEA, and another SEA-player joins, he/she will be placed at 9th position and the EU-players pushed backwards.
+> Region refers to the region-role that player is assigned to (EU, NA, SEA). If he/she has multiple region-roles, the first one counts.<br/>
+> The idea is that players from the region have priority over other regions because of ping issues and suitable time-slots.<br/>
+> <br/>
+> Example 1: If an EU player is the 2nd player to join a SEA-lobby and a SEA-player joins as third, he will be 2nd instead and the EU player pushed to 3rd.<br/>
+> Example 2: If there are 12 player waiting in a SEA-lobby, 4 of which are EU and 8 are SEA, and another SEA-player joins, he/she will be placed at 9th position and the EU-players pushed backwards.<br/>
     
 3. Lobby posts now automatically ping players
 > So far the mention only happens in the Embedding (the darker square in which the lobby-message is posted) - which does not trigger pinging the respective beginner-roles.
