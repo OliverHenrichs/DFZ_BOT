@@ -22,7 +22,7 @@ function getRegionalRoleString(roleId)
 
 // role management
 module.exports = {
-	adminRoles: [process.env.COACH],
+	adminRoles: [process.env.COACH, process.env.COACH_TRYOUT],
 	beginnerRoles: beginnerRoles,
 	regionRoleIDs: regionRoleIDs,
 	

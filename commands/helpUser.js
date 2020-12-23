@@ -54,10 +54,10 @@ module.exports = async (message) => {
             "Creates a lobby in the channel in which you write the command.\n Lobby types: " + Object.keys(c.lobbyTypes).join(", ")+"\n Regions: " + rM.getRegionalRoleStringsForCommand().join(", ")+ "\n Allowed tiers: 1,2,3,4; Give no tiers nor regions for lobby type 'tryout'.\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",
             "!post " + Object.keys(c.lobbyTypes)[0]+" EU 1,2 9:55pm GMT+2 \n\n!post " + Object.keys(c.lobbyTypes)[1]+" SEA 4,3 10:00am Asia/Singapore \n\n!post " + Object.keys(c.lobbyTypes)[3]+" 9:55pm America/New_York");
 
-        // addHelpToTable( _embed, "time", 
-        //     "!time <lobbytype> <timezone>", 
-        //     "Shows you the scheduled time of the lobby in your timezone. Check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",
-        //     "!time " + Object.keys(c.lobbyTypes)[2]+ " Asia/Manila");
+        addHelpToTable( _embed, "update", 
+            "!update <msgId> -tiers <tiers>", 
+            "Updates the lobby that is associated with the given message-ID (get lobby's message-ID: activate developer mode in Discord options, then rightclick the lobby post and click 'copy ID')\nAvailable options: -tiers <tiers> Give tiers you want to allow in this lobby (e.g. '1,2')",
+            "!update 791413627105312769 -tiers 1,2,3");
             
         message.author.send({embed: _embed});
         mH.reactPositive(message, "");

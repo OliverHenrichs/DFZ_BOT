@@ -1,4 +1,5 @@
 const c = require("../misc/constants")
+const g = require("../misc/generics")
 const rM = require("../misc/roleManagement")
 const tZ = require("../misc/timeZone")
 
@@ -79,35 +80,6 @@ function createLobbyPostReactions(lobbyType, message)
 }
 
 /**
-    Check if player positions are a non-empty subset of {1,2,3,4,5}
-    @param positions map of positions to be checked for correctness
-    @param min min number value
-    @param max max number value
-    @return true if correct, false + error msg if not
-*/
-function checkNumbers(positions, min=0, max=5) {
-    // error if empty
-    if (positions.size == 0 || (positions.size == 1 && positions.has(NaN))) {
-        return [false, "no positions were given"];
-    }
-
-    // error if not integer values
-    for (let p of positions) {
-
-        if (Number.isNaN(p)) {
-            return [false, "at least one position is not a number."];
-        }
-        else if (p > max) {
-            return [false, "at least one position is greater than 5."];
-        }
-        else if (p <= min) {
-            return [false, "at least one position is smaller than 1."];
-        }
-    }
-    return [true, ""];
-}
-
-/**
  * Retrieves a sequence of unique numbers from an index of a message split at spaces
  * @param message message containing numbers
  * @param {uint} index index at which the message content must be split in order to retrieve numbers
@@ -121,21 +93,8 @@ function getNumbersFromMessage(message, index, min=0, max=5) {
 
     if(args.length <= index)
         return [false, [], "you need to provide a list of numbers ranging from " + min + " to " + max + " in your post"];
-    // split
-    var numbers = args[index].split(",");
-
-    // get integers
-    for (pos in numbers) {
-        numbers[pos] = Number(numbers[pos]);
-    }
-    // remove duplicates
-    numbers.sort();
-    var uniqueNumbers = new Set(numbers);
-
-    // check numbers
-    var checkResult = checkNumbers(uniqueNumbers, min=0, max=5);
-
-    return [checkResult[0], uniqueNumbers, checkResult[1]];
+    
+    return g.getNumbersFromString(args[index]);
 }
 
 /**
@@ -208,7 +167,6 @@ module.exports.reactNeutral = reactNeutral;
 module.exports.reactNegative = reactNegative;
 module.exports.reactPositive = reactPositive;
 module.exports.createLobbyPostReactions = createLobbyPostReactions;
-module.exports.checkNumbers = checkNumbers;
 module.exports.getNumbersFromMessage = getNumbersFromMessage;
 module.exports.getLobbyRegionRoleFromMessage = getLobbyRegionRoleFromMessage;
 module.exports.getArguments = getArguments;

@@ -1,20 +1,12 @@
 *@Coach The bot received some new features today!*
+**DFZ-Bot v0.5 - Changelog**
 
-**DFZ-Bot v0.4 - Changelog**
-
-1. Automatic scheduling every sunday.
-> The bot will issue schedule-posts for tryout and 5v5-lobby schedule.
-
-2. Display of coach signup in scheduling posts. 
-> Clicking on the Emojis representing the scheduled lobbies will have the coaches name appear in the list of coaches.
-> If more than the designated number of coaches sign up, then they will be queued and - in case a coach resigns, move up and replace them.
-
-3. Automatic creation of Google calendar entries.
-> If enough coaches have signed up for a lobby (for tryouts e.g. 1 coach, for 5v5-lobby 2 coaches) then a google calendar entry is created.
-> The calendar entry will update itself to display the coaches that are currently signed up.
-> Links to the calendars will be posted in the announcement-channel.
-
-If you find bugs or have improvement suggestion, please either DM me or mention me in a post in #internal-talk.
+1. Added update-functionality for lobbies
+> Command reads '*!update <msgId> -tiers <tiers>*'
+> It updates the lobby that is associated with the given message-ID. To get a lobby's message-ID, first activate discord's developer mode in the discord options, then rightclick the lobby post that you want to change and click 'copy ID'.
+> Available options: -tiers <tiers> Give tiers you want to allow in this lobby (e.g. '1,2')
+> Example: '*!update 791297808669737001 -tiers 1,2,3*' would've updated DFZ-bot's EU unranked lobby on the 23rd of december at 8pm CET to also allow Tier 3 players, because 791297808669737001 is the associated message ID of the lobby post.
+> Options to change additional lobby parameters can be implemented if needed.
 
 ==============================================================================================================================================================================================================================
 
@@ -72,3 +64,21 @@ If you find bugs or have improvement suggestion, please either DM me or mention 
 > *!correct*' and *!withdraw*' have already been replaced by emojis in the lobby post.
 > *!time*' can be inferred from looking at "Time to lobby.
 > *!status*' can be inferred by looking at the respective (pinned) lobby posts.
+
+==============================================================================================================================================================================================================================
+
+**DFZ-Bot v0.4 - Changelog**
+
+1. Automatic scheduling every sunday.
+> The bot will issue schedule-posts for tryout and 5v5-lobby schedule.
+
+2. Display of coach signup in scheduling posts. 
+> Clicking on the Emojis representing the scheduled lobbies will have the coaches name appear in the list of coaches.
+> If more than the designated number of coaches sign up, then they will be queued and - in case a coach resigns, move up and replace them.
+
+3. Automatic creation of Google calendar entries.
+> If enough coaches have signed up for a lobby (for tryouts e.g. 1 coach, for 5v5-lobby 2 coaches) then a google calendar entry is created.
+> The calendar entry will update itself to display the coaches that are currently signed up.
+> Links to the calendars will be posted in the announcement-channel.
+
+If you find bugs or have improvement suggestion, please either DM me or mention me in a post in #internal-talk.

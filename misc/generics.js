@@ -30,5 +30,58 @@ module.exports = {
             a[j] = x;
         }
         return a;
+    }, 
+    
+    /**
+        Check if a set of numbers is within the given range
+        @param positions map of numbers to be checked for correctness
+        @param min min number value
+        @param max max number value
+        @return {[boolean, string]} true if correct, false + error msg if not
+    */
+    checkNumbers: function(positions, min=0, max=5) {
+        // error if empty
+        if (positions.size == 0 || (positions.size == 1 && positions.has(NaN))) {
+            return [false, "Did not find any numbers"];
+        }
+
+        // error if not integer values
+        for (let p of positions) {
+
+            if (Number.isNaN(p)) {
+                return [false, "At least one position is NaN."];
+            }
+            else if (p > max) {
+                return [false, "At least one position is greater than " + max + "."];
+            }
+            else if (p < min) {
+                return [false, "At least one position is smaller than " + min + "."];
+            }
+        }
+        return [true, ""];
+    },
+
+    /**
+     * Retrieves a sequence of unique integer values from a string containing comma-separated values
+     * @param stringWithCommaSeperatedNumbers string like this "5,6,8"
+     * @param {int} min min allowed number
+     * @param {int} max max allowed number
+     * @return {[boolean, set<int>, string]}[true if success, unique numbers, error message if not success]
+     */
+    getNumbersFromString: function(stringWithCommaSeperatedNumbers, min=0, max=5)
+    {
+        var numbers = stringWithCommaSeperatedNumbers.split(",");
+        // get integers
+        for (pos in numbers) {
+            numbers[pos] = Number(numbers[pos]);
+        }
+        // remove duplicates
+        numbers.sort();
+        var uniqueNumbers = new Set(numbers);
+
+        // check numbers
+        var checkResult = this.checkNumbers(uniqueNumbers, min, max);
+
+        return [checkResult[0], uniqueNumbers, checkResult[1]];
     }
 }

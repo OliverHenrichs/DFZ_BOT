@@ -2,5 +2,9 @@
 .vscode
 node_modules/
 save.json
+save_test.json
 out/
 private/
+credentials.json
+service_key.json
+token.json

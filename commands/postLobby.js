@@ -45,12 +45,15 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 		return mH.reactNegative(message, errormsg);
 	}
 
+	var title = "We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName;
+	var text = lM.getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole);
+	//"for " + rM.getRoleMentions(lobbyBeginnerRoles) + (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
+	var finalFooter = footer
+	+ (lobbyType !== c.lobbyTypes.tryout ? ("\n\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up."):"")
+	+ "\n\nCoaches: Lock and start lobby with 🔒, cancel with ❌";
+
 	// send embedding post to lobby signup-channel
-	const _embed = aE.generateEmbedding("We host a " + lobbyTypeName + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName,
-										"for " + rM.getRoleMentions(lobbyBeginnerRoles) + (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"") ,
-										footer
-										+ (lobbyType !== c.lobbyTypes.tryout ? ("\n\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up."):"")
-										+ "\n\nCoaches: Lock and start lobby with 🔒, cancel with ❌");
+	const _embed = aE.generateEmbedding(title, text, finalFooter);
 	const lobbyPostMessage = await message.channel.send(rM.getRoleMentions(lobbyBeginnerRoles), {embed: _embed}); // mentioning roles in message again to ping beginners
 
 	// pin message to channel

@@ -4,6 +4,8 @@ const cM = require("../misc/channelManagement")
 const Discord = require("discord.js")
 const g = require("../misc/generics")
 const uH = require("../misc/userHelper")
+const rM = require("../misc/roleManagement")
+const tZ = require("../misc/timeZone")
 const fiveMinInMs = 300000;
 
 /**
@@ -375,6 +377,10 @@ function notifyPlayers(client, lobby, playerCount, message)
     }
 }
 
+
+const remainingLobbyTimeStartString = "Time to lobby: ";
+const alreadyStartedLobbyTimeStartString = "Lobby started ";
+
 module.exports = {
     
     /**
@@ -465,6 +471,14 @@ module.exports = {
 
         // generate new embed
         var new_embed = new Discord.RichEmbed(old_embed);
+        
+        // generate new embed description
+        // save old time 
+        var timeString = new_embed.description[new_embed.description.length - 1];
+        if(!timeString.startsWith(this.remainingLobbyTimeStartString)) 
+            timeString = "";
+
+        new_embed.description = this.getLobbyPostText(lobby.beginnerRoleIds, lobby.type, lobby.regionId) + timeString;
         new_embed.fields = getCurrentUsersAsTable(lobby, true);
         
         // update embed
@@ -498,10 +512,8 @@ module.exports = {
                     const message = await channel.fetchMessage(lobby.messageId);
                     old_embed = message.embeds[0];
 
-                    // remove old time 
-                    var startString = "Time to lobby: ";
                     var description = old_embed.description.split('\n');
-                    if(description[description.length - 1].startsWith(startString)) 
+                    if(description[description.length - 1].startsWith(remainingLobbyTimeStartString)) 
                         description.pop();
 
                     // get new time
@@ -510,7 +522,7 @@ module.exports = {
                     {
                         var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
                         var hours = Math.floor((remainingMs / (1000 * 60 * 60)));
-                        description.push(startString + (hours > 0  ? hours + "h " : "") + minutes + "min");
+                        description.push(remainingLobbyTimeStartString + (hours > 0  ? hours + "h " : "") + minutes + "min");
                     } else {
                         var minutes = Math.floor((-remainingMs / (1000 * 60)) % 60);
                         var hours = Math.floor((-remainingMs / (1000 * 60 * 60)));
@@ -522,7 +534,7 @@ module.exports = {
                             removeLobby(state, channel.id, lobby);
                             return;
                         } else {
-                            startString = "Lobby started ";
+                            startString = alreadyStartedLobbyTimeStartString;
                             if(description[description.length - 1].startsWith(startString)) 
                                 description.pop();
                             description.push(startString + (hours > 0  ? hours + "h " : "") + minutes + "min ago");
@@ -640,5 +652,95 @@ module.exports = {
 
         // update lobby post
         this.updateLobbyPost(lobby, reaction.message.channel);  
+    },
+
+
+    /**
+     * Derives lobby from message arguments (first argument must be message ID registered with lobby)
+     * @param {Stringlist} messageId ID of message that is associated with the lobby
+     * @param {*} channelId ID of channel in which the lobby resides
+     * @param {*} state current bot state
+     */
+    getLobbyFromMessageId: function(messageId, channelId, state)
+    {
+        var channelLobbies = state.lobbies[channelId];
+        if(channelLobbies === undefined || channelLobbies.length === 0)
+            return [undefined, "No open lobbies in this channel."];
+        
+        var foundLobby = false;
+        var lobby = undefined;
+        
+        Object.keys(c.lobbyTypes).forEach(typeKey => {
+            if(foundLobby)
+                return;
+                
+            var typedChannelLobbies = channelLobbies[c.lobbyTypes[typeKey]];
+            if(typedChannelLobbies === undefined)
+                return;
+
+            for (let i = 0; i < typedChannelLobbies.length; i++)
+            {
+                var test = typedChannelLobbies[i];
+                if(test.messageId !== messageId)
+                    continue;
+
+                lobby = test;
+                foundLobby = true;
+                return;
+            }
+        });
+
+        return foundLobby ? [lobby, ""] : [undefined, "No open lobby in this channel matches your ID."];
+    },
+
+    /**
+     * 
+     * @param {StringList} arguments 
+     * @param {lobby} lobby 
+     * @param {message} message
+     */
+    updateLobbyParameters: function(arguments, lobby, message)
+    {
+        var updateTiers = false;
+        var changedLobby = false;
+
+        while(arguments.length > 0 )
+        {
+            let arg = arguments[0];
+            arguments.shift();
+
+            if(arg === "-tiers")
+            {
+                updateTiers = true;
+                continue;
+            } 
+            
+            if(updateTiers)
+            {
+                const minTier = 1;// Beginner tiers 1-4
+                const maxTier = 4;
+                [res, numbers, errormsg] = g.getNumbersFromString(arg, minTier, maxTier);
+                if(!res) {
+                    return [false, errormsg];
+                }
+                
+                var roles = rM.getBeginnerRolesFromNumbers(numbers);
+                if(roles.length !== 0)
+                {
+                    lobby.beginnerRoleIds = roles;
+                    changedLobby = true;
+                }
+
+                updateTiers = false;
+                continue;
+            }
+
+        }
+
+        return [changedLobby, ""];
+    }, 
+
+    getLobbyPostText: function(lobbyBeginnerRoles, lobbyType, lobbyRegionRole) {
+        return "for " + rM.getRoleMentions(lobbyBeginnerRoles) + (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
     }
 }

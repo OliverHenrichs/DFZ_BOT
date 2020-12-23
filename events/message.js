@@ -3,6 +3,7 @@ const rM = require("../misc/roleManagement")
 const cM = require("../misc/channelManagement")
 const mH = require("../misc/messageHelper")
 const hU = require("../commands/helpUser")
+const uL = require("../commands/updateLobby")
 
 const PREFIX = '!';
 
@@ -39,6 +40,9 @@ module.exports = async (client, message) => {
 		}
 		if (content.startsWith("!post")) {
 			return pL(message, client._state)
+		}
+		if (content.startsWith("!update")) {
+			return uL(message, client._state)
 		}
 	} else if (	content.startsWith("!post")) {
 		return mH.reactNegative(message, "Only coaches are eligible for this command.");
