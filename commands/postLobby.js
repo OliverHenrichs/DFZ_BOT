@@ -7,13 +7,13 @@ const tZ = require("../misc/timeZone")
 
 /**
  * Internal function that creates the embedding for the lobby post
- * @param {*} message coaches message that triggered the lobby post
- * @param {*} state bot state
- * @param {*} lobbyType type of lobby
- * @param {*} lobbyTypeName printing name of that lobby
- * @param {*} footer String to append to embedding
+ * @param {Discord.Message} message coaches message that triggered the lobby post
+ * @param {mysql.Connection} dbHandle db handle
+ * @param {number} lobbyType type of lobby
+ * @param {string} lobbyTypeName printing name of that lobby
+ * @param {string} footer String to append to embedding
  */
-async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
+async function postLobby_int(message, dbHandle, lobbyType, lobbyTypeName, footer) {
 
 	// tryout 'region' and role
 	var lobbyRegionRole = undefined;
@@ -65,8 +65,8 @@ async function postLobby_int(message, state, lobbyType, lobbyTypeName, footer) {
 	// react to coach's command
 	mH.reactPositive(message);
 
-	// create lobby data in state
-	lM.createLobby(state, message.channel.id, lobbyType, lobbyBeginnerRoles, lobbyRegionRole, zonedTime.epoch, lobbyPostMessage.id);
+	// create lobby data in database
+	lM.createLobby(dbHandle, message.channel.id, lobbyType, lobbyBeginnerRoles, lobbyRegionRole, zonedTime.epoch, lobbyPostMessage.id);
 }
 
 var reactionStringBeginner = "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\nClick again to remove a position.\nRemove all positions to withdraw from the lobby."
@@ -74,16 +74,16 @@ var reactionStringTryout = "Tryouts: Join lobby by clicking ✅ below.\nClick ag
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
- * @param {*} message coaches message that triggered the lobby post
- * @param {*} state bot state
+ * @param {Discord.Message} message coaches message that triggered the lobby post
+ * @param {mysql.Connection} dbHandle bot database handle
  */
-module.exports = async (message, state) => {
+module.exports = async (message, dbHandle) => {
 	var type = mH.getLobbyType(message);
 	if(type == undefined)
 		return;
 
 	if(type == c.lobbyTypes.tryout)
-		postLobby_int(message, state, type, c.getLobbyNameByType(type), reactionStringTryout);
+		postLobby_int(message, dbHandle, type, c.getLobbyNameByType(type), reactionStringTryout);
 	else
-		postLobby_int(message, state, type, c.getLobbyNameByType(type), reactionStringBeginner);
+		postLobby_int(message, dbHandle, type, c.getLobbyNameByType(type), reactionStringBeginner);
 }

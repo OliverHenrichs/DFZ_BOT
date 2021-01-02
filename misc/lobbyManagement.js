@@ -1,11 +1,10 @@
 const aE = require("../misc/answerEmbedding")
 const c = require("../misc/constants")
-const cM = require("../misc/channelManagement")
+const dB = require("./dataBase")
 const Discord = require("discord.js")
 const g = require("../misc/generics")
 const uH = require("../misc/userHelper")
 const rM = require("../misc/roleManagement")
-const tZ = require("../misc/timeZone")
 const fiveMinInMs = 300000;
 
 /**
@@ -264,7 +263,7 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
 /**
  * Updates message embedding to fit new title / pin status
  * @param {string} messageId message ID of the message that we want to change
- * @param {*} channel the message's channel
+ * @param {Discord.Channel} channel the message's channel
  * @param {string} titleUpdate new title
  * @param {boolean} unpin true to unpin message
  */
@@ -291,15 +290,12 @@ async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unp
 
 /**
  * Removes lobby in backend
- * @param {*} state bot state
- * @param {*} channelId lobby channel id
- * @param {*} lobby lobby to remove
+ * @param {mysql.Connection} dbHandle bot database handle
+ * @param {JSON} lobby lobby to remove
  */
-function removeLobby(state, channelId, lobby)
+function removeLobby(dbHandle, lobby)
 {
-    var index = state.lobbies[channelId][lobby.type].findIndex(_lobby => lobby.messageId == _lobby.messageId);
-    if(index > -1)
-        state.lobbies[channelId][lobby.type].splice(index, 1);
+    dB.removeLobby(dbHandle, lobby);
 }
 
 /**
@@ -351,8 +347,8 @@ function createLobbyStartPost (lobby, channel, playersPerLobby)
 
 /**
  * Indicate that lobby has started
- * @param {*} lobby lobby
- * @param {*} channel message channel
+ * @param {JSON} lobby lobby
+ * @param {Discord.Channel} channel message channel
  */
 async function finishLobbyPost(lobby, channel)
 {
@@ -361,9 +357,9 @@ async function finishLobbyPost(lobby, channel)
 
 /**
  * Notify all players of a lobby
- * @param {*} client discord client
- * @param {*} lobby lobby containing the player to notify
- * @param {*} message message to send to players
+ * @param {Discord.Client} client discord client
+ * @param {JSON} lobby lobby containing the player to notify
+ * @param {Discord.Message} message message to send to players
  */
 function notifyPlayers(client, lobby, playerCount, message)
 {
@@ -372,11 +368,10 @@ function notifyPlayers(client, lobby, playerCount, message)
             if(user !== undefined)
                 user.send(message);
         }).catch(err => 
-            console.log(err)
+            console.log("Error notifying players. Errormessage: " + err)
         );
     }
 }
-
 
 const remainingLobbyTimeStartString = "Time to lobby: ";
 const alreadyStartedLobbyTimeStartString = "Lobby started ";
@@ -384,74 +379,41 @@ const alreadyStartedLobbyTimeStartString = "Lobby started ";
 module.exports = {
     
     /**
-     *  Searches state in channel for lobby by checking for the right message ID
+     *  Finds lobby by its channel and message
      *  @return undefined if not found, else returns the lobby
-     *  @param state bot state
+     *  @param dbHandle bot database handle
      *  @param channelId message channel id
      *  @param messageId message ID
      */
-    findLobbyByMessage: function(state, channelId, messageId)
+    findLobbyByMessage: async function(dbHandle, channelId, messageId)
     {
-        // check all lobby types in channel, for each found check if its message id fits;
-        for (var key in c.lobbyTypes) 
-        {
-            var lobbiesOfType = state.lobbies[channelId][c.lobbyTypes[key]];
-            if(lobbiesOfType === undefined)
-                continue;
+        var lobbies = await dB.getLobbies(dbHandle, channelId, messageId);
+        if(lobbies.length !== 1)
+            return undefined;
 
-            for (let i = 0; i<lobbiesOfType.length; i++)
-            {
-                var _lobby = lobbiesOfType[i];
-                if(_lobby.messageId === messageId)
-                {
-                    return _lobby;
-                }
-            }  
-        }
-
-        return undefined;
-    },
-
-    /**
-     *  Checks if lobby exists and is of today, returns lobby if and undefined if not
-     *  @return undefined if above condition is not fulfilled, else returns the lobby
-     *  @param state bot state
-     *  @param channel message channel
-     *  @param type lobby type
-     */
-    getLobbiesOfType: function (state, channel, type) 
-    {
-        if(state.lobbies[channel] !== undefined)
-            return state.lobbies[channel][type];
-            
-        return undefined;
+        return lobbies[0];
     },
 
     /**
      *  Create lobby in given channel and of given type at given time
      *  @return undefined if above condition is not fulfilled
-     *  @param state bot state
-     *  @param channel message channel
+     *  @param connection bot database handle
+     *  @param channelID message channel id
      *  @param type lobby type
      *  @param beginnerRoles allowed Beginner roles
      *  @param regionRole allowed Beginner roles
      *  @param date date of lobby
      *  @param messageID ref to lobby-message to alter it
      */
-    createLobby: function (state, channel, type, beginnerRoles, regionRole, date, messageID) 
+    createLobby: function (connection, channelID, type, beginnerRoles, regionRole, date, messageID) 
     {
-        // override / create lobby
-        if (state.lobbies[channel][type] === undefined)
-        {
-            state.lobbies[channel][type] = [];
-        }
-
-        state.lobbies[channel][type].push({
+        dB.insertLobby(connection, {
             type: type,
             date: date,
             users: [],
-            beginnerRoleIds: beginnerRoles, // roles
+            beginnerRoleIds: beginnerRoles,
             regionId: regionRole,
+            channelId: channelID,
             messageId : messageID
         });
     },
@@ -460,7 +422,7 @@ module.exports = {
 
     /**
      *  Update lobby post to account for current lobby state
-     *  @param lobby bot state
+     *  @param lobby lobby state
      *  @param channel message channel
      */
     updateLobbyPost: async function(lobby, channel)
@@ -487,69 +449,60 @@ module.exports = {
 
     /**
      *  Update lobby time of each lobby post and delete deprecated lobbies
-     *  @param state current bot state (containing lobbies)
+     *  @param dbHandle handle to data base
      *  @param channels the bot's message channels on the server
      */
-    updateLobbyTimes: async function(channels, state)
+    updateLobbyTimes: async function(channels, dbHandle)
     {
-        var lobbies = state.lobbies;
-        g.asyncForEach(cM.botChannels, async channelId => {
-            // get channel
-            var channel = channels.find(chan => { return chan.id == channelId});
+        lobbies = await dB.getLobbies(dbHandle, '', '');
+        
+        for(let i = 0; i < lobbies.length; i++)
+        {
+            let lobby = lobbies[i];
+            var channel = channels.find(chan => { return chan.id == lobby.channelId});
             if(!channel)
                 return;
-    
-            // go through lobby types
-            await g.asyncForEach(Object.keys(c.lobbyTypes), async key =>  {
-                // get lobby
-                var channelTypedLobbies = lobbies[channelId][c.lobbyTypes[key]];
-                if(channelTypedLobbies === undefined || channelTypedLobbies.length === 0)
+
+            // fetch message
+            const message = await channel.fetchMessage(lobby.messageId);
+            old_embed = message.embeds[0];
+
+            var description = old_embed.description.split('\n');
+            if(description[description.length - 1].startsWith(remainingLobbyTimeStartString)) 
+                description.pop();
+
+            // get new time
+            var remainingMs = lobby.date - Date.now();
+            if(remainingMs > 0 )
+            {
+                var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+                var hours = Math.floor((remainingMs / (1000 * 60 * 60)));
+                description.push(remainingLobbyTimeStartString + (hours > 0  ? hours + "h " : "") + minutes + "min");
+            } else {
+                var minutes = Math.floor((-remainingMs / (1000 * 60)) % 60);
+                var hours = Math.floor((-remainingMs / (1000 * 60 * 60)));
+
+                // more than 3 hours ago => delete lobby
+                if(hours >= 3)
+                {
+                    await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]");
+                    removeLobby(dbHandle, lobby);
                     return;
-    
-                // update lobby time
-                g.asyncForEach(channelTypedLobbies, async lobby => {
-                    // fetch message
-                    const message = await channel.fetchMessage(lobby.messageId);
-                    old_embed = message.embeds[0];
-
-                    var description = old_embed.description.split('\n');
-                    if(description[description.length - 1].startsWith(remainingLobbyTimeStartString)) 
+                } else {
+                    startString = alreadyStartedLobbyTimeStartString;
+                    if(description[description.length - 1].startsWith(startString)) 
                         description.pop();
+                    description.push(startString + (hours > 0  ? hours + "h " : "") + minutes + "min ago");
+                }
+            }
 
-                    // get new time
-                    var remainingMs = lobby.date - Date.now();
-                    if(remainingMs > 0 )
-                    {
-                        var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
-                        var hours = Math.floor((remainingMs / (1000 * 60 * 60)));
-                        description.push(remainingLobbyTimeStartString + (hours > 0  ? hours + "h " : "") + minutes + "min");
-                    } else {
-                        var minutes = Math.floor((-remainingMs / (1000 * 60)) % 60);
-                        var hours = Math.floor((-remainingMs / (1000 * 60 * 60)));
-
-                        // more than 3 hours ago => delete lobby
-                        if(hours >= 3)
-                        {
-                            await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]");
-                            removeLobby(state, channel.id, lobby);
-                            return;
-                        } else {
-                            startString = alreadyStartedLobbyTimeStartString;
-                            if(description[description.length - 1].startsWith(startString)) 
-                                description.pop();
-                            description.push(startString + (hours > 0  ? hours + "h " : "") + minutes + "min ago");
-                        }
-                    }
-
-                    // generate new embed
-                    var new_embed = new Discord.RichEmbed(old_embed);
-                    new_embed.description = description.join('\n');
-                    
-                    // update embed
-                    await message.edit(new_embed);
-                })
-            });
-        });
+            // generate new embed
+            var new_embed = new Discord.RichEmbed(old_embed);
+            new_embed.description = description.join('\n');
+            
+            // update embed
+            await message.edit(new_embed);
+        }
     },
     
     /**
@@ -566,10 +519,10 @@ module.exports = {
     
     /**
      * Starts lobby if time is up
-     * @param {*} client discord client
-     * @param {*} lobby lobby to start
-     * @param {*} user user who wants to start the lobby
-     * @param {*} channel channel in which the lobby resides
+     * @param {Discord.Client} client discord client
+     * @param {JSON} lobby lobby to start
+     * @param {Discord.User} user user who wants to start the lobby
+     * @param {Discord.Channel} channel channel in which the lobby resides
      * @return true if lobby was started (and can therefore be removed)
      */
     startLobby: function (client, lobby, user, channel)
@@ -600,14 +553,14 @@ module.exports = {
 
     /**
      * manages removal of reaction in lobby post (position removal or player removal if last position)
-     * @param {*} client discord client
-     * @param {*} reaction reaction that was removed
-     * @param {*} user user who removed the reaction
+     * @param {Discord.Client} client discord client
+     * @param {Discord.MessageReaction} reaction reaction that was removed
+     * @param {Discord.User} user user who removed the reaction
      */
-    updatePlayerInLobby: function(client, reaction, user)
+    updatePlayerInLobby: async function(client, reaction, user)
     {
         // find lobby
-        var lobby = this.findLobbyByMessage(client._state, reaction.message.channel.id, reaction.message.id);
+        var lobby = await this.findLobbyByMessage(client.dbHandle, reaction.message.channel.id, reaction.message.id);
         if(lobby === undefined)
             return;
 
@@ -651,46 +604,10 @@ module.exports = {
         }
 
         // update lobby post
-        this.updateLobbyPost(lobby, reaction.message.channel);  
-    },
+        this.updateLobbyPost(lobby, reaction.message.channel);
 
-
-    /**
-     * Derives lobby from message arguments (first argument must be message ID registered with lobby)
-     * @param {Stringlist} messageId ID of message that is associated with the lobby
-     * @param {*} channelId ID of channel in which the lobby resides
-     * @param {*} state current bot state
-     */
-    getLobbyFromMessageId: function(messageId, channelId, state)
-    {
-        var channelLobbies = state.lobbies[channelId];
-        if(channelLobbies === undefined || channelLobbies.length === 0)
-            return [undefined, "No open lobbies in this channel."];
-        
-        var foundLobby = false;
-        var lobby = undefined;
-        
-        Object.keys(c.lobbyTypes).forEach(typeKey => {
-            if(foundLobby)
-                return;
-                
-            var typedChannelLobbies = channelLobbies[c.lobbyTypes[typeKey]];
-            if(typedChannelLobbies === undefined)
-                return;
-
-            for (let i = 0; i < typedChannelLobbies.length; i++)
-            {
-                var test = typedChannelLobbies[i];
-                if(test.messageId !== messageId)
-                    continue;
-
-                lobby = test;
-                foundLobby = true;
-                return;
-            }
-        });
-
-        return foundLobby ? [lobby, ""] : [undefined, "No open lobby in this channel matches your ID."];
+        // update lobby in backend
+        dB.updateLobby(client.dbHandle, lobby);
     },
 
     /**

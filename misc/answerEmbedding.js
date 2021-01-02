@@ -5,10 +5,10 @@ module.exports = {
 
     /**
      * Generate embedding given the content
-     * @param {*} _title title
-     * @param {*} _text text
-     * @param {*} _footer footer 
-     * @param {*} table optional table
+     * @param {string} _title title
+     * @param {string} _text text
+     * @param {string} _footer footer 
+     * @param {Array<string>} [table] optional table
      */
     generateEmbedding: function (_title, _text, _footer, table = []) {
         return  {

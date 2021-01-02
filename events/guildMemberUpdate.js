@@ -1,5 +1,9 @@
 const rM = require("../misc/roleManagement")
 
+/**
+ * Checks if member has nickname
+ * @param {Discord.GuildMember} member 
+ */
 function hasNickname(member)
 {
     return member.nickname !== undefined && member.nickname !== null;
@@ -8,9 +12,9 @@ function hasNickname(member)
 /**
  * Emitted whenever a guild member changes - i.e. new role, removed role, nickname.
  * Here we check if a regional role has been added or removed - and change the users nickname to reflect that change
- * @param {Client} client discord client
- * @param {GuildMember} oldMember The member before the update
- * @param {GuildMember} newMember The member after the update
+ * @param {Discord.Client} client discord client
+ * @param {Discord.GuildMember} oldMember The member before the update
+ * @param {Discord.GuildMember} newMember The member after the update
  */
 module.exports = async (client, oldMember, newMember) => {
     // ignore if roles did not change

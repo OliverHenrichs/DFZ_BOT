@@ -12,6 +12,7 @@
     "dot-prop": "^5.3.0",
     "dotenv": "^8.2.0",
     "googleapis": "^65.0.0",
+    "mysql2": "^2.2.5",
     "readwrite-lock": "^1.0.5",
     "string-table": "^0.1.5",
     "timezone-support": "^2.0.2"

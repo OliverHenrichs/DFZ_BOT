@@ -6,7 +6,7 @@ const tZ = require("../misc/timeZone")
 
 /**
  * Reacts to message using reply and emoji
- * @param {message} message message to be replied to
+ * @param {Discord.Message} message message to be replied to
  * @param {string} reply string containing reply message
  * @param {string} emoji emoji to react with
  */
@@ -26,7 +26,7 @@ async function reactMessage(message, reply, emoji)
 
 /**
  * Creates a negative reaction
- * @param {message} message message to react to
+ * @param {Discord.Message} message message to react to
  * @param {string} reply string reply
  */
 function reactNegative(message, reply = "")
@@ -36,7 +36,7 @@ function reactNegative(message, reply = "")
 
 /**
  * Creates a neutral reaction
- * @param {message} message message to react to
+ * @param {Discord.Message} message message to react to
  * @param {string} reply string reply
  */
 function reactNeutral(message, reply = "")
@@ -46,7 +46,7 @@ function reactNeutral(message, reply = "")
 
 /**
  * Creates a positive reaction
- * @param {message} message message to react to
+ * @param {Discord.Message} message message to react to
  * @param {string} reply string reply
  */
 function reactPositive(message, reply = "")
@@ -57,7 +57,7 @@ function reactPositive(message, reply = "")
 /**
  * Creates initial reaction to lobby post for users to react to
  * @param {int} lobbyType 
- * @param {message} message 
+ * @param {Discord.Message} message 
  */
 function createLobbyPostReactions(lobbyType, message) 
 {
@@ -81,7 +81,7 @@ function createLobbyPostReactions(lobbyType, message)
 
 /**
  * Retrieves a sequence of unique numbers from an index of a message split at spaces
- * @param message message containing numbers
+ * @param {Discord.Message} message message containing numbers
  * @param {uint} index index at which the message content must be split in order to retrieve numbers
  * @param {int} min min allowed number
  * @param {int} max max allowed number
@@ -100,7 +100,7 @@ function getNumbersFromMessage(message, index, min=0, max=5) {
 /**
  * Retrieves a region from an index of a message split at spaces
  * message containing regional role
- * @param {Message} message 
+ * @param {Discord.Message} message 
  * @param {int} index 
  */
 function getLobbyRegionRoleFromMessage(message, index) 
@@ -116,8 +116,8 @@ function getLobbyRegionRoleFromMessage(message, index)
 
 /**
  * Takes time part out of message by splitting and taking the part at index, then validates and returns the time
- * @param {*} message message containing the time
- * @param {*} index position of time in the message
+ * @param {Discord.Message} message message containing the time
+ * @param {int} index position of time in the message
  */
 function getTimeFromMessage(message, index)
 {
@@ -131,7 +131,7 @@ function getTimeFromMessage(message, index)
 
 /**
  * returns arguments of message of form "command arg1 arg2 ... argN"
- * @param {message} message 
+ * @param {Discord.Message} message 
  */
 function getArguments(message) {
     var content = message.content.split(" ");
@@ -141,7 +141,7 @@ function getArguments(message) {
 
 /**
  * Derives lobby type from message and reacts based on evaluation
- * @param {message} message message from which to derive lobby type
+ * @param {Discord.Message} message message from which to derive lobby type
  */
 function getLobbyType(message) {
     var args = getArguments(message);

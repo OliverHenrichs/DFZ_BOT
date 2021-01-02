@@ -5,8 +5,8 @@ const rM = require("./roleManagement")
 /**
  * Swap two array elements in place
  * thx @ https://stackoverflow.com/questions/872310/javascript-swap-array-elements
- * @param x first item index
- * @param y second item index
+ * @param {Object} x first item index
+ * @param {Object} y second item index
  * @return ref to array
  */
 Array.prototype.swap = function (x,y) {
@@ -18,8 +18,8 @@ Array.prototype.swap = function (x,y) {
 
 /**
  * compares two users by tier
- * @param {*} a user a
- * @param {*} b user b
+ * @param {JSON} a user a
+ * @param {JSON} b user b
  */
 function tier_sorter(a,b) {
     return b.tier.number - a.tier.number;
@@ -27,7 +27,7 @@ function tier_sorter(a,b) {
 
 /**
 * compares two users by tier the other way round
-* @param {*} a user a
+* @param {JSON} a user a
 * @param {*} b user b
 */
 function reverse_tier_sorter(a,b) {
@@ -36,7 +36,7 @@ function reverse_tier_sorter(a,b) {
 
 /**
  * Filters and sorts users 
- * @param {*} users 
+ * @param {Discord.User} users 
  * @param {*} filter 
  * @param {*} sorter 
  * @return filtered and sorted array of users
@@ -49,7 +49,7 @@ function filterAndSortUsers_int(users, filter, sorter)
 
 /**
  * Filters users by position and sorts the filtered users by tier
- * @param {*} users 
+ * @param {Discord.User} users 
  * @param {*} position 
  * @return filtered array of users
  */
@@ -64,7 +64,7 @@ function filterAndSortByPositionAndTier_int(users, position)
 
 /**
  * Filters users by position
- * @param {*} users 
+ * @param {Discord.User} users 
  * @param {*} position 
  * @return filtered array of users
  */
@@ -288,6 +288,15 @@ createnNonCompetitionTeams = function(playerPositionMap, openUsers)
 },
 
 module.exports = {
+    /**
+     * 
+     * @param {JSON} lobby 
+     * @param {string} name 
+     * @param {number} id 
+     * @param {Array<number>} positions 
+     * @param {string} beginnerRole 
+     * @param {string} regionRole 
+     */
     addUser: function (lobby, name, id, positions, beginnerRole, regionRole)
     {
         // create user
@@ -380,4 +389,5 @@ module.exports = {
 
         return playerPositionMap;
     }
+
 }

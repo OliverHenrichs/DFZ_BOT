@@ -1,6 +1,6 @@
 /**
  * Emitted whenever the client failed to reconnect multiple times and is giving up - time to restart with forever
- * @param {Client} client discord client
+ * @param {Discord.Client} client discord client
  * @param {Event} event The disconnect event
  */
 module.exports = async (client, event) => {

@@ -3,7 +3,14 @@ const rM = require("../misc/roleManagement")
 const aE = require("../misc/answerEmbedding")
 const mH = require("../misc/messageHelper")
 
-
+/**
+ * Creates string to add to help-embedding and augments embed with it
+ * @param {Discord.embed} embed 
+ * @param {string} short 
+ * @param {string} command 
+ * @param {string} functionality 
+ * @param {string} example 
+ */
 function addHelpToTable(embed, short, command, functionality, example) {
     // table for embed
     var tableBase = [

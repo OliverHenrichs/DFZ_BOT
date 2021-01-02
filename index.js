@@ -3,35 +3,12 @@ const Discord = require("discord.js")
 const fs = 		require("fs")
 const client = new Discord.Client({autoReconnect:true});
 
+const lM = require("./misc/lobbyManagement")
+const sM = require("./misc/scheduleManagement")
+const dB = require("./misc/dataBase")
 
-const serializer = 	require("./misc/serializeHelper")
-const cM = 			require("./misc/channelManagement")
-const lM = 			require("./misc/lobbyManagement")
-const sM = 			require("./misc/scheduleManagement")
-
-// setup bot state
-client._state = {};
-client._state.lobbies = {};
-client._state.schedules = [];
-
-// load bot state
-if(!serializer.loadState(client, process.env.SAVEFILE))
-{
-	cM.botChannels.forEach(channel => {
-		client._state.lobbies[channel] = {};
-	});
-} else {
-	// in case a channel is missing, add it here
-	cM.botChannels.forEach(channel => {
-		if(client._state.lobbies[channel] === undefined)
-			client._state.lobbies[channel] = {};
-	});
-}
-if(client._state.schedules === undefined)
-	client._state.schedules = [];
-
-// setup reading messages
-fs.readdir("./events/", (err, files) => {
+// setup discord event handlers
+fs.readdir("./events/", (err, files) => { 
 	files.forEach(file => {
 		const eventHandler = require(`./events/${file}`)
 		const eventName = file.split(".")[0]
@@ -39,23 +16,26 @@ fs.readdir("./events/", (err, files) => {
 	})
 })
 
-// login
-client.login(process.env.BOT_TOKEN).then(() => {
-
+// setup-chain
+dB.getDBHandle()// get db-access
+.then(function(connection) { // add / find tables in db
+	client.dbHandle = connection;
+	return dB.createScheduleTable(connection);
+}).then(() => {
+	return dB.createLobbyTable(client.dbHandle);
+}).then(() => {
+	return dB.createOptionsTable(client.dbHandle);
+}).then(() => { // login to discord client
+	return client.login(process.env.BOT_TOKEN);
+}).then(() => new Promise(function(resolve, reject) { // setup intervals
 	// update lobby posts
 	const timeUpdater = async () => {
 		var guild = client.guilds.get(process.env.GUILD);
 		if(guild === undefined || guild === null)
 			return;
-		lM.updateLobbyTimes(guild.channels, client._state);
+		lM.updateLobbyTimes(guild.channels, client.dbHandle);
 	};
 	setInterval(timeUpdater, 60000); // once per minute
-
-	// write state to file
-	const writer = () => {
-		serializer.writeState(client._state, process.env.SAVEFILE)
-	};
-	setInterval(writer, 15000);// once per 15 min => this should be in database...
 
 	// update lobby schedule 
 	const scheduleWriter = async () => {
@@ -63,11 +43,12 @@ client.login(process.env.BOT_TOKEN).then(() => {
 		var guild = client.guilds.get(process.env.GUILD);
 		if(guild === undefined || guild === null)
 			return;
-		sM.updateSchedules(client._state, guild.channels);
+		sM.updateSchedules(client.dbHandle, guild.channels);
 	}
 	scheduleWriter();
-	setInterval(scheduleWriter, 60*60000); // once per hour
+	setInterval(scheduleWriter, 60000);//60*60000); // once per hour
 
-}).catch(error => {
-	console.log (error);
-});
+	resolve("Interval tasks set");
+})).catch(err => 
+	console.log(err)
+);

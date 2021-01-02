@@ -1,12 +1,17 @@
 
 const aE = require("./answerEmbedding")
 const cM = require("./channelManagement")
+const dB = require("./dataBase")
 const gM = require("./googleCalendarManagement")
 const Discord = require("discord.js")
 const _tz = require("./timeZone")
 const rM = require("./roleManagement")
 const scheduleReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
 
+/**
+ * Create header string for weekly schedule
+ * @param {JSON} scheduleSetup 
+ */
 function getWeekScheduleString(scheduleSetup)
 {
     return "Schedule for Week #" + 
@@ -16,6 +21,15 @@ function getWeekScheduleString(scheduleSetup)
         ")";
 }
 
+/**
+ * Creates text for scheduling embedding. All arrays must be equal length
+ * @param {Array<int>} days the days on which lobbies are scheduled
+ * @param {Array<String>} emojis Which emoji is associated with which schedule
+ * @param {string} title title of Schedule
+ * @param {Array<String>} times time-strings in format hh:mm'am/pm'
+ * @param {string} timezoneName 
+ * @param {int} coachCount Number of coaches required for schedule
+ */
 function getScheduleText(days, emojis, title, times, timezoneName, coachCount)
 {
     var schedule = {
@@ -40,8 +54,8 @@ function reactWithScheduleEmojis(message, lastEmojiIndex = -1)
 
 /**
  * creates schedule message according to schedule setup
- * @param {*} channel schedule channel
- * @param {*} scheduleSetup struct containing all information regarding schedule
+ * @param {Discord.Channel} channel schedule channel
+ * @param {JSON} scheduleSetup json containing all information regarding schedule
  */
 async function writeSchedule(channel, scheduleSetup)
 {
@@ -72,7 +86,7 @@ async function writeSchedule(channel, scheduleSetup)
     if(scheduleSetup.coachCount === 1)
         footer = "If a coach is signed up, then they must create the corresponding lobby at least 3h prior to the event.";
     else 
-        footer = "If two coaches are signed up, then one coach must create the corresponding lobby at least 3h prior to the event.\nIf only one coach is signed up, then they can choose to e.g. offer an unranked lobby.";
+        footer = "If two coaches are signed up, then one coach must create the corresponding lobby at least 3h prior to the event.\nIf only one coach is signed up, then they offer an unranked lobby.";
 
     var _embed = aE.generateEmbedding(getWeekScheduleString(scheduleSetup), "Sign up as a coach by reacting to the respective number.", footer, schedules);
     var message = await channel.send({embed: _embed});
@@ -81,25 +95,37 @@ async function writeSchedule(channel, scheduleSetup)
     return message;
 }
 
-function findSchedule(schedules, messageId, emojiName) {
-    return schedules.find(schedule => {
-        return schedule.message === messageId && schedule.emoji === emojiName;
-    })
+/**
+ * Finds unique schedule identified by message ID and emoji
+ * @param {mysql.Connection} dbHandle 
+ * @param {string} messageId 
+ * @param {string} emojiName 
+ */
+async function findSchedule(dbHandle, messageId, emojiName) {
+    
+    var schedules = await dB.getSchedules(dbHandle, messageId, emojiName);
+    if(schedules.length === 0)
+        return undefined;
+    if(schedules.length > 1)
+    {
+        console.log("Schedules are not unique ??");
+        return undefined;
+    }
+
+    return schedules[0];
 }
 
 module.exports = {
     /**
      * Creates the data associated with the created lobby schedules
-     * @param {*} state client state
-     * @param {*} msg the message that is tied to the schedule
-     * @param {*} scheduleSetup the setup that was used to create the schedule message
+     * @param {mysql.Connection} dbHandle bot database handle
+     * @param {string} messageId the message that is tied to the schedule
+     * @param {string} channelId the channel that is tied to the schedule
+     * @param {JSON} scheduleSetup the setup that was used to create the schedule message
      */
-    createLobbySchedules: function(state, msg, scheduleSetup)
-    {
-        if(state.schedules === undefined)
-            state.schedules = [];
-        
-        for(let i = 0; i< scheduleSetup.regions.length; i++)
+    createLobbySchedules: function(dbHandle, messageId, channelId, scheduleSetup)
+    {        
+        for(let i = 0; i < scheduleSetup.regions.length; i++)
         {
             var region = scheduleSetup.regions[i];
             var tz = scheduleSetup.timezones[i];
@@ -116,8 +142,9 @@ module.exports = {
                     return;
                 }
                 var reactionEmoji = scheduleReactionEmojis[dayBaseIndex+j];
-                state.schedules.push({
-                    message: msg.id,
+                dB.insertSchedule(dbHandle, {
+                    channelId: channelId,
+                    messageId: messageId,
                     type: scheduleSetup.type,
                     coachCount: scheduleSetup.coachCount,
                     emoji: reactionEmoji,
@@ -131,31 +158,41 @@ module.exports = {
 
     /**
      * update schedule: add additional schedules once on sunday and remove deprecated ones
-     * @param {*} state client state
-     * @param {*} channels guild channels
+     * @param {mysql.Connection} dbHandle bot database handle
+     * @param {Discord.Collection<string, Discord.GuildChannel>} channels guild channels
      */
-    updateSchedules: async function (state, channels) 
+    updateSchedules: async function (dbHandle, channels) 
     {
         var now = new Date();
         var day = now.getDay();
 
-        if(state.day === day)
+        var saved_day = await dB.getDay(dbHandle);
+
+        if(saved_day === day)
             return;
-            
-        state.day = day;
         
-        if(day !== 0) // only act on sunday
+        if(isNaN(saved_day))
+            res = await dB.insertDay(dbHandle, day);
+        else
+            res = await dB.updateDay(dbHandle, day);
+        
+        if(day !== 0) // only act on sunday = 0
             return;
 
         // remove events from the past
-        for(let i = state.schedules.length-1; i>=0; i--)
+        var schedules = await dB.getSchedules(dbHandle);
+        var messageIDsToRemove = [];
+        for (let i = 0; i< schedules.length; i++)
         {
-            var scheduleDate = new Date(state.schedules[i].date);
+            var schedule = schedules[i];
+            if(messageIDsToRemove.find(messageId => messageId == schedule.messageId) !== undefined)
+                continue;
+
+            var scheduleDate = new Date(schedules[i].date);
             if(scheduleDate < now)
-            {
-                state.schedules.splice(i, 1);
-            }
+                messageIDsToRemove.push(schedule.messageId);
         }
+        dB.removeSchedules(dbHandle, messageIDsToRemove);
 
         // get dates to add (in 4 weeks)
         [monday, sunday] = _tz.getNextMondayAndSundayDate(/*new Date(now.setDate(now.getDate()+21))*/);
@@ -177,7 +214,7 @@ module.exports = {
                 timezones:_tz.scheduleTimezoneNames
             };
             var msg = await writeSchedule(channel5v5, scheduleSetup);
-            this.createLobbySchedules(state, msg, scheduleSetup);
+            this.createLobbySchedules(dbHandle, msg.id, channel5v5.id, scheduleSetup);
         }
 
         // tryout schedule
@@ -197,18 +234,18 @@ module.exports = {
                 timezones:_tz.scheduleTimezoneNames
             };
             var msg = await writeSchedule(channelTryout, scheduleSetup);
-            this.createLobbySchedules(state, msg, scheduleSetup);
+            this.createLobbySchedules(dbHandle, msg.id, channelTryout.id, scheduleSetup);
         }
     },
 
     /**
      * Update schedule to account for changes in coaches
-     * @param {*} schedule schedule that changed
-     * @param {*} channel channel in which the schedule was posted
+     * @param {JSON} schedule schedule that changed
+     * @param {Discord.Channel} channel channel in which the schedule was posted
      */
     updateSchedulePost: async function(schedule, channel) {
         // fetch message
-        const message = await channel.fetchMessage(schedule.message);
+        const message = await channel.fetchMessage(schedule.messageId);
         if(message === undefined || message === null)
             return;
 
@@ -245,28 +282,45 @@ module.exports = {
     /**
      * Checks if user is coach in schedule, and if yes, removes them.
      * Then updates the schedules / google events to reflect this
-     * @param {*} client discord client (fetching users for rewriting schedule google calendar event)
-     * @param {*} reaction determines which schedule we update
-     * @param {*} user the guy who removed the reaction
+     * @param {Discord.Client} client discord client (fetching users for rewriting schedule google calendar event)
+     * @param {Discord.MessageReaction} reaction determines which schedule we update
+     * @param {Discord.User} user the guy who removed the reaction
      */
-    removeCoachFromSchedule: function(client, reaction, user)
+    removeCoachFromSchedule: async function(client, reaction, user)
     {
-        var schedule = findSchedule(client._state.schedules, reaction.message.id, reaction.emoji.name);
+        var schedule = await findSchedule(client.dbHandle, reaction.message.id, reaction.emoji.name);
+
         var idx = schedule.coaches.findIndex(coach => coach === user.id);
         if(idx !== -1)
         { 
             schedule.coaches.splice(idx, 1);
-            this.updateSchedulePost(schedule, reaction.message.channel);
-            gM.editCalendarEvent(schedule, client);
+            gM.editCalendarEvent(schedule, client)
+            .then(res => {
+                
+                this.updateSchedulePost(schedule, reaction.message.channel);
+                user.send("✅ Removed you as coach from the schedule.");
+                dB.updateSchedule(client.dbHandle, schedule);
+            })
+            .catch(err => 
+            {
+                console.log(err);
+                if(err.code === 410) // if google api fails with 'Resource has been deleted' aka the event is already gone, then still remove coach from schedule
+                {
+                    this.updateSchedulePost(schedule, reaction.message.channel);
+                    dB.updateSchedule(client.dbHandle, schedule);
+                    user.send("✅ Removed you as coach from the schedule.");
+                } else
+                    user.send("⛔ Could not remove you from the schedule. Maybe hit a rate-limit in GoogleCalendar. Try again in 5s.");
+            });
         }   
     }, 
 
     /**
      * Checks if user is coach in schedule, and if not, adds them.
      * Then updates the schedules / google events to reflect this
-     * @param {*} client discord client (fetching users for rewriting schedule google calendar event)
-     * @param {*} reaction determines which schedule we update
-     * @param {*} user the guy who removed the reaction
+     * @param {Discord.Client} client discord client (fetching users for rewriting schedule google calendar event)
+     * @param {Discord.MessageReaction} reaction determines which schedule we update
+     * @param {Discord.User} user the guy who removed the reaction
      */
     addCoachToSchedule: async function(client, reaction, user)
     {
@@ -279,18 +333,40 @@ module.exports = {
             user.send("⛔ You cannot interact because you are not a coach.");
             return;
         }
-
-        var schedule = findSchedule(client._state.schedules, reaction.message.id, reaction.emoji.name);
-        var idx = schedule.coaches.findIndex(coach => coach === user.id);
-        if(idx === -1)
+        
+        var schedule = await findSchedule(client.dbHandle, reaction.message.id, reaction.emoji.name);
+        
+        if(schedule.coaches.find(coach => coach === user.id))
         {
-            schedule.coaches.push(user.id);
-            this.updateSchedulePost(schedule, reaction.message.channel);
-            if (schedule.coaches.length === schedule.coachCount)
-                if(schedule.event_ID === undefined)
-                    gM.createCalendarEvent(schedule, client);
-                else
-                    gM.editCalendarEvent(schedule, client);
+            user.send("⛔ You are already coaching that lobby.");
+            return;
+        }
+        
+        schedule.coaches.push(user.id);
+        
+        // no event exists => create
+        if(schedule.eventId === undefined)
+            gM.createCalendarEvent(schedule, client)
+            .then((eventId) => {
+                schedule.eventId = eventId;
+                dB.updateSchedule(client.dbHandle, schedule);
+                this.updateSchedulePost(schedule, reaction.message.channel);
+                user.send("✅ Created an event in gcalendar and added you as a coach.");
+            }).catch(err => {
+                console.log(err);
+                user.send("⛔ Could not create an event in gcalendar for you. Maybe hit a rate-limit. Try again in 5s.");
+            })
+        else // event exists => modify or delete
+        {
+            gM.editCalendarEvent(schedule, client)
+            .then(eventId => {
+                dB.updateSchedule(client.dbHandle, schedule);
+                this.updateSchedulePost(schedule, reaction.message.channel);
+                user.send("✅ Added you as a coach to the lobby.");
+            }).catch(err => {
+                console.log(err);
+                user.send("⛔ Could not update the gcalendar-event for you. Maybe hit a rate-limit. Try again in 5s.");
+            })
         }
     }
 }

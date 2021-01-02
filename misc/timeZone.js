@@ -164,7 +164,7 @@ module.exports = {
 
     /**
      * Thx @ https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
-     * @param {*} date 
+     * @param {Date} date 
      */
     getWeekNumber: function(date){
         var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));

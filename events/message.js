@@ -10,8 +10,8 @@ const PREFIX = '!';
 /**
  * Main message handler 
  * Filters messages and calls all command subroutines 
- * @param {*} client discord client
- * @param {*} message message to handle 
+ * @param {Discord.Client} client discord client
+ * @param {Discord.Message} message message to handle 
  */
 module.exports = async (client, message) => {
 	
@@ -39,10 +39,10 @@ module.exports = async (client, message) => {
 			return hU(message);
 		}
 		if (content.startsWith("!post")) {
-			return pL(message, client._state)
+			return pL(message, client.dbHandle)
 		}
 		if (content.startsWith("!update")) {
-			return uL(message, client._state)
+			return uL(message, client.dbHandle)
 		}
 	} else if (	content.startsWith("!post")) {
 		return mH.reactNegative(message, "Only coaches are eligible for this command.");

@@ -1,14 +1,13 @@
-
+const dB = require("../misc/database")
 const mH = require("../misc/messageHelper")
-const lM = require("../misc/lobbyManagement")
-
+const lM = require("../misc/lobbyManagement");
 
 /**
  * Checks if lobby exists and updates lobby post depending on message
- * @param {*} message coaches message that triggered the lobby update
- * @param {*} state bot state
+ * @param {Discord.Message} message coaches message that triggered the lobby update
+ * @param {mysql.Connection} dbHandle bot database handle
  */
-module.exports = async (message, state) => {
+module.exports = async (message, dbHandle) => {
 	var args = mH.getArguments(message);
 	
 	if(args.length == 0 || args == "")
@@ -17,7 +16,7 @@ module.exports = async (message, state) => {
 		return undefined;
 	}
 
-	[lobby, answer] = lM.getLobbyFromMessageId(args[0], message.channel.id, state);
+	var lobby = await lM.findLobbyByMessage(dbHandle, message.channel.id, args[0]);
 	if(lobby === undefined)
 		mH.reactNegative(message, answer);
 		
@@ -31,5 +30,6 @@ module.exports = async (message, state) => {
 		return mH.reactNegative(message, "Failed updating lobby parameters: " + errormsg);
 
 	lM.updateLobbyPost(lobby, message.channel);
+	dB.updateLobby(lobby);
 	return mH.reactPositive(message, "Updated lobby parameters.");
 }

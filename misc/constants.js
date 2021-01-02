@@ -14,7 +14,7 @@ module.exports = {
 
     /**
      * Returns lobby name for usage in communication strings
-     * @param {*} lobbyType given lobby type
+     * @param {number} lobbyType given lobby type
      * @return communication string according to lobby type
      */
     getLobbyNameByType: function(lobbyType) {
@@ -33,7 +33,7 @@ module.exports = {
 
     /**
      * checks reaction emoji for ingame position
-     * @param {Emoji} reactionEmoji given emoji
+     * @param {string} reactionEmoji given emoji
      */
     getReactionEmojiPosition: function(reactionEmoji) {
         var idx = positionReactionEmojis.findIndex(type =>  {

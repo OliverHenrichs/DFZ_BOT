@@ -5,9 +5,9 @@ const sM = require("../misc/scheduleManagement")
 /**
  * remove reactions handling
  *
- * @param {*} client discord client
- * @param {*} reaction reaction to handle 
- * @param {*} user user who reacted
+ * @param {Discord.Client} client discord client
+ * @param {Discord.MessageReaction} reaction reaction to handle 
+ * @param {Discord.User} user user who reacted
  */
 module.exports = async (client, reaction, user) => {
     // only care for messages from self
@@ -21,11 +21,10 @@ module.exports = async (client, reaction, user) => {
     // ignore bot's DMs
     if(reaction.message.channel === undefined)
         return;
-
+    
     if(reaction.message.channel.id === cM.scheduleChannelTryout || reaction.message.channel.id === cM.scheduleChannel5v5)
     {
         sM.removeCoachFromSchedule(client, reaction, user);
-    } else {
-        lM.updatePlayerInLobby(client, reaction, user);
-    }
+    } else
+        lM.updatePlayerInLobby(client, reaction, user)        
 }
