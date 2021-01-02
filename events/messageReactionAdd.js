@@ -1,4 +1,4 @@
-const dB = require("../misc/dataBase")
+const dB = require("../misc/database")
 const lM = require("../misc/lobbyManagement")
 const uH = require("../misc/userHelper")
 const rM = require("../misc/roleManagement")

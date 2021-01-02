@@ -5,7 +5,7 @@ const client = new Discord.Client({autoReconnect:true});
 
 const lM = require("./misc/lobbyManagement")
 const sM = require("./misc/scheduleManagement")
-const dB = require("./misc/dataBase")
+const dB = require("./misc/database")
 
 // setup discord event handlers
 fs.readdir("./events/", (err, files) => { 

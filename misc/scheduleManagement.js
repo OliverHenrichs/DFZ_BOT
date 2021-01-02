@@ -1,7 +1,7 @@
 
 const aE = require("./answerEmbedding")
 const cM = require("./channelManagement")
-const dB = require("./dataBase")
+const dB = require("./database")
 const gM = require("./googleCalendarManagement")
 const Discord = require("discord.js")
 const _tz = require("./timeZone")

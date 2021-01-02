@@ -1,6 +1,6 @@
 const aE = require("../misc/answerEmbedding")
 const c = require("../misc/constants")
-const dB = require("./dataBase")
+const dB = require("./database")
 const Discord = require("discord.js")
 const g = require("../misc/generics")
 const uH = require("../misc/userHelper")

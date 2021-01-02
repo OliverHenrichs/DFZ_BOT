@@ -1,6 +1,6 @@
 const cM = require("../misc/channelManagement")
 const c = require("../misc/constants")
-const dB = 			require("../misc/dataBase")
+const dB = 			require("../misc/database")
 const lM = require("../misc/lobbyManagement")
 
 /**
