@@ -167,7 +167,7 @@ async function insertSchedule(dbHandle, schedule)
  */
 async function insertDay(dbHandle, day)
 {
-    return insertRow(dbHandle, 'options', ['name', 'value'], ['\'day\'', day]);
+    return insertRow(dbHandle, 'options', ['name', 'value'], ['day', day]);
 }
 
 /**
@@ -248,7 +248,6 @@ async function selectTableValueByConditions(dbHandle, table, column, conditions)
 
             command = command.substr(0, command.length-5);
         }
-
         dbHandle.execute(command).then(res=>{
             resolve(res[0].length === 0 ? undefined : res[0]);
         });        
@@ -369,7 +368,6 @@ async function deleteTableRows(dbHandle, table, conditions)
 
             command = command.substr(0, command.length-5);
         }
-
         dbHandle.execute(command).then(res=>{
             resolve(res);
         });

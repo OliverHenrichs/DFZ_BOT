@@ -1,6 +1,7 @@
 // const readline = require('readline');
 // const fs = require('fs')
 const { google } = require('googleapis');
+const fs = require('fs')
 const tz = require('./timeZone');
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 
@@ -68,26 +69,31 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar'];
 // }
 
 // configure google auth client
-const privateKey = require('./../service_key.json');
-let jwtClient = new google.auth.JWT(
-  privateKey.client_email,
-  null,
-  privateKey.private_key,
-  SCOPES
-);
-
+let calendarAvailable = true;
+let jwtClient = "";
 let calendar = '';
+try {
 
-// authenticate client on startup
-jwtClient.authorize(function (err, tokens) {
-  if (err) {
-    console.log(err);
-    return;
-  } else {
+  // get private key
+  const privateKey = require('./../service_key.json');
+  
+  jwtClient = new google.auth.JWT(
+    privateKey.client_email,
+    null,
+    privateKey.private_key,
+    SCOPES
+  );
+
+  // authenticate client on startup
+  jwtClient.authorize()
+  .then(tokens =>  {
     console.log("Successfully connected to Google API!");
     calendar = google.calendar({ version: 'v3', jwtClient });
-  }
-});
+  });
+} catch (e) {
+  console.log(e)
+  calendarAvailable = false;
+};
 
 /**
  * returns calendar id for respective region
@@ -103,7 +109,6 @@ function getCalendarIDByRegion(region) {
 
   return undefined;
 }
-
 
 function createEventSummary(schedule)
 {
@@ -239,13 +244,19 @@ function createEvent(summary, description, start, end, attendees = []) {
   }
 }
 
+const noCalendarRejection = "No Calendar";
 module.exports = {
+  noCalendarRejection: noCalendarRejection,
   /**
    * Create calendar event given a schedule 
    * @param {JSON} schedule schedule
    * @param {Discord.Client} client discord client (look-up of users)
    */
   createCalendarEvent: async function (schedule, client) {
+    if(!calendarAvailable)
+      return new Promise(function(resolve, reject) {
+        reject(noCalendarRejection);
+      });
 
     var summary = createEventSummary(schedule);
 
@@ -268,6 +279,12 @@ module.exports = {
   },
 
   editCalendarEvent: async function (schedule, client) {
+    if(!calendarAvailable)
+      return new Promise(function(resolve, reject) {
+        reject(noCalendarRejection);
+      });
+
+
     if (schedule.coaches.length === 0)
       return new Promise(function(resolve, reject) {
         deleteEvent(schedule)

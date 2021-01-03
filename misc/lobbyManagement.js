@@ -319,14 +319,11 @@ function createLobbyStartPost (lobby, channel, playersPerLobby)
         }
     }
 
-    if(userSets.length == 0)
+    if (userSets.length == 0 && userSet.length != 0) // Not enough players but forced
     {
-        if (userSet.length != 0) // Not enough players but forced
-        {
-            const _embed = aE.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", getUserTable(userSet, playersPerLobby, true));
-            channel.send({embed: _embed});
-            return;
-        }
+        const _embed = aE.generateEmbedding("Not enough players for a lobby but we gotta get going anyway", "", "", getUserTable(userSet, playersPerLobby, true));
+        channel.send({embed: _embed});
+        return;
     }
 
     var counter = 0;

@@ -1,7 +1,5 @@
 const cM = require("../misc/channelManagement")
-const c = require("../misc/constants")
 const dB = 			require("../misc/database")
-const lM = require("../misc/lobbyManagement")
 
 /**
  * Fetch lobby messages from bot channels on startup

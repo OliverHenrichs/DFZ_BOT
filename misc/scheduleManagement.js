@@ -300,16 +300,16 @@ module.exports = {
                 this.updateSchedulePost(schedule, reaction.message.channel);
                 user.send("✅ Removed you as coach from the schedule.");
                 dB.updateSchedule(client.dbHandle, schedule);
-            })
-            .catch(err => 
+            }).catch(err => 
             {
                 console.log(err);
-                if(err.code === 410) // if google api fails with 'Resource has been deleted' aka the event is already gone, then still remove coach from schedule
+                // if we have no calendar or google api fails with 'Resource has been deleted' aka the event is already gone, then still remove coach from schedule
+                if(err === gM.noCalendarRejection || err.code === 410) 
                 {
                     this.updateSchedulePost(schedule, reaction.message.channel);
                     dB.updateSchedule(client.dbHandle, schedule);
                     user.send("✅ Removed you as coach from the schedule.");
-                } else
+                } else 
                     user.send("⛔ Could not remove you from the schedule. Maybe hit a rate-limit in GoogleCalendar. Try again in 5s.");
             });
         }   
@@ -352,7 +352,14 @@ module.exports = {
                 dB.updateSchedule(client.dbHandle, schedule);
                 this.updateSchedulePost(schedule, reaction.message.channel);
                 user.send("✅ Created an event in gcalendar and added you as a coach.");
-            }).catch(err => {
+            }).catch((err) => {
+                if(err === gM.noCalendarRejection)
+                {
+                    dB.updateSchedule(client.dbHandle, schedule);
+                    this.updateSchedulePost(schedule, reaction.message.channel);
+                    user.send("✅ Added you as a coach to the event.");
+                    return;
+                }
                 console.log(err);
                 user.send("⛔ Could not create an event in gcalendar for you. Maybe hit a rate-limit. Try again in 5s.");
             })
@@ -362,8 +369,15 @@ module.exports = {
             .then(eventId => {
                 dB.updateSchedule(client.dbHandle, schedule);
                 this.updateSchedulePost(schedule, reaction.message.channel);
-                user.send("✅ Added you as a coach to the lobby.");
+                user.send("✅ Added you as a coach to the event.");
             }).catch(err => {
+                if(err === gM.noCalendarRejection)
+                {
+                    dB.updateSchedule(client.dbHandle, schedule);
+                    this.updateSchedulePost(schedule, reaction.message.channel);
+                    user.send("✅ Added you as a coach to the event.");
+                    return;
+                }
                 console.log(err);
                 user.send("⛔ Could not update the gcalendar-event for you. Maybe hit a rate-limit. Try again in 5s.");
             })

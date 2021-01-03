@@ -1,6 +1,6 @@
 
-const bc = [process.env.BOT_LISTENING_CHANNEL_1, process.env.BOT_LISTENING_CHANNEL_2, process.env.BOT_LISTENING_CHANNEL_3, process.env.BOT_LISTENING_CHANNEL_4, process.env.BOT_LISTENING_CHANNEL_5]
-const cs = "<#" + process.env.BOT_LISTENING_CHANNEL_1 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_2 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_3 + ">, <#" + process.env.BOT_LISTENING_CHANNEL_4+ ">, <#" + process.env.BOT_LISTENING_CHANNEL_5 + ">"
+const bc = [process.env.BOT_LOBBY_CHANNEL_1, process.env.BOT_LOBBY_CHANNEL_2, process.env.BOT_LOBBY_CHANNEL_3, process.env.BOT_LOBBY_CHANNEL_4, process.env.BOT_LOBBY_CHANNEL_5]
+const cs = "<#" + process.env.BOT_LOBBY_CHANNEL_1 + ">, <#" + process.env.BOT_LOBBY_CHANNEL_2 + ">, <#" + process.env.BOT_LOBBY_CHANNEL_3 + ">, <#" + process.env.BOT_LOBBY_CHANNEL_4+ ">, <#" + process.env.BOT_LOBBY_CHANNEL_5 + ">"
 
 // channel management
 module.exports = {

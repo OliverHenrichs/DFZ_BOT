@@ -24,6 +24,7 @@ const months = {
     11:"Nov",
     12:"Dec"
 }
+
 // get current time zone short names (daylight savings time vs normal time)
 const regions = ['EU', 'NA', 'SEA'];
 const regionStrings =  ["🇪🇺 EU", "🇺🇸 NA", "🌏 SEA"];

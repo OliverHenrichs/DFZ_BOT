@@ -65,7 +65,7 @@ function filterAndSortByPositionAndTier_int(users, position)
 /**
  * Filters users by position
  * @param {Discord.User} users 
- * @param {*} position 
+ * @param {int} position 
  * @return filtered array of users
  */
 function filterByPosition(users, position)

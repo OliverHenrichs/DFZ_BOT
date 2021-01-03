@@ -20,6 +20,7 @@ fs.readdir("./events/", (err, files) => {
 dB.getDBHandle()// get db-access
 .then(function(connection) { // add / find tables in db
 	client.dbHandle = connection;
+	console.log("Successfully connected to MySql-db!")
 	return dB.createScheduleTable(connection);
 }).then(() => {
 	return dB.createLobbyTable(client.dbHandle);
@@ -28,6 +29,7 @@ dB.getDBHandle()// get db-access
 }).then(() => { // login to discord client
 	return client.login(process.env.BOT_TOKEN);
 }).then(() => new Promise(function(resolve, reject) { // setup intervals
+	console.log("Successfully logged into Discord client!")
 	// update lobby posts
 	const timeUpdater = async () => {
 		var guild = client.guilds.get(process.env.GUILD);

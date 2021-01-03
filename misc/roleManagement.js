@@ -33,8 +33,8 @@ module.exports = {
 
 	/**
 		Check if message sender has at least one of the roles given by rolesToCheck
-		@param rolesToCheck list of role names to be checked against
-		@param member the guild member who is being checked for having certain roles
+		@param {Array<Int>} rolesToCheck list of role names to be checked against
+		@param {Discord.Member} member the guild member who is being checked for having certain roles
 		@return the found role or undefined if it didn't find one
 	*/
 	findRole: function (member, rolesToCheck) {
@@ -47,8 +47,8 @@ module.exports = {
 	
 	/**
 		takes a sequence of numbers and returns the respective role names for numbers 0-4
-		@param number list of numbers, e.g. [0,1,2,3,4]
-		@return list of roles corresponding to given numbers
+		@param {Array<Int>} number list of numbers, e.g. [0,1,2,3,4]
+		@return {Array<Int>} list of roles corresponding to given numbers
 	*/
 	getBeginnerRolesFromNumbers: function (numbers) {
 		var roles = [];
