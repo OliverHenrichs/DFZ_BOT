@@ -1,9 +1,9 @@
 // const readline = require('readline');
 // const fs = require('fs')
 const { google } = require('googleapis');
-const fs = require('fs')
 const tz = require('./timeZone');
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const s = require('./Schedule')
 
 // const TOKEN_PATH = 'token.json';
 // let oAuth2Client = "";
@@ -118,7 +118,7 @@ function createEventSummary(schedule)
 
 /**
  * returns an event description containing the coaches' names
- * @param {JSON} schedule lobby schedule
+ * @param {s.Schedule} schedule lobby schedule
  * @param {Discord.Client} client discord client
  */
 async function getEventDescription(schedule, client) {
@@ -141,7 +141,7 @@ async function getEventDescription(schedule, client) {
  * insert event in google calendar api
  * @param {calendar_v3.Resource$Events} event scheduled event in google api format
  * @param {string} cal_ID calender ID 
- * @param {JSON} schedule dfz-schedule
+ * @param {s.Schedule} schedule dfz-schedule
  */
 function insertEvent(event, schedule) {
   return new Promise(function(resolve, reject) {
@@ -162,7 +162,7 @@ function insertEvent(event, schedule) {
 /**
  * 
  * @param {GoogleEvent} eventToChange 
- * @param {JSON} schedule 
+ * @param {s.Schedule} schedule 
  * @param {Discord.Client} client 
  */
 async function updateGoogleEvent(eventToChange, schedule, client)
@@ -186,7 +186,7 @@ async function updateGoogleEvent(eventToChange, schedule, client)
 
 /**
  * update event in google calendar api
- * @param {JSON} schedule dfz-schedule
+ * @param {s.Schedule} schedule dfz-schedule
  * @param {Discord.Client} client discord client
  */
 async function updateEvent(schedule, client) {
@@ -197,14 +197,14 @@ async function updateEvent(schedule, client) {
         eventId: schedule.eventId,
     })
     .then(eventToChange => updateGoogleEvent(eventToChange, schedule, client))
-    .then(res => resolve(res))
+    .then(res => resolve(res.data.id))
     .catch(err => reject(err))    
   });
 }
 
 /**
  * delete event in google calendar api
- * @param {JSON} schedule dfz-schedule
+ * @param {s.Schedule} schedule dfz-schedule
  */
 function deleteEvent(schedule) {
   return new Promise(function(resolve, reject) {
@@ -213,7 +213,7 @@ function deleteEvent(schedule) {
       calendarId: getCalendarIDByRegion(schedule.region),
       eventId: schedule.eventId,
     })
-    .then(res => resolve(res))
+    .then(res => resolve(res.data.id))
     .catch(err => reject(err))
   });
 }
@@ -249,7 +249,7 @@ module.exports = {
   noCalendarRejection: noCalendarRejection,
   /**
    * Create calendar event given a schedule 
-   * @param {JSON} schedule schedule
+   * @param {s.Schedule} schedule schedule
    * @param {Discord.Client} client discord client (look-up of users)
    */
   createCalendarEvent: async function (schedule, client) {

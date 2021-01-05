@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+const s = require('./Schedule')
 
 function getScheduleTableJson()
 {
@@ -152,7 +153,7 @@ async function insertLobby(dbHandle, lobby)
 /**
  * Insert schedule into DB
  * @param {mysql.Connection} dbHandle 
- * @param {JSON} schedule 
+ * @param {s.Schedule} schedule 
  */
 async function insertSchedule(dbHandle, schedule)
 {
@@ -208,7 +209,7 @@ async function updateLobby(dbHandle, lobby)
 /**
  * updates schedule in db with current state of schedule
  * @param {mysql.Connection} dbHandle bot database handle
- * @param {JSON} schedule schedule object
+ * @param {s.Schedule} schedule schedule object
  */
 async function updateSchedule(dbHandle, schedule)
 {
@@ -323,7 +324,7 @@ async function getSchedules(dbHandle, message_id = '', emoji = '')
             else
             {
                 schedules = [];
-                dB_response.forEach(resp => schedules.push(resp.data));
+                dB_response.forEach(resp => schedules.push(s.Schedule.fromObject(resp.data)));
                 resolve(schedules);
             }
         })

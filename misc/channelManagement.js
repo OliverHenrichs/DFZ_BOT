@@ -1,5 +1,5 @@
 
-const bc = [process.env.BOT_LOBBY_CHANNEL_1, process.env.BOT_LOBBY_CHANNEL_2, process.env.BOT_LOBBY_CHANNEL_3, process.env.BOT_LOBBY_CHANNEL_4, process.env.BOT_LOBBY_CHANNEL_5]
+const bc = [process.env.BOT_LOBBY_CHANNEL_EU, process.env.BOT_LOBBY_CHANNEL_NA, process.env.BOT_LOBBY_CHANNEL_SEA, process.env.BOT_LOBBY_CHANNEL_TRYOUT, process.env.BOT_LOBBY_CHANNEL_TEST]
 const cs = "<#" + process.env.BOT_LOBBY_CHANNEL_1 + ">, <#" + process.env.BOT_LOBBY_CHANNEL_2 + ">, <#" + process.env.BOT_LOBBY_CHANNEL_3 + ">, <#" + process.env.BOT_LOBBY_CHANNEL_4+ ">, <#" + process.env.BOT_LOBBY_CHANNEL_5 + ">"
 
 // channel management

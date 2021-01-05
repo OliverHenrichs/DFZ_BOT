@@ -253,8 +253,28 @@ module.exports = {
         return [true, zonedLobbyDate, timezoneName, ""];
     },
 
+    /**
+     * 
+     * @param {Date} date 
+     * @param {tZ.timezone} timezone 
+     */
     getZonedTime: function(date, timezone) {
         return tZ.getZonedTime(date, timezone)
+    }, 
+
+    /**
+     * Returns time in given time zone if time zone name is being recognized
+     * @param {Date} date 
+     * @param {string} timezoneName 
+     * @return {tZ.Time} zoned time
+     */
+    getZonedTimeFromTimeZoneName: function(date, timezoneName) {
+        [zone, error] = findTimeZone(timezoneName);
+        
+        if(zone === undefined)
+            return error;
+
+        return tZ.getZonedTime(date, zone)
     }, 
 
     getTimeString: getTimeString

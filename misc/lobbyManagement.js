@@ -3,8 +3,10 @@ const c = require("../misc/constants")
 const dB = require("./database")
 const Discord = require("discord.js")
 const g = require("../misc/generics")
+const mH = require("../misc/messageHelper")
 const uH = require("../misc/userHelper")
 const rM = require("../misc/roleManagement")
+const tZ = require("../misc/timeZone")
 const fiveMinInMs = 300000;
 
 /**
@@ -304,7 +306,7 @@ function removeLobby(dbHandle, lobby)
  *  @param channel channel in which lobby resides
  *  @param playersPerLobby how many players per lobby (will create multiple lobbies if e.g. more than 2x the neccessary players showed up. Rest go to bench).
  */
-function createLobbyStartPost (lobby, channel, playersPerLobby) 
+function createLobbyStartPost(lobby, channel, playersPerLobby) 
 {    
     var userSets = [];
     var userSet = [];
@@ -370,8 +372,39 @@ function notifyPlayers(client, lobby, playerCount, message)
     }
 }
 
+/**
+ *  Create lobby in given channel and of given type at given time
+ *  @return undefined if above condition is not fulfilled
+ *  @param dbHandle bot database handle
+ *  @param channelID message channel id
+ *  @param type lobby type
+ *  @param beginnerRoles allowed Beginner roles
+ *  @param regionRole allowed Beginner roles
+ *  @param date date of lobby
+ *  @param messageID ref to lobby-message to alter it
+ */
+function createLobby(dbHandle, channelID, type, beginnerRoles, regionRole, date, messageID) 
+{
+    dB.insertLobby(dbHandle, {
+        type: type,
+        date: date,
+        users: [],
+        beginnerRoleIds: beginnerRoles,
+        regionId: regionRole,
+        channelId: channelID,
+        messageId : messageID
+    });
+}
+
+function getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole) 
+{
+    return "for " + rM.getRoleMentions(lobbyBeginnerRoles) + (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
+}
+
 const remainingLobbyTimeStartString = "Time to lobby: ";
 const alreadyStartedLobbyTimeStartString = "Lobby started ";
+var footerStringBeginner = "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\nClick again to remove a position.\nRemove all positions to withdraw from the lobby."
+var footerStringTryout = "Tryouts: Join lobby by clicking ✅ below.\nClick again to withdraw from the lobby." 
 
 module.exports = {
     
@@ -390,30 +423,34 @@ module.exports = {
 
         return lobbies[0];
     },
-
+    
     /**
-     *  Create lobby in given channel and of given type at given time
-     *  @return undefined if above condition is not fulfilled
-     *  @param connection bot database handle
-     *  @param channelID message channel id
-     *  @param type lobby type
-     *  @param beginnerRoles allowed Beginner roles
-     *  @param regionRole allowed Beginner roles
-     *  @param date date of lobby
-     *  @param messageID ref to lobby-message to alter it
+     * Internal function that creates the embedding for the lobby post
+     * @param {Discord.Message} message coaches message that triggered the lobby post
+     * @param {mysql.Connection} dbHandle db handle
+     * @param {number} lobbyType type of lobby
      */
-    createLobby: function (connection, channelID, type, beginnerRoles, regionRole, date, messageID) 
+    postLobby: async function (dbHandle, channel, lobbyType, lobbyBeginnerRoles, lobbyRegionRole, zonedTime, zoneName) 
     {
-        dB.insertLobby(connection, {
-            type: type,
-            date: date,
-            users: [],
-            beginnerRoleIds: beginnerRoles,
-            regionId: regionRole,
-            channelId: channelID,
-            messageId : messageID
-        });
+        var title = "We host a " + c.getLobbyNameByType(lobbyType) + " lobby on " + tZ.getTimeString(zonedTime) + " " + zoneName;
+        var text = getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole);
+        var finalFooter = (lobbyType !== c.lobbyTypes.tryout ? (footerStringBeginner + "\n\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up."):footerStringTryout)
+        + "\n\nCoaches: Lock and start lobby with 🔒, cancel with ❌";
+
+        // send embedding post to lobby signup-channel
+        const _embed = aE.generateEmbedding(title, text, finalFooter);
+        const lobbyPostMessage = await channel.send(rM.getRoleMentions(lobbyBeginnerRoles), {embed: _embed}); // mentioning roles in message again to ping beginners
+
+        // pin message to channel
+        lobbyPostMessage.pin();
+
+        // add emojis
+        mH.createLobbyPostReactions(lobbyType, lobbyPostMessage);
+
+        // create lobby data in database
+        createLobby(dbHandle, channel.id, lobbyType, lobbyBeginnerRoles, lobbyRegionRole, zonedTime.epoch, lobbyPostMessage.id);
     },
+
 
     removeLobby: removeLobby,
 
@@ -437,7 +474,7 @@ module.exports = {
         if(!timeString.startsWith(this.remainingLobbyTimeStartString)) 
             timeString = "";
 
-        new_embed.description = this.getLobbyPostText(lobby.beginnerRoleIds, lobby.type, lobby.regionId) + timeString;
+        new_embed.description = getLobbyPostText(lobby.beginnerRoleIds, lobby.type, lobby.regionId) + timeString;
         new_embed.fields = getCurrentUsersAsTable(lobby, true);
         
         // update embed
@@ -652,9 +689,5 @@ module.exports = {
         }
 
         return [changedLobby, ""];
-    }, 
-
-    getLobbyPostText: function(lobbyBeginnerRoles, lobbyType, lobbyRegionRole) {
-        return "for " + rM.getRoleMentions(lobbyBeginnerRoles) + (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
     }
 }

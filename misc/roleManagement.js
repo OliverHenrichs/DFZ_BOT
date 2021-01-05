@@ -1,25 +1,6 @@
 const beginnerRoles = [process.env.TRYOUT, process.env.TIER_1, process.env.TIER_2, process.env.TIER_3, process.env.TIER_4];
 const regionRoleIDs = [process.env.REGION_EU_ROLE, process.env.REGION_NA_ROLE, process.env.REGION_SEA_ROLE];
 
-/**
-* Returns prefix of given role for name adjustment
-* @param {number} roleId id of regional role to check
-* @return corresponding regional prefix
-*/
-function getRegionalRoleString(roleId) 
-{
-	switch (roleId) {
-		case regionRoleIDs[0]:
-			return "EU";
-		case regionRoleIDs[1]:
-			return "NA";
-		case regionRoleIDs[2]:
-			return "SEA";
-		default:
-			return "";
-	}
-};
-
 // role management
 module.exports = {
 	adminRoles: [process.env.COACH, process.env.COACH_TRYOUT],
@@ -92,7 +73,7 @@ module.exports = {
 
 	/**
 	 * Returns prefix of given role for name adjustment
-	 * @param {number} roleId id of regional role to check
+	 * @param {string} roleId id of regional role to check
 	 * @return corresponding regional prefix
 	 */
 	getRegionalRolePrefix: function(roleId) {
@@ -106,9 +87,62 @@ module.exports = {
 			default:
 				return "";
 		}
-	},	
+	},
+
+	/**
+	 * Returns standard timezone given the region role 
+	 * @param {string} roleId id of regional role to check
+	 * @return {string} corresponding timezone name
+	 */
+	getRegionalRoleTimeZoneString: function(roleId) {
+		switch (roleId) {
+			case regionRoleIDs[0]:
+				return "Europe/Berlin";
+			case regionRoleIDs[1]:
+				return "America/New_York";
+			case regionRoleIDs[2]:
+				return "Asia/Singapore";
+			default:
+				return "";
+		}
+	},
+
+	/**
+	* Returns prefix of given role for name adjustment
+	* @param {number} roleId id of regional role to check
+	* @return corresponding regional prefix
+	*/
+	getRegionalRoleString: function(roleId) 
+	{
+		switch (roleId) {
+			case regionRoleIDs[0]:
+				return "EU";
+			case regionRoleIDs[1]:
+				return "NA";
+			case regionRoleIDs[2]:
+				return "SEA";
+			default:
+				return "";
+		}
+	},
 	
-	getRegionalRoleString: getRegionalRoleString,
+	/**
+	 * Returns prefix of given role for name adjustment
+	 * @param {string} roleId id of regional role to check
+	 * @return corresponding regional prefix
+	 */
+	getRegionalRoleLobbyChannel: function(roleId) {
+		switch (roleId) {
+			case regionRoleIDs[0]:
+				return process.env.BOT_LOBBY_CHANNEL_EU;
+			case regionRoleIDs[1]:
+				return process.env.BOT_LOBBY_CHANNEL_NA;
+			case regionRoleIDs[2]:
+				return process.env.BOT_LOBBY_CHANNEL_SEA;
+			default:
+				return "";
+		}
+	},
 
 	getRegionalRoleStringsForCommand: function() {
 		var res = [];
@@ -116,6 +150,10 @@ module.exports = {
 		return res;
 	},
 
+	/**
+	 * Returns role id corresponding to role string
+	 * @param {string} roleString 
+	 */
 	getRegionalRoleFromString: function(roleString) {
 		switch (roleString) {
 			case 'EU':

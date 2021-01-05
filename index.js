@@ -18,17 +18,26 @@ fs.readdir("./events/", (err, files) => {
 
 // setup-chain
 dB.getDBHandle()// get db-access
-.then(function(connection) { // add / find tables in db
+.then((connection) => new Promise(function(resolve, reject) { // setup intervalsfunction(connection) { // add / find tables in db
+	console.log("1");
 	client.dbHandle = connection;
 	console.log("Successfully connected to MySql-db!")
-	return dB.createScheduleTable(connection);
-}).then(() => {
-	return dB.createLobbyTable(client.dbHandle);
-}).then(() => {
-	return dB.createOptionsTable(client.dbHandle);
-}).then(() => { // login to discord client
-	return client.login(process.env.BOT_TOKEN);
-}).then(() => new Promise(function(resolve, reject) { // setup intervals
+	dB.createScheduleTable(connection)
+	.then(()=> resolve());
+}))
+.then(() => {
+	console.log("2");
+	dB.createLobbyTable(client.dbHandle)
+})
+.then(() =>  {
+	console.log("3");
+	dB.createOptionsTable(client.dbHandle)
+})
+.then(() => { // login to discord client
+	console.log("4");
+	return client.login(process.env.BOT_TOKEN); 
+}).then(() => new Promise(async function(resolve, reject) { // setup intervals
+	console.log("5");
 	console.log("Successfully logged into Discord client!")
 	// update lobby posts
 	const timeUpdater = async () => {
@@ -47,8 +56,19 @@ dB.getDBHandle()// get db-access
 			return;
 		sM.updateSchedules(client.dbHandle, guild.channels);
 	}
-	scheduleWriter();
-	setInterval(scheduleWriter, 60000);//60*60000); // once per hour
+	await scheduleWriter();
+	
+	setInterval(scheduleWriter, 60*60000); // once per hour
+
+	// post lobbies from schedule
+	const lobbyPoster = async () => {
+		var guild = client.guilds.get(process.env.GUILD);
+		if(guild === undefined || guild === null)
+			return;
+		await sM.insertScheduledLobbies(guild.channels, client.dbHandle)
+	}
+	await lobbyPoster();
+	setInterval(lobbyPoster, 60*60000); // once per hour
 
 	resolve("Interval tasks set");
 })).catch(err => 

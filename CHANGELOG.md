@@ -1,5 +1,14 @@
 *@Coach The bot received some new features today!*
 
+**DFZ-Bot v0.6 - Changelog**
+
+1. Auto-posting of lobbies for scheduled events that have signed up coaches.
+> The bot will now post the lobbies for each scheduled event in the respective channel 8 hours prior to the lobby time (the time at which the lobby was scheduled)
+> If a coach signs up after that point in time, then the lobby is posted immediatly. **The lobby post is public and will only happen once.** 
+> '*Off topic: If you find out that for whatever reason you cannot coach that lobby you can still withdraw. It's just that after it's been posted, you have to kindly ask your fellow coaches for a stand-in. If you cannot find someone, then you have to cancel the lobby (❌) and make amends to your fello dfz-lers.*'
+
+---
+
 **DFZ-Bot v0.5 - Changelog**
 
 1. Added update-functionality for lobbies
@@ -26,7 +35,6 @@
 > Links to the calendars will be posted in the announcement-channel.
 
 If you find bugs or have improvement suggestion, please either DM me or mention me in a post in #internal-talk.
-
 
 ---
 
