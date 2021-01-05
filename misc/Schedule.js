@@ -2,8 +2,6 @@
  * Just some pod that make up a schedule
  */
 class Schedule {
-    coaches = [];
-    lobbyPosted = false;
     /**
      * constructor
      * @param {string} channelId 
@@ -23,6 +21,8 @@ class Schedule {
         this.emoji = emoji;
         this.date = date;
         this.region = region;
+        this.coaches = [];
+        this.lobbyPosted = false;
     };
 
     static fromObject(obj)
