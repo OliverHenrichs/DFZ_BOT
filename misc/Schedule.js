@@ -2,8 +2,8 @@
  * Just some pod that make up a schedule
  */
 class Schedule {
-    coaches = []
-    lobbyPosted = false
+    coaches = [];
+    lobbyPosted = false;
     /**
      * constructor
      * @param {string} channelId 
@@ -23,7 +23,7 @@ class Schedule {
         this.emoji = emoji;
         this.date = date;
         this.region = region;
-    }
+    };
 
     static fromObject(obj)
     {
@@ -32,7 +32,7 @@ class Schedule {
         var schedule = new Schedule();
         Object.assign(schedule, obj);
         return schedule;
-    }
+    };
 };
 
 module.exports = {
