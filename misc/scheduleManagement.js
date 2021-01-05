@@ -144,8 +144,14 @@ async function createScheduledLobby(channels, dbHandle, schedule)
     var zonedTime = tZ.getZonedTimeFromTimeZoneName(schedule.date, timezoneName);
 
     await lM.postLobby(dbHandle, channel, type, lobbyBeginnerRoles, lobbyRegionRole, zonedTime, timezoneName);
-}
 
+    // message coaches
+    schedule.coaches.forEach(c => {
+        channel.guild.fetchMember(c)
+        .then(guildMember => guildMember.send("I just posted tonight's "+ schedule.region + " lobby starting *" + tZ.getTimeString(zonedTime) + "*.\nYou are coaching 👍"))
+        .catch(err => console.log("error when messaging schedule coaches: " + err))
+    })
+}
 
 /**
  * Inserts all necessary lobbies, i.e. all lobbies due in the next 5 hours that havent been posted yet
