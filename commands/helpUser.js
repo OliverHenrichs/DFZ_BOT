@@ -58,7 +58,7 @@ module.exports = async (message) => {
     {
         addHelpToTable( _embed, "post", 
             "!post <lobbytype> <region> <tiers> <time> <timezone>", 
-            "Creates a lobby in the channel in which you write the command.\n Lobby types: " + Object.keys(c.lobbyTypes).join(", ")+"\n Regions: " + rM.getRegionalRoleStringsForCommand().join(", ")+ "\n Allowed tiers: 1,2,3,4; Give no tiers nor regions for lobby type 'tryout'.\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",
+            "Creates a lobby in the channel in which you write the command.\nLobby types: " + Object.keys(c.lobbyTypes).join(", ")+"\nRegions: " + rM.getRegionalRoleStringsForCommand().join(", ")+ "\n Allowed tiers: 1,2,3,4; Give no tiers nor regions for lobby type 'tryout'.\n time format: 1-12:00-59am/pm \n timezone: CET, ... check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",
             "!post " + Object.keys(c.lobbyTypes)[0]+" EU 1,2 9:55pm GMT+2 \n\n!post " + Object.keys(c.lobbyTypes)[1]+" SEA 4,3 10:00am Asia/Singapore \n\n!post " + Object.keys(c.lobbyTypes)[3]+" 9:55pm America/New_York");
 
         addHelpToTable( _embed, "update", 

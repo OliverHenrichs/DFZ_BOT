@@ -146,7 +146,7 @@ module.exports = {
 
 	getRegionalRoleStringsForCommand: function() {
 		var res = [];
-		regionRoleIDs.forEach((rid) => res.push(getRegionalRoleString(rid)));
+		regionRoleIDs.forEach((rid) => res.push(this.getRegionalRoleString(rid)));
 		return res;
 	},
 
