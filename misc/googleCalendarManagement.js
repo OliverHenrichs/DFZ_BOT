@@ -3,7 +3,7 @@
 const { google } = require('googleapis');
 const tz = require('./timeZone');
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-const s = require('./Schedule')
+const s = require('./schedule')
 
 // const TOKEN_PATH = 'token.json';
 // let oAuth2Client = "";

@@ -1,5 +1,16 @@
 *@Coach The bot received some new features today!*
 
+**DFZ-Bot v0.7 - Changelog**
+
+1. Coach assignment for lobbies.
+> When a coach creates a lobby, they will be labelled a coach for that lobby
+> If the lobby is being auto-created by the schedule, then the assigned coaches in the schedule will also be assigned to the lobby
+> Coaches can now withdraw and join lobbies like players can. Use the emoji 🧑‍🏫 to join/withdraw; 
+
+2. Fixed failure of lobby tier updates due to bot's auto-updates
+
+---
+
 **DFZ-Bot v0.6 - Changelog**
 
 1. Auto-posting of lobbies for scheduled events that have signed up coaches.

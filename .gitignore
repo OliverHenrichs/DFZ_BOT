@@ -8,3 +8,5 @@ private/
 credentials.json
 service_key.json
 token.json
+
+events/rateLimit.js

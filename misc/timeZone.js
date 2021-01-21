@@ -149,7 +149,7 @@ module.exports = {
     regionStrings:regionStrings,
     scheduleTimezoneNames:scheduleTimezoneNames,
     scheduleTimezoneNames_short:scheduleTimezoneNames_short,
-    
+
     /**
      * self-explanatory...
      * @param {string} region 
@@ -250,7 +250,7 @@ module.exports = {
         
         // return zoned lobby date
 	    var zonedLobbyDate = tZ.getZonedTime(lobbyDate, zone);
-        return [true, zonedLobbyDate, timezoneName, ""];
+        return [true, zonedLobbyDate, ""];
     },
 
     /**

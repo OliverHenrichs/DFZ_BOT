@@ -46,6 +46,7 @@ dB.getDBHandle()// get db-access
 			return;
 		lM.updateLobbyTimes(guild.channels, client.dbHandle);
 	};
+	lM.updateLobbyTimes(client.guilds.get(process.env.GUILD).channels, client.dbHandle);
 	setInterval(timeUpdater, 60000); // once per minute
 
 	// update lobby schedule 

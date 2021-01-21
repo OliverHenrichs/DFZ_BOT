@@ -3,7 +3,7 @@ const lobbyTypes = {inhouse:1, unranked:2, botbash:3, tryout: 4}
 const lobbyTypePlayerCount = {inhouse:10, unranked:5, botbash:5, tryout: 5}
 const positionReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
 const tryoutReactionEmoji = '✅';
-const lobbyManagementReactionEmojis =['🔒', '❌'];
+const lobbyManagementReactionEmojis =['🔒', '❌', '🧑‍🏫'];
 
 module.exports = {
     tryoutReactionEmoji: tryoutReactionEmoji,
@@ -11,7 +11,7 @@ module.exports = {
     lobbyManagementReactionEmojis: lobbyManagementReactionEmojis,
     lobbyTypes: lobbyTypes,
     lobbyTypePlayerCount: lobbyTypePlayerCount,
-
+    
     /**
      * Returns lobby name for usage in communication strings
      * @param {number} lobbyType given lobby type

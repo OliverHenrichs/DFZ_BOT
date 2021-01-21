@@ -38,12 +38,15 @@ module.exports = async (message, dbHandle) => {
 	// get zoned time
 	const tryoutIndex = 1;
 	const allOtherTypesIndex = 3;
-	[res, zonedTime, zoneName, errormsg] = mH.getTimeFromMessage(message, type == c.lobbyTypes.tryout ? tryoutIndex : allOtherTypesIndex);
+	[res, zonedTime, errormsg] = mH.getTimeFromMessage(message, type == c.lobbyTypes.tryout ? tryoutIndex : allOtherTypesIndex);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}
 
-	lM.postLobby(dbHandle, message.channel, type, lobbyBeginnerRoles, lobbyRegionRole, zonedTime, zoneName)
+	// author is coach
+	coaches = [message.author.id];
+
+	lM.postLobby(dbHandle, message.channel, coaches, type, lobbyBeginnerRoles, lobbyRegionRole, zonedTime)
 	.then(()=>{
         // react to coach's command
         mH.reactPositive(message);

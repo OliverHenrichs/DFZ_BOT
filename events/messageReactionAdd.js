@@ -1,5 +1,6 @@
 const dB = require("../misc/database")
 const lM = require("../misc/lobbyManagement")
+const mrH = require("../misc/messageReactionHelper")
 const uH = require("../misc/userHelper")
 const rM = require("../misc/roleManagement")
 const cM = require("../misc/channelManagement")
@@ -110,7 +111,7 @@ function handleTryoutEmoji(lobby, user, reaction, role)
  * @param {Discord.MessageReaction} reaction reaction with which the user reacted
  * @param {Discord.Role} role role of the user
  */
-function handleLobbyManagementEmoji(client, lobby, user, reaction, role)
+async function handleLobbyManagementEmoji(client, lobby, user, reaction, role)
 {
     if(rM.adminRoles.find(roleId => roleId == role.id) === undefined)
     {
@@ -125,9 +126,15 @@ function handleLobbyManagementEmoji(client, lobby, user, reaction, role)
     }
     else if(reaction.emoji.name ==='❌')
     {
-        lM.cancelLobbyPost(lobby, reaction.message.channel);
+        await lM.cancelLobbyPost(lobby, reaction.message.channel);
         lM.removeLobby(client.dbHandle, lobby);
         user.send("❌ I cancelled the lobby.");
+    }
+    else if(reaction.emoji.name ==='🧑‍🏫')
+    {
+        lM.addCoach(client.dbHandle, reaction.message.channel, lobby, user.id)
+        .then(()=>user.send("✅ Added you as a coach!"))
+        .catch(error => user.send("⛔ I did not add you as a coach. Reason: " + error))            
     }
 }
 
@@ -139,26 +146,9 @@ function handleLobbyManagementEmoji(client, lobby, user, reaction, role)
  */
 async function handleLobbyRelatedEmoji(client, reaction, user)
 {
-    // find lobby
-    var lobby = await lM.findLobbyByMessage(client.dbHandle, reaction.message.channel.id, reaction.message.id)
-        
-    if(lobby == undefined)
+    [res, lobby, guildMember, role] = await mrH.getInfoFromLobbyReaction(client, reaction, user);
+    if(!res)
         return;
-
-    // get guild member (has role)
-    const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
-
-    // get role
-    var role = rM.findRole(guildMember, rM.beginnerRoles);
-    if(role === undefined || role === null) {
-        role = rM.findRole(guildMember, rM.adminRoles);
-    }
-
-    if(role === undefined || role === null)
-    {
-        user.send("⛔ You cannot interact because you do not have the appropriate role.");
-        return;
-    }
 
     changedLobby = false;
     // handle adding users 
@@ -200,8 +190,7 @@ module.exports = async (client, reaction, user) => {
 		return;
 
     if(reaction.message.channel.id === cM.scheduleChannelTryout || reaction.message.channel.id === cM.scheduleChannel5v5)
-        return await sM.addCoachToSchedule(client, reaction, user);
+        return await sM.addCoach(client, reaction, user);
      
-    
     return await handleLobbyRelatedEmoji(client, reaction, user);
 }

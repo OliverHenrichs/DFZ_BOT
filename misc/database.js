@@ -1,5 +1,6 @@
 const mysql = require('mysql2/promise');
-const s = require('./Schedule')
+const l = require('./lobby')
+const s = require('./schedule')
 
 function getScheduleTableJson()
 {
@@ -142,7 +143,7 @@ async function insertScheduleRow(dbHandle, values)
 /**
  * Insert lobby into DB
  * @param {mysql.Connection} dbHandle 
- * @param {JSON} lobby
+ * @param {l.Lobby} lobby
  */
 async function insertLobby(dbHandle, lobby)
 {

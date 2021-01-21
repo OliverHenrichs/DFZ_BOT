@@ -7,7 +7,7 @@ const Discord = require("discord.js")
 const g = require("./generics")
 const gM = require("./googleCalendarManagement")
 const lM = require("./lobbyManagement")
-const s = require("./Schedule")
+const s = require("./schedule")
 const tZ = require("./timeZone")
 const rM = require("./roleManagement")
 const scheduleReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
@@ -143,7 +143,7 @@ async function createScheduledLobby(channels, dbHandle, schedule)
     var timezoneName = rM.getRegionalRoleTimeZoneString(lobbyRegionRole);
     var zonedTime = tZ.getZonedTimeFromTimeZoneName(schedule.date, timezoneName);
 
-    await lM.postLobby(dbHandle, channel, type, lobbyBeginnerRoles, lobbyRegionRole, zonedTime, timezoneName);
+    await lM.postLobby(dbHandle, channel, schedule.coaches, type, lobbyBeginnerRoles, lobbyRegionRole, zonedTime);
 
     // message coaches
     schedule.coaches.forEach(c => {
@@ -154,14 +154,14 @@ async function createScheduledLobby(channels, dbHandle, schedule)
 }
 
 /**
- * Inserts all necessary lobbies, i.e. all lobbies due in the next 5 hours that havent been posted yet
+ * Inserts all necessary lobbies, i.e. all lobbies due in the next x hours that havent been posted yet
  * @param {Array<Discord.Channel>} guild 
  * @param {mysql.Connection} dbHandle 
  */
 async function insertScheduledLobbies(channels, dbHandle)
 {
     var schedules = await dB.getSchedules(dbHandle);
-    const lobbyPostTime = 60000*60*8;
+    const lobbyPostTime = 60000*60*8; // at the moment 8 hours
     var now = Date.now();
 
     g.asyncForEach(schedules, async s => {
@@ -227,6 +227,7 @@ async function handleScheduleCoachWithdrawal(client, reaction, user, schedule)
 }
 
 module.exports = {
+    findSchedule:findSchedule,
     /**
      * Creates the data associated with the created lobby schedules
      * @param {mysql.Connection} dbHandle bot database handle
@@ -286,7 +287,7 @@ module.exports = {
         else
             res = await dB.updateDay(dbHandle, day);
         
-        if(day !== 0) // only act on sunday = 0
+        if(day !== 4) // only act on sunday = 0
             return;
 
         // remove events from the past
@@ -364,27 +365,27 @@ module.exports = {
         for(let i = 0; i< old_embed.fields.length; i++)
         {
             var field = old_embed.fields[i];
+            if(field.value.indexOf(schedule.emoji) === -1)
+                continue;
 
-            if(field.value.indexOf(schedule.emoji) !== -1)
+            var lines = field.value.split('\n');
+            for(let j = 0; j < lines.length; j++)
             {
-                var lines = field.value.split('\n');
-                for(let j = 0; j < lines.length; j++)
-                {
-                    var line = lines[j];
-                    if(line.indexOf(schedule.emoji) !== -1 && j+schedule.coachCount < lines.length)
-                    {
-                        lines[j+1] = "coach 1: " + (schedule.coaches.length > 0 ? ("<@" + schedule.coaches[0] + ">") : "");
-                        if(schedule.coachCount > 1)
-                            lines[j+2] = "coach 2: " + (schedule.coaches.length > 1 ? ("<@" + schedule.coaches[1] + ">") : "");
-                        
-                        var new_embed = new Discord.RichEmbed(old_embed);
-                        new_embed.fields[i].value = lines.join('\n');
-        
-                        // update embed
-                        await message.edit(new_embed);
-                        return;
-                    }
-                }
+                var line = lines[j];
+                if(line.indexOf(schedule.emoji) === -1 || j+schedule.coachCount >= lines.length)
+                    continue;
+
+                // coach change
+                lines[j+1] = "coach 1: " + (schedule.coaches.length > 0 ? ("<@" + schedule.coaches[0] + ">") : "");
+                if(schedule.coachCount > 1)
+                    lines[j+2] = "coach 2: " + (schedule.coaches.length > 1 ? ("<@" + schedule.coaches[1] + ">") : "");
+                
+                var new_embed = new Discord.RichEmbed(old_embed);
+                new_embed.fields[i].value = lines.join('\n');
+
+                // update embed
+                await message.edit(new_embed);
+                return;
             }
         }
     },
@@ -432,7 +433,7 @@ module.exports = {
      * @param {Discord.MessageReaction} reaction determines which schedule we update
      * @param {Discord.User} user the guy who removed the reaction
      */
-    addCoachToSchedule: async function(client, reaction, user)
+    addCoach: async function(client, reaction, user)
     {
         // get guild member (has role)
         const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
