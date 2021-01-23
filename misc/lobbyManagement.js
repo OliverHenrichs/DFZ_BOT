@@ -367,26 +367,13 @@ function createLobbyStartPost(lobby, channel, playersPerLobby)
     }
 }
 
-/**
- * Indicate that lobby has started
- * @param {JSON} lobby lobby
- * @param {Discord.Channel} channel message channel
- */
-async function finishLobbyPost(lobby, channel)
-{
-    updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Lobby started already! 😎]")
-}
-
-
-        
 async function updateLobbyPostAndDBEntry(lobby, channel, dbHandle)
 {
     module.exports.updateLobbyPost(lobby, channel)// update lobby post
     .then(() => dB.updateLobby(dbHandle, lobby))// update lobby in backend
     .catch((err) => console.log("Could not update lobby in post or data base. Reason: \n" + err))
 }
-        
-
+         
 /**
  * Notify all players of a lobby
  * @param {Discord.Client} client discord client
@@ -407,8 +394,10 @@ function notifyPlayers(client, lobby, playerCount, message)
 
 function getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole, coaches) 
 {
+    maxCoachCount = getCoachCountByLobbyType(lobbyType);
+    coachCount = coaches === undefined ? 0 : coaches.length;
     return "for " + rM.getRoleMentions(lobbyBeginnerRoles) + 
-            (coaches === undefined || coaches.length === 0 ? "" : (coaches.length >= 2 ? ("\nCoaches: <@" + coaches[0] + ">, <@" + coaches[1]) + ">" : ("\nCoach: <@" + coaches[0]) + ">")) +
+            (coachCount === 0 ? "" : (coaches.length >= 2 && maxCoachCount === 2 ? ("\nCoaches: <@" + coaches[0] + ">, <@" + coaches[1]) + ">" : ("\nCoach: <@" + coaches[0]) + ">")) +
             (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
 }
 
@@ -602,7 +591,7 @@ module.exports = {
         notifyPlayers(client, lobby, playersPerLobby, "Your " + c.getLobbyNameByType(lobby.type) + "-lobby just started! 😎 Please move to the voice channel and await further instructions.");
 
         // delete the lobby and "archive" the lobby post
-        finishLobbyPost(lobby, channel);
+        updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Lobby started already! 😎]")
         
         user.send("🔒 I started the lobby.")
         return true;

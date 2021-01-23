@@ -13,8 +13,8 @@ async function getInfoFromLobbyReaction(client, reaction, user)
     // find lobby
     var lobby = await lM.findLobbyByMessage(client.dbHandle, reaction.message.channel.id, reaction.message.id)
             
-    if(lobby == undefined)
-        return false;
+    if(lobby === undefined)
+        return [false, undefined, undefined, undefined];
 
     // get guild member (has role)
     const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
@@ -28,7 +28,7 @@ async function getInfoFromLobbyReaction(client, reaction, user)
     if(role === undefined || role === null)
     {
         user.send("⛔ You cannot interact because you do not have the appropriate role.");
-        return false;
+        return [false, undefined, undefined, undefined];
     }
 
     return [true, lobby, guildMember, role];
