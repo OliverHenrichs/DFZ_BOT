@@ -4,8 +4,7 @@ const rM = require("../misc/roleManagement")
  * Checks if member has nickname
  * @param {Discord.GuildMember} member 
  */
-function hasNickname(member)
-{
+function hasNickname(member) {
     return member.nickname !== undefined && member.nickname !== null;
 }
 

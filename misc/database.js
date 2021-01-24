@@ -1,9 +1,33 @@
 const mysql = require('mysql2/promise');
-const l = require('./lobby')
-const s = require('./schedule')
+const l = require('./lobby');
+const s = require('./schedule');
+const c = require('./coach');
 
-function getScheduleTableJson()
-{
+function getCoachTableJson() {
+    return {   
+        table_name: "coaches",
+        table_columns: [
+            {
+                id:'user_id',
+                type: 'VARCHAR(255)'
+            },
+            {  
+                id:'lobbyCount',
+                type: 'int'
+            },
+            {  
+                id:'lobbyCountTryout',
+                type: 'int'
+            },
+            {  
+                id:'lobbyCountNormal',
+                type: 'int'
+            }
+        ]
+    };
+}
+
+function getScheduleTableJson() {
     return {   
         table_name: "schedules",
         table_columns: [
@@ -23,8 +47,7 @@ function getScheduleTableJson()
     };
 }
 
-function getLobbyTableJson()
-{
+function getLobbyTableJson() {
     return {   
         table_name: "lobbies",
         table_columns: [
@@ -44,8 +67,7 @@ function getLobbyTableJson()
     };
 }
 
-function getOptionsTableJson()
-{
+function getOptionsTableJson() {
     return {   
         table_name: "options",
         table_columns: [
@@ -61,22 +83,35 @@ function getOptionsTableJson()
     };
 }
 
-function createScheduleTable(dbHandle)
-{
+function createCoachTable(dbHandle) {
+    var json = getCoachTableJson();
+    return createTable(dbHandle, json.table_name, json.table_columns);
+}
+
+function createScheduleTable(dbHandle) {
     var json = getScheduleTableJson();
     return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createLobbyTable(dbHandle)
-{
+function createLobbyTable(dbHandle) {
     var json = getLobbyTableJson();
     return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createOptionsTable(dbHandle)
-{
+function createOptionsTable(dbHandle) {
     var json = getOptionsTableJson();
     return createTable(dbHandle, json.table_name, json.table_columns);
+}
+
+
+/**
+ * @param {String} tableName table to return
+ * @param {String} column column to sort by
+ * @returns sorted table
+ */
+function getSortedTableCommand(tableName, columnName) {
+    //SELECT * FROM table_name ORDER BY column_name ASC|DESC
+    return 'SELECT * FROM ' + tableName + ' ORDER BY ' + columnName + " DESC";
 }
 
 /**
@@ -84,8 +119,7 @@ function createOptionsTable(dbHandle)
  * @param {string} table_name name of table 
  * @param {Array<String>} table_columns names of table columns
  */
-function createCreateTableCommand(table_name, table_columns)
-{
+function createCreateTableCommand(table_name, table_columns) {
     var command = 'CREATE TABLE IF NOT EXISTS '+ table_name + ' (';
     command += (table_name + '_id INT AUTO_INCREMENT, ');
     table_columns.forEach(col => {
@@ -101,8 +135,7 @@ function createCreateTableCommand(table_name, table_columns)
  * @param {string} table_name name of table 
  * @param {Array<String>} table_columns names of table columns
  */
-async function createTable(dbHandle, table_name, table_columns)
-{
+async function createTable(dbHandle, table_name, table_columns) {
     var command = createCreateTableCommand(table_name, table_columns);
     return dbHandle.execute(command);
 }
@@ -114,10 +147,18 @@ async function createTable(dbHandle, table_name, table_columns)
  * @param {Array<String>} columnNames column IDs
  * @param {Array<String>} columnValues column values
  */
-async function insertRow(dbHandle, table, columnNames, columnValues)
-{
-    var command = 'INSERT INTO ' + table + '( ' + columnNames.join(', ') + ') VALUES(\'' + columnValues.join('\', \'') + '\');';
+async function insertRow(dbHandle, table, columnNames, columnValues) {
+    var command =   'INSERT INTO ' + table + 
+                    '( ' + columnNames.join(', ') + ') VALUES(\'' + columnValues.join('\', \'') + '\');';
     return dbHandle.execute(command);
+}
+/**
+ * inserts coach into database
+ * @param {mysql.Connection} dbHandle bot database handle
+ * @param {Array<String>} values values for channel_id, message_id and data
+ */
+async function insertCoachRow(dbHandle, values) {
+    return insertRow(dbHandle, 'coaches', ['user_id', 'lobbyCount', 'lobbyCountTryout', 'lobbyCountNormal'], values);
 }
 
 /**
@@ -125,8 +166,7 @@ async function insertRow(dbHandle, table, columnNames, columnValues)
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {Array<String>} values values for channel_id, message_id and data
  */
-async function insertLobbyRow(dbHandle, values)
-{
+async function insertLobbyRow(dbHandle, values) {
     return insertRow(dbHandle, 'lobbies', ['channel_id', 'message_id', 'data'], values);
 }
 
@@ -135,9 +175,21 @@ async function insertLobbyRow(dbHandle, values)
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {Array<String>} values values for emoji, messageId and data
  */
-async function insertScheduleRow(dbHandle, values)
-{
+async function insertScheduleRow(dbHandle, values) {
     return insertRow(dbHandle, 'schedules', ['emoji', 'message_id', 'data'], values);
+}
+
+/**
+ * Insert lobby into DB
+ * @param {mysql.Connection} dbHandle 
+ * @param {c.Coach} coach
+ */
+async function insertCoach(dbHandle, coach) {
+    values = [  coach.userId,
+                coach.lobbyCount,
+                coach.lobbyCountTryout,
+                coach.lobbyCountNormal];
+    return insertCoachRow(dbHandle, values);
 }
 
 /**
@@ -145,8 +197,7 @@ async function insertScheduleRow(dbHandle, values)
  * @param {mysql.Connection} dbHandle 
  * @param {l.Lobby} lobby
  */
-async function insertLobby(dbHandle, lobby)
-{
+async function insertLobby(dbHandle, lobby) {
     values = [lobby.channelId, lobby.messageId, JSON.stringify(lobby)];
     return insertLobbyRow(dbHandle, values);
 }
@@ -156,8 +207,7 @@ async function insertLobby(dbHandle, lobby)
  * @param {mysql.Connection} dbHandle 
  * @param {s.Schedule} schedule 
  */
-async function insertSchedule(dbHandle, schedule)
-{
+async function insertSchedule(dbHandle, schedule) {
     values = [schedule.emoji, schedule.messageId, JSON.stringify(schedule)];
     return insertScheduleRow(dbHandle, values);
 }
@@ -167,8 +217,7 @@ async function insertSchedule(dbHandle, schedule)
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {int} day day
  */
-async function insertDay(dbHandle, day)
-{
+async function insertDay(dbHandle, day) {
     return insertRow(dbHandle, 'options', ['name', 'value'], ['day', day]);
 }
 
@@ -176,25 +225,35 @@ async function insertDay(dbHandle, day)
  * updates a table with new values according to given conditions
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {string} table table id
- * @param {string} column column id
- * @param {string} value new value
+ * @param {Array<String>} columns column ids
+ * @param {Array<String>} values new values
  * @param {Array<String>} conditions array of strings containing sql conditions
  */
-async function updateTableEntryByConditions(dbHandle, table, column, value, conditions)
-{
-    var command = "Update " + table + " SET " + column + "=" + value;
+async function updateTableEntriesByConditions(dbHandle, table, columns, values, conditions) {
+    return new Promise(function(resolve, reject) {
+        var command = "Update " + table + " SET ";
+        let cols = columns.length;
+        if(cols === 0 || cols !== values.length) {
+            reject("#columns must equal #values");
+        }
+        for(let i = 0; i<cols; i++) {
+            command += (columns[i] + "=" + values[i] + ((i < cols-1) ? ", " : ""));
+        }
 
-    if(conditions.length > 0)
-    {
-        command += " WHERE ";
-        conditions.forEach(condition =>
-        {
-            command += condition + " AND "; 
-        });
+        if(conditions.length > 0) {
+            command += " WHERE ";
+            conditions.forEach(condition =>
+            {
+                command += condition + " AND "; 
+            });
 
-        command = command.substr(0, command.length-5);
-    }
-    return dbHandle.execute(command);
+            command = command.substr(0, command.length-5);
+        }
+
+        dbHandle.execute(command)
+        .then(() => resolve())
+        .catch(err => reject(err));
+    });
 }
 
 /**
@@ -202,9 +261,13 @@ async function updateTableEntryByConditions(dbHandle, table, column, value, cond
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {JSON} lobby lobby object
  */
-async function updateLobby(dbHandle, lobby)
-{
-    return updateTableEntryByConditions(dbHandle, 'lobbies', 'data', '\''+JSON.stringify(lobby)+'\'', getLobbyConditions(lobby.channelId, lobby.messageId));
+async function updateLobby(dbHandle, lobby) {
+    return updateTableEntriesByConditions(dbHandle, 
+        'lobbies', 
+        ['data'], 
+        ['\''+JSON.stringify(lobby)+'\''], 
+        getLobbyConditions(lobby.channelId, lobby.messageId)
+    );
 }
 
 /**
@@ -212,9 +275,13 @@ async function updateLobby(dbHandle, lobby)
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {s.Schedule} schedule schedule object
  */
-async function updateSchedule(dbHandle, schedule)
-{
-    return updateTableEntryByConditions(dbHandle, 'schedules', 'data', '\''+JSON.stringify(schedule)+'\'', getScheduleConditions(schedule.messageId, schedule.emoji));
+async function updateSchedule(dbHandle, schedule) {
+    return updateTableEntriesByConditions(dbHandle, 
+        'schedules', 
+        ['data'], 
+        ['\''+JSON.stringify(schedule)+'\''], 
+        getScheduleConditions(schedule.messageId, schedule.emoji)
+    );
 }
 
 /**
@@ -222,9 +289,28 @@ async function updateSchedule(dbHandle, schedule)
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {int} day current day of the week (0=sun, 1=mon, ...)
  */
-async function updateDay(dbHandle, day)
-{
-    return updateTableEntryByConditions(dbHandle, 'options', 'value', day, ['name = \'day\'']);
+async function updateDay(dbHandle, day) {
+    return updateTableEntriesByConditions(dbHandle, 
+        'options', 
+        ['value'], 
+        [day], 
+        ['name = \'day\'']
+    );
+}
+
+/**
+ * updates schedule in db with current state of schedule
+ * @param {mysql.Connection} dbHandle bot database handle
+ * @param {c.Coach} coach coach id
+ */
+async function updateCoach(dbHandle, coach) {
+    return updateTableEntriesByConditions(
+        dbHandle, 
+        'coaches', 
+        ['lobbyCount', 'lobbyCountTryout', 'lobbyCountNormal'], 
+        [coach.lobbyCount, coach.lobbyCountTryout, coach.lobbyCountNormal], 
+        ['user_id = \''+ coach.userId+'\'']
+    );
 }
 
 /**
@@ -234,8 +320,7 @@ async function updateDay(dbHandle, day)
  * @param {string} column 
  * @param {Array<String>} conditions 
  */
-async function selectTableValueByConditions(dbHandle, table, column, conditions)
-{
+async function selectTableValueByConditions(dbHandle, table, column, conditions) {
     return new Promise(function(resolve, reject) {
             
         var command = "SELECT " + column + " FROM " + table;
@@ -261,8 +346,7 @@ async function selectTableValueByConditions(dbHandle, table, column, conditions)
  * @param {string} message_id 
  * @param {string} emoji 
  */
-function getScheduleConditions(message_id, emoji)
-{
+function getScheduleConditions(message_id, emoji) {
     var conditions = [];
     if(message_id !== '')
         conditions.push('message_id = \''+ message_id+'\'');
@@ -276,8 +360,7 @@ function getScheduleConditions(message_id, emoji)
  * @param {string} channelId 
  * @param {string} messageId 
  */
-function getLobbyConditions(channelId, messageId)
-{
+function getLobbyConditions(channelId, messageId) {
     var conditions = [];
     if(channelId !== '')
         conditions.push('channel_id = \''+ channelId+'\'');
@@ -292,8 +375,7 @@ function getLobbyConditions(channelId, messageId)
  * @param {string} channelId 
  * @param {string} messageId 
  */
-async function getLobbies(dbHandle, channelId = '', messageId = '')
-{
+async function getLobbies(dbHandle, channelId = '', messageId = '') {
     return new Promise(function(resolve, reject) {
         selectTableValueByConditions(dbHandle, 'lobbies', 'data', getLobbyConditions(channelId, messageId))
         .then(dB_response =>{
@@ -315,8 +397,7 @@ async function getLobbies(dbHandle, channelId = '', messageId = '')
  * @param {string} message_id 
  * @param {string} emoji 
  */
-async function getSchedules(dbHandle, message_id = '', emoji = '')
-{
+async function getSchedules(dbHandle, message_id = '', emoji = '') {
     return new Promise(function(resolve, reject) {
         selectTableValueByConditions(dbHandle, 'schedules', 'data', getScheduleConditions(message_id, emoji))
         .then(dB_response =>{
@@ -336,8 +417,7 @@ async function getSchedules(dbHandle, message_id = '', emoji = '')
  * returns day from options-table in database
  * @param {mysql.Connection} dbHandle 
  */
-async function getDay(dbHandle)
-{
+async function getDay(dbHandle) {
     return new Promise(function(resolve, reject) {
         selectTableValueByConditions(dbHandle, 'options', 'value', ['name = \'day\''])
         .then(dB_response =>{
@@ -349,14 +429,48 @@ async function getDay(dbHandle)
     });
 }
 
+
+/**
+ * Returns all coaches in DB with their lobby counts
+ * @param {mysql.Connection} dbHandle 
+ * @param {string} columnName name of column to sort by 
+ */
+async function getSortedCoaches(dbHandle, columnName = 'lobbyCount') {
+    return new Promise(function(resolve, reject) {
+        var command = getSortedTableCommand('coaches', columnName)
+        dbHandle.execute(command).then(res=>{
+            resolve(res);
+        });
+    });
+}
+
+/**
+ * Returns all schedules fitting given message id and emoji
+ * @param {mysql.Connection} dbHandle 
+ * @param {string} userId 
+ */
+async function getCoach(dbHandle, userId = '') {
+    return new Promise(function(resolve, reject) {
+        selectTableValueByConditions(dbHandle, 'coaches', 'lobbyCount, lobbyCountTryout, lobbyCountNormal', ['user_id = \''+userId+'\''])
+        .then(dB_response =>{
+            if(!Array.isArray(dB_response) || dB_response.length === 0) {
+                resolve(undefined);
+                return;
+            }
+            var c_content = dB_response[0]
+            c_content.userId = userId;
+            resolve(c.Coach.fromObject(c_content));
+        })
+    });
+}
+
 /**
  * Deletes table rows in given table according to the laid out conditions
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {string} table table name 
  * @param {Array<String>} conditions array of strings containing the conditions (will be combined with 'AND')
  */
-async function deleteTableRows(dbHandle, table, conditions)
-{
+async function deleteTableRows(dbHandle, table, conditions) {
     return new Promise(function(resolve, reject) {
         var command = "DELETE FROM " + table;
 
@@ -381,8 +495,7 @@ async function deleteTableRows(dbHandle, table, conditions)
  * @param {mysql.Connection} dbHandle 
  * @param {JSON} lobby 
  */
-async function removeLobby(dbHandle, lobby)
-{
+async function removeLobby(dbHandle, lobby) {
     return deleteTableRows(dbHandle, 'lobbies', getLobbyConditions(lobby.channelId, lobby.messageId))
 }
 
@@ -391,8 +504,7 @@ async function removeLobby(dbHandle, lobby)
  * @param {mysql.Connection} dbHandle 
  * @param {Array<String>} messageIDs 
  */
-async function removeSchedules(dbHandle, messageIDs)
-{
+async function removeSchedules(dbHandle, messageIDs) {
     var conditions = ['message_id = \''+ messageIDs.join("\' OR message_id = \'") + '\''];
     return deleteTableRows(dbHandle, 'schedules', conditions);
 }
@@ -409,18 +521,23 @@ module.exports = {
         });
     },
 
+    createCoachTable:createCoachTable,
     createScheduleTable:createScheduleTable,
     createLobbyTable:createLobbyTable,
     createOptionsTable:createOptionsTable,
+    insertCoach:insertCoach,
     insertLobby:insertLobby,
     insertSchedule:insertSchedule,
     insertDay:insertDay,
     updateLobby:updateLobby,
     updateSchedule:updateSchedule,
     updateDay:updateDay,
+    updateCoach:updateCoach,
     getLobbies:getLobbies,
     getSchedules:getSchedules,
     getDay:getDay,
+    getCoach:getCoach,
+    getSortedCoaches:getSortedCoaches,
     removeLobby:removeLobby,
     removeSchedules:removeSchedules
 };

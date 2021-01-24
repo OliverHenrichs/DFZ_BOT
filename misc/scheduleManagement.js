@@ -18,8 +18,7 @@ const scheduleTypes = {lobby:"Lobbies", tryout:"Tryouts"};
  * Create header string for weekly schedule
  * @param {JSON} scheduleSetup 
  */
-function getWeekScheduleString(scheduleSetup)
-{
+function getWeekScheduleString(scheduleSetup) {
     return "Schedule for Week #" + 
         tZ.getWeekNumber(scheduleSetup.mondayDate) + " in " + (scheduleSetup.mondayDate.getYear()+1900) +
         " ("    + tZ.months[scheduleSetup.mondayDate.getMonth()+1] + " " + scheduleSetup.mondayDate.getDate() +" - "
@@ -36,8 +35,7 @@ function getWeekScheduleString(scheduleSetup)
  * @param {string} timezoneName 
  * @param {int} coachCount Number of coaches required for schedule
  */
-function getScheduleText(days, emojis, title, times, timezoneName, coachCount)
-{
+function getScheduleText(days, emojis, title, times, timezoneName, coachCount) {
     var schedule = {
         name: title,
         value:   "",
@@ -52,8 +50,7 @@ function getScheduleText(days, emojis, title, times, timezoneName, coachCount)
     return schedule;
 }    
 
-function reactWithScheduleEmojis(message, lastEmojiIndex = -1)
-{
+function reactWithScheduleEmojis(message, lastEmojiIndex = -1) {
     for(let idx = 0; idx < (lastEmojiIndex == -1 ? scheduleReactionEmojis.length : lastEmojiIndex); idx++)
         message.react(scheduleReactionEmojis[idx]);
 }
@@ -63,8 +60,7 @@ function reactWithScheduleEmojis(message, lastEmojiIndex = -1)
  * @param {Discord.Channel} channel schedule channel
  * @param {JSON} scheduleSetup json containing all information regarding schedule
  */
-async function writeSchedule(channel, scheduleSetup)
-{
+async function writeSchedule(channel, scheduleSetup) {
     if(scheduleSetup.regions.length !== scheduleSetup.timezones.length || scheduleSetup.regions.length !== scheduleSetup.times.length)
         return undefined;
 
@@ -76,8 +72,7 @@ async function writeSchedule(channel, scheduleSetup)
     var schedules = [];
     var emojiCount = 0;
 
-    for(let i = 0; i < scheduleSetup.regions.length; i++)
-    {
+    for(let i = 0; i < scheduleSetup.regions.length; i++) {
         var regionString = scheduleSetup.regionStrings[i];
         var tz = scheduleSetup.timezoneShortNames[i];
 
@@ -109,8 +104,7 @@ async function findSchedule(dbHandle, messageId, emojiName) {
     var schedules = await dB.getSchedules(dbHandle, messageId, emojiName);
     if(schedules.length === 0)
         return undefined;
-    if(schedules.length > 1)
-    {
+    if(schedules.length > 1) {
         console.log("Schedules are not unique ??");
         return undefined;
     }
@@ -124,13 +118,11 @@ async function findSchedule(dbHandle, messageId, emojiName) {
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {s.Schedule} schedule 
  */
-async function createScheduledLobby(channels, dbHandle, schedule)
-{     
+async function createScheduledLobby(channels, dbHandle, schedule) {     
     var lobbyRegionRole = rM.getRegionalRoleFromString(schedule.region);
     var type = schedule.type == scheduleTypes.tryout ? c.lobbyTypes.tryout : (schedule.coachCount == 2 ? c.lobbyTypes.inhouse : c.lobbyTypes.unranked);
 
-    if(type === c.lobbyTypes.tryout)
-    {
+    if(type === c.lobbyTypes.tryout) {
         channel = channels.get(process.env.BOT_LOBBY_CHANNEL_TRYOUT);
         lobbyBeginnerRoles = rM.beginnerRoles.slice(0,1);
     }
@@ -158,8 +150,7 @@ async function createScheduledLobby(channels, dbHandle, schedule)
  * @param {Array<Discord.Channel>} guild 
  * @param {mysql.Connection} dbHandle 
  */
-async function insertScheduledLobbies(channels, dbHandle)
-{
+async function insertScheduledLobbies(channels, dbHandle) {
     var schedules = await dB.getSchedules(dbHandle);
     const lobbyPostTime = 60000*60*8; // at the moment 8 hours
     var now = Date.now();
@@ -176,7 +167,7 @@ async function insertScheduledLobbies(channels, dbHandle)
         {
             s.lobbyPosted = true; // dont double post
             await createScheduledLobby(channels, dbHandle, s);
-            dB.updateSchedule(dbHandle, s);
+            await dB.updateSchedule(dbHandle, s);
         }
     });
 }
@@ -189,8 +180,7 @@ async function insertScheduledLobbies(channels, dbHandle)
  * @param {Discord.User} user 
  * @param {s.Schedule} schedule 
  */
-async function handleScheduleCoachAdd(client, reaction, user, schedule)
-{
+async function handleScheduleCoachAdd(client, reaction, user, schedule) {
     return new Promise(async function(resolve, reject) {
         try {
             await dB.updateSchedule(client.dbHandle, schedule);
@@ -211,8 +201,7 @@ async function handleScheduleCoachAdd(client, reaction, user, schedule)
  * @param {Discord.User} user 
  * @param {s.Schedule} schedule 
  */
-async function handleScheduleCoachWithdrawal(client, reaction, user, schedule)
-{
+async function handleScheduleCoachWithdrawal(client, reaction, user, schedule) {
     return new Promise(async function(resolve, reject) {
         try {
             schedule.eventId = undefined;
@@ -235,8 +224,7 @@ module.exports = {
      * @param {string} channelId the channel that is tied to the schedule
      * @param {Schedule} scheduleSetup the setup that was used to create the schedule message
      */
-    createLobbySchedules: function(dbHandle, messageId, channelId, scheduleSetup)
-    {        
+    createLobbySchedules: function(dbHandle, messageId, channelId, scheduleSetup) {        
         for(let i = 0; i < scheduleSetup.regions.length; i++)
         {
             var region = scheduleSetup.regions[i];
@@ -397,8 +385,7 @@ module.exports = {
      * @param {Discord.MessageReaction} reaction determines which schedule we update
      * @param {Discord.User} user the guy who removed the reaction
      */
-    removeCoachFromSchedule: async function(client, reaction, user)
-    {
+    removeCoachFromSchedule: async function(client, reaction, user) {
         var schedule = await findSchedule(client.dbHandle, reaction.message.id, reaction.emoji.name);
 
         var idx = schedule.coaches.findIndex(coach => coach === user.id);
@@ -433,8 +420,7 @@ module.exports = {
      * @param {Discord.MessageReaction} reaction determines which schedule we update
      * @param {Discord.User} user the guy who removed the reaction
      */
-    addCoach: async function(client, reaction, user)
-    {
+    addCoach: async function(client, reaction, user) {
         // get guild member (has role)
         const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
 

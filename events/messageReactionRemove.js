@@ -12,14 +12,12 @@ const sM = require("../misc/scheduleManagement")
  * @param {Discord.MessageReaction} reaction 
  * @param {Discord.User} user 
  */
-async function handleLobbyRelatedEmoji(client, reaction, user)
-{
+async function handleLobbyRelatedEmoji(client, reaction, user) {
     [res, lobby, guildMember, role] = await mrH.getInfoFromLobbyReaction(client, reaction, user);
     if(!res)
         return;
 
-    if(rM.adminRoles.includes(role.id) && reaction.emoji.name === c.lobbyManagementReactionEmojis[2])
-    {
+    if(rM.adminRoles.includes(role.id) && reaction.emoji.name === c.lobbyManagementReactionEmojis[2]) {
         lM.removeCoach(client.dbHandle, reaction.message.channel, lobby, user.id)
         .then(()=>user.send("✅ Removed you as a coach!"))
         .catch(error => user.send("⛔ I could not remove you as a coach. Reason: " + error))  
@@ -48,8 +46,7 @@ module.exports = async (client, reaction, user) => {
     if(reaction.message.channel === undefined)
         return;
     
-    if(reaction.message.channel.id === cM.scheduleChannelTryout || reaction.message.channel.id === cM.scheduleChannel5v5)
-    {
+    if(reaction.message.channel.id === cM.scheduleChannelTryout || reaction.message.channel.id === cM.scheduleChannel5v5) {
         sM.removeCoachFromSchedule(client, reaction, user);
     } else // something with a lobby post
     {

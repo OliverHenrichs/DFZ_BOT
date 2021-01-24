@@ -4,6 +4,7 @@ const cM = require("../misc/channelManagement")
 const mH = require("../misc/messageHelper")
 const hU = require("../commands/helpUser")
 const uL = require("../commands/updateLobby")
+const hS = require("../commands/highScore.js")
 
 const PREFIX = '!';
 
@@ -28,6 +29,11 @@ module.exports = async (client, message) => {
 		return;
 	}
 
+	// Ignore DMs
+	if (message.channel.type === 'dm') {
+		return mH.reactNegative(message, "Bot doesn't support DMs!");
+	}
+
 	// Ignore messages outside of bot channels
 	if (!cM.isWatchingChannel(message.channel.id)) {
 		return mH.reactNegative(message, "I only listen to messages in the channels " + cM.channelStrings);
@@ -39,10 +45,13 @@ module.exports = async (client, message) => {
 			return hU(message);
 		}
 		if (content.startsWith("!post")) {
-			return pL(message, client.dbHandle)
+			return pL(message, client.dbHandle);
 		}
 		if (content.startsWith("!update")) {
-			return uL(message, client.dbHandle)
+			return uL(message, client.dbHandle);
+		}
+		if (content.startsWith("!highscores")) {
+			return hS(message, client.dbHandle);
 		}
 	} else if (	content.startsWith("!post")) {
 		return mH.reactNegative(message, "Only coaches are eligible for this command.");

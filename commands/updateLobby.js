@@ -22,14 +22,13 @@ module.exports = async (message, dbHandle) => {
 		
 	// remove message ID from args
 	args.shift();
-		
 	
 	//return mH.reactNegative(message, errormsg);
 	[res, errormsg] = lM.updateLobbyParameters(args, lobby);
 	if(res !== true)
 		return mH.reactNegative(message, "Failed updating lobby parameters: " + errormsg);
 
-	lM.updateLobbyPost(lobby, message.channel);
-	dB.updateLobby(dbHandle, lobby);
-	return mH.reactPositive(message, "Updated lobby parameters.");
+	dB.updateLobby(dbHandle, lobby)
+	.then(lM.updateLobbyPost(lobby, message.channel))
+	.then(mH.reactPositive(message, "Updated lobby parameters."));
 }

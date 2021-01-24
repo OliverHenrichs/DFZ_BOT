@@ -12,8 +12,7 @@ class Schedule {
      * @param {string} date 
      * @param {string} region 
      */
-    constructor(channelId="", messageId="", type=-1, coachCount=0, emoji="", date="", region="")
-    {
+    constructor(channelId="", messageId="", type=-1, coachCount=0, emoji="", date="", region="") {
         this.channelId = channelId;
         this.messageId = messageId;
         this.type = type;
@@ -25,8 +24,7 @@ class Schedule {
         this.lobbyPosted = false;
     };
 
-    static fromObject(obj)
-    {
+    static fromObject(obj) {
         if(obj == null)
             return;
         var schedule = new Schedule();

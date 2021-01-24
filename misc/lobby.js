@@ -12,8 +12,7 @@ class Lobby {
      * @param {string} channelId 
      * @param {string} messageId 
      */
-    constructor(type=-1, date="", coaches=[], beginnerRoleIds=[], regionId="", channelId="", messageId="")
-    {
+    constructor(type=-1, date="", coaches=[], beginnerRoleIds=[], regionId="", channelId="", messageId="") {
         this.type = type
         this.date = date
         this.users = []
@@ -24,8 +23,7 @@ class Lobby {
         this.messageId  = messageId
     };
 
-    static fromObject(obj)
-    {
+    static fromObject(obj) {
         if(obj == null)
             return;
         var lobby = new Lobby();

@@ -53,8 +53,7 @@ function filterAndSortUsers_int(users, filter, sorter)
  * @param {*} position 
  * @return filtered array of users
  */
-function filterAndSortByPositionAndTier_int(users, position)
-{
+function filterAndSortByPositionAndTier_int(users, position) {
     var _filter = (user) => {
         return user.positions.includes(position);
     };
@@ -68,8 +67,7 @@ function filterAndSortByPositionAndTier_int(users, position)
  * @param {int} position 
  * @return filtered array of users
  */
-function filterByPosition(users, position)
-{
+function filterByPosition(users, position) {
     var _filter = (user) => {
         return user.positions.includes(position);
     };
@@ -85,8 +83,7 @@ function filterByPosition(users, position)
 function getPlayersPerPosition(_users) {
     // get players per position
     var playersPerPosition = [];
-    for(let position = 1; position < 6; position++)
-    {
+    for(let position = 1; position < 6; position++) {
         playersPerPosition.push({pos: position, users: filterByPosition(_users, position)});
         
         // randomly reverse order
@@ -107,15 +104,13 @@ function getPlayersPerPosition(_users) {
  * @param {map} playerPositionMap maps players to position
  * @param {list} openUsers users in the lobby
  */
-createInhouseTeams = function(playerPositionMap, openUsers)
-{
+createInhouseTeams = function(playerPositionMap, openUsers) {
     // now sort by tier
     openUsers.sort(g.coinFlip() === true ? tier_sorter : reverse_tier_sorter);
 
     var playersPerPosition = getPlayersPerPosition(openUsers);
     var skillPoints = {radiant:0, dire:0};
-    while (true)
-    {
+    while (true) {
         // we're finished cause there are no more positions to fill
         if(playersPerPosition.length == 0)
             break;
@@ -231,8 +226,7 @@ createInhouseTeams = function(playerPositionMap, openUsers)
 createnNonCompetitionTeams = function(playerPositionMap, openUsers) 
 {
     var playersPerPosition = getPlayersPerPosition(openUsers);
-    while (true)
-    {
+    while (true) {
         // we're finished cause there are no more positions to fill
         if(playersPerPosition.length == 0)
             break;
@@ -297,8 +291,7 @@ module.exports = {
      * @param {string} beginnerRole 
      * @param {string} regionRole 
      */
-    addUser: function (lobby, name, id, positions, beginnerRole, regionRole)
-    {
+    addUser: function (lobby, name, id, positions, beginnerRole, regionRole) {
         // create user
         var user = {};
         user.name = name;
@@ -354,8 +347,7 @@ module.exports = {
         return lobby.users.find(element => element.id == userId);
     },
 
-    filterAndSortAllUsers: function(lobby, filter, sorter)
-    {
+    filterAndSortAllUsers: function(lobby, filter, sorter) {
         return filterAndSortUsers_int(lobby.users, filter, sorter);
     },
 
@@ -371,8 +363,7 @@ module.exports = {
      * @param {list} users 
      * @param {int} lobbyType
      */
-    createTeams: function(users, lobbyType)
-    {
+    createTeams: function(users, lobbyType) {
         var playerPositionMap = {};
         var openUsers = users;
 

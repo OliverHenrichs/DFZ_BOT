@@ -68,8 +68,7 @@ module.exports = {
      * @param {int} max max allowed number
      * @return {[boolean, set<int>, string]}[true if success, unique numbers, error message if not success]
      */
-    getNumbersFromString: function(stringWithCommaSeperatedNumbers, min=0, max=5)
-    {
+    getNumbersFromString: function(stringWithCommaSeperatedNumbers, min=0, max=5) {
         var numbers = stringWithCommaSeperatedNumbers.split(",");
         // get integers
         for (pos in numbers) {

@@ -32,8 +32,7 @@ const scheduleTimezoneNames = ["Europe/Berlin", "America/New_York", "Asia/Singap
 
 const scheduleTimezoneNames_short = getTimeZoneShortNames(scheduleTimezoneNames);
 
-function getTimeZoneShortNames(timezoneNames)
-{
+function getTimeZoneShortNames(timezoneNames) {
     var date = Date.now();
     var timezoneShortNames = [];
     timezoneNames.forEach(name => {
@@ -59,8 +58,7 @@ function getTimeZoneShortNames(timezoneNames)
  * @param {string} timeString input string
  * @return true if validator succeeds
  */
-function validateTime(timeString)
-{
+function validateTime(timeString) {
     // check length
     var l = timeString.length;
     if(l != 6 && l != 7)
@@ -69,8 +67,7 @@ function validateTime(timeString)
     // check hour
     var hour = -1;
     var ampm ="";
-    if (l == 6)
-    {
+    if (l == 6) {
         hour = parseInt(timeString[0])
         minute = parseInt(timeString.substring(2, 4))
         ampm = timeString.substring(4);
@@ -82,8 +79,7 @@ function validateTime(timeString)
     if((isNaN(hour) || isNaN(minute)) || (ampm != "am" && ampm != "pm") || (hour < 0 || hour > 12) || (minute < 0 || minute > 59))
         return [undefined, undefined];
 
-    if(ampm === "am")
-    {
+    if(ampm === "am") {
         if(hour === 12)
             return [hour-12, minute]; // 12:30 am => 00:30
         else 
@@ -100,8 +96,7 @@ function validateTime(timeString)
  * gets time zone from time zone name
  * @param {string} timezoneName 
  */
-function findTimeZone(timezoneName)
-{
+function findTimeZone(timezoneName) {
     /*
     * POSIX-Definition causes GMT+X to be GMT-X and vice versa... 
     * In order to not confuse the user we exchange + and - here ;-)
@@ -134,8 +129,7 @@ function findTimeZone(timezoneName)
     return [zone, ""];
 }
 
-function getTimeString(zonedTime)
-{
+function getTimeString(zonedTime) {
     return weekDays[zonedTime.dayOfWeek] + ", "+ months[zonedTime.month] +" "+ zonedTime.day + " at " + zonedTime.hours + ":" + (zonedTime.minutes < 10 ? "0"+ zonedTime.minutes : zonedTime.minutes);
 }
 
@@ -154,8 +148,7 @@ module.exports = {
      * self-explanatory...
      * @param {string} region 
      */
-    getTimeZoneStringFromRegion: function(_region)
-    {
+    getTimeZoneStringFromRegion: function(_region) {
         var idx = regions.findIndex(region => {return region === _region});
         if(idx === -1)
             return scheduleTimezoneNames[0];

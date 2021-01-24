@@ -1,5 +1,3 @@
-// const readline = require('readline');
-// const fs = require('fs')
 const { google } = require('googleapis');
 const tz = require('./timeZone');
 const SCOPES = ['https://www.googleapis.com/auth/calendar'];
@@ -110,8 +108,7 @@ function getCalendarIDByRegion(region) {
   return undefined;
 }
 
-function createEventSummary(schedule)
-{
+function createEventSummary(schedule) {
   var lobbyType = (schedule.type === "Tryouts" ? "tryout lobby" : (schedule.coaches.length == 1 ? "unranked lobby": "5v5 lobby"));
   return schedule.region + " " + lobbyType;
 }
@@ -165,8 +162,7 @@ function insertEvent(event, schedule) {
  * @param {s.Schedule} schedule 
  * @param {Discord.Client} client 
  */
-async function updateGoogleEvent(eventToChange, schedule, client)
-{
+async function updateGoogleEvent(eventToChange, schedule, client) {
   return new Promise(async function(resolve, reject) {
     try {
       description = await getEventDescription(schedule, client);

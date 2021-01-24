@@ -7,6 +7,7 @@ const l = require("../misc/lobby")
 const mH = require("../misc/messageHelper")
 const uH = require("../misc/userHelper")
 const rM = require("../misc/roleManagement")
+const tr = require("../misc/tracker")
 const tZ = require("../misc/timeZone")
 const _tZ = require('timezone-support')
 const fiveMinInMs = 300000;
@@ -18,8 +19,7 @@ const fiveMinInMs = 300000;
  * @return {number} 
  */
 function getCoachCountByLobbyType(lobbyType) {
-    switch (lobbyType)
-    {
+    switch (lobbyType) {
         case c.lobbyTypes.inhouse:
             return 2;
         case c.lobbyTypes.unranked:
@@ -75,8 +75,7 @@ function getPositionalUserTable(users, position, mention=false) {
     return tableBase;
 }
 
-function addUserWithPositionsToUserTable(tableBase, user, positions, startIndex = 0, mention=false)
-{
+function addUserWithPositionsToUserTable(tableBase, user, positions, startIndex = 0, mention=false) {
     tableBase[startIndex].value = tableBase[startIndex].value + "\r\n" + (mention ? ("["+user.region.name +"]<@" +user.id + ">") : "["+user.region.name +"]"+user.name);
     tableBase[startIndex+1].value = tableBase[startIndex+1].value + "\r\n" + positions.join(", ");
     tableBase[startIndex+2].value = tableBase[startIndex+2].value + "\r\n" + user.tier.name;
@@ -157,14 +156,18 @@ function getUserTable(users, playersPerLobby=-1, mention=false) {
             addToUserTable(tableBench, usr, startIndexBench, mention);
     });
 
-    if(usrIndex > playersPerLobby && playersPerLobby !== -1)
-    {
+    if(usrIndex > playersPerLobby && playersPerLobby !== -1) {
         var finalTable = tableBase.concat(tableBench);
         return finalTable;
     }
         
     
     return tableBase;
+}
+
+function getPlayersPerLobbyByLobbyType(type) {
+    var key = Object.keys(c.lobbyTypes).find(typeKey => c.lobbyTypes[typeKey] == type);
+    return c.lobbyTypePlayerCount[key];
 }
 
 /**
@@ -174,14 +177,8 @@ function getUserTable(users, playersPerLobby=-1, mention=false) {
  *  @param mention if true mentions the user in the table
  */
 function getCurrentUsersAsTable(lobby, mention=false) {
-    var userTable;
-
-    var key = Object.keys(c.lobbyTypes).find(typeKey => c.lobbyTypes[typeKey] == lobby.type);
-    var playersPerLobby = c.lobbyTypePlayerCount[key];
-    
-    userTable = getUserTable(lobby.users, playersPerLobby, mention);
-
-    return userTable;
+    playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
+    return getUserTable(lobby.users, playersPerLobby, mention);
 }
 
 /**
@@ -192,8 +189,7 @@ function getCurrentUsersAsTable(lobby, mention=false) {
  *  @param position position of user to add
  *  @param mention if true mentions the user in the table
  */
-function addUserToTeam(tableBase, index, player, position, mention)
-{
+function addUserToTeam(tableBase, index, player, position, mention) {
     addUserWithPositionsToUserTable(tableBase, player, [position], index, mention)
 }
 
@@ -204,8 +200,7 @@ function addUserToTeam(tableBase, index, player, position, mention)
  *  @param mention if true mentions the users in the table
  */
 function getTeamTable(assignedUsers, lobbyType, mention=false) {
-    if(lobbyType == c.lobbyTypes.inhouse)
-    {
+    if(lobbyType == c.lobbyTypes.inhouse) {
         var tableBaseInhouse = [
             {
                 name: 'Side',
@@ -254,8 +249,7 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
         });
 
         return tableBaseInhouse;
-    } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash || lobbyType == c.lobbyTypes.tryout)
-    {        
+    } else if (lobbyType == c.lobbyTypes.unranked || lobbyType == c.lobbyTypes.botbash || lobbyType == c.lobbyTypes.tryout) {        
         var tableBase = [
             {
                 name: 'Name',
@@ -318,8 +312,7 @@ async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unp
  * @param {mysql.Connection} dbHandle bot database handle
  * @param {JSON} lobby lobby to remove
  */
-function removeLobby(dbHandle, lobby)
-{
+function removeLobby(dbHandle, lobby) {
     dB.removeLobby(dbHandle, lobby);
 }
 
@@ -367,8 +360,7 @@ function createLobbyStartPost(lobby, channel, playersPerLobby)
     }
 }
 
-async function updateLobbyPostAndDBEntry(lobby, channel, dbHandle)
-{
+async function updateLobbyPostAndDBEntry(lobby, channel, dbHandle) {
     module.exports.updateLobbyPost(lobby, channel)// update lobby post
     .then(() => dB.updateLobby(dbHandle, lobby))// update lobby in backend
     .catch((err) => console.log("Could not update lobby in post or data base. Reason: \n" + err))
@@ -380,8 +372,7 @@ async function updateLobbyPostAndDBEntry(lobby, channel, dbHandle)
  * @param {JSON} lobby lobby containing the player to notify
  * @param {Discord.Message} message message to send to players
  */
-function notifyPlayers(client, lobby, playerCount, message)
-{
+function notifyPlayers(client, lobby, playerCount, message) {
     for (let i = 0; i < Math.min(lobby.users.length, playerCount); i++) {
         client.fetchUser(lobby.users[i].id).then(user => {
             if(user !== undefined)
@@ -397,7 +388,7 @@ function getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole, coache
     maxCoachCount = getCoachCountByLobbyType(lobbyType);
     coachCount = coaches === undefined ? 0 : coaches.length;
     return "for " + rM.getRoleMentions(lobbyBeginnerRoles) + 
-            (coachCount === 0 ? "" : (coaches.length >= 2 && maxCoachCount === 2 ? ("\nCoaches: <@" + coaches[0] + ">, <@" + coaches[1]) + ">" : ("\nCoach: <@" + coaches[0]) + ">")) +
+            (coachCount === 0 ? "" : (coachCount >= 2 && maxCoachCount === 2 ? ("\nCoaches: <@" + coaches[0] + ">, <@" + coaches[1]) + ">" : ("\nCoach: <@" + coaches[0]) + ">")) +
             (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
 }
 
@@ -415,8 +406,7 @@ module.exports = {
      *  @param channelId message channel id
      *  @param messageId message ID
      */
-    findLobbyByMessage: async function(dbHandle, channelId, messageId)
-    {
+    findLobbyByMessage: async function(dbHandle, channelId, messageId) {
         var lobbies = await dB.getLobbies(dbHandle, channelId, messageId);
         if(lobbies.length !== 1)
             return undefined;
@@ -470,8 +460,7 @@ module.exports = {
      *  @param lobby lobby state
      *  @param channel message channel
      */
-    updateLobbyPost: async function(lobby, channel)
-    {
+    updateLobbyPost: async function(lobby, channel) {
         // fetch message
         const message = await channel.fetchMessage(lobby.messageId);
         old_embed = message.embeds[0];
@@ -498,8 +487,7 @@ module.exports = {
      *  @param dbHandle handle to data base
      *  @param channels the bot's message channels on the server
      */
-    updateLobbyTimes: async function(channels, dbHandle)
-    {
+    updateLobbyTimes: async function(channels, dbHandle) {
         lobbies = await dB.getLobbies(dbHandle, '', '');
         
         for(let i = 0; i < lobbies.length; i++)
@@ -556,8 +544,7 @@ module.exports = {
      *  @param lobby lobby
      *  @param channel message channel
      */
-    cancelLobbyPost: async function(lobby, channel)
-    {
+    cancelLobbyPost: async function(lobby, channel) {
         updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Lobby cancelled! 😢]");
     },
 
@@ -571,8 +558,7 @@ module.exports = {
      * @param {Discord.Channel} channel channel in which the lobby resides
      * @return true if lobby was started (and can therefore be removed)
      */
-    startLobby: function (client, lobby, user, channel)
-    {
+    startLobby: function(client, lobby, user, channel) {
         // prevent premature start of lobby
         var timeLeftInMS = lobby.date - new Date();
         if (timeLeftInMS > fiveMinInMs) { // 5min = 300.000 ms
@@ -581,9 +567,13 @@ module.exports = {
         }
 
         // check player count
-        var key = Object.keys(c.lobbyTypes).find( typeKey => c.lobbyTypes[typeKey] == lobby.type);
-        var playersPerLobby = c.lobbyTypePlayerCount[key];
-        
+        if (lobby.users.length === 0) {
+            updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Cancelled because nobody showed up! 😭]")
+            user.send("🔒 I started the lobby. Nobody signed up tho, so just play some Dotes instead 😎");
+            return;
+        }
+
+        var playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
         // create new post with match-ups
         createLobbyStartPost(lobby, channel, playersPerLobby);
 
@@ -593,6 +583,9 @@ module.exports = {
         // delete the lobby and "archive" the lobby post
         updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Lobby started already! 😎]")
         
+        // save coaches and players lobbies
+        tr.saveCoachParticipation(client.dbHandle, lobby.coaches, lobby.type);
+
         user.send("🔒 I started the lobby.")
         return true;
     },
@@ -604,8 +597,7 @@ module.exports = {
      * @param {l.Lobby} lobby lobby that we look at
      * @param {Discord.User} user user who removed the reaction
      */
-    updatePlayerInLobby: async function(dbHandle, reaction, lobby, user)
-    {
+    updatePlayerInLobby: async function(dbHandle, reaction, lobby, user) {
         // check reaction emojis
         var position = '-';
         if(lobby.type === c.lobbyTypes.tryout)
@@ -653,8 +645,7 @@ module.exports = {
      * @param {StringList} arguments 
      * @param {lobby} lobby 
      */
-    updateLobbyParameters: function(arguments, lobby)
-    {
+    updateLobbyParameters: function(arguments, lobby) {
         var updateTiers = false;
         var changedLobby = false;
 
@@ -702,8 +693,7 @@ module.exports = {
      * @param {string} userId 
      * @returns true if successful, false if not
      */
-    addCoach: async function(dbHandle, channel, lobby, userId)
-    {
+    addCoach: async function(dbHandle, channel, lobby, userId) {
         return new Promise(function(resolve, reject) {
             if(lobby.coaches === undefined)
             {
@@ -739,8 +729,7 @@ module.exports = {
      * @param {string} userId 
      * @returns true if successful, false if not
      */
-    removeCoach: async function (dbHandle, channel, lobby, userId)
-    {
+    removeCoach: async function (dbHandle, channel, lobby, userId) {
         return new Promise(function(resolve, reject) {
             if(lobby.coaches === undefined)
             {

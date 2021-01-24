@@ -65,7 +65,12 @@ module.exports = async (message) => {
             "!update <msgId> -tiers <tiers>", 
             "Updates the lobby that is associated with the given message-ID (get lobby's message-ID: activate developer mode in Discord options, then rightclick the lobby post and click 'copy ID')\nAvailable options: -tiers <tiers> Give tiers you want to allow in this lobby (e.g. '1,2')",
             "!update 791413627105312769 -tiers 1,2,3");
-            
+
+        addHelpToTable( _embed, "highscore", 
+            "!highscore -type <type>", 
+            "Shows you an all-time coach ranking displaying who coached how much",
+            "!highscore\n!highscore -type normal\n!highscore -type tryout");
+        
         message.author.send({embed: _embed});
         mH.reactPositive(message, "");
     }

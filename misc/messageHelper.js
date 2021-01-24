@@ -10,9 +10,11 @@ const tZ = require("../misc/timeZone")
  * @param {string} reply string containing reply message
  * @param {string} emoji emoji to react with
  */
-async function reactMessage(message, reply, emoji)
-{
-    message.react(emoji).then(() => message.delete(5000));
+async function reactMessage(message, reply, emoji) {
+    message.react(emoji).then(() => {
+        if (message.channel.type !== 'dm')
+             message.delete(5000)
+    });
     
     if(reply == "" ) 
         return;
@@ -29,8 +31,7 @@ async function reactMessage(message, reply, emoji)
  * @param {Discord.Message} message message to react to
  * @param {string} reply string reply
  */
-function reactNegative(message, reply = "")
-{
+function reactNegative(message, reply = "") {
     reactMessage(message, reply, '⛔');
 }
 
@@ -39,8 +40,7 @@ function reactNegative(message, reply = "")
  * @param {Discord.Message} message message to react to
  * @param {string} reply string reply
  */
-function reactNeutral(message, reply = "")
-{
+function reactNeutral(message, reply = "") {
     reactMessage(message, reply, '😐');
 }
 
@@ -49,8 +49,7 @@ function reactNeutral(message, reply = "")
  * @param {Discord.Message} message message to react to
  * @param {string} reply string reply
  */
-function reactPositive(message, reply = "")
-{
+function reactPositive(message, reply = "") {
     reactMessage(message, reply, '✅');
 }
 
@@ -73,8 +72,7 @@ function createLobbyPostReactions(lobbyType, message)
 		}  
     }
     
-    for(let idx = 0; idx < c.lobbyManagementReactionEmojis.length; idx++)
-    {
+    for(let idx = 0; idx < c.lobbyManagementReactionEmojis.length; idx++) {
         message.react(c.lobbyManagementReactionEmojis[idx]);
     }
 }
@@ -119,8 +117,7 @@ function getLobbyRegionRoleFromMessage(message, index)
  * @param {Discord.Message} message message containing the time
  * @param {int} index position of time in the message
  */
-function getTimeFromMessage(message, index)
-{
+function getTimeFromMessage(message, index) {
     var args = getArguments(message);
 
     if(args.length <= index + 1)
