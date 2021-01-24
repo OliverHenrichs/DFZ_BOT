@@ -10,6 +10,16 @@ const weekDays = {
     6:"Saturday"
 }
 
+const weekDayNumbers = {  
+    "Sunday":0,
+    "Monday":1, 
+    "Tuesday":2, 
+    "Wednesday":3, 
+    "Thursday":4, 
+    "Friday":5, 
+    "Saturday":6
+}
+
 const months = {
     1:"Jan",
     2:"Feb",
@@ -136,7 +146,8 @@ function getTimeString(zonedTime) {
 const dayInMs = 24*1000*60*60;
 
 module.exports = {
-    weekDays: weekDays,
+    weekDays:weekDays,
+    weekDayNumbers:weekDayNumbers,
     months:months,
 
     regions:regions,

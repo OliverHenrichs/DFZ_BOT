@@ -120,7 +120,10 @@ async function findSchedule(dbHandle, messageId, emojiName) {
  */
 async function createScheduledLobby(channels, dbHandle, schedule) {     
     var lobbyRegionRole = rM.getRegionalRoleFromString(schedule.region);
-    var type = schedule.type == scheduleTypes.tryout ? c.lobbyTypes.tryout : (schedule.coachCount == 2 ? c.lobbyTypes.inhouse : c.lobbyTypes.unranked);
+
+    var isTryout = schedule.type === scheduleTypes.tryout;
+    var isInhouse = (schedule.coachCount === 2  && schedule.coaches.length > 1);
+    var type = (isTryout ? c.lobbyTypes.tryout : (isInhouse ? c.lobbyTypes.inhouse : c.lobbyTypes.unranked));
 
     if(type === c.lobbyTypes.tryout) {
         channel = channels.get(process.env.BOT_LOBBY_CHANNEL_TRYOUT);
@@ -275,7 +278,7 @@ module.exports = {
         else
             res = await dB.updateDay(dbHandle, day);
         
-        if(day !== 4) // only act on sunday = 0
+        if(day !== tZ.weekDayNumbers.Sunday)
             return;
 
         // remove events from the past
