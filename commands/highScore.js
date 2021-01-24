@@ -79,7 +79,7 @@ module.exports = async (message, dbHandle) => {
         "Coached Lobby Highscores", 
         "Hall of Fame of DFZ coaches!", 
         "Start your lobbies with 🔒 to make them count!", 
-        tableBase)
+        dbResponse.length > 0 ? tableBase : [])
     
     mH.reactPositive(message);
     message.author.send({embed: _embed});
