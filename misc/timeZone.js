@@ -38,7 +38,7 @@ const months = {
 // get current time zone short names (daylight savings time vs normal time)
 const regions = ['EU', 'NA', 'SEA'];
 const regionStrings =  ["🇪🇺 EU", "🇺🇸 NA", "🌏 SEA"];
-const scheduleTimezoneNames = ["Europe/Berlin", "America/New_York", "Asia/Singapore"];
+const scheduleTimezoneNames = ["Europe/Berlin", "America/New_York", "Asia/Manila"];
 
 const scheduleTimezoneNames_short = getTimeZoneShortNames(scheduleTimezoneNames);
 
