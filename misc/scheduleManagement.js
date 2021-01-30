@@ -14,6 +14,9 @@ const scheduleReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5�
 
 const scheduleTypes = {lobby:"Lobbies", tryout:"Tryouts"};
 
+const lobbyPostTime = 60000*60*8; // at the moment 8 hours
+const lobbyOverlapTime = 60000*60*3; // at the moment 3 hours
+
 /**
  * Create header string for weekly schedule
  * @param {JSON} scheduleSetup 
@@ -148,6 +151,26 @@ async function createScheduledLobby(channels, dbHandle, schedule) {
     })
 }
 
+async function isScheduleOverlapping(dbHandle, schedule)
+{
+    var lobbies = await dB.getLobbies(dbHandle);
+    
+    for (let i = 0; i<lobbies.length; i++) {
+        var lobby = lobbies[i];
+        if(schedule.type === scheduleTypes.tryout) {
+            if(lobby.type == c.lobbyTypes.tryout) // all tryout games are in the same channel
+                return true;
+            continue;
+        }
+        
+        // all normal games of the same region are in the same channel
+        if(rM.getRegionalRoleFromString(schedule.region) === lobby.regionId)
+            return true;
+    }
+    
+    return false;
+}
+
 /**
  * Inserts all necessary lobbies, i.e. all lobbies due in the next x hours that havent been posted yet
  * @param {Array<Discord.Channel>} guild 
@@ -155,23 +178,30 @@ async function createScheduledLobby(channels, dbHandle, schedule) {
  */
 async function insertScheduledLobbies(channels, dbHandle) {
     var schedules = await dB.getSchedules(dbHandle);
-    const lobbyPostTime = 60000*60*8; // at the moment 8 hours
     var now = Date.now();
 
     g.asyncForEach(schedules, async s => {
         if(s.coaches.length === 0) // only post lobbies for which we have coaches
+            return;
+            
+        if(s.lobbyPosted) // dont double post 
             return;
 
         var diff = s.date-now; 
         if(diff < 0) // dont post lobbies that are in the past
             return;
 
-        if(diff < lobbyPostTime && !s.lobbyPosted) // dont double post AND only post a couple hours prior to lobby time
-        {
-            s.lobbyPosted = true; // dont double post
-            await createScheduledLobby(channels, dbHandle, s);
-            await dB.updateSchedule(dbHandle, s);
-        }
+        if(diff > lobbyPostTime) // dont post lobbies that are too far in the future
+            return;
+
+        // dont post lobbies that would overlap with another lobby, except for if the new lobby is urgent
+        var overlapping = await isScheduleOverlapping(dbHandle, s);
+        if(overlapping && diff > lobbyOverlapTime)
+            return;
+
+        s.lobbyPosted = true;
+        await createScheduledLobby(channels, dbHandle, s);
+        await dB.updateSchedule(dbHandle, s);
     });
 }
 
