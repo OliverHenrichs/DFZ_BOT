@@ -6,13 +6,12 @@ const lM = require("../misc/lobbyManagement")
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
  * @param {Discord.Message} message coaches message that triggered the lobby post
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  */
 module.exports = async (message, dbHandle) => {
 	var type = mH.getLobbyType(message);
 	if(type == undefined)
 		return;
-        
 	// tryout 'region' and role
 	var lobbyRegionRole = undefined;
 	var beginnerRoleNumbers = [0];

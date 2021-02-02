@@ -98,7 +98,7 @@ async function writeSchedule(channel, scheduleSetup) {
 
 /**
  * Finds unique schedule identified by message ID and emoji
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {string} messageId 
  * @param {string} emojiName 
  */
@@ -118,7 +118,7 @@ async function findSchedule(dbHandle, messageId, emojiName) {
 /**
  * Creates a lobby post for due schedule
  * @param {Array<Discord.Channel>} channels channels in which to post the lobby
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {s.Schedule} schedule 
  */
 async function createScheduledLobby(channels, dbHandle, schedule) {     
@@ -151,6 +151,11 @@ async function createScheduledLobby(channels, dbHandle, schedule) {
     })
 }
 
+/**
+ * Checks if in the scheduled lobby's channel is currently a posted lobby
+ * @param {mysql.Pool} dbHandle 
+ * @param {s.Schedule} schedule 
+ */
 async function isScheduleOverlapping(dbHandle, schedule)
 {
     var lobbies = await dB.getLobbies(dbHandle);
@@ -174,7 +179,7 @@ async function isScheduleOverlapping(dbHandle, schedule)
 /**
  * Inserts all necessary lobbies, i.e. all lobbies due in the next x hours that havent been posted yet
  * @param {Array<Discord.Channel>} guild 
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  */
 async function insertScheduledLobbies(channels, dbHandle) {
     var schedules = await dB.getSchedules(dbHandle);
@@ -194,7 +199,8 @@ async function insertScheduledLobbies(channels, dbHandle) {
         if(diff > lobbyPostTime) // dont post lobbies that are too far in the future
             return;
 
-        // dont post lobbies that would overlap with another lobby, except for if the new lobby is urgent
+        // dont post lobbies that would overlap with another lobby
+        // except for if the new lobby is urgent
         var overlapping = await isScheduleOverlapping(dbHandle, s);
         if(overlapping && diff > lobbyOverlapTime)
             return;
@@ -252,7 +258,7 @@ module.exports = {
     findSchedule:findSchedule,
     /**
      * Creates the data associated with the created lobby schedules
-     * @param {mysql.Connection} dbHandle bot database handle
+     * @param {mysql.Pool} dbHandle bot database handle
      * @param {string} messageId the message that is tied to the schedule
      * @param {string} channelId the channel that is tied to the schedule
      * @param {Schedule} scheduleSetup the setup that was used to create the schedule message
@@ -290,7 +296,7 @@ module.exports = {
 
     /**
      * update schedule: add additional schedules once on sunday and remove deprecated ones
-     * @param {mysql.Connection} dbHandle bot database handle
+     * @param {mysql.Pool} dbHandle bot database handle
      * @param {Discord.Collection<string, Discord.GuildChannel>} channels guild channels
      */
     updateSchedules: async function (dbHandle, channels) 

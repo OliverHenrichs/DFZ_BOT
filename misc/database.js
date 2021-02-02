@@ -128,10 +128,25 @@ function createCreateTableCommand(table_name, table_columns) {
     command += 'INDEX(' + table_name + '_id)) ENGINE=INNODB;';
     return command;
 }
+/**
+ * 
+ * @param {mysql.Pool} dbHandle dbHandle bot database handle
+ * @param {*} command 
+ */
+async function executeDBCommand(dbHandle, command) {
+    return new Promise(function(resolve, reject) {
+        dbHandle.execute(command)
+        .then(res=> resolve(res))   
+        .catch((err) => {
+            reject("Could not reconnect to MYSQL database. Reason: " + err);
+            console.log("Could not reconnect to MYSQL database. Reason: " + err);
+        });
+    });
+}
 
 /**
  * Creates new table in mysql-database
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {string} table_name name of table 
  * @param {Array<String>} table_columns names of table columns
  */
@@ -142,7 +157,7 @@ async function createTable(dbHandle, table_name, table_columns) {
 
 /**
  * Executes insert command in mysql-db 
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {string} table table id
  * @param {Array<String>} columnNames column IDs
  * @param {Array<String>} columnValues column values
@@ -150,11 +165,11 @@ async function createTable(dbHandle, table_name, table_columns) {
 async function insertRow(dbHandle, table, columnNames, columnValues) {
     var command =   'INSERT INTO ' + table + 
                     '( ' + columnNames.join(', ') + ') VALUES(\'' + columnValues.join('\', \'') + '\');';
-    return dbHandle.execute(command);
+    return executeDBCommand(dbHandle, command);
 }
 /**
  * inserts coach into database
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {Array<String>} values values for channel_id, message_id and data
  */
 async function insertCoachRow(dbHandle, values) {
@@ -163,7 +178,7 @@ async function insertCoachRow(dbHandle, values) {
 
 /**
  * inserts lobby into database
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {Array<String>} values values for channel_id, message_id and data
  */
 async function insertLobbyRow(dbHandle, values) {
@@ -172,7 +187,7 @@ async function insertLobbyRow(dbHandle, values) {
 
 /**
  * inserts schedule into database
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {Array<String>} values values for emoji, messageId and data
  */
 async function insertScheduleRow(dbHandle, values) {
@@ -181,7 +196,7 @@ async function insertScheduleRow(dbHandle, values) {
 
 /**
  * Insert lobby into DB
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {c.Coach} coach
  */
 async function insertCoach(dbHandle, coach) {
@@ -194,7 +209,7 @@ async function insertCoach(dbHandle, coach) {
 
 /**
  * Insert lobby into DB
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {l.Lobby} lobby
  */
 async function insertLobby(dbHandle, lobby) {
@@ -204,7 +219,7 @@ async function insertLobby(dbHandle, lobby) {
 
 /**
  * Insert schedule into DB
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {s.Schedule} schedule 
  */
 async function insertSchedule(dbHandle, schedule) {
@@ -214,7 +229,7 @@ async function insertSchedule(dbHandle, schedule) {
 
 /**
  * Setup function for day in options in database
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {int} day day
  */
 async function insertDay(dbHandle, day) {
@@ -223,7 +238,7 @@ async function insertDay(dbHandle, day) {
 
 /**
  * updates a table with new values according to given conditions
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {string} table table id
  * @param {Array<String>} columns column ids
  * @param {Array<String>} values new values
@@ -250,15 +265,19 @@ async function updateTableEntriesByConditions(dbHandle, table, columns, values, 
             command = command.substr(0, command.length-5);
         }
 
-        dbHandle.execute(command)
-        .then(() => resolve())
-        .catch(err => reject(err));
+        executeDBCommand(dbHandle, command)
+        .then(res=>{
+            resolve(res);
+        })
+        .catch(err => {
+            reject(err);
+        })
     });
 }
 
 /**
  * updates lobby in db with current state of lobby
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {JSON} lobby lobby object
  */
 async function updateLobby(dbHandle, lobby) {
@@ -272,7 +291,7 @@ async function updateLobby(dbHandle, lobby) {
 
 /**
  * updates schedule in db with current state of schedule
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {s.Schedule} schedule schedule object
  */
 async function updateSchedule(dbHandle, schedule) {
@@ -286,7 +305,7 @@ async function updateSchedule(dbHandle, schedule) {
 
 /**
  * updates current day in DB
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {int} day current day of the week (0=sun, 1=mon, ...)
  */
 async function updateDay(dbHandle, day) {
@@ -300,7 +319,7 @@ async function updateDay(dbHandle, day) {
 
 /**
  * updates schedule in db with current state of schedule
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {c.Coach} coach coach id
  */
 async function updateCoach(dbHandle, coach) {
@@ -315,7 +334,7 @@ async function updateCoach(dbHandle, coach) {
 
 /**
  * Compiles input to mysql command and resolves the database answer as the result
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {string} table 
  * @param {string} column 
  * @param {Array<String>} conditions 
@@ -335,9 +354,14 @@ async function selectTableValueByConditions(dbHandle, table, column, conditions)
 
             command = command.substr(0, command.length-5);
         }
-        dbHandle.execute(command).then(res=>{
+        
+        executeDBCommand(dbHandle, command)
+        .then(res=>{
             resolve(res[0].length === 0 ? undefined : res[0]);
-        });        
+        })
+        .catch(err => {
+            reject(err);
+        })
     });
 }
 
@@ -371,7 +395,7 @@ function getLobbyConditions(channelId, messageId) {
 
 /**
  * returns all lobbies given channel and message id
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {string} channelId 
  * @param {string} messageId 
  */
@@ -393,7 +417,7 @@ async function getLobbies(dbHandle, channelId = '', messageId = '') {
 
 /**
  * Returns all schedules fitting given message id and emoji
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {string} message_id 
  * @param {string} emoji 
  */
@@ -415,7 +439,7 @@ async function getSchedules(dbHandle, message_id = '', emoji = '') {
 
 /**
  * returns day from options-table in database
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  */
 async function getDay(dbHandle) {
     return new Promise(function(resolve, reject) {
@@ -432,21 +456,26 @@ async function getDay(dbHandle) {
 
 /**
  * Returns all coaches in DB with their lobby counts
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {string} columnName name of column to sort by 
  */
 async function getSortedCoaches(dbHandle, columnName = 'lobbyCount') {
     return new Promise(function(resolve, reject) {
         var command = getSortedTableCommand('coaches', columnName)
-        dbHandle.execute(command).then(res=>{
+        
+        executeDBCommand(dbHandle, command)
+        .then(res=>{
             resolve(res);
-        });
+        })
+        .catch(err => {
+            reject(err);
+        })
     });
 }
 
 /**
  * Returns all schedules fitting given message id and emoji
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {string} userId 
  */
 async function getCoach(dbHandle, userId = '') {
@@ -466,16 +495,15 @@ async function getCoach(dbHandle, userId = '') {
 
 /**
  * Deletes table rows in given table according to the laid out conditions
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {string} table table name 
  * @param {Array<String>} conditions array of strings containing the conditions (will be combined with 'AND')
  */
 async function deleteTableRows(dbHandle, table, conditions) {
     return new Promise(function(resolve, reject) {
-        var command = "DELETE FROM " + table;
 
-        if(conditions.length > 0)
-        {
+        var command = "DELETE FROM " + table;
+        if(conditions.length > 0) {
             command += " WHERE ";
             conditions.forEach(condition =>
             {
@@ -484,15 +512,21 @@ async function deleteTableRows(dbHandle, table, conditions) {
 
             command = command.substr(0, command.length-5);
         }
-        dbHandle.execute(command).then(res=>{
+
+        
+        executeDBCommand(dbHandle, command)
+        .then(res => {
             resolve(res);
-        });
+        })
+        .catch(err => {
+            reject(err);
+        })
     });
 }
 
 /**
  * Remove lobby from database
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {JSON} lobby 
  */
 async function removeLobby(dbHandle, lobby) {
@@ -501,7 +535,7 @@ async function removeLobby(dbHandle, lobby) {
 
 /**
  * Remove all schedules belonging to a message-ID
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {Array<String>} messageIDs 
  */
 async function removeSchedules(dbHandle, messageIDs) {
@@ -511,14 +545,18 @@ async function removeSchedules(dbHandle, messageIDs) {
 
 module.exports = {
     /**
-     * Connect to mysql-db
+     * @return {mysql.Pool}
      */
-    getDBHandle: function() {
-        return mysql.createConnection({
+    createPool: function() {
+        return mysql.createPool({
+            host: 'localhost',
             user: process.env.DB_USER,
             password: process.env.DB_PASS,
-            database: process.env.DB_NAME
-        });
+            database: process.env.DB_NAME,
+            waitForConnections: true,
+            connectionLimit: 10,
+            queueLimit: 0
+          });
     },
 
     createCoachTable:createCoachTable,

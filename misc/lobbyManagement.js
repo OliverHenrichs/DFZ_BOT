@@ -309,7 +309,7 @@ async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unp
 
 /**
  * Removes lobby in backend
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {JSON} lobby lobby to remove
  */
 function removeLobby(dbHandle, lobby) {
@@ -416,7 +416,7 @@ module.exports = {
     
     /**
      * Internal function that creates the embedding for the lobby post
-     * @param {mysql.Connection} dbHandle db handle
+     * @param {mysql.Pool} dbHandle db handle
      * @param {Discord.Channel} channel lobby channel
      * @param {Array<String>} coaches lobby's coaches
      * @param {number} lobbyType type of lobby
@@ -500,7 +500,6 @@ module.exports = {
             // fetch message
             const message = await channel.fetchMessage(lobby.messageId);
             old_embed = message.embeds[0];
-
             var description = old_embed.description.split('\n');
             if(description[description.length - 1].startsWith(remainingLobbyTimeStartString)) 
                 description.pop();
@@ -592,7 +591,7 @@ module.exports = {
 
     /**
      * manages removal of reaction in lobby post (position removal or player removal if last position)
-     * @param {mysql.Connection} dbHandle 
+     * @param {mysql.Pool} dbHandle 
      * @param {Discord.MessageReaction} reaction reaction that was removed
      * @param {l.Lobby} lobby lobby that we look at
      * @param {Discord.User} user user who removed the reaction
@@ -687,7 +686,7 @@ module.exports = {
 
     /**
      * Adds coach to existing lobby
-     * @param {mysql.Connection} dbHandle 
+     * @param {mysql.Pool} dbHandle 
      * @param {Discord.Channel} channel 
      * @param {l.Lobby} lobby 
      * @param {string} userId 
@@ -723,7 +722,7 @@ module.exports = {
 
     /**
      * Removes coach from existing lobby
-     * @param {mysql.Connection} dbHandle 
+     * @param {mysql.Pool} dbHandle 
      * @param {Discord.Channel} channel 
      * @param {l.Lobby} lobby 
      * @param {string} userId 

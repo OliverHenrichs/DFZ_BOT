@@ -16,26 +16,24 @@ fs.readdir("./events/", (err, files) => {
 	})
 })
 
+// get db-access
+client.dbHandle = dB.createPool()
+
 // setup-chain
-dB.getDBHandle()// get db-access
-.then((connection) => new Promise(function(resolve, reject) { // setup intervalsfunction(connection) { // add / find tables in db
-	client.dbHandle = connection;
-	console.log("Successfully connected to MySql-db!")
-	dB.createScheduleTable(connection)
-	.then(()=> resolve());
-}))
+dB.createScheduleTable(client.dbHandle)
 .then(() => {
-	return dB.createLobbyTable(client.dbHandle)
+	return dB.createLobbyTable(client.dbHandle);
 })
 .then(() =>  {
-	return dB.createOptionsTable(client.dbHandle)
+	return dB.createOptionsTable(client.dbHandle);
 })
 .then(() =>  {
-	return dB.createCoachTable(client.dbHandle)
+	return dB.createCoachTable(client.dbHandle);
 })
 .then(() => { // login to discord client
-	return client.login(process.env.BOT_TOKEN); 
+	return client.login(process.env.BOT_TOKEN);
 }).then(() => new Promise(async function(resolve, reject) { // setup intervals
+	
 	console.log("Successfully logged into Discord client!")
 	// update lobby posts
 	const timeUpdater = async () => {

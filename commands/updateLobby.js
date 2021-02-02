@@ -5,7 +5,7 @@ const lM = require("../misc/lobbyManagement");
 /**
  * Checks if lobby exists and updates lobby post depending on message
  * @param {Discord.Message} message coaches message that triggered the lobby update
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  */
 module.exports = async (message, dbHandle) => {
 	var args = mH.getArguments(message);
@@ -18,7 +18,7 @@ module.exports = async (message, dbHandle) => {
 
 	var lobby = await lM.findLobbyByMessage(dbHandle, message.channel.id, args[0]);
 	if(lobby === undefined)
-		mH.reactNegative(message, answer);
+		mH.reactNegative(message, "Did not find lobby given the Id.");
 		
 	// remove message ID from args
 	args.shift();

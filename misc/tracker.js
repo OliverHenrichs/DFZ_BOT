@@ -4,7 +4,7 @@ const db = require("../misc/database")
 
 /**
  * 
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  * @param {Array<String>} coaches coach ids
  * @param {int} lobbyType lobby type 
  */
@@ -31,7 +31,7 @@ async function saveCoachParticipation(dbHandle, coaches, lobbyType) {
 
 /**
  * Calls db to get coach list sorted by columnName
- * @param {mysql.Connection} dbHandle 
+ * @param {mysql.Pool} dbHandle 
  * @param {String} columnName 
  */
 async function getCoachList(dbHandle, columnName) {

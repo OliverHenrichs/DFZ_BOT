@@ -18,7 +18,7 @@ function addDBRowToTable(tableBase, dbRow) {
 /**
  * Returns list of coaches and their lobby count as a private message to the messaging user
  * @param {Discord.Message} message triggering message
- * @param {mysql.Connection} dbHandle bot database handle
+ * @param {mysql.Pool} dbHandle bot database handle
  */
 module.exports = async (message, dbHandle) => {
     var arguments = mH.getArguments(message);
