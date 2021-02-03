@@ -487,11 +487,12 @@ module.exports = {
      *  @param dbHandle handle to data base
      *  @param channels the bot's message channels on the server
      */
-    updateLobbyTimes: async function(channels, dbHandle) {
-        lobbies = await dB.getLobbies(dbHandle, '', '');
+    updateLobbyTimes: async function(guild, dbHandle) {
+        lobbies = await dB.getLobbies(dbHandle);
         
-        for(let i = 0; i < lobbies.length; i++)
-        {
+        var channels = guild.channels;
+        
+        for(let i = 0; i < lobbies.length; i++) {
             let lobby = lobbies[i];
             var channel = channels.find(chan => { return chan.id == lobby.channelId});
             if(!channel)
@@ -500,14 +501,26 @@ module.exports = {
             // fetch message
             const message = await channel.fetchMessage(lobby.messageId);
             old_embed = message.embeds[0];
+            if(message === undefined || old_embed === undefined ) {
+                dB.removeLobby(dbHandle, lobby);
+                continue;
+            }
+            
             var description = old_embed.description.split('\n');
             if(description[description.length - 1].startsWith(remainingLobbyTimeStartString)) 
                 description.pop();
 
             // get new time
             var remainingMs = lobby.date - Date.now();
-            if(remainingMs > 0 )
-            {
+            if(remainingMs > 0 ) {
+                // if(lobby.notified === undefined && remainingMs < (1000*60*5)) {
+                //     lobby.notified = true;
+                //     dB.updateLobby(dbHandle, lobby);
+                //     lobby.users.forEach(user => {
+                        
+                //     })
+                // }
+
                 var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
                 var hours = Math.floor((remainingMs / (1000 * 60 * 60)));
                 description.push(remainingLobbyTimeStartString + (hours > 0  ? hours + "h " : "") + minutes + "min");
@@ -516,8 +529,7 @@ module.exports = {
                 var hours = Math.floor((-remainingMs / (1000 * 60 * 60)));
 
                 // more than 3 hours ago => delete lobby
-                if(hours >= 3)
-                {
+                if(hours >= 3) {
                     await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]");
                     removeLobby(dbHandle, lobby);
                     continue;
@@ -599,8 +611,7 @@ module.exports = {
     updatePlayerInLobby: async function(dbHandle, reaction, lobby, user) {
         // check reaction emojis
         var position = '-';
-        if(lobby.type === c.lobbyTypes.tryout)
-        {
+        if(lobby.type === c.lobbyTypes.tryout) {
             if(reaction.emoji.name !== c.tryoutReactionEmoji)
                 return;
         } else {
@@ -617,8 +628,7 @@ module.exports = {
         
         // if positions are relevant, remove positions
         var removeUser = true;
-        if(lobby.type !== c.lobbyTypes.tryout)
-        {
+        if(lobby.type !== c.lobbyTypes.tryout) {
             // remove user position
             lobbyUser.positions = lobbyUser.positions.filter(_position=> {
                 return _position != position;
@@ -630,8 +640,7 @@ module.exports = {
         }
 
         // remove user if necessary
-        if(removeUser === true)
-        {
+        if(removeUser === true) {
             var idx = lobby.users.findIndex(_user => _user.id == user.id);
             lobby.users.splice(idx,1);
         }
@@ -648,19 +657,16 @@ module.exports = {
         var updateTiers = false;
         var changedLobby = false;
 
-        while(arguments.length > 0 )
-        {
+        while(arguments.length > 0 ) {
             let arg = arguments[0];
             arguments.shift();
 
-            if(arg === "-tiers")
-            {
+            if(arg === "-tiers") {
                 updateTiers = true;
                 continue;
             } 
             
-            if(updateTiers)
-            {
+            if(updateTiers) {
                 const minTier = 1;// Beginner tiers 1-4
                 const maxTier = 4;
                 [res, numbers, errormsg] = g.getNumbersFromString(arg, minTier, maxTier);
@@ -669,8 +675,7 @@ module.exports = {
                 }
                 
                 var roles = rM.getBeginnerRolesFromNumbers(numbers);
-                if(roles.length !== 0)
-                {
+                if(roles.length !== 0) {
                     lobby.beginnerRoleIds = roles;
                     changedLobby = true;
                 }
@@ -678,7 +683,6 @@ module.exports = {
                 updateTiers = false;
                 continue;
             }
-
         }
 
         return [changedLobby, ""];
@@ -694,21 +698,18 @@ module.exports = {
      */
     addCoach: async function(dbHandle, channel, lobby, userId) {
         return new Promise(function(resolve, reject) {
-            if(lobby.coaches === undefined)
-            {
+            if(lobby.coaches === undefined) {
                 reject("Lobby does not support coaches yet.");
                 return;
             }
 
             coachCount = getCoachCountByLobbyType(lobby.type);
-            if(lobby.coaches.length >= coachCount)
-            {
+            if(lobby.coaches.length >= coachCount) {
                 reject("Enough coaches have already signed up.");
                 return;
             }
     
-            if(lobby.coaches.find(coach => coach === userId) !== undefined)
-            {
+            if(lobby.coaches.find(coach => coach === userId) !== undefined) {
                 reject("You are already signed up as a coach.");
                 return;
             }
@@ -730,15 +731,13 @@ module.exports = {
      */
     removeCoach: async function (dbHandle, channel, lobby, userId) {
         return new Promise(function(resolve, reject) {
-            if(lobby.coaches === undefined)
-            {
+            if(lobby.coaches === undefined) {
                 reject("Lobby does not support coaches yet.");
                 return;
             }
 
             coachIndex = lobby.coaches.findIndex(coach => coach === userId);
-            if(coachIndex === -1)
-            {
+            if(coachIndex === -1) {
                 reject("You are not signed up as a coach.");
                 return;
             }

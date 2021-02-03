@@ -185,7 +185,9 @@ async function insertScheduledLobbies(channels, dbHandle) {
     var schedules = await dB.getSchedules(dbHandle);
     var now = Date.now();
 
-    g.asyncForEach(schedules, async s => {
+    for(let i = 0; i < schedules.length; i++) {
+        var s = schedules[i];
+
         if(s.coaches.length === 0) // only post lobbies for which we have coaches
             return;
             
@@ -208,7 +210,7 @@ async function insertScheduledLobbies(channels, dbHandle) {
         s.lobbyPosted = true;
         await createScheduledLobby(channels, dbHandle, s);
         await dB.updateSchedule(dbHandle, s);
-    });
+    }
 }
 
 
