@@ -203,9 +203,9 @@ async function insertScheduledLobbies(channels, dbHandle) {
 
         // dont post lobbies that would overlap with another lobby
         // except for if the new lobby is urgent
-        var overlapping = await isScheduleOverlapping(dbHandle, s);
-        if(overlapping && diff > lobbyOverlapTime)
-            return;
+        // var overlapping = await isScheduleOverlapping(dbHandle, s);
+        // if(overlapping && diff > lobbyOverlapTime)
+        //     return;
 
         s.lobbyPosted = true;
         await createScheduledLobby(channels, dbHandle, s);
@@ -305,7 +305,6 @@ module.exports = {
     {
         var now = new Date();
         var day = now.getDay();
-
         var saved_day = await dB.getDay(dbHandle);
 
         if(saved_day === day)

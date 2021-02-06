@@ -38,7 +38,7 @@ const months = {
 // get current time zone short names (daylight savings time vs normal time)
 const regions = ['EU', 'NA', 'SEA'];
 const regionStrings =  ["🇪🇺 EU", "🇺🇸 NA", "🌏 SEA"];
-const scheduleTimezoneNames = ["Europe/Berlin", "America/New_York", "Asia/Manila"];
+const scheduleTimezoneNames = ["Europe/Berlin", "America/New_York", "Asia/Singapore"];
 
 const scheduleTimezoneNames_short = getTimeZoneShortNames(scheduleTimezoneNames);
 
@@ -56,8 +56,8 @@ function getTimeZoneShortNames(timezoneNames) {
         if(abbr === "+08")
             abbr = "SGT";
         else if(abbr[0] == '+' || abbr[1] == '-')
-            abbr = "GMT"+abbr;
-        timezoneShortNames.push(abbr);
+            abbr = "UTC"+abbr;
+        timezoneShortNames.push(abbr); 
     });
     return timezoneShortNames;
 }

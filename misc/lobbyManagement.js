@@ -312,7 +312,7 @@ async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unp
  * @param {mysql.Pool} dbHandle bot database handle
  * @param {JSON} lobby lobby to remove
  */
-function removeLobby(dbHandle, lobby) {
+async function removeLobby(dbHandle, lobby) {
     dB.removeLobby(dbHandle, lobby);
 }
 
@@ -337,8 +337,7 @@ function createLobbyStartPost(lobby, channel, playersPerLobby)
         }
     }
 
-    if (userSets.length === 0 && userSet.length !== 0) // Not enough players but forced
-    {
+    if (userSets.length === 0 && userSet.length !== 0) { // Not enough players but forced
         const _embed = aE.generateEmbedding((lobby.type === c.lobbyTypes.tryout ? "Tryout lobby starts now" : "Not enough players for a lobby but we gotta get going anyway"), "", "", getUserTable(userSet, playersPerLobby, true));
         channel.send({embed: _embed});
         return;
@@ -391,6 +390,17 @@ function getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole, coache
             (coachCount === 0 ? "" : (coachCount >= 2 && maxCoachCount === 2 ? ("\nCoaches: <@" + coaches[0] + ">, <@" + coaches[1]) + ">" : ("\nCoach: <@" + coaches[0]) + ">")) +
             (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
 }
+
+async function getMessageFromChannel(channel, messageId) {
+    return new Promise(function(resolve, reject) {
+        channel.fetchMessage(messageId)
+        .then(message => {
+            resolve(message);
+        }).catch(err=>
+            resolve(undefined)
+        );
+    });
+} 
 
 const remainingLobbyTimeStartString = "Time to lobby: ";
 const alreadyStartedLobbyTimeStartString = "Lobby started ";
@@ -488,21 +498,26 @@ module.exports = {
      *  @param channels the bot's message channels on the server
      */
     updateLobbyTimes: async function(guild, dbHandle) {
+    return new Promise(async function(resolve) {
         lobbies = await dB.getLobbies(dbHandle);
-        
+    
         var channels = guild.channels;
         
-        for(let i = 0; i < lobbies.length; i++) {
-            let lobby = lobbies[i];
+        for(const lobby of lobbies) {
             var channel = channels.find(chan => { return chan.id == lobby.channelId});
             if(!channel)
                 continue;
 
             // fetch message
-            const message = await channel.fetchMessage(lobby.messageId);
+            const message = await getMessageFromChannel(channel, lobby.messageId);
+            if(message === undefined) {
+                await dB.removeLobby(dbHandle, lobby);
+                continue;
+            }
+
             old_embed = message.embeds[0];
-            if(message === undefined || old_embed === undefined ) {
-                dB.removeLobby(dbHandle, lobby);
+            if(old_embed === undefined ) {
+                await dB.removeLobby(dbHandle, lobby);
                 continue;
             }
             
@@ -531,7 +546,7 @@ module.exports = {
                 // more than 3 hours ago => delete lobby
                 if(hours >= 3) {
                     await updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Removed deprecated lobby 😾]");
-                    removeLobby(dbHandle, lobby);
+                    await removeLobby(dbHandle, lobby);
                     continue;
                 } else {
                     startString = alreadyStartedLobbyTimeStartString;
@@ -548,6 +563,9 @@ module.exports = {
             // update embed
             await message.edit(new_embed);
         }
+
+        resolve();
+    })
     },
     
     /**
@@ -611,7 +629,7 @@ module.exports = {
     updatePlayerInLobby: async function(dbHandle, reaction, lobby, user) {
         // check reaction emojis
         var position = '-';
-        if(lobby.type === c.lobbyTypes.tryout) {
+        if (lobby.type === c.lobbyTypes.tryout) {
             if(reaction.emoji.name !== c.tryoutReactionEmoji)
                 return;
         } else {
