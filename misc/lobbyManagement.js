@@ -12,7 +12,6 @@ const tZ = require("../misc/timeZone")
 const _tZ = require('timezone-support')
 const fiveMinInMs = 300000;
 
-
 /**
  * Returns required number of coaches for a given lobby type
  * @param {number} lobbyType given lobby type
@@ -161,7 +160,6 @@ function getUserTable(users, playersPerLobby=-1, mention=false) {
         return finalTable;
     }
         
-    
     return tableBase;
 }
 
@@ -244,8 +242,10 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
 
         Object.keys(assignedUsers).forEach((position) => {
             var players = assignedUsers[position];
-            addUserToTeam(tableBaseInhouse, 1, players[0], position, mention);
-            addUserToTeam(tableBaseInhouse, 5, players[1], position, mention);
+            const teamAIndex = 1;
+            const teamBIndex = 5;
+            addUserToTeam(tableBaseInhouse, teamAIndex, players[0], position, mention);
+            addUserToTeam(tableBaseInhouse, teamBIndex, players[1], position, mention);
         });
 
         return tableBaseInhouse;
@@ -268,9 +268,10 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
             }
         ];
     
+        const teamIndex = 0;
         Object.keys(assignedUsers).forEach((position) => {
             var player = assignedUsers[position];
-            addUserToTeam(tableBase, 0, player, position, mention);
+            addUserToTeam(tableBase, teamIndex, player, position, mention);
         });
 
         return tableBase;
