@@ -1,3 +1,4 @@
+const cM = require("../misc/channelManagement")
 const lM = require("../misc/lobbyManagement")
 const rM = require("../misc/roleManagement")
 
@@ -32,4 +33,26 @@ async function getInfoFromLobbyReaction(client, reaction, user) {
     return [true, lobby, guildMember, role];
 }
 
+function isValidLobbyReaction(reaction, user) {
+    
+    // only care for messages from self
+	if (reaction.message.author.id !== process.env.BOT_ID) 
+        return false;
+
+    // ignore reactions from self
+    if(user.id === process.env.BOT_ID)
+        return false;
+
+    // ignore bot's DMs
+    if(reaction.message.channel === undefined)
+        return false;
+
+    // Ignore messages outside of bot channels
+	if (!cM.isWatchingChannel(reaction.message.channel.id))
+        return;
+
+    return true;
+}
+
+module.exports.isValidLobbyReaction = isValidLobbyReaction;
 module.exports.getInfoFromLobbyReaction = getInfoFromLobbyReaction;

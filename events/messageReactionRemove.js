@@ -34,16 +34,7 @@ async function handleLobbyRelatedEmoji(client, reaction, user) {
  * @param {Discord.User} user user who reacted
  */
 module.exports = async (client, reaction, user) => {
-    // only care for messages from self
-	if (reaction.message.author.id !== process.env.BOT_ID)
-		return;
-    
-    // ignore reactions from self
-    if(user.id == process.env.BOT_ID)
-        return;
-
-    // ignore bot's DMs
-    if(reaction.message.channel === undefined)
+    if(!mrH.isValidLobbyReaction(reaction, user))
         return;
     
     if(reaction.message.channel.id === cM.scheduleChannelTryout || reaction.message.channel.id === cM.scheduleChannel5v5) {
