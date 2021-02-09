@@ -50,7 +50,7 @@ module.exports = async (client, message) => {
 		if (content.startsWith("!update")) {
 			return uL(message, client.dbHandle);
 		}
-		if (content.startsWith("!highscores")) {
+		if (content.startsWith("!highscore")) {
 			return hS(message, client.dbHandle);
 		}
 	} else if (	content.startsWith("!post")) {
