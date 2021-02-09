@@ -189,17 +189,17 @@ async function insertScheduledLobbies(channels, dbHandle) {
         var s = schedules[i];
 
         if(s.coaches.length === 0) // only post lobbies for which we have coaches
-            return;
+            continue;
             
         if(s.lobbyPosted) // dont double post 
-            return;
+            continue;
 
         var diff = s.date-now; 
         if(diff < 0) // dont post lobbies that are in the past
-            return;
+            continue;
 
         if(diff > lobbyPostTime) // dont post lobbies that are too far in the future
-            return;
+            continue;
 
         // dont post lobbies that would overlap with another lobby
         // except for if the new lobby is urgent

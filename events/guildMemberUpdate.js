@@ -41,13 +41,11 @@ module.exports = async (client, oldMember, newMember) => {
     {
         newMember.setNickname(prefix+newMember.displayName, "Added regional role " + prefix).catch(err => { 
             console.log("Could not change nickname of " + newMember.displayName);
-            console.log(err);
         });
     } else if (hasNickname(newMember)) // if user has nick => remove it now
     {
         newMember.setNickname(null, "Removed regional role " + prefix).catch(err => { 
             console.log("Could not remove nickname of " + newMember.displayName);
-            console.log(err);
         })
     } 
 }
