@@ -1,9 +1,13 @@
 require("dotenv").config()
 const Discord = require("discord.js")
+const Website = require("./website/website");
 const fs = 		require("fs")
+var ws = {}
 const client = new Discord.Client({autoReconnect:true});
 
 const dB = require("./misc/database")
+// get db-access
+client.dbHandle = dB.createPool()
 
 // setup discord event handlers
 fs.readdir("./events/", (err, files) => { 
@@ -14,8 +18,6 @@ fs.readdir("./events/", (err, files) => {
 	})
 })
 
-// get db-access
-client.dbHandle = dB.createPool()
 
 // setup-chain
 dB.createScheduleTable(client.dbHandle)
@@ -30,6 +32,9 @@ dB.createScheduleTable(client.dbHandle)
 })
 .then(() => { // login to discord client
 	return client.login(process.env.BOT_TOKEN);
+})
+.then(() => { // login to discord client
+	ws = new Website(process.env.WEBSITE_PASSWD, 80, client);
 }).catch(err => 
 	console.log(err)
 );

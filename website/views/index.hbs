@@ -1,0 +1,75 @@
+
+<div class="topContainer">
+    <img src="/dfz_logo.png" class="big-dfz-logo">
+    <div class="fadeInAnimationScroll">
+        <h1>THE PLACE TO LEARN DOTA</h1>
+        
+        <div class="button-container">
+            <a href="#recruiting-section"><button class="hollow-button">RECRUIT A FRIEND</button></a>
+            <a href="https://discord.gg/JxJW6sCQ"><button class="button">SIGN UP</button></a>
+            <a href="#hall-of-fame-section"><button class="hollow-button">HALL OF FAME</button></a>
+        </div>
+    </div>
+    <div class="section">
+        <h1 class="someMarginBottom">WHAT WE DO</h1>
+        <h3>TO HELP NEW PLAYERS</h3>
+        <div class="dfz-row">
+            <div class="dfz-col col1-laola">
+                <div class="textBox">
+                    <img class="img-box"
+                        src="https://uploads-ssl.webflow.com/6023abc5ebce82c760afd179/6023ddf05fa15b917fd4f187_coaching.png" />
+                    <h3 class="heading">FREE COACHING</h3>
+                    <p class="paragraph">We offer free group coaching at scheduled times several times per week.</p>
+                </div>
+            </div>
+            <div class="dfz-col col2-laola">
+                <div class="textBox">
+                    <img class="img-box"
+                        src="https://uploads-ssl.webflow.com/6023abc5ebce82c760afd179/6023df46c894d91724902266_Discord-Logo-Color.png" />
+                    <h3 class="heading">COMMUNITY</h3>
+                    <p class="paragraph">Friendly, open community for relaxed and toxicity-free learning of Dota 2.</p>
+                </div>
+            </div>
+            <div class="dfz-col col3-laola">
+                <div class="textBox">
+                    <img class="img-box"
+                        src="https://uploads-ssl.webflow.com/6023abc5ebce82c760afd179/6023e4105fa15ba798d507c5_iconfinder_28-twitch_4202062.png" />
+                    <h3>COACH TV</h3>
+                    <p class="paragraph">We offer free group coaching at scheduled times several times per week.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section accent">
+        <h1 class="someMarginBottom">TYPES OF LOBBIES</h1>
+        <h3>TO HELP NEW PLAYERS</h3>
+    </div>
+    
+    
+    <div id="recruiting-section" class="section">
+        <h1 class="someMarginBottom">RECRUIT A FRIEND</h1>
+        <iframe class="dfz-yt-frame" src="https://www.youtube.com/embed/jPTXe2VxP0g?rel=0&controls=1&autoplay=0&mute=0&start=0"></iframe>
+    </div>
+
+    <div id="hall-of-fame-section" class="section">
+        <h1 class="someMarginBottom">COACH HALL OF FAME</h1>
+        
+        <table>
+            <tr>
+                <td>Coach</td>
+                <td>Total Matches</td>
+                <td>Lobbies</td>
+                <td>Tryouts</td>
+            </tr>
+            {{#each coaches}}
+            <tr>
+                <td>{{this.nick}}</td> 
+                <td>{{this.lobbyCount}}</td> 
+                <td>{{this.lobbyCountNormal}}</td> 
+                <td>{{this.lobbyCountTryout}}</td> 
+            </tr>
+            {{/each}}
+        </table>
+    </div>
+</div>
