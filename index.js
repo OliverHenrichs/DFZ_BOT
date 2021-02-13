@@ -34,7 +34,7 @@ dB.createScheduleTable(client.dbHandle)
 	return client.login(process.env.BOT_TOKEN);
 })
 .then(() => { // login to discord client
-	ws = new Website(process.env.WEBSITE_PASSWD, 80, client);
+	//ws = new Website(process.env.WEBSITE_PASSWD, 80, client);
 }).catch(err => 
 	console.log(err)
 );
