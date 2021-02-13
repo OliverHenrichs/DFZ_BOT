@@ -37,10 +37,9 @@ module.exports = async (client, reaction, user) => {
     if(!mrH.isValidLobbyReaction(reaction, user))
         return;
     
-    if(reaction.message.channel.id === cM.scheduleChannelTryout || reaction.message.channel.id === cM.scheduleChannel5v5) {
+    if(cM.scheduleChannels.includes(reaction.message.channel.id)) {
         sM.removeCoachFromSchedule(client, reaction, user);
-    } else // something with a lobby post
-    {
+    } else {
         await handleLobbyRelatedEmoji(client, reaction, user)
     }
              

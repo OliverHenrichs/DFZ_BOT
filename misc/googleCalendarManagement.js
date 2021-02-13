@@ -109,7 +109,17 @@ function getCalendarIDByRegion(region) {
 }
 
 function createEventSummary(schedule) {
-  var lobbyType = (schedule.type === "Tryouts" ? "tryout lobby" : (schedule.coaches.length == 1 ? "unranked lobby": "5v5 lobby"));
+  var lobbyType = "";
+  
+  if (schedule.type === "Tryouts")
+    lobbyType = "tryout lobby";
+  else if (schedule.type === "Botbash")
+    lobbyType = "botbash lobby";
+  else if (schedule.coaches.length == 1)
+    lobbyType = "unranked lobby";
+  else 
+    lobbyType = "5v5 lobby";
+  
   return schedule.region + " " + lobbyType;
 }
 

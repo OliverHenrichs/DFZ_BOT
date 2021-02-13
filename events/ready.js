@@ -26,7 +26,7 @@ function getUniqueSchedulePosts(schedules) {
 module.exports = async (client) => {
     console.log("Ready at " +  new Date().toLocaleString());
     try {
-        for (const channel of cM.botChannels) {
+        for (const channel of cM.lobbyChannels) {
             var lobbies = await dB.getLobbies(client.dbHandle, channel);
             
             if(lobbies === undefined)

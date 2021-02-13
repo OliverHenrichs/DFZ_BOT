@@ -8,6 +8,7 @@ const client = new Discord.Client({autoReconnect:true});
 const dB = require("./misc/database")
 // get db-access
 client.dbHandle = dB.createPool();
+//client.dbHandle.dfz_debugMode = true;
 
 // setup discord event handlers
 fs.readdir("./events/", (err, files) => { 

@@ -12,7 +12,7 @@ const tZ = require("./timeZone")
 const rM = require("./roleManagement")
 const scheduleReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
 
-const scheduleTypes = {lobby:"Lobbies", tryout:"Tryouts"};
+const scheduleTypes = {lobby:"Lobbies", tryout:"Tryouts", botbash:"Botbash"};
 
 const lobbyPostTime = 60000*60*8; // at the moment 8 hours
 const lobbyOverlapTime = 60000*60*3; // at the moment 3 hours
@@ -115,6 +115,22 @@ async function findSchedule(dbHandle, messageId, emojiName) {
     return schedules[0];
 }
 
+function getLobbyType(schedule) {
+    if(schedule.type === scheduleTypes.tryout) {
+        return c.lobbyTypes.tryout;
+    }
+
+    if(schedule.type === scheduleTypes.botbash) {
+        return c.lobbyTypes.botbash;
+    }
+
+    if (schedule.coachCount === 2  && schedule.coaches.length > 1) {
+        return c.lobbyTypes.inhouse;
+    }
+    
+    return c.lobbyTypes.unranked;
+}
+
 /**
  * Creates a lobby post for due schedule
  * @param {Array<Discord.Channel>} channels channels in which to post the lobby
@@ -124,16 +140,16 @@ async function findSchedule(dbHandle, messageId, emojiName) {
 async function createScheduledLobby(channels, dbHandle, schedule) {     
     var lobbyRegionRole = rM.getRegionalRoleFromString(schedule.region);
 
-    var isTryout = schedule.type === scheduleTypes.tryout;
-    var isInhouse = (schedule.coachCount === 2  && schedule.coaches.length > 1);
-    var type = (isTryout ? c.lobbyTypes.tryout : (isInhouse ? c.lobbyTypes.inhouse : c.lobbyTypes.unranked));
+    var type = getLobbyType(schedule);
 
     if(type === c.lobbyTypes.tryout) {
         channel = channels.get(process.env.BOT_LOBBY_CHANNEL_TRYOUT);
         lobbyBeginnerRoles = rM.beginnerRoles.slice(0,1);
     }
-    else 
-    {
+    else if (type === c.lobbyTypes.botbash) {
+        channel = channels.get(process.env.BOT_LOBBY_CHANNEL_BOTBASH);
+        lobbyBeginnerRoles = rM.beginnerRoles.slice(1,2);
+    } else {
         channel = channels.get(rM.getRegionalRoleLobbyChannel(lobbyRegionRole));
         lobbyBeginnerRoles = rM.beginnerRoles.slice(1,3);
     }
@@ -258,6 +274,7 @@ async function handleScheduleCoachWithdrawal(client, reaction, user, schedule) {
 
 module.exports = {
     findSchedule:findSchedule,
+    
     /**
      * Creates the data associated with the created lobby schedules
      * @param {mysql.Pool} dbHandle bot database handle
@@ -307,16 +324,20 @@ module.exports = {
         var day = now.getDay();
         var saved_day = await dB.getDay(dbHandle);
 
-        if(saved_day === day)
-            return;
+        if(dbHandle.dfz_debugMode === true) {
+            dbHandle.dfz_debugMode = false;
+        } else {
+            if(saved_day === day)
+                return;
         
-        if(isNaN(saved_day))
-            res = await dB.insertDay(dbHandle, day);
-        else
-            res = await dB.updateDay(dbHandle, day);
-        
-        if(day !== tZ.weekDayNumbers.Sunday)
-            return;
+            if(isNaN(saved_day))
+                res = await dB.insertDay(dbHandle, day);
+            else
+                res = await dB.updateDay(dbHandle, day);
+            
+            if(day !== tZ.weekDayNumbers.Sunday)
+                return;
+        }
 
         // remove events from the past
         var schedules = await dB.getSchedules(dbHandle);
@@ -333,7 +354,7 @@ module.exports = {
         }
         dB.removeSchedules(dbHandle, messageIDsToRemove);
 
-        // get dates to add (in 4 weeks)
+        // get dates to add (next week)
         [monday, sunday] = tZ.getNextMondayAndSundayDate(/*new Date(now.setDate(now.getDate()+21))*/);
 
         // lobby schedule
@@ -363,7 +384,7 @@ module.exports = {
             var scheduleSetup = {
                 mondayDate: monday,
                 sundayDate: sunday,
-                days: [2,4,6], 
+                days: [2, 4, 6], 
                 type: scheduleTypes.tryout,
                 coachCount: 1,
                 regionStrings: tZ.regionStrings,
@@ -374,6 +395,26 @@ module.exports = {
             };
             var msg = await writeSchedule(channelTryout, scheduleSetup);
             this.createLobbySchedules(dbHandle, msg.id, channelTryout.id, scheduleSetup);
+        }
+        
+        // botbash schedule
+        var channelBotbash = channels.find(chan => { return chan.id == cM.scheduleChannelBotbash});
+        if(channelBotbash)
+        {
+            var scheduleSetup = {
+                mondayDate: monday,
+                sundayDate: sunday,
+                days: [2, 4, 6], 
+                type: scheduleTypes.botbash,
+                coachCount: 1,
+                regionStrings: tZ.regionStrings,
+                regions: tZ.regions,
+                times: ["8:00pm", "8:00pm", "8:00pm"],
+                timezoneShortNames: tZ.scheduleTimezoneNames_short,
+                timezones:tZ.scheduleTimezoneNames
+            };
+            var msg = await writeSchedule(channelBotbash, scheduleSetup);
+            this.createLobbySchedules(dbHandle, msg.id, channelBotbash.id, scheduleSetup);
         }
     },
 
