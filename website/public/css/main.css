@@ -45,17 +45,19 @@ body {
     display: inline-block;
     margin-left: 10px;
     margin-right: 10px;
-    padding: 12px 30px;
+    color: #fff;
+    line-height: 21px;
+    font-weight: 300;
     border-radius: 4px;
+}
+
+.filled-button {
+    padding: 12px 30px;
     background-color: #b32812;
     -webkit-transition: background-color 300ms ease;
     transition: background-color 300ms ease;
     font-family: Roboto, sans-serif;
-    color: #fff;
     font-size: 16px;
-    line-height: 21px;
-    font-weight: 300;
-    text-align: center;
     letter-spacing: 2px;
     text-decoration: none;
     text-transform: uppercase;
@@ -63,17 +65,10 @@ body {
 }
 
 .hollow-button {
-    display: inline-block;
-    margin-left: 10px;
-    margin-right: 10px;
     padding: 10px 30px;
     border: 1px solid #fff;
-    border-radius: 4px;
     -webkit-transition: background-color 300ms ease, border 300ms ease, color 300ms ease;
     transition: background-color 300ms ease, border 300ms ease, color 300ms ease;
-    color: #fff;
-    line-height: 21px;
-    font-weight: 300;
     letter-spacing: 2px;
     text-decoration: none;
     text-transform: uppercase;
@@ -97,7 +92,7 @@ body {
 .section {
     position: relative;
     display: block;
-    padding: 80px 10px;
+    padding: 40px 10px;
     opacity: 1;
     margin-left: auto;
     margin-right: auto;
@@ -105,51 +100,61 @@ body {
 
 .img-box {
     display: block;
-    width: 35%;
-    margin-right: auto;
-    margin-left: auto;
+    height: 100px;
     border: 1px none #fff;
     border-radius: 0%;
     background-color: transparent;
     box-shadow: none;
+
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
 }
 
-.dfz-row {
-    display: table;
-    box-sizing: border-box;
+.dfz-grid {
+    display: grid;    
     width: 100%;
 }
 
+.dfz-grid-row-3 {
+    grid-template-areas: "a a a";
+    grid-template-columns: 33.33%;
+}
+
+.dfz-grid-row-4 {
+    grid-template-areas: "a a a a";
+    grid-template-columns: 25%;
+}
+
 .dfz-col {
-    display: table-cell;
-    width: calc(33.33% - 20px);
     position: relative;
     float: left;
     min-height: 1px;
     padding-left: 10px;
     padding-right: 10px;
+    width: calc(100% - 20px);
 }
 
 .paragraph {
-    display: block;
-    margin-block-start: 1em;
-    margin-block-end: 1em;
-    margin-inline-start: 0px;
-    margin-inline-end: 0px;
+    display: block; 
+    margin: 0px 5px;
 }
 
 .textBox {
-    padding: 15px;
+    padding: 15px 0px 0px 0px;
     border: 1px none #36393f;
     border-radius: 15px;
     background-color: #2f3136;
     text-align: center;
-    height: calc(100% - 30px);
-    width: calc(100% - 30px);
+    height: 100%;
 }
 
 .accent {
     background-color: #2f3136;
+}
+
+.text-box-accent {
+    background-color: #202225;
 }
 
 .dfz-yt-frame {    
@@ -176,19 +181,17 @@ table {
 }
 
 @media only screen and (max-width: 767px) {
-    .textBox {
-        margin-bottom: 30px;
-    }
-
+    
     .dfz-col {
-        width: calc(100% - 20px);
-        left: auto;
-        right: auto;
+        padding-bottom: 30px;
     }
     
-    .img-box {
-        width: auto;
-        max-height: 50px;
+    .dfz-col-3 {
+        width: calc(100% - 20px);
+    }
+
+    .dfz-col-4 {
+        width: calc(100% - 20px);
     }
     
     .button-container {
@@ -203,6 +206,12 @@ table {
     .big-dfz-logo {
         width: 80%;
     }
+
+    .dfz-grid-row-3, .dfz-grid-row-4 {
+        grid-template-areas: "a";
+        grid-template-columns: 100%;
+    }
+    
 }
 
 @media only screen and (min-width: 768px) {
