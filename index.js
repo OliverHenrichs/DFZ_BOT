@@ -7,7 +7,7 @@ const client = new Discord.Client({autoReconnect:true});
 
 const dB = require("./misc/database")
 // get db-access
-client.dbHandle = dB.createPool()
+client.dbHandle = dB.createPool();
 
 // setup discord event handlers
 fs.readdir("./events/", (err, files) => { 
@@ -34,7 +34,7 @@ dB.createScheduleTable(client.dbHandle)
 	return client.login(process.env.BOT_TOKEN);
 })
 .then(() => { // login to discord client
-	//ws = new Website(process.env.WEBSITE_PASSWD, 80, client);
+	ws = new Website(process.env.WEBSITE_PASSWD, 80, client);
 }).catch(err => 
 	console.log(err)
 );
