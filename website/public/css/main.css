@@ -4,7 +4,7 @@ body {
     background-color: #202225;
 }
 
-.topContainer {
+.main-container {
     display: block;
     text-align: center;
     cursor: default;
@@ -16,11 +16,15 @@ body {
     display: inline-block;
 }
 
-.fadeInAnimationScroll {
+.fade-in-animation-scroll {
     -webkit-animation: fadeInAnimation 2s ease-in-out; /* Chrome, Safari, Opera */
     animation: fadeInAnimation 2s ease;
     animation-iteration-count: 1; 
     animation-fill-mode: forwards;
+}
+
+.dfz-bottom-margin {
+    margin-bottom: 10px;
 }
   
 @keyframes fadeInAnimation { 
@@ -85,10 +89,6 @@ body {
     color: #b32812;
 }
 
-.someMarginBottom {
-    margin-bottom: 16px;
-}
-
 .section {
     position: relative;
     display: block;
@@ -96,6 +96,13 @@ body {
     opacity: 1;
     margin-left: auto;
     margin-right: auto;
+    
+    border-width: 3px;
+    border-color: #b32812;
+    border-top-style: double;
+    border-right-style: hidden;
+    border-bottom-style: hidden;
+    border-left-style: hidden;
 }
 
 .img-box {
@@ -114,6 +121,7 @@ body {
 .dfz-grid {
     display: grid;    
     width: 100%;
+    padding-bottom: 10px;
 }
 
 .dfz-grid-row-3 {
@@ -141,12 +149,12 @@ body {
 }
 
 .textBox {
-    padding: 15px 0px 0px 0px;
+    padding: 15px 0px;
     border: 1px none #36393f;
     border-radius: 15px;
     background-color: #2f3136;
     text-align: center;
-    height: 100%;
+    height: calc(100% - 15px);
 }
 
 .accent {
@@ -205,6 +213,10 @@ table {
 
     .big-dfz-logo {
         width: 80%;
+    }
+    
+    .dfz-grid {
+        padding-bottom: 0px;
     }
 
     .dfz-grid-row-3, .dfz-grid-row-4 {
