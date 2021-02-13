@@ -22,10 +22,6 @@ body {
     animation-iteration-count: 1; 
     animation-fill-mode: forwards;
 }
-
-.dfz-bottom-margin {
-    margin-bottom: 10px;
-}
   
 @keyframes fadeInAnimation { 
     0% { 
@@ -99,9 +95,9 @@ body {
     
     border-width: 3px;
     border-color: #b32812;
-    border-top-style: double;
+    border-top-style: hidden;
     border-right-style: hidden;
-    border-bottom-style: hidden;
+    border-bottom-style: double;
     border-left-style: hidden;
 }
 
