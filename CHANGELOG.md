@@ -1,5 +1,12 @@
 *@Coach The bot received some new features today!*
 
+**DFZ-Bot v0.8 - Changelog** **STILL WIP**
+
+1. Botbash lobby schedule
+> Introduced Botbash lobby schedule strictly for Beginner Tier 1
+
+---
+
 **DFZ-Bot v0.7 - Changelog**
 
 1. Coach assignment for lobbies.
