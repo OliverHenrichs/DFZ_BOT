@@ -10,16 +10,21 @@ const db = require("../misc/database")
  */
 async function saveCoachParticipation(dbHandle, coaches, lobbyType) {
     var isTryout = lobbyType === c.lobbyTypes.tryout;
+    var isReplayAnalysis = lobbyType === c.lobbyTypes.replayAnalysis;
+    var isNormal = !isTryout && !isReplayAnalysis;
+
     coaches.forEach((coachId)=> {
         db.getCoach(dbHandle, coachId)
         .then(dBCoach => {
             if(dBCoach === undefined) {
-                db.insertCoach(dbHandle, new co.Coach(coachId, 1, (isTryout? 1 : 0), (isTryout? 0 : 1)));
+                db.insertCoach(dbHandle, new co.Coach(coachId, 1, (isTryout? 1 : 0), (isNormal? 1 : 0), (isReplayAnalysis? 1 : 0)));
             } else {
                 dBCoach.lobbyCount += 1;
 
                 if(isTryout)
                     dBCoach.lobbyCountTryout += 1;
+                else if(isReplayAnalysis)
+                    dBCoach.lobbyCountReplayAnalysis += 1;
                 else 
                     dBCoach.lobbyCountNormal += 1;
 

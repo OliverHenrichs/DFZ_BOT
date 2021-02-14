@@ -27,6 +27,8 @@ function getCoachCountByLobbyType(lobbyType) {
             return 1;
         case c.lobbyTypes.tryout:
             return 1;
+        case c.lobbyTypes.replayAnalysis:
+            return 1;
     }
     return 0;
 }
@@ -317,6 +319,25 @@ async function removeLobby(dbHandle, lobby) {
     dB.removeLobby(dbHandle, lobby);
 }
 
+function getIncompleteTeamPostTitle(type) {
+    if (type === c.lobbyTypes.tryout)
+        return "Tryout lobby starts now";
+    if (type === c.lobbyTypes.replayAnalysis)
+        return "Replay analysis session starts now";
+
+    return "Not enough players for a lobby but we gotta get going anyway";
+}
+
+function getCompleteTeamPostTitle(type) {
+    var res = c.getLobbyNameByType(lobby.type)
+    if (type === c.lobbyTypes.replayAnalysis)
+        res += " session starts now";
+    else
+        res += " lobby #" + (++counter) + (counter == 1 ? " starts now" : " starts later");
+
+    return res;
+}
+
 /**
  *  Creates an embedding for a starting lobby
  *  @param lobby lobby to start
@@ -339,7 +360,9 @@ function createLobbyStartPost(lobby, channel, playersPerLobby)
     }
 
     if (userSets.length === 0 && userSet.length !== 0) { // Not enough players but forced
-        const _embed = aE.generateEmbedding((lobby.type === c.lobbyTypes.tryout ? "Tryout lobby starts now" : "Not enough players for a lobby but we gotta get going anyway"), "", "", getUserTable(userSet, playersPerLobby, true));
+        var title = getIncompleteTeamPostTitle(lobby.type);
+
+        const _embed = aE.generateEmbedding(title, "", "", getUserTable(userSet, playersPerLobby, true));
         channel.send({embed: _embed});
         return;
     }
@@ -349,7 +372,7 @@ function createLobbyStartPost(lobby, channel, playersPerLobby)
         var teams = uH.createTeams(us, lobby.type);
         var teamTable = getTeamTable(teams, lobby.type, true);
         
-        const _embed = aE.generateEmbedding(c.getLobbyNameByType(lobby.type) + " lobby #" + (++counter) + (counter == 1 ? " starts now " : " starts later "), "", "", teamTable);
+        const _embed = aE.generateEmbedding(getCompleteTeamPostTitle(type, counter++), "", "", teamTable);
         channel.send({embed: _embed});
     });
 
@@ -389,7 +412,7 @@ function getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole, coache
     coachCount = coaches === undefined ? 0 : coaches.length;
     return "for " + rM.getRoleMentions(lobbyBeginnerRoles) + 
             (coachCount === 0 ? "" : (coachCount >= 2 && maxCoachCount === 2 ? ("\nCoaches: <@" + coaches[0] + ">, <@" + coaches[1]) + ">" : ("\nCoach: <@" + coaches[0]) + ">")) +
-            (lobbyType !== c.lobbyTypes.tryout ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
+            (c.isRoleBasedLobbyType(lobbyType) ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
 }
 
 async function getMessageFromChannel(channel, messageId) {
@@ -403,10 +426,24 @@ async function getMessageFromChannel(channel, messageId) {
     });
 } 
 
+function getLobbyPostFooter(type, regionRole) {
+    var res = "";
+    if(c.isRoleBasedLobbyType(type)) {
+        res += footerStringBeginner + "\n\nPlayers from " + rM.getRegionalRoleString(regionRole) + "-region will be moved up.";
+    } else if (type === c.lobbyTypes.tryout) {
+        res += footerStringTryout;
+    } else if (type === c.lobbyTypes.replayAnalysis)
+        res += footerStringReplayAnalysis;
+    
+    res += "\n\nCoaches: Lock and start lobby with 🔒, cancel with ❌";
+    return res;
+}
+
 const remainingLobbyTimeStartString = "Time to lobby: ";
 const alreadyStartedLobbyTimeStartString = "Lobby started ";
 var footerStringBeginner = "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\nClick again to remove a position.\nRemove all positions to withdraw from the lobby."
-var footerStringTryout = "Tryouts: Join lobby by clicking ✅ below.\nClick again to withdraw from the lobby." 
+var footerStringTryout = "Join lobby by clicking ✅ below.\nClick again to withdraw." 
+var footerStringReplayAnalysis = "Join session by clicking ✅ below.\nClick again to withdraw." 
 
 module.exports = {
     
@@ -437,13 +474,12 @@ module.exports = {
      */
     postLobby: async function (dbHandle, channel, coaches, lobbyType, lobbyBeginnerRoles, lobbyRegionRole, zonedTime) 
     {
-        var title = "We host a " + c.getLobbyNameByType(lobbyType) + " lobby on " + tZ.getTimeString(zonedTime) + " " + zonedTime.zone.abbreviation;
+        var title = "We host " + c.getLobbyPostNameByType(lobbyType) + " on " + tZ.getTimeString(zonedTime) + " " + zonedTime.zone.abbreviation;
         var text = getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole, coaches);
-        var finalFooter = (lobbyType !== c.lobbyTypes.tryout ? (footerStringBeginner + "\n\nPlayers from " + rM.getRegionalRoleString(lobbyRegionRole) + "-region will be moved up."):footerStringTryout)
-        + "\n\nCoaches: Lock and start lobby with 🔒, cancel with ❌";
+        var footer = getLobbyPostFooter(lobbyType, lobbyRegionRole);
 
         // send embedding post to lobby signup-channel
-        const _embed = aE.generateEmbedding(title, text, finalFooter);
+        const _embed = aE.generateEmbedding(title, text, footer);
         const lobbyPostMessage = await channel.send(rM.getRoleMentions(lobbyBeginnerRoles), {embed: _embed}); // mentioning roles in message again to ping beginners
 
         // pin message to channel
@@ -608,7 +644,8 @@ module.exports = {
         createLobbyStartPost(lobby, channel, playersPerLobby);
 
         // notify players 
-        notifyPlayers(client, lobby, playersPerLobby, "Your " + c.getLobbyNameByType(lobby.type) + "-lobby just started! 😎 Please move to the voice channel and await further instructions.");
+        var notification = "Your " + c.getLobbyNameByType(lobby.type) + "-lobby just started! 😎 Please move to the voice channel and await further instructions.";
+        notifyPlayers(client, lobby, playersPerLobby, notification);
 
         // delete the lobby and "archive" the lobby post
         updateAndUnpinLobbyEmbedding(lobby.messageId, channel, "[⛔ Lobby started already! 😎]")
@@ -630,13 +667,15 @@ module.exports = {
     updatePlayerInLobby: async function(dbHandle, reaction, lobby, user) {
         // check reaction emojis
         var position = '-';
-        if (lobby.type === c.lobbyTypes.tryout) {
+
+        // for simple lobbies just check '✅'
+        if (c.isSimpleLobbyType(lobby.type)) {
             if(reaction.emoji.name !== c.tryoutReactionEmoji)
                 return;
         } else {
-            // get position
+            // for role based lobbies check positions
             position = c.getReactionEmojiPosition(reaction.emoji);
-            if(position === 0)
+            if(position === 0) // if finds none => -1, but function adds one to match with ingame positions 1-5; therefore 0 = -1...
                 return;
         }
 
@@ -645,9 +684,11 @@ module.exports = {
         if(lobbyUser === undefined)
             return;
         
-        // if positions are relevant, remove positions
+        // for simple lobbies, always remove
         var removeUser = true;
-        if(lobby.type !== c.lobbyTypes.tryout) {
+
+        // if positions are relevant, remove positions
+        if(c.isRoleBasedLobbyType(lobby.type)) {
             // remove user position
             lobbyUser.positions = lobbyUser.positions.filter(_position=> {
                 return _position != position;

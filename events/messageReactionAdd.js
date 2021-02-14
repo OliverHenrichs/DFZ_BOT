@@ -86,12 +86,17 @@ function handlePositionEmoji(lobby, user, reaction, role, guildMember) {
  * @param {string} role role of the user
  * @returns true if lobby was changed
  */
-function handleTryoutEmoji(lobby, user, reaction, role) {
-    if(lobby.type !== c.lobbyTypes.tryout)
+function handleSimpleLobbyEmoji(lobby, user, reaction, role) {
+    if(!c.isSimpleLobbyType(lobby.type))
         return false;
 
-    if(role.id !== process.env.TRYOUT) {
+    if(lobby.type === c.lobbyTypes.tryout && role.id !== process.env.TRYOUT) {
         user.send("⛔ You cannot join because you do not have the tryout role.");
+        return false;
+    }
+
+    if(lobby.type === c.lobbyTypes.replayAnalysis && rM.tierRoles.find(tr => tr === role.id) === undefined) {
+        user.send("⛔ You cannot join because you do not have a beginner role role.");
         return false;
     }
     
@@ -143,8 +148,8 @@ async function handleLobbyRelatedEmoji(client, reaction, user) {
     // handle adding users 
     if(c.isKnownPositionEmoji(reaction.emoji))
         changedLobby = handlePositionEmoji(lobby, user, reaction, role, guildMember);
-    else if(c.isKnownTryoutEmoji(reaction.emoji))
-        changedLobby = handleTryoutEmoji(lobby, user, reaction, role);
+    else if(c.isKnownSimpleLobbyEmoji(reaction.emoji))
+        changedLobby = handleSimpleLobbyEmoji(lobby, user, reaction, role);
     else if(c.isKnownLobbyManagementEmoji(reaction.emoji)) {// handle lobby management => will delete lobby if x-ed or started => no need to update => just return
         return handleLobbyManagementEmoji(client, lobby, user, reaction, role);
     }

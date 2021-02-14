@@ -14,10 +14,9 @@ module.exports = async (message, dbHandle) => {
 		return;
 	// tryout 'region' and role
 	var lobbyRegionRole = undefined;
-	var beginnerRoleNumbers = [0];
+	var beginnerRoleNumbers = [];
 
-	if(type !== c.lobbyTypes.tryout)
-	{
+	if(c.isRoleBasedLobbyType(type)) {
 		// get region role
 		var lobbyRegionRole = mH.getLobbyRegionRoleFromMessage(message, 1);
 		if (lobbyRegionRole === undefined)
@@ -30,14 +29,19 @@ module.exports = async (message, dbHandle) => {
 		if(!res) {
 			return mH.reactNegative(message, errormsg);
 		}
+	} else if(type === c.lobbyTypes.replayAnalysis) {
+		beginnerRoleNumbers = [1, 2, 3, 4];
+	} else if(type === c.lobbyTypes.tryout) {
+		beginnerRoleNumbers = [0];
 	}
 
 	var lobbyBeginnerRoles = rM.getBeginnerRolesFromNumbers(beginnerRoleNumbers);
 
 	// get zoned time
-	const tryoutIndex = 1;
-	const allOtherTypesIndex = 3;
-	[res, zonedTime, errormsg] = mH.getTimeFromMessage(message, type == c.lobbyTypes.tryout ? tryoutIndex : allOtherTypesIndex);
+	const simpleLobbyIndex = 1;
+	const roleBasedLobbyIndex = 3;
+	const lobbyIndex = c.isSimpleLobbyType(type) ? simpleLobbyIndex : roleBasedLobbyIndex;
+	[res, zonedTime, errormsg] = mH.getTimeFromMessage(message, lobbyIndex);
 	if(!res) {
 		return mH.reactNegative(message, errormsg);
 	}

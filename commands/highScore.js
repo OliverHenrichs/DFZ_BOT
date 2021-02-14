@@ -41,6 +41,8 @@ module.exports = async (message, dbHandle) => {
                 dbResponse = await t.getCoachList(dbHandle, 'lobbyCountTryout');
             else if (arg === 'normal')
                 dbResponse = await t.getCoachList(dbHandle, 'lobbyCountNormal');
+            else if (arg === 'replayAnalysis')
+                dbResponse = await t.getCoachList(dbHandle, 'lobbyCountReplayAnalysis');
             else 
                 dbResponse = await t.getCoachList(dbHandle, 'lobbyCount');
         }
@@ -67,6 +69,10 @@ module.exports = async (message, dbHandle) => {
         },
         {
             name: 'Tryouts',
+            value: '',
+        },
+        {
+            name: 'Replay Analyses',
             value: '',
         }
     ];    

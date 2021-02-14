@@ -1,9 +1,11 @@
 *@Coach The bot received some new features today!*
 
-**DFZ-Bot v0.8 - Changelog** **STILL WIP**
+**DFZ-Bot v0.8 - Changelog**
 
 1. Botbash lobby schedule
-> Introduced Botbash lobby schedule strictly for Beginner Tier 1
+> Introduced Botbash lobby schedule strictly for Beginner Tier 1.
+2. Lobby type ReplayAnalysis
+> Posted like a tryout lobby, i.e. !post replayAnalysis 10:00pm SGT, it will invite all beginner tiers (1-4).
 
 ---
 

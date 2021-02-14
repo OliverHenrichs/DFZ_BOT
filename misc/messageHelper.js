@@ -60,7 +60,7 @@ function reactPositive(message, reply = "") {
  */
 function createLobbyPostReactions(lobbyType, message) 
 {
-	if(lobbyType == c.lobbyTypes.tryout)
+	if(lobbyType === c.lobbyTypes.tryout || lobbyType === c.lobbyTypes.replayAnalysis)
 	{
 		message.react(c.tryoutReactionEmoji);
 	}

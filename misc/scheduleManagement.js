@@ -86,7 +86,7 @@ async function writeSchedule(channel, scheduleSetup) {
         emojiCount = emojiStartIndex+days.length;
     }
     
-    var footer =    "If a coach or two are signed up, the corresponding lobby is automatically created at least 5h prior to the event." +
+    var footer =    "If coaches are signed up, the corresponding lobby is automatically created roughly 8h prior to the event." +
                     "\nIf coaches only sign up shortly before the lobby (4h or less), then they must manually create the lobby.";
 
     var _embed = aE.generateEmbedding(getWeekScheduleString(scheduleSetup), "Sign up as a coach by reacting to the respective number.", footer, schedules);

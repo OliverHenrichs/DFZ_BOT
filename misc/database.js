@@ -22,6 +22,10 @@ function getCoachTableJson() {
             {  
                 id:'lobbyCountNormal',
                 type: 'int'
+            },
+            {  
+                id:'lobbyCountReplayAnalysis',
+                type: 'int'
             }
         ]
     };
@@ -173,7 +177,7 @@ async function insertRow(dbHandle, table, columnNames, columnValues) {
  * @param {Array<String>} values values for channel_id, message_id and data
  */
 async function insertCoachRow(dbHandle, values) {
-    return insertRow(dbHandle, 'coaches', ['user_id', 'lobbyCount', 'lobbyCountTryout', 'lobbyCountNormal'], values);
+    return insertRow(dbHandle, 'coaches', ['user_id', 'lobbyCount', 'lobbyCountTryout', 'lobbyCountNormal', 'lobbyCountReplayAnalysis'], values);
 }
 
 /**
@@ -203,7 +207,8 @@ async function insertCoach(dbHandle, coach) {
     values = [  coach.userId,
                 coach.lobbyCount,
                 coach.lobbyCountTryout,
-                coach.lobbyCountNormal];
+                coach.lobbyCountNormal, 
+                coach.lobbyCountReplayAnalysis];
     return insertCoachRow(dbHandle, values);
 }
 
@@ -326,8 +331,8 @@ async function updateCoach(dbHandle, coach) {
     return updateTableEntriesByConditions(
         dbHandle, 
         'coaches', 
-        ['lobbyCount', 'lobbyCountTryout', 'lobbyCountNormal'], 
-        [coach.lobbyCount, coach.lobbyCountTryout, coach.lobbyCountNormal], 
+        ['lobbyCount', 'lobbyCountTryout', 'lobbyCountNormal', 'lobbyCountReplayAnalysis'], 
+        [coach.lobbyCount, coach.lobbyCountTryout, coach.lobbyCountNormal, coach.lobbyCountReplayAnalysis], 
         ['user_id = \''+ coach.userId+'\'']
     );
 }
@@ -480,7 +485,7 @@ async function getSortedCoaches(dbHandle, columnName = 'lobbyCount') {
  */
 async function getCoach(dbHandle, userId = '') {
     return new Promise(function(resolve, reject) {
-        selectTableValueByConditions(dbHandle, 'coaches', 'lobbyCount, lobbyCountTryout, lobbyCountNormal', ['user_id = \''+userId+'\''])
+        selectTableValueByConditions(dbHandle, 'coaches', 'lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis', ['user_id = \''+userId+'\''])
         .then(dB_response =>{
             if(!Array.isArray(dB_response) || dB_response.length === 0) {
                 resolve(undefined);
