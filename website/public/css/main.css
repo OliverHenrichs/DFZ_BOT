@@ -184,6 +184,10 @@ table {
     width: 100%;
 }
 
+.dfz-bottom-margin {
+    margin-bottom: 10px;
+}
+
 @media only screen and (max-width: 767px) {
     
     .dfz-col {
