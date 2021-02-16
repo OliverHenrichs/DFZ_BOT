@@ -329,7 +329,7 @@ function getIncompleteTeamPostTitle(type) {
 }
 
 function getCompleteTeamPostTitle(type) {
-    var res = c.getLobbyNameByType(lobby.type)
+    var res = c.getLobbyNameByType(type)
     if (type === c.lobbyTypes.replayAnalysis)
         res += " session starts now";
     else
@@ -372,7 +372,7 @@ function createLobbyStartPost(lobby, channel, playersPerLobby)
         var teams = uH.createTeams(us, lobby.type);
         var teamTable = getTeamTable(teams, lobby.type, true);
         
-        const _embed = aE.generateEmbedding(getCompleteTeamPostTitle(type, counter++), "", "", teamTable);
+        const _embed = aE.generateEmbedding(getCompleteTeamPostTitle(lobby.type, counter++), "", "", teamTable);
         channel.send({embed: _embed});
     });
 
