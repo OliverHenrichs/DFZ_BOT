@@ -328,12 +328,12 @@ function getIncompleteTeamPostTitle(type) {
     return "Not enough players for a lobby but we gotta get going anyway";
 }
 
-function getCompleteTeamPostTitle(type) {
+function getCompleteTeamPostTitle(type, counter) {
     var res = c.getLobbyNameByType(type)
     if (type === c.lobbyTypes.replayAnalysis)
         res += " session starts now";
     else
-        res += " lobby #" + (++counter) + (counter == 1 ? " starts now" : " starts later");
+        res += " lobby #" + counter + (counter == 1 ? " starts now" : " starts later");
 
     return res;
 }
