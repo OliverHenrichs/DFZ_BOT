@@ -10,7 +10,7 @@ const lM = require("./lobbyManagement")
 const s = require("./schedule")
 const tZ = require("./timeZone")
 const rM = require("./roleManagement")
-const scheduleReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
+const scheduleReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'];
 
 const scheduleTypes = {lobby:"Lobbies", tryout:"Tryouts", botbash:"Botbash"};
 
@@ -45,7 +45,7 @@ function getScheduleText(days, emojis, title, times, timezoneName, coachCount) {
         inline: true
     };
 
-    for(let i = 0; i< days.length; i++)
+    for(let i = 0; i < days.length; i++)
         schedule.value +=   "\n"+emojis[i] + " " + days[i] + " " + times[i] + " " + timezoneName +
                             "\n coach 1: " +
                             (coachCount > 1 ? "\n coach 2: " : "");
@@ -67,23 +67,32 @@ async function writeSchedule(channel, scheduleSetup) {
     if(scheduleSetup.regions.length !== scheduleSetup.timezones.length || scheduleSetup.regions.length !== scheduleSetup.times.length)
         return undefined;
 
-    var days = [];
-    scheduleSetup.days.forEach(day => {
-        days.push(tZ.weekDays[day].slice(0, 3));
+    var dayShortNames = [];
+    scheduleSetup.days.forEach(regionDays => {
+        var regionDaysShortNames = [];
+        regionDays.forEach(day => {
+            regionDaysShortNames.push(tZ.weekDays[day].slice(0, 3));
+        })
+        dayShortNames.push(regionDaysShortNames);
     });
 
     var schedules = [];
-    var emojiCount = 0;
-
+    var emojiStartIndex = 0;
     for(let i = 0; i < scheduleSetup.regions.length; i++) {
         var regionString = scheduleSetup.regionStrings[i];
         var tz = scheduleSetup.timezoneShortNames[i];
 
-        var emojiStartIndex = i*days.length;
-        var emojis = scheduleReactionEmojis.slice(emojiStartIndex, emojiStartIndex+days.length);
-        schedules.push(getScheduleText(days, emojis, "**"+ regionString +" " + scheduleSetup.type +"**", scheduleSetup.times, tz, scheduleSetup.coachCount));
+        var emojis = scheduleReactionEmojis.slice(emojiStartIndex, emojiStartIndex+dayShortNames[i].length);
+        schedules.push(getScheduleText(
+            dayShortNames[i], 
+            emojis, 
+            "**"+ regionString +" " + scheduleSetup.type +"**", 
+            scheduleSetup.times[i], 
+            tz, 
+            scheduleSetup.coachCount
+        ));
         
-        emojiCount = emojiStartIndex+days.length;
+        emojiStartIndex += dayShortNames[i].length;
     }
     
     var footer =    "If coaches are signed up, the corresponding lobby is automatically created roughly 8h prior to the event." +
@@ -91,7 +100,7 @@ async function writeSchedule(channel, scheduleSetup) {
 
     var _embed = aE.generateEmbedding(getWeekScheduleString(scheduleSetup), "Sign up as a coach by reacting to the respective number.", footer, schedules);
     var message = await channel.send({embed: _embed});
-    reactWithScheduleEmojis(message, emojiCount);
+    reactWithScheduleEmojis(message, emojiStartIndex);
 
     return message;
 }
@@ -272,6 +281,61 @@ async function handleScheduleCoachWithdrawal(client, reaction, user, schedule) {
     });
 }
 
+
+/**
+ * verify input data sanity and create common schedule setup
+ * @param {Date} _mondayDate 
+ * @param {Date} _sundayDate 
+ * @param {Array<Array<int>>} _days 
+ * @param {int} _type 
+ * @param {int} _coachCount 
+ * @param {Array<Array<string>>} _times 
+ */
+function createScheduleSetup(_mondayDate, _sundayDate, _days, _type, _coachCount, _times) {
+
+    var numRegions = tZ.regions.length;
+
+    // verify days
+    if(_days.length === 1) { // same days for each region
+        for(let i = 0; i < numRegions - 1; i++)
+            _days.push(_days[0]); // duplicate for other regions
+    } else if(_days.length !== numRegions) { // individual days for each region
+        // has to be either of two
+        return undefined;
+    } 
+
+    // verify times
+    if(_times.length === 1) { // same times for each region
+        for(let i = 0; i < numRegions - 1; i++)
+            _times.push(_times[0]); // duplicate for other regions
+    } else if(_times.length !== numRegions) { // individual times for each region
+        // has to be either of two
+        return undefined;
+    }
+
+    // verify day-time-combination
+    for(let i = 0; i < numRegions; i++) {
+        if(_times[i].length !== _days[i].length) {
+            return undefined;
+        }
+    }
+    
+    var scheduleSetup = {
+        mondayDate: _mondayDate,
+        sundayDate: _sundayDate,
+        days: _days, 
+        type: _type,
+        coachCount: _coachCount,
+        regionStrings: tZ.regionStrings,
+        regions: tZ.regions,
+        times: _times,
+        timezoneShortNames: tZ.scheduleTimezoneNames_short,
+        timezones: tZ.scheduleTimezoneNames
+    };
+
+    return scheduleSetup;
+}
+
 module.exports = {
     findSchedule:findSchedule,
     
@@ -282,18 +346,20 @@ module.exports = {
      * @param {string} channelId the channel that is tied to the schedule
      * @param {Schedule} scheduleSetup the setup that was used to create the schedule message
      */
-    createLobbySchedules: function(dbHandle, messageId, channelId, scheduleSetup) {        
+    createLobbySchedules: function(dbHandle, messageId, channelId, scheduleSetup) {       
+        var dayBaseIndex = 0; 
         for(let i = 0; i < scheduleSetup.regions.length; i++)
         {
             var region = scheduleSetup.regions[i];
             var timeZone = scheduleSetup.timezones[i];
+            var days = scheduleSetup.days[i];
+            var times = scheduleSetup.times[i];
 
-            var dayBaseIndex = i*scheduleSetup.days.length;
-            for(let j = 0; j < scheduleSetup.days.length; j++)
+            for(let j = 0; j < days.length; j++)
             {
-                var day = scheduleSetup.days[j];
-                var time = scheduleSetup.times[j];
-                var _date =tZ.getScheduledDate(scheduleSetup.mondayDate, day, time, timeZone);
+                var day = days[j];
+                var time = times[j];
+                var _date = tZ.getScheduledDate(scheduleSetup.mondayDate, day, time, timeZone);
                 if(_date === undefined)
                 {
                     console.log("Could not determine scheduled date for " + scheduleSetup);
@@ -310,6 +376,8 @@ module.exports = {
                     region
                 ));
             }
+
+            dayBaseIndex += days.length;
         }
     },
 
@@ -361,18 +429,17 @@ module.exports = {
         var channel5v5 = channels.find(chan => { return chan.id == cM.scheduleChannel5v5});
         if(channel5v5)
         {
-            var scheduleSetup = {
-                mondayDate: monday,
-                sundayDate: sunday,
-                days: [3,5,0], 
-                type: scheduleTypes.lobby,
-                coachCount: 2,
-                regionStrings: tZ.regionStrings,
-                regions: tZ.regions,
-                times: ["8:00pm", "8:00pm", "4:00pm"],
-                timezoneShortNames: tZ.scheduleTimezoneNames_short,
-                timezones:tZ.scheduleTimezoneNames
-            };
+            var coachCount = 2;
+            var days = [[3, 5, 0]];
+            var times = [["8:00pm", "8:00pm", "4:00pm"], ["8:00pm", "8:00pm", "4:00pm"], ["9:00pm", "9:00pm", "4:00pm"]];
+            var scheduleSetup = createScheduleSetup(
+                monday, 
+                sunday, 
+                days, 
+                scheduleTypes.lobby, 
+                coachCount, 
+                times
+            );
             var msg = await writeSchedule(channel5v5, scheduleSetup);
             this.createLobbySchedules(dbHandle, msg.id, channel5v5.id, scheduleSetup);
         }
@@ -381,18 +448,17 @@ module.exports = {
         var channelTryout = channels.find(chan => { return chan.id == cM.scheduleChannelTryout});
         if(channelTryout)
         {
-            var scheduleSetup = {
-                mondayDate: monday,
-                sundayDate: sunday,
-                days: [2, 4, 6], 
-                type: scheduleTypes.tryout,
-                coachCount: 1,
-                regionStrings: tZ.regionStrings,
-                regions: tZ.regions,
-                times: ["8:00pm", "8:00pm", "8:00pm"],
-                timezoneShortNames: tZ.scheduleTimezoneNames_short,
-                timezones:tZ.scheduleTimezoneNames
-            };
+            var coachCount = 1;
+            var days = [[2, 4, 6]];
+            var times = [["8:00pm", "8:00pm", "8:00pm"]];
+            var scheduleSetup = createScheduleSetup(
+                monday, 
+                sunday, 
+                days, 
+                scheduleTypes.tryout, 
+                coachCount, 
+                times
+            );
             var msg = await writeSchedule(channelTryout, scheduleSetup);
             this.createLobbySchedules(dbHandle, msg.id, channelTryout.id, scheduleSetup);
         }
@@ -400,19 +466,18 @@ module.exports = {
         // botbash schedule
         var channelBotbash = channels.find(chan => { return chan.id == cM.scheduleChannelBotbash});
         if(channelBotbash)
-        {
-            var scheduleSetup = {
-                mondayDate: monday,
-                sundayDate: sunday,
-                days: [2, 4, 6], 
-                type: scheduleTypes.botbash,
-                coachCount: 1,
-                regionStrings: tZ.regionStrings,
-                regions: tZ.regions,
-                times: ["8:00pm", "8:00pm", "8:00pm"],
-                timezoneShortNames: tZ.scheduleTimezoneNames_short,
-                timezones:tZ.scheduleTimezoneNames
-            };
+        {            
+            var coachCount = 1;
+            var days = [[2, 4, 6]];
+            var times = [["8:45pm", "8:45pm", "8:45pm"]];
+            var scheduleSetup = createScheduleSetup(
+                monday, 
+                sunday, 
+                days, 
+                scheduleTypes.botbash, 
+                coachCount, 
+                times
+            );
             var msg = await writeSchedule(channelBotbash, scheduleSetup);
             this.createLobbySchedules(dbHandle, msg.id, channelBotbash.id, scheduleSetup);
         }
