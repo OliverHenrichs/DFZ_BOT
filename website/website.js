@@ -51,7 +51,9 @@ class WebSocket {
     }
 
     async updateCoachList() {
-        
+        if(this.client.dbHandle === undefined)
+            return;
+
         var nativeCoachList = await tr.getCoachList(this.client.dbHandle, 'lobbyCount');
         for (let i = 0; i < nativeCoachList.length; i++) {
             var coach = nativeCoachList[i];
