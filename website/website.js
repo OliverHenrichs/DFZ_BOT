@@ -14,9 +14,7 @@ const tr = require('../misc/tracker');
 
 var coachList = {};
 
-
 class WebSocket {
-
     constructor(token, port, client) {
         this.token = token;
         this.port = port;
@@ -43,7 +41,6 @@ class WebSocket {
         this.registerRoots();
 
         this.setupHallOfFame();
-
 
         this.server = this.app.listen(port, () => {
             console.log("Websocket listening on port " + (this.server.address().port));
@@ -77,7 +74,6 @@ class WebSocket {
     // }
 
     registerRoots() {
-
         this.app.get('/', (req, res) => {
             res.render('index', {
                 title: 'No Bullshit. No Ads. Just DOTA.', 
