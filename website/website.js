@@ -1,8 +1,8 @@
 const express = require('express')
 const hbs = require('express-handlebars')
 const bodyParser = require('body-parser')
-var RateLimit = require('express-rate-limit');
 
+var RateLimit = require('express-rate-limit');
 var limiter = new RateLimit({
   windowMs: 15*60*1000, // 15 minutes 
   max: 100, // limit each IP to 100 requests per windowMs 
@@ -11,12 +11,12 @@ var limiter = new RateLimit({
 
 const path = require('path');
 const tr = require('../misc/tracker');
-
-var coachList = {};
+const _title ='No Bullshit. No Ads. Just DOTA.'
 
 class WebSocket {
     constructor(token, port, client) {
         this.token = token;
+        this.coachList = {};
         this.port = port;
         this.client = client;
 
@@ -29,7 +29,6 @@ class WebSocket {
             defaultLayout: 'layout',
             layoutsDir: __dirname + '/layouts'
         }));
-
         this.app.set('views', path.join(__dirname, 'views'));
         this.app.set('view engine', 'hbs');
 
@@ -61,7 +60,7 @@ class WebSocket {
                 coach.nick = "Unknown";
             }
         }
-        coachList = nativeCoachList;
+        this.coachList = nativeCoachList;
     }
 
     async setupHallOfFame() {
@@ -69,15 +68,16 @@ class WebSocket {
         setInterval(this.updateCoachList, 2*60*60000);
     }
 
-    // checkToken(_token) {
-    //     return (_token == this.token)
-    // }
-
     registerRoots() {
         this.app.get('/', (req, res) => {
             res.render('index', {
-                title: 'No Bullshit. No Ads. Just DOTA.', 
-                coaches: coachList
+                title: _title, 
+                coaches: this.coachList
+            });
+        })
+        this.app.get('/joinLink', (req, res) => {
+            res.render('joinLink', {
+                title: _title
             });
         })
 

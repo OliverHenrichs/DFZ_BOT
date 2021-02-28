@@ -1,0 +1,112 @@
+{{>smallHeader}}
+<div class="dfz-abstract-container main-container">
+    <div class="fade-in-animation-scroll">
+        <h1>How to join the community</h1>
+        <div class="section accent section-small-padding">
+            <h2>1. Create Join Message</h2>
+            <table class="dfz-table">
+                <tr>
+                    <td class="bigTableCell">How shall we call you?</td>
+                    <td class="smallTableCell"><input id="userName" class="dfz-small-input" placeholder="Your name"></td>
+                </tr>
+                <tr>
+                    <td class="bigTableCell">What is your Dota ID? <span id="popUpDotaId" class="popUpOnHover">(What's that?)</span>
+                        <div id="dotaIDImageContainer" class="modalImage">
+                            <img src="/FriendIDExplanation.gif"  style="width:100%;max-width:700px">
+                        </div>
+                    </td>
+                    <td class="smallTableCell"><input id="dotaId" class="dfz-small-input" placeholder="Your Dota ID"></td>
+                </tr>
+                <tr>
+                    <td class="bigTableCell">How many Games/Hours have you played?</td>
+                    <td><input id="gameHours" class="dfz-small-input" placeholder="10"></td>
+                </tr>
+                <tr>
+                    <td class="bigTableCell">Where are you from? EU/SEA/NA</td>
+                    <td class="smallTableCell"><select class="dfz-select" id="region" name="Region">
+                            <option value="EU">EU</option>
+                            <option value="NA">NA</option>
+                            <option value="SEA">SEA</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="bigTableCell">Discord Tag of the person which referred you</td>
+                    <td class="smallTableCell"><input id="referralTag" class="dfz-small-input" placeholder="name#1234"></td>
+                </tr>
+                <tr>
+                    <td class="bigTableCell">
+                        <button id="copyButton" class="button margin-top-bottom filled-button autoFontSize" onclick="copyToClipboard()">
+                            <span class="visible-when-large">Copy to clipboard</span>
+                            <span class="visible-when-small">Copy</span>
+                        </button>
+                    </td>
+                    <td class="smallTableCell"><textarea class="dfz-textarea" id="joinMessage" placeholder="" disabled> </textarea> </td>
+                </tr>
+            </table>
+        </div>
+        <div class="section section-small-padding">
+            <h2>2. Post Join Message</h2>
+            <div class="margin-top-bottom">
+                Post the copied message on our
+                <a href="https://discord.gg/HCyXbmCtpS" target="_blank">
+                    <p class="paragraph">Discord server</p>
+                </a>
+                in the channel #💎-sign-up-here to receive the tryout role.
+            </div>
+        </div>
+        <div class="section accent section-small-padding">
+            <h2>3. Sign up for a tryout game</h2>
+            <div class="margin-top-bottom">
+                Check out for tryout games <span id="popUpTryout" class="popUpOnHover">(they look like this)</span>
+                
+                <div id="tryoutImageContainer" class="img-box modalImage" style="background-image: url('/tryout.png');"></div>
+                </div>
+                in the channel #👋-tryouts and join one of them.
+                The tryout schedule is posted in #📋-tryout-schedule.
+            </div>
+        </div>
+    </div>
+</div>
+
+{{>about}}
+
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+<script>
+    function copyToClipboard() {
+        var $temp = $("<textarea></textarea>");
+        $("body").append($temp);
+        $temp.val($("#joinMessage").val()).select();
+        document.execCommand("copy");
+        $temp.remove();
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const params = new URLSearchParams(window.location.search)
+        
+        var discordReferralLinkValue = params.get('referralTag');
+        let referralTag = document.getElementById("referralTag");
+        if(discordReferralLinkValue) {
+            referralTag.value = discordReferralLinkValue;
+        }
+    
+        var inputs = [];
+        inputs.push(document.getElementById("userName"));
+        inputs.push(document.getElementById("dotaId"));
+        inputs.push(document.getElementById("gameHours"));
+        inputs.push(document.getElementById("region"));
+        inputs.push(referralTag);
+    
+        inputs.forEach(input => {
+            input.oninput = function() {
+                document.getElementById("joinMessage").value = 
+                    "!apply" + ' ' 
+                    + document.getElementById("userName").value + ', '
+                    + document.getElementById("dotaId").value + ', '
+                    + document.getElementById("gameHours").value + ', '
+                    + document.getElementById("region").value + ', '
+                    + document.getElementById("referralTag").value;
+            }
+        })
+    });
+</script>

@@ -1,13 +1,13 @@
-<div class="main-container">
-    <img src="/dfz_logo.png" class="big-dfz-logo">
-
+{{>header}}
+<div class="dfz-abstract-container">
     <div class="fade-in-animation-scroll">
         <h1>THE PLACE TO START DOTA</h1>
 
         <div class="button-container">
-            <a href="https://discord.com/invite/fQcxpvc" target="_blank"><button class="button hollow-button">SIGN UP</button></a>
-            <a href="#recruiting-section"><button class="button filled-button">RECRUIT A FRIEND</button></a>
-            <a href="#hall-of-fame-section"><button class="button hollow-button">HALL OF FAME</button></a>
+            <a href="https://discord.com/invite/fQcxpvc" target="_blank"><button class="button margin-top-bottom hollow-button">SIGN
+                    UP</button></a>
+            <a href="#recruiting-section"><button class="button margin-top-bottom filled-button">RECRUIT A FRIEND</button></a>
+            <a href="#hall-of-fame-section"><button class="button margin-top-bottom hollow-button">HALL OF FAME</button></a>
         </div>
     </div>
 
@@ -31,7 +31,8 @@
                     <h3>COMMUNITY</h3>
                 </div>
                 <div class="textBox">
-                    <p class="paragraph">We are a friendly, open community for relaxed and toxicity-free learning of Dota 2.</p>
+                    <p class="paragraph">We are a friendly, open community for relaxed and toxicity-free learning of
+                        Dota 2.</p>
                 </div>
             </div>
             <div class="dfz-col col3-laola">
@@ -40,7 +41,7 @@
                     </div>
                     <h3>COACH TV</h3>
                 </div>
-                <div class="textBox">                    
+                <div class="textBox">
                     <a href="https://www.twitch.tv/dotafromzero" target="_blank">
                         <p class="paragraph">We regularly stream our coaching sessions.</p>
                     </a>
@@ -48,7 +49,6 @@
             </div>
         </div>
     </div>
-
     <div class="section accent">
         <h1>HOW TO JOIN</h1>
         <div class="dfz-grid dfz-grid-row-3">
@@ -59,8 +59,8 @@
                     <h3>Discord</h3>
                 </div>
                 <div class="textBox text-box-accent">
-                    <a href="https://discord.com/invite/fQcxpvc" target="_blank">
-                        <p class="paragraph">Join the Discord server.</p>
+                    <a href="/JoinLink" target="_blank">
+                        <p class="paragraph">Guide to joining.</p>
                     </a>
                 </div>
             </div>
@@ -71,7 +71,8 @@
                     <h3>Tryout</h3>
                 </div>
                 <div class="textBox text-box-accent">
-                    <p class="paragraph">Play a game against bots with a coach watching and receive a suitable beginner role.</p>
+                    <p class="paragraph">Play a game against bots with a coach watching and receive a suitable beginner
+                        role.</p>
                 </div>
             </div>
             <div class="dfz-col">
@@ -143,7 +144,8 @@
 
     <div id="hall-of-fame-section" class="section">
         <h1>COACH HALL OF FAME</h1>
-        <h3>Our coaches dedicate their free time to this cause! Here their deeds become immortal (until the server burns down).</h3>
+        <h3>Our coaches dedicate their free time to this cause! Here their deeds become immortal (until the server burns
+            down).</h3>
         <table>
             <tr>
                 <td>Coach</td>
@@ -163,13 +165,6 @@
             {{/each}}
         </table>
     </div>
-
-    <footer>
-        <h1>CREDITS</h1>
-        <div class="dfz-bottom-margin">The icon in the cell 'Free Coaching' was made by <a href="https://www.flaticon.com/de/autoren/eucalyp" target="_blank" title="Eucalyp">Eucalyp</a> from
-            <a href="https://www.flaticon.com/" target="_blank" title="Flaticon">www.flaticon.com</a></div>
-        <div class="dfz-bottom-margin">Tons of icons made by the one and only Laerer</div>
-        <div class="dfz-bottom-margin">Inspired by the free webflow template <a href="https://velocity-free-template.webflow.io/" target="_blank">Velocity</a> </div>
-        <div>DFZ Discord-Bot and Website created and maintained by <a href="https://github.com/OliverHenrichs/" target="_blank" >ValarM</a></div>
-    </footer>
 </div>
+
+{{>about}}

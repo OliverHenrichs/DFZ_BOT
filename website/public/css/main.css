@@ -5,13 +5,21 @@ body {
     background-color: #202225;
 }
 
-.main-container {
+.dfz-abstract-container {
     display: block;
     text-align: center;
     cursor: default;
+}
+
+.header-container {
     padding-top: 15vw;
-    
+}
+
+.main-container {
     padding-bottom: 10px;
+}
+
+.red-top-border {
     border-width: 3px;
     border-color: #b32812;
     border-top-style: solid;
@@ -43,6 +51,20 @@ body {
         transform: translateY(0px);
      } 
 }
+
+.inputTable {
+    display: table;
+    align-items: flex-start;
+}
+
+.smallTableCell {
+    min-width: 50px;
+}
+
+.bigTableCell {
+    width: 100%;
+}
+
 
 .button-container {
     display: flex;
@@ -97,11 +119,13 @@ body {
 
 .section {
     position: relative;
-    display: block;
     padding: 80px 10vw;
-    opacity: 1;
     margin-left: auto;
     margin-right: auto;
+}
+
+.section-small-padding {
+    padding: 10px 10px;
 }
 
 .img-box {
@@ -146,6 +170,66 @@ body {
     display: block; 
     margin: 0px 5px;
     opacity: 1;
+}
+
+.dfz-select {
+    width: 100%;
+}
+
+.popUpOnHover {
+    color: #f20e4f;
+    cursor: pointer;
+}
+
+.dfz-textarea {
+    width: 75%;
+    resize: none;
+}
+
+.dfz-table .td {
+    word-break: break-word;
+}
+
+.dfz-table {
+    table-layout:auto; 
+    width: 40%; 
+    margin:auto; 
+    max-width: 500px; 
+    border: 1px solid black;
+}
+
+.dfz-small-input {
+    max-width: 35vw;
+}
+
+.autoFontSize {
+    font-size: revert;
+}
+
+.modalImage {
+    display: none;
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    margin-right: 15vw;
+    border: 1px solid #b32812;
+    background-color: black;
+}
+
+#tryoutImageContainer {
+    bottom: 12vw;
+    margin-left: 20%;
+    margin-right: 20%;
+    height: 20vw;
+    padding-left: calc(2.117 * 20vw);
+}
+
+#popUpDotaId:hover ~ #dotaIDImageContainer {
+    display:block;
+}
+
+#popUpTryout:hover ~ #tryoutImageContainer {
+    display:block;
+    background-image: url(/tryout.png);
 }
 
 .infoBox {
@@ -204,7 +288,19 @@ table {
     margin-bottom: 10px;
 }
 
+.margin-top-bottom {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
 @media only screen and (max-width: 767px) {
+    .visible-when-large {
+        display: none;
+    }
+    .visible-when-small {
+        display: inline-block;
+    }
+
     .section {
         padding: 10px 10px;
     }
@@ -225,11 +321,6 @@ table {
         flex-flow: column;   
     }
 
-    .button {
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-
     .big-dfz-logo {
         width: 80%;
     }
@@ -246,6 +337,13 @@ table {
 }
 
 @media only screen and (min-width: 768px) {
+    .visible-when-large {
+        display: inline-block;
+    }
+    .visible-when-small {
+        display: none;
+    }
+
     .col1-laola {
         -webkit-animation: fadeInAnimation 1s ease-in-out;
         animation: fadeInAnimation 1s ease;
