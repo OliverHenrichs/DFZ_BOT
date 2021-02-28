@@ -75,8 +75,13 @@ class WebSocket {
                 coaches: this.coachList
             });
         })
-        this.app.get('/joinLink', (req, res) => {
+        this.app.get('/join', (req, res) => {
             res.render('joinLink', {
+                title: _title
+            });
+        })
+        this.app.get('/referral', (req, res) => {
+            res.render('referralLink', {
                 title: _title
             });
         })

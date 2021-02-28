@@ -1,0 +1,35 @@
+{{>smallHeader}}
+<div class="dfz-abstract-container main-container">
+    <div class="fade-in-animation-scroll">
+        <h1>Create a referral link</h1>
+        <div class="section accent section-small-padding">
+            <table class="dfz-table">
+                <tr>
+                    <td class="bigTableCell">Your Discord name and tag</td>
+                    <td class="smallTableCell"><input id="userName" class="dfz-small-input" placeholder="Your name"></td>
+                </tr>
+                <tr>
+                    <td class="bigTableCell">
+                        <button class="button margin-top-bottom filled-button autoFontSize" onclick="copyToClipboard()">
+                            <span class="visible-when-large">Copy to clipboard</span>
+                            <span class="visible-when-small">Copy</span>
+                        </button>
+                    </td>
+                    <td class="smallTableCell"><textarea class="dfz-textarea" id="joinMessage" placeholder="" disabled> </textarea> </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{>about}}
+{{>scripts}}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {    
+        document.getElementById("userName").oninput = function() {
+            document.getElementById("joinMessage").value = 
+                    "http://107.180.238.99/join?referralTag=" + document.getElementById("userName").value;
+        }
+    });
+</script>

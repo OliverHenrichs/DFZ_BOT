@@ -36,7 +36,7 @@
                 </tr>
                 <tr>
                     <td class="bigTableCell">
-                        <button id="copyButton" class="button margin-top-bottom filled-button autoFontSize" onclick="copyToClipboard()">
+                        <button class="button margin-top-bottom filled-button autoFontSize" onclick="copyToClipboard()">
                             <span class="visible-when-large">Copy to clipboard</span>
                             <span class="visible-when-small">Copy</span>
                         </button>
@@ -70,17 +70,9 @@
 </div>
 
 {{>about}}
+{{>scripts}}
 
-<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 <script>
-    function copyToClipboard() {
-        var $temp = $("<textarea></textarea>");
-        $("body").append($temp);
-        $temp.val($("#joinMessage").val()).select();
-        document.execCommand("copy");
-        $temp.remove();
-    }
-
     document.addEventListener("DOMContentLoaded", function() {
         const params = new URLSearchParams(window.location.search)
         
