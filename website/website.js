@@ -50,11 +50,12 @@ class WebSocket {
         if(this.client.dbHandle === undefined)
             return;
 
+        var guild = await this.client.guilds.fetch(process.env.GUILD);
         var nativeCoachList = await tr.getCoachList(this.client.dbHandle, 'lobbyCount');
         for (let i = 0; i < nativeCoachList.length; i++) {
             var coach = nativeCoachList[i];
             try{
-                var member = await this.client.guilds.fetch(process.env.GUILD).members.fetch(coach.user_id);
+                var member = await guild.members.fetch(coach.user_id);
                 coach.nick = member.displayName;
             } catch {
                 coach.nick = "Unknown";
