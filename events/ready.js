@@ -51,9 +51,10 @@ module.exports = async (client) => {
         // we have many schedules per messages => only fetch each message once
         var fetchedSchedulePosts = getUniqueSchedulePosts(schedules);
 
+        var guild = await client.guilds.fetch(process.env.GUILD);
         try{
             for (const post of fetchedSchedulePosts) {
-                await client.guilds.fetch(process.env.GUILD).channels.get(post.channelId).messages.fetch(post.messageId);
+                guild.channels.get(post.channelId).messages.fetch(post.messageId);
             }
         } catch {(err) => 
             console.log(err);
@@ -72,12 +73,7 @@ module.exports = async (client) => {
                 console.log(err);
             }
         };
-        try{
-            var guild = await client.guilds.fetch(process.env.GUILD);
-            await lM.updateLobbyTimes(guild, client.dbHandle);
-        } catch {(err) => 
-            console.log(err);
-        }
+        await timeUpdater();
         setInterval(timeUpdater, 60000); // once per minute
 
         // update lobby schedule 
