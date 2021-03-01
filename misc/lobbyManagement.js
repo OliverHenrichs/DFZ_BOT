@@ -480,6 +480,7 @@ module.exports = {
 
         // send embedding post to lobby signup-channel
         const _embed = aE.generateEmbedding(title, text, footer);
+        console.log(_embed);
         const lobbyPostMessage = await channel.send(rM.getRoleMentions(lobbyBeginnerRoles), {embed: _embed}); // mentioning roles in message again to ping beginners
 
         // pin message to channel

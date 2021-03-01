@@ -1,3 +1,4 @@
+const Discord = require("discord.js")
 
 module.exports = {
 
@@ -9,7 +10,7 @@ module.exports = {
      * @param {Array<string>} [table] optional table
      */
     generateEmbedding: function (_title, _text, _footer, table = []) {
-        return  {
+        return  new Discord.MessageEmbed({
             title: _title,
             description: _text,
             fields: table,
@@ -17,6 +18,6 @@ module.exports = {
                 text: _footer
             },
             timestamp: new Date()
-        };
+        });
     }
 }
