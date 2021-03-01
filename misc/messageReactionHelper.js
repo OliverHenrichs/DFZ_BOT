@@ -17,7 +17,7 @@ async function getInfoFromLobbyReaction(client, reaction, user) {
         return [false, undefined, undefined, undefined];
 
     // get guild member (has role)
-    const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
+    const guildMember = await reaction.message.channel.guild.members.fetch(user.id);
 
     // get role
     var role = rM.findRole(guildMember, rM.beginnerRoles);

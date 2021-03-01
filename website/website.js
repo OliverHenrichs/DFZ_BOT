@@ -54,7 +54,7 @@ class WebSocket {
         for (let i = 0; i < nativeCoachList.length; i++) {
             var coach = nativeCoachList[i];
             try{
-                var member = await this.client.guilds.get(process.env.GUILD).fetchMember(coach.user_id);
+                var member = await this.client.guilds.fetch(process.env.GUILD).members.fetch(coach.user_id);
                 coach.nick = member.displayName;
             } catch {
                 coach.nick = "Unknown";
@@ -94,7 +94,7 @@ class WebSocket {
         //     if(!this.checkToken(_token)) 
         //         return;
 
-        //     var channel = this.client.guilds.get(process.env.GUILD).channels.get(channelId)
+        //     var channel = this.client.guilds.fetch(process.env.GUILD).channels.get(channelId)
 
         //     if(channel)
         //         channel.send(text);

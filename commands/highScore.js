@@ -13,6 +13,7 @@ function addDBRowToTable(tableBase, dbRow) {
     tableBase[1].value = tableBase[1].value + "\r\n" + dbRow.lobbyCount;
     tableBase[2].value = tableBase[2].value + "\r\n" + dbRow.lobbyCountNormal;
     tableBase[3].value = tableBase[3].value + "\r\n" + dbRow.lobbyCountTryout;
+    tableBase[4].value = tableBase[4].value + "\r\n" + dbRow.lobbyCountReplayAnalysis;
 }
 
 /**
@@ -70,10 +71,12 @@ module.exports = async (message, dbHandle) => {
         {
             name: 'Tryouts',
             value: '',
+            inline: true,
         },
         {
             name: 'Replay Analyses',
             value: '',
+            inline: true,
         }
     ];    
 

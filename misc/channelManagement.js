@@ -14,15 +14,10 @@ module.exports = {
     scheduleChannelBotbash: process.env.BOT_SCHEDULE_CHANNEL_BOTBASH,
     scheduleChannelTryout: process.env.BOT_SCHEDULE_CHANNEL_TRYOUT,
     scheduleChannel5v5: process.env.BOT_SCHEDULE_CHANNEL_5V5,
+    signupChannel: process.env.BOT_SIGNUP_CHANNEL,
     scheduleChannels: sc,
     lobbyChannels: lc,
     channelStrings: cs,
-
-    /**
-     * checks 
-     * @param {string} channelId 
-     * @param {[string]} channelIds 
-     */
     isWatchingChannel: function (channelId) {
         return lc.includes(channelId) || sc.includes(channelId);
     }

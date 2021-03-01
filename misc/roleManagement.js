@@ -1,4 +1,5 @@
 const beginnerRoles = [process.env.TRYOUT, process.env.TIER_1, process.env.TIER_2, process.env.TIER_3, process.env.TIER_4];
+const beginnerRolesWithoutTryout = beginnerRoles.slice(1);
 const regionRoleIDs = [process.env.REGION_EU_ROLE, process.env.REGION_NA_ROLE, process.env.REGION_SEA_ROLE];
 
 // role management
@@ -6,6 +7,7 @@ module.exports = {
 	adminRoles: [process.env.COACH, process.env.COACH_TRYOUT],
 	tierRoles: beginnerRoles.slice(1),
 	beginnerRoles: beginnerRoles,
+	beginnerRolesWithoutTryout: beginnerRolesWithoutTryout,
 	regionRoleIDs: regionRoleIDs,
 	
 	isAdminRole: function(role)
@@ -24,7 +26,7 @@ module.exports = {
 			return undefined;
 		}
 
-		return member.roles.find(role => rolesToCheck.includes(role.id));
+		return member.roles.cache.find(role => rolesToCheck.includes(role.id));
 	},
 	
 	/**

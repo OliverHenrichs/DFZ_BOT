@@ -8,7 +8,7 @@ const client = new Discord.Client({autoReconnect:true});
 const dB = require("./misc/database")
 // get db-access
 client.dbHandle = dB.createPool();
-//client.dbHandle.dfz_debugMode = true;
+// client.dbHandle.dfz_debugMode = true;
 
 // setup discord event handlers
 fs.readdir("./events/", (err, files) => { 
@@ -30,6 +30,9 @@ dB.createScheduleTable(client.dbHandle)
 })
 .then(() =>  {
 	return dB.createCoachTable(client.dbHandle);
+})
+.then(() =>  {
+	return dB.createPlayerTable(client.dbHandle);
 })
 .then(() => { // login to discord client
 	return client.login(process.env.BOT_TOKEN);

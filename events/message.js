@@ -5,6 +5,7 @@ const mH = require("../misc/messageHelper")
 const hU = require("../commands/helpUser")
 const uL = require("../commands/updateLobby")
 const hS = require("../commands/highScore.js")
+const ap = require("../commands/apply.js")
 
 const PREFIX = '!';
 
@@ -33,13 +34,18 @@ module.exports = async (client, message) => {
 	if (message.channel.type === 'dm') {
 		return mH.reactNegative(message, "Bot doesn't support DMs!");
 	}
+	
+	// handle applications
+	if(cM.signupChannel === message.channel.id && content.startsWith("!apply")) {
+		return ap(message, client.dbHandle);
+	}
 
 	// Ignore messages outside of bot channels
 	if (!cM.isWatchingChannel(message.channel.id)) {
 		return mH.reactNegative(message, "I only listen to messages in the channels " + cM.channelStrings);
 	}
 
-	// help for admins
+	// handle admin commands
 	if (rM.findRole(message.member, rM.adminRoles) != undefined) {
 		if (content.startsWith("!help") || content.startsWith("!helpme")) {
 			return hU(message);
@@ -53,7 +59,5 @@ module.exports = async (client, message) => {
 		if (content.startsWith("!highscore")) {
 			return hS(message, client.dbHandle);
 		}
-	} else if (	content.startsWith("!post")) {
-		return mH.reactNegative(message, "Only coaches are eligible for this command.");
 	}
 }

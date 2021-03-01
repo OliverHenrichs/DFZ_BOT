@@ -131,10 +131,10 @@ function createEventSummary(schedule) {
 async function getEventDescription(schedule, client) {
   return new Promise(async function(resolve, reject) {
     try {
-      var coach1 = await client.fetchUser(schedule.coaches[0]);
+      var coach1 = await client.users.fetch(schedule.coaches[0]);
       var coachesString = coach1.username;
       if (schedule.coaches.length > 1) {
-        var coach2 = await client.fetchUser(schedule.coaches[1]);
+        var coach2 = await client.users.fetch(schedule.coaches[1]);
         coachesString += " and " + coach2.username;
       }
       resolve("Coached by " + coachesString);

@@ -292,7 +292,7 @@ function getTeamTable(assignedUsers, lobbyType, mention=false) {
 async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unpin=true) 
 {
     // fetch message
-    const message = await channel.fetchMessage(messageId);
+    const message = await channel.messages.fetch(messageId);
     if(unpin === true)
         message.unpin();
 
@@ -302,7 +302,7 @@ async function updateAndUnpinLobbyEmbedding(messageId, channel, titleUpdate, unp
     if(newEmbedTitle.length > 256)
         newEmbedTitle = newEmbedTitle.slice(0,256);
 
-    var new_embed =   new Discord.RichEmbed(old_embed)
+    var new_embed =   new Discord.MessageEmbed(old_embed)
                             .setTitle(newEmbedTitle);
     //new_embed.fields = undefined;
     
@@ -367,7 +367,7 @@ function createLobbyStartPost(lobby, channel, playersPerLobby)
         return;
     }
 
-    var counter = 0;
+    var counter = -1;
     userSets.forEach(us => {
         var teams = uH.createTeams(us, lobby.type);
         var teamTable = getTeamTable(teams, lobby.type, true);
@@ -397,7 +397,7 @@ async function updateLobbyPostAndDBEntry(lobby, channel, dbHandle) {
  */
 function notifyPlayers(client, lobby, playerCount, message) {
     for (let i = 0; i < Math.min(lobby.users.length, playerCount); i++) {
-        client.fetchUser(lobby.users[i].id).then(user => {
+        client.users.fetch(lobby.users[i].id).then(user => {
             if(user !== undefined)
                 user.send(message);
         }).catch(err => 
@@ -417,7 +417,7 @@ function getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole, coache
 
 async function getMessageFromChannel(channel, messageId) {
     return new Promise(function(resolve, reject) {
-        channel.fetchMessage(messageId)
+        channel.messages.fetch(messageId)
         .then(message => {
             resolve(message);
         }).catch(err=>
@@ -509,11 +509,11 @@ module.exports = {
      */
     updateLobbyPost: async function(lobby, channel) {
         // fetch message
-        const message = await channel.fetchMessage(lobby.messageId);
+        const message = await channel.messages.fetch(lobby.messageId);
         old_embed = message.embeds[0];
 
         // generate new embed
-        var new_embed = new Discord.RichEmbed(old_embed);
+        var new_embed = new Discord.MessageEmbed(old_embed);
         
         // generate new embed description
         // save old time 
@@ -541,7 +541,7 @@ module.exports = {
         var channels = guild.channels;
         
         for(const lobby of lobbies) {
-            var channel = channels.find(chan => { return chan.id == lobby.channelId});
+            var channel = channels.cache.find(chan => { return chan.id == lobby.channelId});
             if(!channel)
                 continue;
 
@@ -594,7 +594,7 @@ module.exports = {
             }
 
             // generate new embed
-            var new_embed = new Discord.RichEmbed(old_embed);
+            var new_embed = new Discord.MessageEmbed(old_embed);
             new_embed.description = description.join('\n');
             
             // update embed
@@ -652,6 +652,7 @@ module.exports = {
         
         // save coaches and players lobbies
         tr.saveCoachParticipation(client.dbHandle, lobby.coaches, lobby.type);
+        tr.savePlayerParticipation(client.dbHandle, lobby.users, lobby.type, playersPerLobby);
 
         user.send("🔒 I started the lobby.")
         return true;

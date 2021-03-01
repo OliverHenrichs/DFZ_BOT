@@ -1,4 +1,6 @@
+const dB = require("../misc/database")
 const rM = require("../misc/roleManagement")
+const pL = require("../misc/player")
 
 /**
  * Checks if member has nickname
@@ -9,25 +11,16 @@ function hasNickname(member) {
 }
 
 /**
- * Emitted whenever a guild member changes - i.e. new role, removed role, nickname.
- * Here we check if a regional role has been added or removed - and change the users nickname to reflect that change
- * @param {Discord.Client} client discord client
- * @param {Discord.GuildMember} oldMember The member before the update
- * @param {Discord.GuildMember} newMember The member after the update
+ * Update nickname on regional role change
+ * @param {Discord.GuildMember} oldMember 
+ * @param {Discord.GuildMember} newMember 
  */
-module.exports = async (client, oldMember, newMember) => {
-    // ignore if roles did not change
-    if(oldMember.roles.size === newMember.roles.size)
-        return;
-
+function updateNickname(oldMember, newMember) {
+    
     var oldRole = rM.findRole(oldMember, rM.regionRoleIDs);
     var newRole = rM.findRole(newMember, rM.regionRoleIDs);
-    if((oldRole === null && newRole === null) || (oldRole !== null && newRole !== null)) 
-    {
-        // if no roles are defined => role change had nothing to do with regional roles (e.g. tier change)
-        // if both roles are defined => someone is having more than 1 regional role => cannot decide which prefix
-        return;
-    }
+    if(oldRole === newRole) 
+        return false;
 
     // add or remove?
     var addRole = newRole !== null;
@@ -35,7 +28,7 @@ module.exports = async (client, oldMember, newMember) => {
     // which prefix to look for?
     var prefix = rM.getRegionalRolePrefix(addRole ? newRole.id : oldRole.id);
     if(prefix == "")
-        return;
+        return false;
 
     if(addRole) // set nick to reflect role
     {
@@ -47,5 +40,54 @@ module.exports = async (client, oldMember, newMember) => {
         newMember.setNickname(null, "Removed regional role " + prefix).catch(err => { 
             console.log("Could not remove nickname of " + newMember.displayName);
         })
-    } 
+    }
+
+    return true;
+}
+
+
+/**
+ * Inserts player in DB if they have not been added yet
+ * Checks referral code if the player already existed and awards a point to the referrer
+ * @param {mysql.Pool} dbHandle bot db handle
+ * @param {Discord.GuildMember} oldMember 
+ * @param {Discord.GuildMember} newMember 
+ */
+async function handleFirstBeginnerRole(dbHandle, oldMember, newMember) {
+    var oldRole = rM.findRole(oldMember, rM.beginnerRolesWithoutTryout);
+    var newRole = rM.findRole(newMember, rM.beginnerRolesWithoutTryout);
+    if(oldRole !== undefined || newRole === undefined)  {
+        return false;
+    }
+    
+    var player = await dB.getPlayerByID(dbHandle, newMember.user.id);
+    if(player === undefined) {
+        dB.insertPlayer(dbHandle, new pL.Player(newMember.user.id, newMember.user.tag));
+    } else if (player.referredBy !== "" && !player.referralLock) {
+        referrer = await dB.getPlayerByTag(dbHandle, player.referredBy)
+        referrer.referralCount += 1;
+        await dB.updatePlayer(dbHandle, referrer);
+        
+        player.referralLock = 1;
+        await dB.updatePlayer(dbHandle, player);
+    }
+
+    return true;
+}
+
+/**
+ * Emitted whenever a guild member changes - i.e. role or nickname.
+ * @param {Discord.Client} client discord client
+ * @param {Discord.GuildMember} oldMember The member before the update
+ * @param {Discord.GuildMember} newMember The member after the update
+ */
+module.exports = async (client, oldMember, newMember) => {
+    // ignore if roles did not change
+    if(oldMember.roles.cache.size === newMember.roles.cache.size)
+        return;
+
+    if(updateNickname(oldMember, newMember))
+        return;
+
+    handleFirstBeginnerRole(client.dbHandle, oldMember, newMember);
 }

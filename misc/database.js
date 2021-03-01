@@ -1,7 +1,8 @@
+const c = require('./coach');
 const mysql = require('mysql2/promise');
 const l = require('./lobby');
+const p = require('./player');
 const s = require('./schedule');
-const c = require('./coach');
 
 function getCoachTableJson() {
     return {   
@@ -25,6 +26,58 @@ function getCoachTableJson() {
             },
             {  
                 id:'lobbyCountReplayAnalysis',
+                type: 'int'
+            }
+        ]
+    };
+}
+
+function getPlayerTableJson() {
+    return {   
+        table_name: "players",
+        table_columns: [
+            {
+                id:'userId',
+                type: 'VARCHAR(255)'
+            },
+            {
+                id:'tag',
+                type: 'VARCHAR(255)'
+            },
+            {  
+                id:'referredBy',
+                type: 'VARCHAR(255)'
+            },
+            {  
+                id:'referralLock',
+                type: 'TINYINT(1)'
+            },
+            {  
+                id:'referralCount',
+                type: 'int'
+            },
+            {  
+                id:'lobbyCount',
+                type: 'int'
+            },
+            {  
+                id:'lobbyCountUnranked',
+                type: 'int'
+            },
+            {  
+                id:'lobbyCountBotBash',
+                type: 'int'
+            },
+            {  
+                id:'lobbyCount5v5',
+                type: 'int'
+            },
+            {  
+                id:'lobbyCountReplayAnalysis',
+                type: 'int'
+            },
+            {  
+                id:'offenses',
                 type: 'int'
             }
         ]
@@ -85,6 +138,11 @@ function getOptionsTableJson() {
             }
         ]
     };
+}
+
+function createPlayerTable(dbHandle) {
+    var json = getPlayerTableJson();
+    return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
 function createCoachTable(dbHandle) {
@@ -171,13 +229,26 @@ async function insertRow(dbHandle, table, columnNames, columnValues) {
                     '( ' + columnNames.join(', ') + ') VALUES(\'' + columnValues.join('\', \'') + '\');';
     return executeDBCommand(dbHandle, command);
 }
+
 /**
  * inserts coach into database
  * @param {mysql.Pool} dbHandle bot database handle
- * @param {Array<String>} values values for channel_id, message_id and data
+ * @param {Array<String>} values 
  */
 async function insertCoachRow(dbHandle, values) {
     return insertRow(dbHandle, 'coaches', ['user_id', 'lobbyCount', 'lobbyCountTryout', 'lobbyCountNormal', 'lobbyCountReplayAnalysis'], values);
+}
+
+/**
+ * inserts player into database
+ * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Array<String>} values 
+ */
+async function insertPlayerRow(dbHandle, values) {
+    return insertRow(dbHandle, 'players', 
+                    ['userId', 'tag', 'referredBy', 'referralLock', 'referralCount', 
+                    'lobbyCount', 'lobbyCountUnranked', 'lobbyCountBotBash', 
+                    'lobbyCount5v5', 'lobbyCountReplayAnalysis', 'offenses'], values);
 }
 
 /**
@@ -199,7 +270,7 @@ async function insertScheduleRow(dbHandle, values) {
 }
 
 /**
- * Insert lobby into DB
+ * Insert coach into DB
  * @param {mysql.Pool} dbHandle 
  * @param {c.Coach} coach
  */
@@ -210,6 +281,26 @@ async function insertCoach(dbHandle, coach) {
                 coach.lobbyCountNormal, 
                 coach.lobbyCountReplayAnalysis];
     return insertCoachRow(dbHandle, values);
+}
+
+/**
+ * Insert player into DB
+ * @param {mysql.Pool} dbHandle 
+ * @param {p.Player} player
+ */
+async function insertPlayer(dbHandle, player) {
+    values = [  player.userId,
+                player.tag,
+                player.referredBy,
+                player.referralLock,
+                player.referralCount,
+                player.lobbyCount,
+                player.lobbyCountUnranked,
+                player.lobbyCountBotBash,
+                player.lobbyCount5v5,
+                player.lobbyCountReplayAnalysis,
+                player.offenses];
+    return insertPlayerRow(dbHandle, values);
 }
 
 /**
@@ -323,9 +414,9 @@ async function updateDay(dbHandle, day) {
 }
 
 /**
- * updates schedule in db with current state of schedule
+ * updates coach in db 
  * @param {mysql.Pool} dbHandle bot database handle
- * @param {c.Coach} coach coach id
+ * @param {c.Coach} coach coach
  */
 async function updateCoach(dbHandle, coach) {
     return updateTableEntriesByConditions(
@@ -334,6 +425,25 @@ async function updateCoach(dbHandle, coach) {
         ['lobbyCount', 'lobbyCountTryout', 'lobbyCountNormal', 'lobbyCountReplayAnalysis'], 
         [coach.lobbyCount, coach.lobbyCountTryout, coach.lobbyCountNormal, coach.lobbyCountReplayAnalysis], 
         ['user_id = \''+ coach.userId+'\'']
+    );
+}
+
+/**
+ * updates player in db 
+ * @param {mysql.Pool} dbHandle bot database handle
+ * @param {p.Player} player player
+ */
+async function updatePlayer(dbHandle, player) {
+    return updateTableEntriesByConditions(
+        dbHandle, 
+        'players', 
+        [   'referredBy', 'referralLock', 'referralCount', 
+            'lobbyCount', 'lobbyCountUnranked', 'lobbyCountBotBash', 
+            'lobbyCount5v5', 'lobbyCountReplayAnalysis', 'offenses'], 
+        [   '\"' + player.referredBy + '\"' , player.referralLock, player.referralCount, 
+            player.lobbyCount, player.lobbyCountUnranked, player.lobbyCountBotBash,
+            player.lobbyCount5v5, player.lobbyCountReplayAnalysis, player.offenses], 
+        ['userId = \''+ player.userId+'\'']
     );
 }
 
@@ -479,13 +589,13 @@ async function getSortedCoaches(dbHandle, columnName = 'lobbyCount') {
 }
 
 /**
- * Returns all schedules fitting given message id and emoji
+ * Returns coach given user ID, resolves undefined if not found
  * @param {mysql.Pool} dbHandle 
  * @param {string} userId 
  */
 async function getCoach(dbHandle, userId = '') {
     return new Promise(function(resolve, reject) {
-        selectTableValueByConditions(dbHandle, 'coaches', 'lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis', ['user_id = \''+userId+'\''])
+        selectTableValueByConditions(dbHandle, 'coaches', 'lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis', ['userId = \''+userId+'\''])
         .then(dB_response =>{
             if(!Array.isArray(dB_response) || dB_response.length === 0) {
                 resolve(undefined);
@@ -494,6 +604,27 @@ async function getCoach(dbHandle, userId = '') {
             var c_content = dB_response[0]
             c_content.userId = userId;
             resolve(c.Coach.fromObject(c_content));
+        })
+    });
+}
+
+async function getPlayerByID(dbHandle, userId = '') {
+    return getPlayer(dbHandle, ['userId = \''+userId+'\'']);
+}
+
+async function getPlayerByTag(dbHandle, tag = '') {
+    return getPlayer(dbHandle, ['tag = \''+tag+'\'']);
+}
+
+async function getPlayer(dbHandle, filter) {
+    return new Promise(function(resolve, reject) {
+        selectTableValueByConditions(dbHandle, 'players', 'userId, tag, referredBy, referralLock, referralCount, lobbyCount, lobbyCountUnranked, lobbyCountBotBash, lobbyCount5v5, lobbyCountReplayAnalysis, offenses', filter)
+        .then(dB_response => {
+            if(!Array.isArray(dB_response) || dB_response.length === 0) {
+                resolve(undefined);
+                return;
+            }
+            resolve(p.Player.fromObject(dB_response[0]));
         })
     });
 }
@@ -517,7 +648,6 @@ async function deleteTableRows(dbHandle, table, conditions) {
 
             command = command.substr(0, command.length-5);
         }
-
         
         executeDBCommand(dbHandle, command)
         .then(res => {
@@ -563,12 +693,13 @@ module.exports = {
             queueLimit: 0
           });
     },
-
+    createPlayerTable:createPlayerTable,
     createCoachTable:createCoachTable,
     createScheduleTable:createScheduleTable,
     createLobbyTable:createLobbyTable,
     createOptionsTable:createOptionsTable,
     insertCoach:insertCoach,
+    insertPlayer:insertPlayer,
     insertLobby:insertLobby,
     insertSchedule:insertSchedule,
     insertDay:insertDay,
@@ -576,11 +707,14 @@ module.exports = {
     updateSchedule:updateSchedule,
     updateDay:updateDay,
     updateCoach:updateCoach,
+    updatePlayer:updatePlayer,
     getLobbies:getLobbies,
     getSchedules:getSchedules,
     getDay:getDay,
     getCoach:getCoach,
     getSortedCoaches:getSortedCoaches,
+    getPlayerByID:getPlayerByID,
+    getPlayerByTag:getPlayerByTag,
     removeLobby:removeLobby,
     removeSchedules:removeSchedules
 };

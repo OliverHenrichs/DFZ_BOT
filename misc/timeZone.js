@@ -1,5 +1,7 @@
 const tZ = require('timezone-support')
 
+const msPerDay = 86400000;
+
 const weekDays = {  
     0:"Sunday",
     1:"Monday", 
@@ -176,21 +178,21 @@ module.exports = {
         var dayNum = d.getUTCDay() || 7;
         d.setUTCDate(d.getUTCDate() + 4 - dayNum);
         var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-        return Math.ceil((((d - yearStart) / 86400000) + 1)/7)
+        return Math.ceil((((d - yearStart) / msPerDay) + 1)/7)
     },
 
     /**
      * Thx @ https://stackoverflow.com/questions/4156434/javascript-get-the-first-day-of-the-week-from-current-date
      * Returns the dates for given date's next week's monday and sunday
-     * @param {Date} date date from which on we want next monday and tuesday
      */
-    getNextMondayAndSundayDate: function(date=undefined) {
-        var now = date === undefined ? new Date() : date;
+    getNextMondayAndSundayDate: function() {
+        var now = new Date();
         var day = now.getDay(),
-            diffToMondayNextWeek = now.getDate() - day + (day == 0 ? 1 : 8),
+            diffToMondayNextWeek = day == 0 ? 1 : 8-day,
             diffToSundayOfNextWeek = diffToMondayNextWeek + 6;
  
-        return [new Date(now.setDate(diffToMondayNextWeek)), new Date(now.setDate(diffToSundayOfNextWeek))];
+        
+        return [new Date(Date.now() + diffToMondayNextWeek * msPerDay), new Date(Date.now() + diffToSundayOfNextWeek * msPerDay)];
     },
 
     getTimeZoneShortNames: getTimeZoneShortNames,

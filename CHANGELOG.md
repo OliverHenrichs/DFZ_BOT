@@ -1,5 +1,22 @@
 *@Coach The bot received some new features today!*
 
+**DFZ-Bot v0.9 - Changelog**
+
+1. We now have a **Website**. It's fancy but unfinished.
+> It's not official yet, but @coaches [check it out](http://107.180.238.99/) (https and DNS is coming soon).
+> It describes what we do at DFZ.
+> One can create an !apply-string [using a form](http://107.180.238.99/join).
+> Players can create a referral-link that inputs a player's Discord-Tag in above form (Idea: players bring in new players)
+2. Bot tracks players
+> Players will have a track record of all games that have been started with 🔒 by a coach
+> Looking for uses of this apart from making a nice table
+3. Enabled Referrals
+> Posting the !apply message generated with a referral-link is picked up by the bot s.t. we can track player's referral-count
+> Referrers get a point, when a new player receives a Beginner-role (after a tryout-match)
+4. Updated discord.js to v12.5.1 and fixed all API-changes
+
+---
+
 **DFZ-Bot v0.8 - Changelog**
 
 1. Botbash lobby schedule

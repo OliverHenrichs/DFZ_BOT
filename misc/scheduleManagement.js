@@ -170,7 +170,7 @@ async function createScheduledLobby(channels, dbHandle, schedule) {
 
     // message coaches
     schedule.coaches.forEach(c => {
-        channel.guild.fetchMember(c)
+        channel.guild.members.fetch(c)
         .then(guildMember => guildMember.send("I just posted tonight's "+ schedule.region + " lobby starting *" + tZ.getTimeString(zonedTime) + "*.\nYou are coaching 👍"))
         .catch(err => console.log("error when messaging schedule coaches: " + err))
     })
@@ -426,7 +426,7 @@ module.exports = {
         [monday, sunday] = tZ.getNextMondayAndSundayDate(/*new Date(now.setDate(now.getDate()+21))*/);
 
         // lobby schedule
-        var channel5v5 = channels.find(chan => { return chan.id == cM.scheduleChannel5v5});
+        var channel5v5 = channels.cache.find(chan => { return chan.id == cM.scheduleChannel5v5});
         if(channel5v5)
         {
             var coachCount = 2;
@@ -445,7 +445,7 @@ module.exports = {
         }
 
         // tryout schedule
-        var channelTryout = channels.find(chan => { return chan.id == cM.scheduleChannelTryout});
+        var channelTryout = channels.cache.find(chan => { return chan.id == cM.scheduleChannelTryout});
         if(channelTryout)
         {
             var coachCount = 1;
@@ -464,7 +464,7 @@ module.exports = {
         }
         
         // botbash schedule
-        var channelBotbash = channels.find(chan => { return chan.id == cM.scheduleChannelBotbash});
+        var channelBotbash = channels.cache.find(chan => { return chan.id == cM.scheduleChannelBotbash});
         if(channelBotbash)
         {            
             var coachCount = 1;
@@ -490,7 +490,7 @@ module.exports = {
      */
     updateSchedulePost: async function(schedule, channel) {
         // fetch message
-        const message = await channel.fetchMessage(schedule.messageId);
+        const message = await channel.messages.fetch(schedule.messageId);
         if(message === undefined || message === null)
             return;
 
@@ -514,7 +514,7 @@ module.exports = {
                 if(schedule.coachCount > 1)
                     lines[j+2] = "coach 2: " + (schedule.coaches.length > 1 ? ("<@" + schedule.coaches[1] + ">") : "");
                 
-                var new_embed = new Discord.RichEmbed(old_embed);
+                var new_embed = new Discord.MessageEmbed(old_embed);
                 new_embed.fields[i].value = lines.join('\n');
 
                 // update embed
@@ -568,7 +568,7 @@ module.exports = {
      */
     addCoach: async function(client, reaction, user) {
         // get guild member (has role)
-        const guildMember = await reaction.message.channel.guild.fetchMember(user.id);
+        const guildMember = await reaction.message.channel.guild.members.fetch(user.id);
 
         // get role
         var role = rM.findRole(guildMember, rM.adminRoles);

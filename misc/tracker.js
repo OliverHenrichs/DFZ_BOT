@@ -1,6 +1,8 @@
 const c = require("../misc/constants")
 const co = require("../misc/coach")
 const db = require("../misc/database")
+const pl = require("../misc/player");
+const { DiscordAPIError } = require("discord.js");
 
 /**
  * 
@@ -47,7 +49,54 @@ async function getCoachList(dbHandle, columnName) {
     });
 }
 
+/**
+ * Increase Player lobby count
+ * @param {mysql.Pool} dbHandle 
+ * @param {Discord.User} users 
+ * @param {int} lobbyType 
+ * @param {int} playersPerLobby 
+ */
+async function savePlayerParticipation(dbHandle, users, lobbyType, playersPerLobby) {
+    var isReplayAnalysis = lobbyType === c.lobbyTypes.replayAnalysis;
+    var isUnranked = lobbyType === c.lobbyTypes.unranked;
+    var is5v5 = lobbyType === c.lobbyTypes.inhouse;
+    var isBotbash = lobbyType === c.lobbyTypes.botbash;
+
+    for (let i = 0; i < Math.min(users.length, playersPerLobby); i++) {
+        db.getPlayerByID(dbHandle, users[i].id)
+        .then(player => {
+            if(player === undefined) {
+                db.insertPlayer(
+                    dbHandle, 
+                    new pl.Player(  
+                        users[i].id, users[i].tag, "", 0,  1, 
+                        (isUnranked? 1 : 0), 
+                        (isBotbash? 1 : 0), 
+                        (is5v5? 1 : 0), 
+                        (isReplayAnalysis? 1 : 0), 
+                        0
+                    )
+                );
+            } else {
+                player.lobbyCount += 1;
+                
+                if(isReplayAnalysis)
+                    player.lobbyCountReplayAnalysis += 1;
+                else if(isUnranked)
+                    player.lobbyCountUnranked += 1;
+                else if(is5v5)
+                    player.lobbyCount5v5 += 1;
+                else if(isBotbash)
+                    player.lobbyCountBotBash += 1;
+
+                db.updatePlayer(dbHandle, player);
+            }
+        })
+    }
+}
+
 module.exports = {
     saveCoachParticipation: saveCoachParticipation,
+    savePlayerParticipation: savePlayerParticipation,
     getCoachList: getCoachList
 }

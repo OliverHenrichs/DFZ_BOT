@@ -33,7 +33,7 @@ module.exports = async (client) => {
                 return;
 
             for (const lobby of lobbies) {
-                await client.guilds.get(process.env.GUILD).channels.get(channel).fetchMessage(lobby.messageId);
+                await client.guilds.fetch(process.env.GUILD).channels.get(channel).messages.fetch(lobby.messageId);
             }
         }
     } catch {(err) => 
@@ -53,7 +53,7 @@ module.exports = async (client) => {
 
         try{
             for (const post of fetchedSchedulePosts) {
-                await client.guilds.get(process.env.GUILD).channels.get(post.channelId).fetchMessage(post.messageId);
+                await client.guilds.fetch(process.env.GUILD).channels.get(post.channelId).messages.fetch(post.messageId);
             }
         } catch {(err) => 
             console.log(err);
@@ -64,7 +64,7 @@ module.exports = async (client) => {
         // update lobby posts
         const timeUpdater = async () => {
             try{
-                var guild = client.guilds.get(process.env.GUILD);
+                var guild = await client.guilds.fetch(process.env.GUILD);
                 if(guild === undefined || guild === null)
                     return;
                 await lM.updateLobbyTimes(guild, client.dbHandle);
@@ -73,7 +73,8 @@ module.exports = async (client) => {
             }
         };
         try{
-            await lM.updateLobbyTimes(client.guilds.get(process.env.GUILD), client.dbHandle);
+            var guild = await client.guilds.fetch(process.env.GUILD);
+            await lM.updateLobbyTimes(guild, client.dbHandle);
         } catch {(err) => 
             console.log(err);
         }
@@ -82,7 +83,7 @@ module.exports = async (client) => {
         // update lobby schedule 
         const scheduleWriter = async () => {
             
-            var guild = client.guilds.get(process.env.GUILD);
+            var guild = await client.guilds.fetch(process.env.GUILD);
             if(guild === undefined || guild === null)
                 return;
             sM.updateSchedules(client.dbHandle, guild.channels);
@@ -93,7 +94,7 @@ module.exports = async (client) => {
 
         // post lobbies from schedule
         const lobbyPoster = async () => {
-            var guild = client.guilds.get(process.env.GUILD);
+            var guild = client.guilds.fetch(process.env.GUILD);
             if(guild === undefined || guild === null)
                 return;
             await sM.insertScheduledLobbies(guild.channels, client.dbHandle);

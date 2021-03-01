@@ -13,7 +13,7 @@ const tZ = require("../misc/timeZone")
 async function reactMessage(message, reply, emoji) {
     message.react(emoji).then(() => {
         if (message.channel.type !== 'dm')
-             message.delete(5000)
+             message.delete({ timeout: 5000})
     });
     
     if(reply == "" ) 
