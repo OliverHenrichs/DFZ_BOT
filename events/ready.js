@@ -26,14 +26,16 @@ function getUniqueSchedulePosts(schedules) {
 module.exports = async (client) => {
     console.log("Ready at " +  new Date().toLocaleString());
     try {
+        var guild = await client.guilds.fetch(process.env.GUILD)
         for (const channel of cM.lobbyChannels) {
             var lobbies = await dB.getLobbies(client.dbHandle, channel);
             
-            if(lobbies === undefined)
-                return;
+            if(lobbies.length === 0 || lobbies === [] || lobbies === undefined)
+                continue;
 
+            var gc = guild.channels.cache.find(chan => chan.id === channel);
             for (const lobby of lobbies) {
-                await client.guilds.fetch(process.env.GUILD).channels.get(channel).messages.fetch(lobby.messageId);
+                await gc.messages.fetch(lobby.messageId);
             }
         }
     } catch {(err) => 
@@ -54,7 +56,8 @@ module.exports = async (client) => {
         var guild = await client.guilds.fetch(process.env.GUILD);
         try{
             for (const post of fetchedSchedulePosts) {
-                guild.channels.get(post.channelId).messages.fetch(post.messageId);
+                var gc = guild.channels.cache.find(chan => chan.id === post.channelId);
+                gc.messages.fetch(post.messageId);
             }
         } catch {(err) => 
             console.log(err);

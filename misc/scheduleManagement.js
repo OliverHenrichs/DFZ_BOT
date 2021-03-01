@@ -142,7 +142,7 @@ function getLobbyType(schedule) {
 
 /**
  * Creates a lobby post for due schedule
- * @param {Array<Discord.Channel>} channels channels in which to post the lobby
+ * @param {Collection<Snowflake, GuildChannel>} channels channels in which to post the lobby
  * @param {mysql.Pool} dbHandle bot database handle
  * @param {s.Schedule} schedule 
  */
@@ -151,15 +151,17 @@ async function createScheduledLobby(channels, dbHandle, schedule) {
 
     var type = getLobbyType(schedule);
 
+    var channel = undefined;
     if(type === c.lobbyTypes.tryout) {
-        channel = channels.get(process.env.BOT_LOBBY_CHANNEL_TRYOUT);
+        channel = channels.cache.find(chan => chan.id === process.env.BOT_LOBBY_CHANNEL_TRYOUT);
         lobbyBeginnerRoles = rM.beginnerRoles.slice(0,1);
     }
     else if (type === c.lobbyTypes.botbash) {
-        channel = channels.get(process.env.BOT_LOBBY_CHANNEL_BOTBASH);
+        channel = channels.cache.find(chan => chan.id === process.env.BOT_LOBBY_CHANNEL_BOTBASH);
         lobbyBeginnerRoles = rM.beginnerRoles.slice(1,2);
     } else {
-        channel = channels.get(rM.getRegionalRoleLobbyChannel(lobbyRegionRole));
+        var channelId = rM.getRegionalRoleLobbyChannel(lobbyRegionRole)
+        channel = channels.cache.find(chan => chan.id === channelId);
         lobbyBeginnerRoles = rM.beginnerRoles.slice(1,3);
     }
 
