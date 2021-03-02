@@ -93,7 +93,7 @@ module.exports = async (client) => {
 
         // post lobbies from schedule
         const lobbyPoster = async () => {
-            var guild = client.guilds.fetch(process.env.GUILD);
+            var guild = await client.guilds.fetch(process.env.GUILD);
             if(guild === undefined || guild === null)
                 return;
             await sM.insertScheduledLobbies(guild.channels, client.dbHandle);
