@@ -29,7 +29,7 @@ module.exports = async (message, dbHandle) => {
 		if(!res) {
 			return mH.reactNegative(message, errormsg);
 		}
-	} else if(type === c.lobbyTypes.replayAnalysis) {
+	} else if(type === c.lobbyTypes.replayAnalysis || type === c.lobbyTypes.meeting) {
 		beginnerRoleNumbers = [1, 2, 3, 4];
 	} else if(type === c.lobbyTypes.tryout) {
 		beginnerRoleNumbers = [0];

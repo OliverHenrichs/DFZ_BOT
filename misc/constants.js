@@ -1,6 +1,6 @@
 
-const lobbyTypes = {inhouse:1, unranked:2, botbash:3, tryout: 4, replayAnalysis: 5}
-const lobbyTypePlayerCount = {inhouse:10, unranked:5, botbash:5, tryout: 5, replayAnalysis: 1000}
+const lobbyTypes = {inhouse:1, unranked:2, botbash:3, tryout: 4, replayAnalysis: 5, meeting: 6}
+const lobbyTypePlayerCount = {inhouse:10, unranked:5, botbash:5, tryout: 5, replayAnalysis: 1000, meeting: 1000}
 const positionReactionEmojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
 const tryoutReactionEmoji = '✅';
 const lobbyManagementReactionEmojis =['🔒', '❌', '🧑‍🏫'];
@@ -10,7 +10,7 @@ module.exports = {
     positionReactionEmojis: positionReactionEmojis,
     lobbyManagementReactionEmojis: lobbyManagementReactionEmojis,
     lobbyTypes: lobbyTypes,
-    simpleLobbyTypes: [lobbyTypes.tryout, lobbyTypes.replayAnalysis],
+    simpleLobbyTypes: [lobbyTypes.tryout, lobbyTypes.replayAnalysis, lobbyTypes.meeting],
     roleBasedLobbyTypes: [lobbyTypes.inhouse, lobbyTypes.unranked, lobbyTypes.botbash],
     lobbyTypePlayerCount: lobbyTypePlayerCount,
     
@@ -64,6 +64,8 @@ module.exports = {
                 return "a TRYOUT lobby"
             case lobbyTypes.replayAnalysis:
                 return "a REPLAY ANALYSIS session"
+            case lobbyTypes.meeting:
+                return "a meeting"
         }
     },
 

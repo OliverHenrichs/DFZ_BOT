@@ -29,6 +29,8 @@ function getCoachCountByLobbyType(lobbyType) {
             return 1;
         case c.lobbyTypes.replayAnalysis:
             return 1;
+        case c.lobbyTypes.meeting:
+            return 1;
     }
     return 0;
 }
@@ -324,6 +326,8 @@ function getIncompleteTeamPostTitle(type) {
         return "Tryout lobby starts now";
     if (type === c.lobbyTypes.replayAnalysis)
         return "Replay analysis session starts now";
+    if (type === c.lobbyTypes.meeting)
+        return "Meeting starts now";
 
     return "Not enough players for a lobby but we gotta get going anyway";
 }
@@ -332,6 +336,8 @@ function getCompleteTeamPostTitle(type, counter) {
     var res = c.getLobbyNameByType(type)
     if (type === c.lobbyTypes.replayAnalysis)
         res += " session starts now";
+    else if(type === c.lobbyTypes.meeting)
+        res += " starts now";
     else
         res += " lobby #" + counter + (counter == 1 ? " starts now" : " starts later");
 
@@ -410,8 +416,18 @@ function getLobbyPostText(lobbyBeginnerRoles, lobbyType, lobbyRegionRole, coache
 {
     maxCoachCount = getCoachCountByLobbyType(lobbyType);
     coachCount = coaches === undefined ? 0 : coaches.length;
+    var coachString = ""
+    var coachStringPl = "";
+    if(lobbyType === c.lobbyTypes.meeting) {
+        coachString = "Chair";
+        coachStringPl = "Chairs";
+    } else {
+        coachString = "Coach";
+        coachStringPl = "Coaches";
+    }
+
     return "for " + rM.getRoleMentions(lobbyBeginnerRoles) + 
-            (coachCount === 0 ? "" : (coachCount >= 2 && maxCoachCount === 2 ? ("\nCoaches: <@" + coaches[0] + ">, <@" + coaches[1]) + ">" : ("\nCoach: <@" + coaches[0]) + ">")) +
+            (coachCount === 0 ? "" : (coachCount >= 2 && maxCoachCount === 2 ? ("\n" + coachStringPl +": <@" + coaches[0] + ">, <@" + coaches[1]) + ">" : ("\n" + coachString + ": <@" + coaches[0]) + ">")) +
             (c.isRoleBasedLobbyType(lobbyType) ? "\nRegion: "+ rM.getRoleMention(lobbyRegionRole) :"");
 }
 
@@ -432,10 +448,16 @@ function getLobbyPostFooter(type, regionRole) {
         res += footerStringBeginner + "\n\nPlayers from " + rM.getRegionalRoleString(regionRole) + "-region will be moved up.";
     } else if (type === c.lobbyTypes.tryout) {
         res += footerStringTryout;
+    } else if (type === c.lobbyTypes.meeting) {
+        res += footerStringMeeting;
     } else if (type === c.lobbyTypes.replayAnalysis)
         res += footerStringReplayAnalysis;
-    
-    res += "\n\nCoaches: Lock and start lobby with 🔒, cancel with ❌";
+
+    if (type === c.lobbyTypes.meeting) {
+        res += "\n\nMeeting chair:";
+    } else 
+        res += "\n\nCoaches:";
+    res += " Lock and start lobby with 🔒, cancel with ❌";
     return res;
 }
 
@@ -444,6 +466,7 @@ const alreadyStartedLobbyTimeStartString = "Lobby started ";
 var footerStringBeginner = "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\nClick again to remove a position.\nRemove all positions to withdraw from the lobby."
 var footerStringTryout = "Join lobby by clicking ✅ below.\nClick again to withdraw." 
 var footerStringReplayAnalysis = "Join session by clicking ✅ below.\nClick again to withdraw." 
+var footerStringMeeting = "Join meeting by clicking ✅ below.\nClick again to withdraw." 
 
 module.exports = {
     
@@ -480,7 +503,6 @@ module.exports = {
 
         // send embedding post to lobby signup-channel
         const _embed = aE.generateEmbedding(title, text, footer);
-        console.log(_embed);
         const lobbyPostMessage = await channel.send(rM.getRoleMentions(lobbyBeginnerRoles), {embed: _embed}); // mentioning roles in message again to ping beginners
 
         // pin message to channel

@@ -1,4 +1,4 @@
-const lc = [process.env.BOT_LOBBY_CHANNEL_EU, process.env.BOT_LOBBY_CHANNEL_NA, process.env.BOT_LOBBY_CHANNEL_SEA, process.env.BOT_LOBBY_CHANNEL_TRYOUT, process.env.BOT_LOBBY_CHANNEL_TEST, process.env.BOT_LOBBY_CHANNEL_BOTBASH, process.env.BOT_LOBBY_CHANNEL_REPLAYANALYSIS]
+const lc = [process.env.BOT_LOBBY_CHANNEL_EU, process.env.BOT_LOBBY_CHANNEL_NA, process.env.BOT_LOBBY_CHANNEL_SEA, process.env.BOT_LOBBY_CHANNEL_TRYOUT, process.env.BOT_LOBBY_CHANNEL_TEST, process.env.BOT_LOBBY_CHANNEL_BOTBASH, process.env.BOT_LOBBY_CHANNEL_REPLAYANALYSIS, process.env.BOT_MEETING_CHANNEL]
 const sc = [process.env.BOT_SCHEDULE_CHANNEL_BOTBASH, process.env.BOT_SCHEDULE_CHANNEL_TRYOUT, process.env.BOT_SCHEDULE_CHANNEL_5V5];
 const cs = "<#" 
             + process.env.BOT_LOBBY_CHANNEL_EU + ">, <#" 
