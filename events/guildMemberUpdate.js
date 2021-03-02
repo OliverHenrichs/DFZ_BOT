@@ -23,7 +23,7 @@ function updateNickname(oldMember, newMember) {
         return false;
 
     // add or remove?
-    var addRole = newRole !== null;
+    var addRole = newRole !== undefined;
 
     // which prefix to look for?
     var prefix = rM.getRegionalRolePrefix(addRole ? newRole.id : oldRole.id);
