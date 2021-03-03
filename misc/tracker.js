@@ -50,6 +50,19 @@ async function getCoachList(dbHandle, columnName) {
 }
 
 /**
+ * Calls db to get player list sorted by columnName
+ * @param {mysql.Pool} dbHandle 
+ * @param {String} columnName 
+ */
+async function getPlayerList(dbHandle, columnName) {
+    return new Promise(function(resolve, reject) {
+        db.getSortedPlayers(dbHandle, columnName)
+        .then(coaches => resolve(coaches[0]))
+        .catch((err) => reject(err));
+    });
+}
+
+/**
  * Increase Player lobby count
  * @param {mysql.Pool} dbHandle 
  * @param {Discord.User} users 
@@ -98,5 +111,6 @@ async function savePlayerParticipation(dbHandle, users, lobbyType, playersPerLob
 module.exports = {
     saveCoachParticipation: saveCoachParticipation,
     savePlayerParticipation: savePlayerParticipation,
-    getCoachList: getCoachList
+    getCoachList: getCoachList,
+    getPlayerList: getPlayerList
 }

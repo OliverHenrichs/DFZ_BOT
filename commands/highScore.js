@@ -2,19 +2,97 @@ const aE = require("../misc/answerEmbedding")
 const t = require("../misc/tracker")
 const mH = require("../misc/messageHelper")
 
+const highScoreTypes = {coaches : {id: 0, name: "coaches"} , players: {id: 1, name: "players"}}
+
 /**
  * 
  * @param {JSON} tableBase 
  * @param {int} startIndex 
  * @param {JSON} dbRow 
  */
-function addDBRowToTable(tableBase, dbRow) {
+function addDBCoachRowToTable(tableBase, dbRow) {
     tableBase[0].value = tableBase[0].value + "\r\n<@" +dbRow.user_id + ">";
     tableBase[1].value = tableBase[1].value + "\r\n" + dbRow.lobbyCount;
     tableBase[2].value = tableBase[2].value + "\r\n" + dbRow.lobbyCountNormal;
     tableBase[3].value = tableBase[3].value + "\r\n" + dbRow.lobbyCountTryout;
     tableBase[4].value = tableBase[4].value + "\r\n" + dbRow.lobbyCountReplayAnalysis;
 }
+
+/**
+ * 
+ * @param {JSON} tableBase 
+ * @param {int} startIndex 
+ * @param {JSON} dbRow 
+ */
+function addDBPlayerRowToTable(tableBase, dbRow) {
+    tableBase[0].value = tableBase[0].value + "\r\n<@" +dbRow.userId + ">";
+    tableBase[1].value = tableBase[1].value + "\r\n" + dbRow.lobbyCount;
+    tableBase[2].value = tableBase[2].value + "\r\n" + dbRow.lobbyCountUnranked;
+    tableBase[3].value = tableBase[3].value + "\r\n" + dbRow.lobbyCount5v5;
+    tableBase[4].value = tableBase[4].value + "\r\n" + dbRow.lobbyCountBotBash;
+    tableBase[5].value = tableBase[5].value + "\r\n" + dbRow.lobbyCountReplayAnalysis;
+}
+    
+const tableBaseCoachesTemplate = [
+    {
+        name: 'Coach',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Total Coached Lobbies',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Regular Lobbies',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Tryouts',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Replay Analyses',
+        value: '',
+        inline: true,
+    }
+]; 
+
+const tableBasePlayersTemplate = [
+    {
+        name: 'Player',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Total played',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Unranked',
+        value: '',
+        inline: true,
+    },
+    {
+        name: '5v5',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Botbash',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Replay Analyses',
+        value: '',
+        inline: true,
+    }
+]; 
 
 /**
  * Returns list of coaches and their lobby count as a private message to the messaging user
@@ -24,70 +102,99 @@ function addDBRowToTable(tableBase, dbRow) {
 module.exports = async (message, dbHandle) => {
     var arguments = mH.getArguments(message);
 
-    var getLobbyType = false;
-    var finished = false;
-    var dbResponse = [];
+    var nextisLobbyType = false, 
+        lobbyType = "",
+        nextIsUserType = false,
+        userType = "";    
+
     while(arguments.length > 0 ) {
         let arg = arguments[0];
         arguments.shift();
 
-        if(arg === "-type") {
-            getLobbyType = true;
+        if(arg === "-userType" || arg === "-ut") {
+            nextIsUserType = true;
             continue;
-        } 
+        }
+
+        if(arg === "-lobbyType" || arg === "-lt") {
+            nextisLobbyType = true;
+            continue;
+        }
         
-        if(getLobbyType) {
-            finished = true;
-            if(arg === 'tryout')
-                dbResponse = await t.getCoachList(dbHandle, 'lobbyCountTryout');
-            else if (arg === 'normal')
-                dbResponse = await t.getCoachList(dbHandle, 'lobbyCountNormal');
-            else if (arg === 'replayAnalysis')
-                dbResponse = await t.getCoachList(dbHandle, 'lobbyCountReplayAnalysis');
-            else 
-                dbResponse = await t.getCoachList(dbHandle, 'lobbyCount');
+        if(nextisLobbyType) {
+            lobbyType = arg;
+            nextisLobbyType = false;
+            continue
+        }
+
+        if(nextIsUserType) {
+            userType = arg;
+            nextIsUserType = false;
+            continue
         }
     }
 
-    if(!finished)
-        dbResponse = await t.getCoachList(dbHandle, 'lobbyCount');
-    
-    var tableBase = [
-        {
-            name: 'Coach',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Total Coached Lobbies',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Regular Lobbies',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Tryouts',
-            value: '',
-            inline: true,
-        },
-        {
-            name: 'Replay Analyses',
-            value: '',
-            inline: true,
-        }
-    ];    
+    var dbResponse = [];
 
+    var players = true;
+    var ut = "";
+    switch(userType) {
+        case "players":
+            ut = "players";
+            break;
+        case "coaches":
+        default:
+            ut = "coaches";
+            players = false;
+    }
+
+    var tableBase = players ? tableBasePlayersTemplate : tableBaseCoachesTemplate;
+    
+    var lt = "";
+    if(players) {
+        switch(lobbyType) {
+            case 'unranked':
+                lt = 'lobbyCountUnranked';
+                break;
+            case '5v5':
+                lt = 'lobbyCount5v5';
+                break;
+            case 'botbash':
+                lt = 'lobbyCountBotBash';
+                break;
+            case 'replayAnalysis':
+                lt = 'lobbyCountReplayAnalysis';
+                break;
+            default:
+                lt = "lobbyCount";
+        }
+        dbResponse = await t.getPlayerList(dbHandle, lt);
+    }
+    else {
+        switch(lobbyType) {
+            case 'tryout':
+                lt = 'lobbyCountTryout';
+                break;
+            case 'normal':
+                lt = 'lobbyCountNormal';
+                break;
+            case 'replayAnalysis':
+                lt = 'lobbyCountReplayAnalysis';
+                break;
+            default:
+                lt = "lobbyCount";
+        }
+        dbResponse = await t.getCoachList(dbHandle, lt);
+    }
+    
     dbResponse.forEach(dbRow => {
-        addDBRowToTable(tableBase, dbRow)
+        players ? addDBPlayerRowToTable(tableBase, dbRow) : addDBCoachRowToTable(tableBase, dbRow);
     });
 
     var _embed = aE.generateEmbedding(
-        "Coached Lobby Highscores", 
-        "Hall of Fame of DFZ coaches!", 
-        "Start your lobbies with 🔒 to make them count!", 
+        "Lobby Highscores ("+ (players ? "Players" : "Coaches") + ")", 
+        "Hall of Fame of DFZ "+ (players ? "Players" : "Coaches") + " !", 
+        "Start lobbies with 🔒 to make them count!", 
         dbResponse.length > 0 ? tableBase : [])
     
     mH.reactPositive(message);

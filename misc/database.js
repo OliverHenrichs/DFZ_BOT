@@ -574,6 +574,25 @@ async function getDay(dbHandle) {
  * @param {mysql.Pool} dbHandle 
  * @param {string} columnName name of column to sort by 
  */
+async function getSortedPlayers(dbHandle, columnName = 'lobbyCount') {
+    return new Promise(function(resolve, reject) {
+        var command = getSortedTableCommand('players', columnName)
+        
+        executeDBCommand(dbHandle, command)
+        .then(res=>{
+            resolve(res);
+        })
+        .catch(err => {
+            reject(err);
+        })
+    });
+}
+
+/**
+ * Returns all coaches in DB with their lobby counts
+ * @param {mysql.Pool} dbHandle 
+ * @param {string} columnName name of column to sort by 
+ */
 async function getSortedCoaches(dbHandle, columnName = 'lobbyCount') {
     return new Promise(function(resolve, reject) {
         var command = getSortedTableCommand('coaches', columnName)
@@ -713,6 +732,7 @@ module.exports = {
     getDay:getDay,
     getCoach:getCoach,
     getSortedCoaches:getSortedCoaches,
+    getSortedPlayers:getSortedPlayers,
     getPlayerByID:getPlayerByID,
     getPlayerByTag:getPlayerByTag,
     removeLobby:removeLobby,
