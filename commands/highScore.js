@@ -185,7 +185,7 @@ module.exports = async (message, dbHandle) => {
     
     var counter = 0
     dbResponse.forEach(dbRow => {
-        if (counter ++ < 10)
+        if (counter++ < 10)
             players ? addDBPlayerRowToTable(tableBase, dbRow) : addDBCoachRowToTable(tableBase, dbRow);
     });
 

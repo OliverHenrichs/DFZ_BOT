@@ -147,6 +147,11 @@ body {
     padding-bottom: 10px;
 }
 
+.dfz-grid-row-2 {
+    grid-template-areas: "a a";
+    grid-template-columns: repeat(2, 50%);
+}
+
 .dfz-grid-row-3 {
     grid-template-areas: "a a a";
     grid-template-columns: repeat(3, 33.33%);
@@ -223,13 +228,25 @@ body {
     padding-left: calc(2.117 * 20vw);
 }
 
+#tagImageContainer {
+    bottom: 12vw;
+    margin-left: 20%;
+    margin-right: 20%;
+    min-height: 100px;
+    height: 20vw;
+    padding-left: calc(1.777 * 20vw);
+}
+
 #popUpDotaId:hover ~ #dotaIDImageContainer {
     display:block;
 }
 
 #popUpTryout:hover ~ #tryoutImageContainer {
     display:block;
-    background-image: url(/tryout.png);
+}
+
+#popUpTag:hover ~ #tagImageContainer {
+    display:block;
 }
 
 .infoBox {

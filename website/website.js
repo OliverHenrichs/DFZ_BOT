@@ -81,11 +81,6 @@ class WebSocket {
                 title: _title
             });
         })
-        this.app.get('/referral', (req, res) => {
-            res.render('referralLink', {
-                title: _title
-            });
-        })
 
         // this.app.post('/sendMessage', (req, res) => {
         //     var _token = req.body.token;
