@@ -2,12 +2,9 @@ const aE = require("../misc/answerEmbedding")
 const t = require("../misc/tracker")
 const mH = require("../misc/messageHelper")
 
-const highScoreTypes = {coaches : {id: 0, name: "coaches"} , players: {id: 1, name: "players"}}
-
 /**
  * 
  * @param {JSON} tableBase 
- * @param {int} startIndex 
  * @param {JSON} dbRow 
  */
 function addDBCoachRowToTable(tableBase, dbRow) {
@@ -21,11 +18,10 @@ function addDBCoachRowToTable(tableBase, dbRow) {
 /**
  * 
  * @param {JSON} tableBase 
- * @param {int} startIndex 
  * @param {JSON} dbRow 
  */
 function addDBPlayerRowToTable(tableBase, dbRow) {
-    tableBase[0].value = tableBase[0].value + "\r\n<@" +dbRow.userId + ">";
+    tableBase[0].value = tableBase[0].value + "\r\n<@" + dbRow.userId + ">";
     tableBase[1].value = tableBase[1].value + "\r\n" + dbRow.lobbyCount;
     tableBase[2].value = tableBase[2].value + "\r\n" + dbRow.lobbyCountUnranked;
     tableBase[3].value = tableBase[3].value + "\r\n" + dbRow.lobbyCount5v5;
@@ -195,7 +191,8 @@ module.exports = async (message, dbHandle) => {
         "Lobby Highscores ("+ (players ? "Players" : "Coaches") + ")", 
         "Hall of Fame of DFZ "+ (players ? "Players" : "Coaches") + " !", 
         "Start lobbies with 🔒 to make them count!", 
-        dbResponse.length > 0 ? tableBase : [])
+        dbResponse.length > 0 ? tableBase : []
+    )
     
     mH.reactPositive(message);
     message.author.send({embed: _embed});
