@@ -183,12 +183,14 @@ module.exports = async (message, dbHandle) => {
         dbResponse = await t.getCoachList(dbHandle, lt);
     }
     
+    var counter = 0
     dbResponse.forEach(dbRow => {
-        players ? addDBPlayerRowToTable(tableBase, dbRow) : addDBCoachRowToTable(tableBase, dbRow);
+        if (counter ++ < 10)
+            players ? addDBPlayerRowToTable(tableBase, dbRow) : addDBCoachRowToTable(tableBase, dbRow);
     });
 
     var _embed = aE.generateEmbedding(
-        "Lobby Highscores ("+ (players ? "Players" : "Coaches") + ")", 
+        "Lobby Highscores ("+ (players ? "Players" : "Coaches") + ") Top 10", 
         "Hall of Fame of DFZ "+ (players ? "Players" : "Coaches") + " !", 
         "Start lobbies with 🔒 to make them count!", 
         dbResponse.length > 0 ? tableBase : []
