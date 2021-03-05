@@ -15,25 +15,24 @@ async function saveCoachParticipation(dbHandle, coaches, lobbyType) {
     var isReplayAnalysis = lobbyType === c.lobbyTypes.replayAnalysis;
     var isNormal = !isTryout && !isReplayAnalysis;
 
-    coaches.forEach((coachId)=> {
-        db.getCoach(dbHandle, coachId)
-        .then(dBCoach => {
-            if(dBCoach === undefined) {
-                db.insertCoach(dbHandle, new co.Coach(coachId, 1, (isTryout? 1 : 0), (isNormal? 1 : 0), (isReplayAnalysis? 1 : 0)));
-            } else {
-                dBCoach.lobbyCount += 1;
+    for (let i = 0; i < coaches.length; i++) {
+        var coachId = coaches[i];
+        var dBCoach = await db.getCoach(dbHandle, coachId);
+        if(dBCoach === undefined) {
+            await db.insertCoach(dbHandle, new co.Coach(coachId, 1, (isTryout? 1 : 0), (isNormal? 1 : 0), (isReplayAnalysis? 1 : 0)));
+        } else {
+            dBCoach.lobbyCount += 1;
 
-                if(isTryout)
-                    dBCoach.lobbyCountTryout += 1;
-                else if(isReplayAnalysis)
-                    dBCoach.lobbyCountReplayAnalysis += 1;
-                else 
-                    dBCoach.lobbyCountNormal += 1;
+            if(isTryout)
+                dBCoach.lobbyCountTryout += 1;
+            else if(isReplayAnalysis)
+                dBCoach.lobbyCountReplayAnalysis += 1;
+            else 
+                dBCoach.lobbyCountNormal += 1;
 
-                db.updateCoach(dbHandle, dBCoach);
-            }
-        })
-    });
+            await db.updateCoach(dbHandle, dBCoach);
+        }
+    }
 }
 
 /**
@@ -76,35 +75,34 @@ async function savePlayerParticipation(dbHandle, users, lobbyType, playersPerLob
     var isBotbash = lobbyType === c.lobbyTypes.botbash;
 
     for (let i = 0; i < Math.min(users.length, playersPerLobby); i++) {
-        db.getPlayerByID(dbHandle, users[i].id)
-        .then(player => {
-            if(player === undefined) {
-                db.insertPlayer(
-                    dbHandle, 
-                    new pl.Player(  
-                        users[i].id, users[i].tag, "", 0,  1, 
-                        (isUnranked? 1 : 0), 
-                        (isBotbash? 1 : 0), 
-                        (is5v5? 1 : 0), 
-                        (isReplayAnalysis? 1 : 0), 
-                        0
-                    )
-                );
-            } else {
-                player.lobbyCount += 1;
-                
-                if(isReplayAnalysis)
-                    player.lobbyCountReplayAnalysis += 1;
-                else if(isUnranked)
-                    player.lobbyCountUnranked += 1;
-                else if(is5v5)
-                    player.lobbyCount5v5 += 1;
-                else if(isBotbash)
-                    player.lobbyCountBotBash += 1;
+        var player = await db.getPlayerByID(dbHandle, users[i].id)
+        
+        if(player === undefined) {
+            await db.insertPlayer(
+                dbHandle, 
+                new pl.Player(  
+                    users[i].id, users[i].tag, "", 0,  1, 
+                    (isUnranked? 1 : 0), 
+                    (isBotbash? 1 : 0), 
+                    (is5v5? 1 : 0), 
+                    (isReplayAnalysis? 1 : 0), 
+                    0
+                )
+            );
+        } else {
+            player.lobbyCount += 1;
+            
+            if(isReplayAnalysis)
+                player.lobbyCountReplayAnalysis += 1;
+            else if(isUnranked)
+                player.lobbyCountUnranked += 1;
+            else if(is5v5)
+                player.lobbyCount5v5 += 1;
+            else if(isBotbash)
+                player.lobbyCountBotBash += 1;
 
-                db.updatePlayer(dbHandle, player);
-            }
-        })
+            await db.updatePlayer(dbHandle, player);
+        }
     }
 }
 

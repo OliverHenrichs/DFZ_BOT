@@ -614,7 +614,7 @@ async function getSortedCoaches(dbHandle, columnName = 'lobbyCount') {
  */
 async function getCoach(dbHandle, userId = '') {
     return new Promise(function(resolve, reject) {
-        selectTableValueByConditions(dbHandle, 'coaches', 'lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis', ['userId = \''+userId+'\''])
+        selectTableValueByConditions(dbHandle, 'coaches', 'lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis', ['user_id = \''+userId+'\''])
         .then(dB_response =>{
             if(!Array.isArray(dB_response) || dB_response.length === 0) {
                 resolve(undefined);
