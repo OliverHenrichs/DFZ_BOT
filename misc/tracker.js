@@ -74,6 +74,11 @@ async function savePlayerParticipation(dbHandle, users, lobbyType, playersPerLob
     var is5v5 = lobbyType === c.lobbyTypes.inhouse;
     var isBotbash = lobbyType === c.lobbyTypes.botbash;
 
+    var referredBy = "",
+        referralLock = 0, 
+        referralCount = 0,
+        lobbyCount = 1;
+
     for (let i = 0; i < Math.min(users.length, playersPerLobby); i++) {
         var player = await db.getPlayerByID(dbHandle, users[i].id)
         
@@ -81,7 +86,12 @@ async function savePlayerParticipation(dbHandle, users, lobbyType, playersPerLob
             await db.insertPlayer(
                 dbHandle, 
                 new pl.Player(  
-                    users[i].id, users[i].tag, "", 0,  1, 
+                    users[i].id, 
+                    users[i].tag, 
+                    referredBy,
+                    referralLock, 
+                    referralCount,
+                    lobbyCount,
                     (isUnranked? 1 : 0), 
                     (isBotbash? 1 : 0), 
                     (is5v5? 1 : 0), 
