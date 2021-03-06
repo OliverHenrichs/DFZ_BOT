@@ -570,7 +570,7 @@ async function getDay(dbHandle) {
 
 
 /**
- * Returns all coaches in DB with their lobby counts
+ * Returns all players in DB sorted by specific column
  * @param {mysql.Pool} dbHandle 
  * @param {string} columnName name of column to sort by 
  */
@@ -589,7 +589,7 @@ async function getSortedPlayers(dbHandle, columnName = 'lobbyCount') {
 }
 
 /**
- * Returns all coaches in DB with their lobby counts
+ * Returns all coaches in DB sorted by specific column
  * @param {mysql.Pool} dbHandle 
  * @param {string} columnName name of column to sort by 
  */

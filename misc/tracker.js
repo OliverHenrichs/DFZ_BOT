@@ -14,13 +14,16 @@ async function saveCoachParticipation(dbHandle, coaches, lobbyType) {
     var isTryout = lobbyType === c.lobbyTypes.tryout;
     var isReplayAnalysis = lobbyType === c.lobbyTypes.replayAnalysis;
     var isNormal = !isTryout && !isReplayAnalysis;
-
+    console.log('In saveCoachParticipation for ' + coaches.length + coaches.length > 1 ? "coaches" : "coach");
     for (let i = 0; i < coaches.length; i++) {
         var coachId = coaches[i];
+        console.log('checking existence of coach ' + coachId);
         var dBCoach = await db.getCoach(dbHandle, coachId);
         if(dBCoach === undefined) {
+            console.log('Inserting coach');
             await db.insertCoach(dbHandle, new co.Coach(coachId, 1, (isTryout? 1 : 0), (isNormal? 1 : 0), (isReplayAnalysis? 1 : 0)));
         } else {
+            console.log('updating coach');
             dBCoach.lobbyCount += 1;
 
             if(isTryout)
@@ -33,6 +36,7 @@ async function saveCoachParticipation(dbHandle, coaches, lobbyType) {
             await db.updateCoach(dbHandle, dBCoach);
         }
     }
+    console.log('Finished saveCoachParticipation');
 }
 
 /**
