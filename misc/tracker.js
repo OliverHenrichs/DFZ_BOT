@@ -14,7 +14,7 @@ async function saveCoachParticipation(dbHandle, coaches, lobbyType) {
     var isTryout = lobbyType === c.lobbyTypes.tryout;
     var isReplayAnalysis = lobbyType === c.lobbyTypes.replayAnalysis;
     var isNormal = !isTryout && !isReplayAnalysis;
-    console.log('In saveCoachParticipation for ' + coaches.length + coaches.length > 1 ? "coaches" : "coach");
+    console.log('Starting saveCoachParticipation for ' + coaches.length + (coaches.length > 1 ? "coaches" : "coach"));
     for (let i = 0; i < coaches.length; i++) {
         var coachId = coaches[i];
         console.log('checking existence of coach ' + coachId);
