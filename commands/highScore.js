@@ -183,11 +183,9 @@ module.exports = async (message, dbHandle) => {
         dbResponse = await t.getCoachList(dbHandle, lt);
     }
     
-    var counter = 0
-    dbResponse.forEach(dbRow => {
-        if (counter++ < 10)
-            players ? addDBPlayerRowToTable(tableBase, dbRow) : addDBCoachRowToTable(tableBase, dbRow);
-    });
+    const maxNum = 10;
+    for (let i = 0; i< Math.min(maxNum, dbResponse.length); i++)
+        players ? addDBPlayerRowToTable(tableBase, dbResponse[i]) : addDBCoachRowToTable(tableBase, dbResponse[i]);
 
     var _embed = aE.generateEmbedding(
         "Lobby Highscores ("+ (players ? "Players" : "Coaches") + ") Top 10", 
