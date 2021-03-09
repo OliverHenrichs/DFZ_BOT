@@ -1,6 +1,7 @@
 const express = require('express')
 const hbs = require('express-handlebars')
 const bodyParser = require('body-parser')
+var visitCounter = require('express-visit-counter');
 
 var RateLimit = require('express-rate-limit');
 var limiter = new RateLimit({
@@ -33,6 +34,7 @@ class WebSocket {
         this.app.set('view engine', 'hbs');
 
         this.app.use(express.static(path.join(__dirname, 'public')));
+        this.app.use(visitCounter.initialize());
 
         // this.app.use(bodyParser.urlencoded({extended: false}));
         // this.app.use(bodyParser.json());
@@ -69,17 +71,43 @@ class WebSocket {
         setInterval(this.updateCoachList, 2*60*60000);
     }
 
-    registerRoots() {
-        this.app.get('/', (req, res) => {
+    async registerRoots() {
+        this.app.get('/', async (req, res) => {
+            var vc = await visitCounter.Loader.getCount();
             res.render('index', {
                 title: _title, 
-                coaches: this.coachList
+                coaches: this.coachList,
+                visitorCount: vc
             });
         })
-        this.app.get('/join', (req, res) => {
+        this.app.get('/join', async (req, res) => {
+            var vc = await visitCounter.Loader.getCount();
             res.render('joinLink', {
-                title: _title
+                title: _title,
+                visitorCount: vc
             });
+        })
+        this.app.get('/count', async function(req, res) {
+            let visitorsAltogether = await visitCounter.Loader.getCount();
+            let visitorsSite1 = await visitCounter.Loader.getCount("/join");
+            
+            let visitorsLogAltogether = await visitCounter.Loader.getLog();
+            let visitorsLogSite1 = await visitCounter.Loader.getLog("/join");
+            
+            res.send(`
+                <b>visitors altogether:</b> ${visitorsAltogether}<br />
+                <b>visitors on site 1:</b> ${visitorsSite1}<br />
+            
+                <p>
+                <b>The whole log as JSON-String:</b><br />
+                ${JSON.stringify(visitorsLogAltogether)}
+                </p>
+            
+                <p>
+                <b>The log of site1 as JSON-String:</b><br />
+                ${JSON.stringify(visitorsLogSite1)}
+                </p>
+            `);
         })
 
         // this.app.post('/sendMessage', (req, res) => {

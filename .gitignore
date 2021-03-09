@@ -8,5 +8,6 @@ private/
 credentials.json
 service_key.json
 token.json
+visits.sqlite
 
 events/rateLimit.js
