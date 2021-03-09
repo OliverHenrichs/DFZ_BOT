@@ -184,7 +184,7 @@ module.exports = async (message, dbHandle) => {
     }
     
     const maxNum = 10;
-    for (let i = 0; i< Math.min(maxNum, dbResponse.length); i++)
+    for (let i = 0; i<Math.min(maxNum, dbResponse.length); i++)
         players ? addDBPlayerRowToTable(tableBase, dbResponse[i]) : addDBCoachRowToTable(tableBase, dbResponse[i]);
 
     var _embed = aE.generateEmbedding(
