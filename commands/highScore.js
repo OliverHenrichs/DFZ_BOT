@@ -144,7 +144,7 @@ module.exports = async (message, dbHandle) => {
             players = false;
     }
 
-    var tableBase = players ? tableBasePlayersTemplate : tableBaseCoachesTemplate;
+    var tableBase = JSON.parse(JSON.stringify(players ? tableBasePlayersTemplate : tableBaseCoachesTemplate));
     
     var lt = "";
     if(players) {
