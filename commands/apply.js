@@ -18,6 +18,6 @@ module.exports = async (message, dbHandle) => {
     if(args[4] === undefined && args[4] === "")
         return;
 
-    var referralPlayer = await db.getPlayerByTag(dbHandle, args[4]);
+    var referralPlayer = await db.getPlayerByTag(dbHandle, args[4].trim());
     db.insertPlayer(dbHandle, new pl.Player(message.author.id, message.author.tag, referralPlayer === undefined ? "" : referralPlayer.tag));       
 }
