@@ -1,0 +1,15 @@
+<!-- Load an icon library to show a hamburger menu (bars) on small screens -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<iframe style="display: none;" name="dummyframe" id="dummyframe"></iframe>
+
+<form action="/sendMessage" method="POST" target="dummyframe">
+    <input type="hidden" name="token" value="{{token}}" >
+    <select name="channelid">
+        {{#each channels}}
+            <option value="{{this.id}}">{{this.name}}</option>
+        {{/each}}
+    </select>
+    <input type="text" name="text" placeholder="Message text">
+    <input type="submit" value="send">
+</form>

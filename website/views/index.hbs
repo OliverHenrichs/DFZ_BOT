@@ -26,7 +26,7 @@
             </div>
             <div class="dfz-col col2-laola">
                 <div class="infoBox">
-                    <div class="img-box" style="background-image: url('/discord-logo-color.png');">
+                    <div class="img-box" style="background-image: url('/community.svg');">
                     </div>
                     <h3>COMMUNITY</h3>
                 </div>
@@ -42,9 +42,11 @@
                     <h3>COACH TV</h3>
                 </div>
                 <div class="textBox">
+                    We regularly 
                     <a href="https://www.twitch.tv/dotafromzero" target="_blank">
-                        <p class="paragraph">We regularly stream our coaching sessions.</p>
+                        <p class="paragraph">stream</p>
                     </a>
+                    our coaching sessions.
                 </div>
             </div>
         </div>
@@ -54,7 +56,7 @@
         <div class="dfz-grid dfz-grid-row-3">
             <div class="dfz-col">
                 <div class="infoBox text-box-accent">
-                    <div class="img-box" style="background-image: url('/placeholder.png');">
+                    <div class="img-box" style="background-image: url('/discord-logo-color.png');">
                     </div>
                     <h3>Discord</h3>
                 </div>
@@ -67,9 +69,9 @@
             </div>
             <div class="dfz-col">
                 <div class="infoBox text-box-accent">
-                    <div class="img-box" style="background-image: url('/placeholder.png');">
+                    <div class="img-box" style="background-image: url('/calibration.svg');">
                     </div>
-                    <h3>Tryout</h3>
+                    <h3>Calibration Game</h3>
                 </div>
                 <div class="textBox text-box-accent">
                     <p class="paragraph">Play a game against bots with a coach watching and receive a suitable beginner
@@ -78,7 +80,7 @@
             </div>
             <div class="dfz-col">
                 <div class="infoBox text-box-accent">
-                    <div class="img-box" style="background-image: url('/placeholder.png');">
+                    <div class="img-box" style="background-image: url('/play.svg');">
                     </div>
                     <h3>Play</h3>
                 </div>
@@ -203,7 +205,7 @@
             tagParts.forEach(part => {
                 part.trim();
             })
-            link += tagParts[0] + "&number=" + tagParts[1];
+            link += tagParts[0].trim() + "&number=" + tagParts[1].trim();
             document.getElementById("joinMessage").value = link;
         }
     });

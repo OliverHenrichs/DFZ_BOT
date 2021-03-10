@@ -4,7 +4,7 @@ const regionRoleIDs = [process.env.REGION_EU_ROLE, process.env.REGION_NA_ROLE, p
 
 // role management
 module.exports = {
-	adminRoles: [process.env.COACH, process.env.COACH_TRYOUT],
+	adminRoles: [process.env.COACH, process.env.COACH_TRYOUT, process.env.COMPANION],
 	tierRoles: beginnerRoles.slice(1),
 	beginnerRoles: beginnerRoles,
 	beginnerRolesWithoutTryout: beginnerRolesWithoutTryout,
