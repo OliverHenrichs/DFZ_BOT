@@ -27,6 +27,7 @@ function addDBPlayerRowToTable(tableBase, dbRow) {
     tableBase[3].value = tableBase[3].value + "\r\n" + dbRow.lobbyCount5v5;
     tableBase[4].value = tableBase[4].value + "\r\n" + dbRow.lobbyCountBotBash;
     tableBase[5].value = tableBase[5].value + "\r\n" + dbRow.lobbyCountReplayAnalysis;
+    tableBase[6].value = tableBase[6].value + "\r\n" + dbRow.referralCount;
 }
     
 const tableBaseCoachesTemplate = [
@@ -85,6 +86,11 @@ const tableBasePlayersTemplate = [
     },
     {
         name: 'Replay Analyses',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Referral Count',
         value: '',
         inline: true,
     }
@@ -160,6 +166,9 @@ module.exports = async (message, dbHandle) => {
                 break;
             case 'replayAnalysis':
                 lt = 'lobbyCountReplayAnalysis';
+                break;
+            case 'referralCount':
+                lt = 'referralCount';
                 break;
             default:
                 lt = "lobbyCount";
