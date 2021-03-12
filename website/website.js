@@ -69,7 +69,8 @@ class WebSocket {
             console.log('HTTP Server running on port 80');
         });
 
-        if(!justHttp) {
+        this.useHttps = !justHttp;
+        if(this.useHttps) {
             this.credentials = credentials;
             console.log(this.credentials);
             this.httpsServer = https.createServer(this.credentials, this.app);
@@ -102,8 +103,19 @@ class WebSocket {
         setInterval(this.updateCoachList, 2*60*60000);
     }
 
+    redirectHttps(req, res) {
+        if (!req.secure && this.useHttps) {
+            res.redirect('https://' + req.headers.host + req.url);
+            return true;
+        }
+        return false;
+    }
+
     async registerRoots() {
         this.app.get('/', async (req, res) => {
+            if (this.redirectHttps(req, res)) {
+                return;
+            }
             var vc = await visitCounter.Loader.getCount();
             res.render('index', {
                 title: _title, 
@@ -112,6 +124,9 @@ class WebSocket {
             });
         })
         this.app.get('/join', async (req, res) => {
+            if (this.redirectHttps(req, res)) {
+                return;
+            }
             var vc = await visitCounter.Loader.getCount();
             res.render('joinLink', {
                 title: _title,
