@@ -17,8 +17,8 @@ const credentials = {
 
 var justHttp = false;
 try {
-    credentials.privateKey = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/privkey.pem', 'utf8');
-    credentials.certificate = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/cert.pem', 'utf8');
+    credentials.key = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/privkey.pem', 'utf8');
+    credentials.cert = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/cert.pem', 'utf8');
     credentials.ca = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/chain.pem', 'utf8');
 } catch (e) {
     justHttp = true;
