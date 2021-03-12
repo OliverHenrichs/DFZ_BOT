@@ -1,8 +1,31 @@
+const path = require('path');
+const fs = require('fs');
+const tr = require('../misc/tracker');
 const express = require('express')
 const hbs = require('express-handlebars')
-const bodyParser = require('body-parser')
+//const bodyParser = require('body-parser')
 var visitCounter = require('express-visit-counter');
+const https = require('https');
+const http = require('http');
 
+// SSL credentials
+const credentials = {
+	key: undefined,
+	cert: undefined,
+	ca: undefined
+};
+
+var justHttp = false;
+try {
+    credentials.privateKey = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/privkey.pem', 'utf8');
+    credentials.certificate = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/cert.pem', 'utf8');
+    credentials.ca = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/chain.pem', 'utf8');
+} catch (e) {
+    justHttp = true;
+    console.log("Could not find https-cert, only loading http-server");
+};
+
+// rate limit
 var RateLimit = require('express-rate-limit');
 var limiter = new RateLimit({
   windowMs: 15*60*1000, // 15 minutes 
@@ -10,15 +33,12 @@ var limiter = new RateLimit({
   delayMs: 0 // disable delaying - full speed until the max limit is reached 
 });
 
-const path = require('path');
-const tr = require('../misc/tracker');
 const _title ='No Bullshit. No Ads. Just DOTA.'
 
 class WebSocket {
-    constructor(token, port, client) {
+    constructor(token, client) {
         this.token = token;
         this.coachList = {};
-        this.port = port;
         this.client = client;
 
         this.app = express();
@@ -43,9 +63,18 @@ class WebSocket {
 
         this.setupHallOfFame();
 
-        this.server = this.app.listen(port, () => {
-            console.log("Websocket listening on port " + (this.server.address().port));
-        })
+        // Starting both http & https servers
+        this.httpServer = http.createServer(this.app);
+        this.httpServer.listen(80, () => {
+            console.log('HTTP Server running on port 80');
+        });
+
+        if(!justHttp) {
+            this.httpsServer = https.createServer(credentials, this.app);
+            this.httpsServer.listen(443, () => {
+                console.log('HTTPS Server running on port 443');
+            });
+        }
     }
 
     async updateCoachList() {
@@ -86,28 +115,6 @@ class WebSocket {
                 title: _title,
                 visitorCount: vc
             });
-        })
-        this.app.get('/count', async function(req, res) {
-            let visitorsAltogether = await visitCounter.Loader.getCount();
-            let visitorsSite1 = await visitCounter.Loader.getCount("/join");
-            
-            let visitorsLogAltogether = await visitCounter.Loader.getLog();
-            let visitorsLogSite1 = await visitCounter.Loader.getLog("/join");
-            
-            res.send(`
-                <b>visitors altogether:</b> ${visitorsAltogether}<br />
-                <b>visitors on site 1:</b> ${visitorsSite1}<br />
-            
-                <p>
-                <b>The whole log as JSON-String:</b><br />
-                ${JSON.stringify(visitorsLogAltogether)}
-                </p>
-            
-                <p>
-                <b>The log of site1 as JSON-String:</b><br />
-                ${JSON.stringify(visitorsLogSite1)}
-                </p>
-            `);
         })
 
         // this.app.post('/sendMessage', (req, res) => {
