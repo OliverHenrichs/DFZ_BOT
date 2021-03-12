@@ -20,6 +20,12 @@ try {
     credentials.privateKey = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/privkey.pem', 'utf8');
     credentials.certificate = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/cert.pem', 'utf8');
     credentials.ca = fs.readFileSync('/etc/letsencrypt/live/dotafromzero.com/chain.pem', 'utf8');
+    console.log("cert");
+    console.log(credentials.certificate);
+    console.log("privateKey");
+    console.log(credentials.privateKey);
+    console.log("ca");
+    console.log(credentials.ca);
 } catch (e) {
     justHttp = true;
     console.log("Could not find https-cert, only loading http-server");
