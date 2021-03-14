@@ -73,7 +73,6 @@ class WebSocket {
         this.useHttps = !justHttp;
         if(this.useHttps) {
             this.credentials = credentials;
-            console.log(this.credentials);
             this.httpsServer = https.createServer(this.credentials, this.app);
             this.httpsServer.listen(443, () => {
                 console.log('HTTPS Server running on port 443');
