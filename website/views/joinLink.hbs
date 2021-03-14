@@ -7,11 +7,12 @@
             <h2>1. Create Signup Message</h2>
             <table class="dfz-table">
                 <tr>
-                    <td class="bigTableCell">How shall we call you?</td>
+                    <td class="bigTableCell">(Nick-)Name</td>
                     <td class="smallTableCell"><input id="userName" class="dfz-small-input" placeholder="Your name"></td>
                 </tr>
                 <tr>
-                    <td class="bigTableCell">What is your Dota ID? <span id="popUpDotaId" class="popUpOnHover">(What's that?)</span>
+                    <td class="bigTableCell">Dota ID 
+                        <span id="popUpDotaId" class="popUpOnHover">(What's that?)</span>
                         <div id="dotaIDImageContainer" class="modalImage">
                             <img src="/FriendIDExplanation.gif"  style="width:100%;max-width:700px">
                         </div>
@@ -19,11 +20,11 @@
                     <td class="smallTableCell"><input id="dotaId" class="dfz-small-input" placeholder="Your Dota ID"></td>
                 </tr>
                 <tr>
-                    <td class="bigTableCell">How many Games/Hours have you played?</td>
+                    <td class="bigTableCell">Experience (games played, roughly)</td>
                     <td><input id="gameHours" class="dfz-small-input" placeholder="10"></td>
                 </tr>
                 <tr>
-                    <td class="bigTableCell">Where are you from? EU/SEA/NA</td>
+                    <td class="bigTableCell">Which region do you play?</td>
                     <td class="smallTableCell"><select class="dfz-select" id="region" name="Region">
                             <option value="EU">EU</option>
                             <option value="NA">NA</option>
@@ -32,7 +33,15 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="bigTableCell">Discord Tag of the person who referred you</td>
+                    <td class="bigTableCell">
+                        Who referred you?
+                        <span id="popUpTag2" class="popUpOnHover">
+                            Discord tag 
+                        </span>
+                        <div id="tag2ImageContainer" class="modalImage">
+                            <img src="/discord-tag.gif"  style="width:100%;max-width:700px">
+                        </div>
+                    </td>
                     <td class="smallTableCell"><input id="referralTag" class="dfz-small-input" placeholder="name#1234"></td>
                 </tr>
                 <tr>
@@ -61,7 +70,8 @@
             <div class="margin-top-bottom">
                 Check out for tryout games <span id="popUpTryout" class="popUpOnHover">(they look like this)</span>
                 
-                <div id="tryoutImageContainer" class="img-box modalImage" style="background-image: url('/tryout.png');"></div>
+                <div id="tryoutImageContainer" class="modalImage">
+                    <img src="/tryout.png"  style="width:100%;max-width:700px">
                 </div>
                 in the channel #👋-tryouts and join one of them.
                 The tryout schedule is posted in #📋-tryout-schedule.

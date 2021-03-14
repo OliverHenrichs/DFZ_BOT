@@ -144,10 +144,9 @@
         <table class="dfz-table">
             <tr>
                 <td class="bigTableCell">Your 
-                    <span id="popUpTag" class="popUpOnHover">
-                        Discord tag 
-                    </span>
-                    <div id="tagImageContainer" class="img-box modalImage" style="background-image: url('/discord-tag.gif');">
+                    <span id="popUpTag" class="popUpOnHover">Discord tag</span>
+                    <div id="tagImageContainer" class="modalImage">
+                        <img src="/discord-tag.gif" style="width:100%;max-width:700px">
                     </div>
                 </td>
                 <td class="smallTableCell"><input id="userName" class="dfz-small-input" placeholder="name#1234"></td>
@@ -161,6 +160,19 @@
                 </td>
                 <td class="smallTableCell"><textarea class="dfz-textarea" id="joinMessage" placeholder="" disabled> </textarea> </td>
             </tr>
+        </table>
+        <h1>REFERRAL HALL OF FAME</h1>
+        <table>
+            <tr class="text-box-accent">
+                <td>Discord-Tag</td>
+                <td>Referrals</td>
+            </tr>
+            {{#each referrers}}
+            <tr class="text-box-accent">
+                <td>{{this.tag}}</td>
+                <td>{{this.referralCount}}</td>
+            </tr>
+            {{/each}}
         </table>
         {{!-- <iframe class="dfz-yt-frame" src="https://www.youtube.com/embed/jPTXe2VxP0g?rel=0&controls=1&autoplay=0&mute=0&start=0"></iframe> --}}
     </div>

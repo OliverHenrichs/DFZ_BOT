@@ -19,6 +19,10 @@ body {
     padding-bottom: 10px;
 }
 
+.credit-container {
+    margin-top: 50px;
+}
+
 .red-top-border {
     border-width: 3px;
     border-color: #b32812;
@@ -215,26 +219,8 @@ body {
     display: none;
     position: fixed; /* Stay in place */
     z-index: 1; /* Sit on top */
-    margin-right: 15vw;
     border: 1px solid #b32812;
     background-color: black;
-}
-
-#tryoutImageContainer {
-    bottom: 12vw;
-    margin-left: 20%;
-    margin-right: 20%;
-    height: 20vw;
-    padding-left: calc(2.117 * 20vw);
-}
-
-#tagImageContainer {
-    bottom: 12vw;
-    margin-left: 20%;
-    margin-right: 20%;
-    min-height: 100px;
-    height: 20vw;
-    padding-left: calc(1.777 * 20vw);
 }
 
 #popUpDotaId:hover ~ #dotaIDImageContainer {
@@ -246,6 +232,10 @@ body {
 }
 
 #popUpTag:hover ~ #tagImageContainer {
+    display:block;
+}
+
+#popUpTag2:hover ~ #tag2ImageContainer {
     display:block;
 }
 

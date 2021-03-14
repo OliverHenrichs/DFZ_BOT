@@ -20,15 +20,37 @@ function addDBCoachRowToTable(tableBase, dbRow) {
  * @param {JSON} tableBase 
  * @param {JSON} dbRow 
  */
-function addDBPlayerRowToTable(tableBase, dbRow) {
+ function addDBPlayerRowToTable(tableBase, dbRow) {
     tableBase[0].value = tableBase[0].value + "\r\n<@" + dbRow.userId + ">";
     tableBase[1].value = tableBase[1].value + "\r\n" + dbRow.lobbyCount;
     tableBase[2].value = tableBase[2].value + "\r\n" + dbRow.lobbyCountUnranked;
     tableBase[3].value = tableBase[3].value + "\r\n" + dbRow.lobbyCount5v5;
     tableBase[4].value = tableBase[4].value + "\r\n" + dbRow.lobbyCountBotBash;
     tableBase[5].value = tableBase[5].value + "\r\n" + dbRow.lobbyCountReplayAnalysis;
-    tableBase[6].value = tableBase[6].value + "\r\n" + dbRow.referralCount;
 }
+
+/**
+ * 
+ * @param {JSON} tableBase 
+ * @param {JSON} dbRow 
+ */
+function addDBReferrerRowToTable(tableBase, dbRow) {
+    tableBase[0].value = tableBase[0].value + "\r\n" + dbRow.tag;
+    tableBase[1].value = tableBase[1].value + "\r\n" + dbRow.referralCount;
+}
+
+const tableBaseReferrersTemplate = [
+    {
+        name: 'Referrer',
+        value: '',
+        inline: true,
+    },
+    {
+        name: 'Referral Count',
+        value: '',
+        inline: true,
+    }
+]; 
     
 const tableBaseCoachesTemplate = [
     {
@@ -138,22 +160,25 @@ module.exports = async (message, dbHandle) => {
 
     var dbResponse = [];
 
-    var players = true;
     var ut = "";
+    var tableBase = undefined;
     switch(userType) {
         case "players":
             ut = "players";
+            tableBase = JSON.parse(JSON.stringify(tableBasePlayersTemplate));
+            break;
+        case "referrers":
+            ut = "referrers";
+            tableBase = JSON.parse(JSON.stringify(tableBaseReferrersTemplate));
             break;
         case "coaches":
         default:
             ut = "coaches";
-            players = false;
+            tableBase = JSON.parse(JSON.stringify(tableBaseCoachesTemplate));
     }
-
-    var tableBase = JSON.parse(JSON.stringify(players ? tableBasePlayersTemplate : tableBaseCoachesTemplate));
     
     var lt = "";
-    if(players) {
+    if(ut === "players") {
         switch(lobbyType) {
             case 'unranked':
                 lt = 'lobbyCountUnranked';
@@ -167,15 +192,12 @@ module.exports = async (message, dbHandle) => {
             case 'replayAnalysis':
                 lt = 'lobbyCountReplayAnalysis';
                 break;
-            case 'referralCount':
-                lt = 'referralCount';
-                break;
             default:
                 lt = "lobbyCount";
         }
         dbResponse = await t.getPlayerList(dbHandle, lt);
     }
-    else {
+    else if (ut === "coaches") {
         switch(lobbyType) {
             case 'tryout':
                 lt = 'lobbyCountTryout';
@@ -190,16 +212,27 @@ module.exports = async (message, dbHandle) => {
                 lt = "lobbyCount";
         }
         dbResponse = await t.getCoachList(dbHandle, lt);
+    } else if (ut === "referrers") {
+        dbResponse = await t.getReferrerList(dbHandle);
     }
     
     const maxNum = 10;
-    for (let i = 0; i<Math.min(maxNum, dbResponse.length); i++)
-        players ? addDBPlayerRowToTable(tableBase, dbResponse[i]) : addDBCoachRowToTable(tableBase, dbResponse[i]);
+    for (let i = 0; i<Math.min(maxNum, dbResponse.length); i++) {
+        if(ut === "players") {
+            addDBPlayerRowToTable(tableBase, dbResponse[i]) 
+        }
+        else if (ut === "coaches"){ 
+            addDBCoachRowToTable(tableBase, dbResponse[i]);
+        }
+        else if (ut === "referrers"){ 
+            addDBReferrerRowToTable(tableBase, dbResponse[i]);
+        }
+    }
 
     var _embed = aE.generateEmbedding(
-        "Lobby Highscores ("+ (players ? "Players" : "Coaches") + ") Top 10", 
-        "Hall of Fame of DFZ "+ (players ? "Players" : "Coaches") + " !", 
-        "Start lobbies with 🔒 to make them count!", 
+        "Lobby Highscores ("+ ut + ") Top 10", 
+        "Hall of Fame of DFZ "+ ut + "!", 
+        "", 
         dbResponse.length > 0 ? tableBase : []
     )
     

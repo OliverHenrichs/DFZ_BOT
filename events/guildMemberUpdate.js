@@ -64,9 +64,9 @@ async function handleFirstBeginnerRole(dbHandle, oldMember, newMember) {
     if(player === undefined) {
         dB.insertPlayer(dbHandle, new pL.Player(newMember.user.id, newMember.user.tag));
     } else if (player.referredBy !== "" && !player.referralLock) {
-        referrer = await dB.getPlayerByTag(dbHandle, player.referredBy)
+        referrer = await dB.getReferrerByTag(dbHandle, player.referredBy)
         referrer.referralCount += 1;
-        await dB.updatePlayer(dbHandle, referrer);
+        await dB.updateReferrer(dbHandle, referrer);
         
         player.referralLock = 1;
         await dB.updatePlayer(dbHandle, player);

@@ -60,7 +60,20 @@ async function getCoachList(dbHandle, columnName) {
 async function getPlayerList(dbHandle, columnName) {
     return new Promise(function(resolve, reject) {
         db.getSortedPlayers(dbHandle, columnName)
-        .then(coaches => resolve(coaches[0]))
+        .then(players => resolve(players[0]))
+        .catch((err) => reject(err));
+    });
+}
+
+/**
+ * Calls db to get player list sorted by columnName
+ * @param {mysql.Pool} dbHandle 
+ * @param {String} columnName 
+ */
+async function getReferrerList(dbHandle, columnName="referralCount") {
+    return new Promise(function(resolve, reject) {
+        db.getSortedReferrers(dbHandle, columnName)
+        .then(referrers => resolve(referrers[0]))
         .catch((err) => reject(err));
     });
 }
@@ -124,5 +137,6 @@ module.exports = {
     saveCoachParticipation: saveCoachParticipation,
     savePlayerParticipation: savePlayerParticipation,
     getCoachList: getCoachList,
-    getPlayerList: getPlayerList
+    getPlayerList: getPlayerList, 
+    getReferrerList: getReferrerList
 }

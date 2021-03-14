@@ -37,7 +37,7 @@ module.exports = async (client, message) => {
 	
 	// handle applications
 	if(cM.signupChannel === message.channel.id && content.startsWith("!apply")) {
-		return ap(message, client.dbHandle);
+		return ap(client, message);
 	}
 
 	// Ignore messages outside of bot channels

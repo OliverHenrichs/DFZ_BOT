@@ -39,6 +39,7 @@ class WebSocket {
     constructor(token, client) {
         this.token = token;
         this.coachList = {};
+        this.referrerList = {};
         this.client = client;
 
         this.app = express();
@@ -98,9 +99,18 @@ class WebSocket {
         this.coachList = nativeCoachList;
     }
 
+    async updateReferrerList() {
+        if(this.client.dbHandle === undefined)
+            return;
+
+        this.referrerList = await tr.getReferrerList(this.client.dbHandle);
+    }
+
     async setupHallOfFame() {
         await this.updateCoachList();
         setInterval(this.updateCoachList, 2*60*60000);
+        await this.updateReferrerList();
+        setInterval(this.updateReferrerList, 2*60*60000);
     }
 
     redirectHttps(req, res) {
@@ -120,6 +130,7 @@ class WebSocket {
             res.render('index', {
                 title: _title, 
                 coaches: this.coachList,
+                referrers: this.referrerList,
                 visitorCount: vc
             });
         })

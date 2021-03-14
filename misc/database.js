@@ -2,6 +2,7 @@ const c = require('./coach');
 const mysql = require('mysql2/promise');
 const l = require('./lobby');
 const p = require('./player');
+const r = require('./referrer');
 const s = require('./schedule');
 
 function getCoachTableJson() {
@@ -53,10 +54,6 @@ function getPlayerTableJson() {
                 type: 'TINYINT(1)'
             },
             {  
-                id:'referralCount',
-                type: 'int'
-            },
-            {  
                 id:'lobbyCount',
                 type: 'int'
             },
@@ -78,6 +75,26 @@ function getPlayerTableJson() {
             },
             {  
                 id:'offenses',
+                type: 'int'
+            }
+        ]
+    };
+}
+
+function getReferrerTableJson() {
+    return {   
+        table_name: "referrers",
+        table_columns: [
+            {
+                id:'userId',
+                type: 'VARCHAR(255)'
+            },
+            {
+                id:'tag',
+                type: 'VARCHAR(255)'
+            },
+            {  
+                id:'referralCount',
                 type: 'int'
             }
         ]
@@ -142,6 +159,11 @@ function getOptionsTableJson() {
 
 function createPlayerTable(dbHandle) {
     var json = getPlayerTableJson();
+    return createTable(dbHandle, json.table_name, json.table_columns);
+}
+
+function createReferrerTable(dbHandle) {
+    var json = getReferrerTableJson();
     return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
@@ -246,9 +268,18 @@ async function insertCoachRow(dbHandle, values) {
  */
 async function insertPlayerRow(dbHandle, values) {
     return insertRow(dbHandle, 'players', 
-                    ['userId', 'tag', 'referredBy', 'referralLock', 'referralCount', 
+                    ['userId', 'tag', 'referredBy', 'referralLock', 
                     'lobbyCount', 'lobbyCountUnranked', 'lobbyCountBotBash', 
                     'lobbyCount5v5', 'lobbyCountReplayAnalysis', 'offenses'], values);
+}
+
+/**
+ * inserts player into database
+ * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Array<String>} values 
+ */
+async function insertReferrerRow(dbHandle, values) {
+    return insertRow(dbHandle, 'referrers', ['userId', 'tag', 'referralCount'], values);
 }
 
 /**
@@ -293,7 +324,6 @@ async function insertPlayer(dbHandle, player) {
                 player.tag,
                 player.referredBy,
                 player.referralLock,
-                player.referralCount,
                 player.lobbyCount,
                 player.lobbyCountUnranked,
                 player.lobbyCountBotBash,
@@ -301,6 +331,18 @@ async function insertPlayer(dbHandle, player) {
                 player.lobbyCountReplayAnalysis,
                 player.offenses];
     return insertPlayerRow(dbHandle, values);
+}
+
+/**
+ * Insert referrer into DB
+ * @param {mysql.Pool} dbHandle 
+ * @param {r.Referrer} referrer
+ */
+async function insertReferrer(dbHandle, referrer) {
+    values = [  referrer.userId,
+                referrer.tag,
+                referrer.referralCount];
+    return insertReferrerRow(dbHandle, values);
 }
 
 /**
@@ -437,13 +479,28 @@ async function updatePlayer(dbHandle, player) {
     return updateTableEntriesByConditions(
         dbHandle, 
         'players', 
-        [   'referredBy', 'referralLock', 'referralCount', 
+        [   'referredBy', 'referralLock', 
             'lobbyCount', 'lobbyCountUnranked', 'lobbyCountBotBash', 
             'lobbyCount5v5', 'lobbyCountReplayAnalysis', 'offenses'], 
-        [   '\"' + player.referredBy + '\"' , player.referralLock, player.referralCount, 
+        [   '\"' + player.referredBy + '\"' , player.referralLock,
             player.lobbyCount, player.lobbyCountUnranked, player.lobbyCountBotBash,
             player.lobbyCount5v5, player.lobbyCountReplayAnalysis, player.offenses], 
         ['userId = \''+ player.userId+'\'']
+    );
+}
+
+/**
+ * updates referrer in db 
+ * @param {mysql.Pool} dbHandle bot database handle
+ * @param {r.Referrer} referrer referrer
+ */
+async function updateReferrer(dbHandle, referrer) {
+    return updateTableEntriesByConditions(
+        dbHandle, 
+        'referrers', 
+        ['userId', 'referralCount'], 
+        [ referrer.userId, referrer.referralCount], 
+        ['tag = \''+ referrer.tag+'\'']
     );
 }
 
@@ -588,6 +645,26 @@ async function getSortedPlayers(dbHandle, columnName = 'lobbyCount') {
     });
 }
 
+
+/**
+ * Returns all referrers in DB sorted by specific column
+ * @param {mysql.Pool} dbHandle 
+ * @param {string} columnName name of column to sort by 
+ */
+async function getSortedReferrers(dbHandle, columnName = 'referralCount') {
+    return new Promise(function(resolve, reject) {
+        var command = getSortedTableCommand('referrers', columnName)
+        
+        executeDBCommand(dbHandle, command)
+        .then(res=>{
+            resolve(res);
+        })
+        .catch(err => {
+            reject(err);
+        })
+    });
+}
+
 /**
  * Returns all coaches in DB sorted by specific column
  * @param {mysql.Pool} dbHandle 
@@ -637,13 +714,34 @@ async function getPlayerByTag(dbHandle, tag = '') {
 
 async function getPlayer(dbHandle, filter) {
     return new Promise(function(resolve, reject) {
-        selectTableValueByConditions(dbHandle, 'players', 'userId, tag, referredBy, referralLock, referralCount, lobbyCount, lobbyCountUnranked, lobbyCountBotBash, lobbyCount5v5, lobbyCountReplayAnalysis, offenses', filter)
+        selectTableValueByConditions(dbHandle, 'players', 'userId, tag, referredBy, referralLock, lobbyCount, lobbyCountUnranked, lobbyCountBotBash, lobbyCount5v5, lobbyCountReplayAnalysis, offenses', filter)
         .then(dB_response => {
             if(!Array.isArray(dB_response) || dB_response.length === 0) {
                 resolve(undefined);
                 return;
             }
             resolve(p.Player.fromObject(dB_response[0]));
+        })
+    });
+}
+
+async function getReferrerByID(dbHandle, userId = '') {
+    return getReferrer(dbHandle, ['userId = \''+userId+'\'']);
+}
+
+async function getReferrerByTag(dbHandle, tag = '') {
+    return getReferrer(dbHandle, ['tag = \''+tag+'\'']);
+}
+
+async function getReferrer(dbHandle, filter) {
+    return new Promise(function(resolve, reject) {
+        selectTableValueByConditions(dbHandle, 'referrers', 'userId, tag, referralCount', filter)
+        .then(dB_response => {
+            if(!Array.isArray(dB_response) || dB_response.length === 0) {
+                resolve(undefined);
+                return;
+            }
+            resolve(r.Referrer.fromObject(dB_response[0]));
         })
     });
 }
@@ -713,12 +811,14 @@ module.exports = {
           });
     },
     createPlayerTable:createPlayerTable,
+    createReferrerTable:createReferrerTable,
     createCoachTable:createCoachTable,
     createScheduleTable:createScheduleTable,
     createLobbyTable:createLobbyTable,
     createOptionsTable:createOptionsTable,
     insertCoach:insertCoach,
     insertPlayer:insertPlayer,
+    insertReferrer:insertReferrer,
     insertLobby:insertLobby,
     insertSchedule:insertSchedule,
     insertDay:insertDay,
@@ -727,14 +827,18 @@ module.exports = {
     updateDay:updateDay,
     updateCoach:updateCoach,
     updatePlayer:updatePlayer,
+    updateReferrer:updateReferrer,
     getLobbies:getLobbies,
     getSchedules:getSchedules,
     getDay:getDay,
     getCoach:getCoach,
     getSortedCoaches:getSortedCoaches,
     getSortedPlayers:getSortedPlayers,
+    getSortedReferrers:getSortedReferrers,
     getPlayerByID:getPlayerByID,
     getPlayerByTag:getPlayerByTag,
+    getReferrerByID:getReferrerByID,
+    getReferrerByTag:getReferrerByTag,
     removeLobby:removeLobby,
     removeSchedules:removeSchedules
 };

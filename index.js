@@ -34,6 +34,9 @@ dB.createScheduleTable(client.dbHandle)
 .then(() =>  {
 	return dB.createPlayerTable(client.dbHandle);
 })
+.then(() =>  {
+	return dB.createReferrerTable(client.dbHandle);
+})
 .then(() => { // login to discord client
 	return client.login(process.env.BOT_TOKEN);
 })
