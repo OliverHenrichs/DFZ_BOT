@@ -6,7 +6,8 @@ var maxCounter = 3;
  * @param {Event} event The disconnect event
  */
 module.exports = async (client, event) => {
-    console.error(`client's WebSocket encountered a connection error: ${event.message}`);
-    if(++counter >= maxCounter)
-        return process.exit(1);
-}
+  console.error(
+    `client's WebSocket encountered a connection error: ${event.message}`
+  );
+  if (++counter >= maxCounter) return process.exit(1);
+};

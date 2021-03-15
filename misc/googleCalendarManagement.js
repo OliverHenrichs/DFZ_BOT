@@ -1,7 +1,7 @@
-const { google } = require('googleapis');
-const tz = require('./timeZone');
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
-const s = require('./schedule')
+const { google } = require("googleapis");
+const tz = require("./timeZone");
+const SCOPES = ["https://www.googleapis.com/auth/calendar"];
+const s = require("./schedule");
 
 // const TOKEN_PATH = 'token.json';
 // let oAuth2Client = "";
@@ -69,12 +69,11 @@ const s = require('./schedule')
 // configure google auth client
 let calendarAvailable = true;
 let jwtClient = "";
-let calendar = '';
+let calendar = "";
 try {
-
   // get private key
-  const privateKey = require('./../service_key.json');
-  
+  const privateKey = require("./../service_key.json");
+
   jwtClient = new google.auth.JWT(
     privateKey.client_email,
     null,
@@ -83,43 +82,35 @@ try {
   );
 
   // authenticate client on startup
-  jwtClient.authorize()
-  .then(tokens =>  {
+  jwtClient.authorize().then((tokens) => {
     console.log("Successfully connected to Google API!");
-    calendar = google.calendar({ version: 'v3', jwtClient });
+    calendar = google.calendar({ version: "v3", jwtClient });
   });
 } catch (e) {
-  console.log(e)
+  console.log(e);
   calendarAvailable = false;
-};
+}
 
 /**
  * returns calendar id for respective region
  * @param {string} region region string
  */
 function getCalendarIDByRegion(region) {
-  if (region === tz.regions[0])
-    return process.env.CALENDAR_REGION_EU;
-  else if (region === tz.regions[1])
-    return process.env.CALENDAR_REGION_NA;
-  else if (region === tz.regions[2])
-    return process.env.CALENDAR_REGION_SEA;
+  if (region === tz.regions[0]) return process.env.CALENDAR_REGION_EU;
+  else if (region === tz.regions[1]) return process.env.CALENDAR_REGION_NA;
+  else if (region === tz.regions[2]) return process.env.CALENDAR_REGION_SEA;
 
   return undefined;
 }
 
 function createEventSummary(schedule) {
   var lobbyType = "";
-  
-  if (schedule.type === "Tryouts")
-    lobbyType = "tryout lobby";
-  else if (schedule.type === "Botbash")
-    lobbyType = "botbash lobby";
-  else if (schedule.coaches.length == 1)
-    lobbyType = "unranked lobby";
-  else 
-    lobbyType = "5v5 lobby";
-  
+
+  if (schedule.type === "Tryouts") lobbyType = "tryout lobby";
+  else if (schedule.type === "Botbash") lobbyType = "botbash lobby";
+  else if (schedule.coaches.length == 1) lobbyType = "unranked lobby";
+  else lobbyType = "5v5 lobby";
+
   return schedule.region + " " + lobbyType;
 }
 
@@ -129,7 +120,7 @@ function createEventSummary(schedule) {
  * @param {Discord.Client} client discord client
  */
 async function getEventDescription(schedule, client) {
-  return new Promise(async function(resolve, reject) {
+  return new Promise(async function (resolve, reject) {
     try {
       var coach1 = await client.users.fetch(schedule.coaches[0]);
       var coachesString = coach1.username;
@@ -138,56 +129,69 @@ async function getEventDescription(schedule, client) {
         coachesString += " and " + coach2.username;
       }
       resolve("Coached by " + coachesString);
-    }catch(e) {
+    } catch (e) {
       reject(e);
     }
-  })
+  });
 }
 
 /**
  * insert event in google calendar api
  * @param {calendar_v3.Resource$Events} event scheduled event in google api format
- * @param {string} cal_ID calender ID 
+ * @param {string} cal_ID calender ID
  * @param {s.Schedule} schedule dfz-schedule
  */
 function insertEvent(event, schedule) {
-  return new Promise(function(resolve, reject) {
-    calendar.events.insert({
-      auth: jwtClient,
-      calendarId: getCalendarIDByRegion(schedule.region),
-      resource: event,
-    }, function (err, event) {
-      if (err) {
-        console.log('There was an error contacting the Calendar service to INSERT an event: ' + err);
-        reject('There was an error contacting the Calendar service to INSERT an event: ' + err);
-      } else
-        resolve(event.data.id)
-    });
+  return new Promise(function (resolve, reject) {
+    calendar.events.insert(
+      {
+        auth: jwtClient,
+        calendarId: getCalendarIDByRegion(schedule.region),
+        resource: event,
+      },
+      function (err, event) {
+        if (err) {
+          console.log(
+            "There was an error contacting the Calendar service to INSERT an event: " +
+              err
+          );
+          reject(
+            "There was an error contacting the Calendar service to INSERT an event: " +
+              err
+          );
+        } else resolve(event.data.id);
+      }
+    );
   });
 }
 
 /**
- * 
- * @param {GoogleEvent} eventToChange 
- * @param {s.Schedule} schedule 
- * @param {Discord.Client} client 
+ *
+ * @param {GoogleEvent} eventToChange
+ * @param {s.Schedule} schedule
+ * @param {Discord.Client} client
  */
 async function updateGoogleEvent(eventToChange, schedule, client) {
-  return new Promise(async function(resolve, reject) {
+  return new Promise(async function (resolve, reject) {
     try {
       description = await getEventDescription(schedule, client);
       res = await calendar.events.update({
         auth: jwtClient,
         calendarId: getCalendarIDByRegion(schedule.region),
         eventId: schedule.eventId,
-        requestBody: createEvent(createEventSummary(schedule), description, eventToChange.data.start, eventToChange.data.end, attendees = []),
+        requestBody: createEvent(
+          createEventSummary(schedule),
+          description,
+          eventToChange.data.start,
+          eventToChange.data.end,
+          (attendees = [])
+        ),
       });
       resolve(res);
-    }
-    catch(e) {
+    } catch (e) {
       reject(e);
     }
-  })
+  });
 }
 
 /**
@@ -196,15 +200,18 @@ async function updateGoogleEvent(eventToChange, schedule, client) {
  * @param {Discord.Client} client discord client
  */
 async function updateEvent(schedule, client) {
-  return new Promise(function(resolve, reject) {
-    calendar.events.get({
+  return new Promise(function (resolve, reject) {
+    calendar.events
+      .get({
         auth: jwtClient,
         calendarId: getCalendarIDByRegion(schedule.region),
         eventId: schedule.eventId,
-    })
-    .then(eventToChange => updateGoogleEvent(eventToChange, schedule, client))
-    .then(res => resolve(res.data.id))
-    .catch(err => reject(err))    
+      })
+      .then((eventToChange) =>
+        updateGoogleEvent(eventToChange, schedule, client)
+      )
+      .then((res) => resolve(res.data.id))
+      .catch((err) => reject(err));
   });
 }
 
@@ -213,14 +220,15 @@ async function updateEvent(schedule, client) {
  * @param {s.Schedule} schedule dfz-schedule
  */
 function deleteEvent(schedule) {
-  return new Promise(function(resolve, reject) {
-    calendar.events.delete({
-      auth: jwtClient,
-      calendarId: getCalendarIDByRegion(schedule.region),
-      eventId: schedule.eventId,
-    })
-    .then(res => resolve(res.data.id))
-    .catch(err => reject(err))
+  return new Promise(function (resolve, reject) {
+    calendar.events
+      .delete({
+        auth: jwtClient,
+        calendarId: getCalendarIDByRegion(schedule.region),
+        eventId: schedule.eventId,
+      })
+      .then((res) => resolve(res.data.id))
+      .catch((err) => reject(err));
   });
 }
 
@@ -234,33 +242,33 @@ function deleteEvent(schedule) {
  */
 function createEvent(summary, description, start, end, attendees = []) {
   return {
-    'summary': summary,
-    'location': 'DFZ Discord',
-    'description': description,
-    'start': start,
-    'end': end,
-    'attendees': attendees,
-    'reminders': {
-      'useDefault': false,
-      'overrides': [
-        { 'method': 'email', 'minutes': 24 * 60 },
-        { 'method': 'popup', 'minutes': 10 }
-      ]
-    }
-  }
+    summary: summary,
+    location: "DFZ Discord",
+    description: description,
+    start: start,
+    end: end,
+    attendees: attendees,
+    reminders: {
+      useDefault: false,
+      overrides: [
+        { method: "email", minutes: 24 * 60 },
+        { method: "popup", minutes: 10 },
+      ],
+    },
+  };
 }
 
 const noCalendarRejection = "No Calendar";
 module.exports = {
   noCalendarRejection: noCalendarRejection,
   /**
-   * Create calendar event given a schedule 
+   * Create calendar event given a schedule
    * @param {s.Schedule} schedule schedule
    * @param {Discord.Client} client discord client (look-up of users)
    */
   createCalendarEvent: async function (schedule, client) {
-    if(!calendarAvailable)
-      return new Promise(function(resolve, reject) {
+    if (!calendarAvailable)
+      return new Promise(function (resolve, reject) {
         reject(noCalendarRejection);
       });
 
@@ -270,7 +278,7 @@ module.exports = {
 
     // attendees
     // TODO: google impersonation for personal invites
-    var attendees = [];//{email: "ohenrichs@gmail.com"}];
+    var attendees = []; //{email: "ohenrichs@gmail.com"}];
 
     // time
     var start = new Date(schedule.date);
@@ -278,32 +286,35 @@ module.exports = {
     var timeZoneString = tz.getTimeZoneStringFromRegion(schedule.region);
 
     // create event
-    var event = createEvent(summary, description, { 'dateTime': start.toISOString(), 'timeZone': timeZoneString }, { 'dateTime': end.toISOString(), 'timeZone': timeZoneString }, attendees);
+    var event = createEvent(
+      summary,
+      description,
+      { dateTime: start.toISOString(), timeZone: timeZoneString },
+      { dateTime: end.toISOString(), timeZone: timeZoneString },
+      attendees
+    );
 
     // insert event in calendar
     return insertEvent(event, schedule);
   },
 
   editCalendarEvent: async function (schedule, client) {
-    if(!calendarAvailable)
-      return new Promise(function(resolve, reject) {
+    if (!calendarAvailable)
+      return new Promise(function (resolve, reject) {
         reject(noCalendarRejection);
       });
 
-
     if (schedule.coaches.length === 0)
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         deleteEvent(schedule)
-        .then(res => resolve(res))
-        .catch(err => reject(err))
+          .then((res) => resolve(res))
+          .catch((err) => reject(err));
       });
     else
-      return new Promise(function(resolve, reject) {
+      return new Promise(function (resolve, reject) {
         updateEvent(schedule, client)
-        .then(res => resolve(res))
-        .catch(err => reject(err))
+          .then((res) => resolve(res))
+          .catch((err) => reject(err));
       });
-  }
-}
-
-
+  },
+};

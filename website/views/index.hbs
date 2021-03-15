@@ -5,10 +5,13 @@
         <h1>THE PLACE TO START DOTA</h1>
 
         <div class="button-container">
-            <a href="//dotafromzero.com/join" target="_blank"><button class="button margin-top-bottom hollow-button">SIGN
+            <a href="//dotafromzero.com/join" target="_blank"><button
+                    class="button margin-top-bottom hollow-button">SIGN
                     UP</button></a>
-            <a href="#recruiting-section"><button class="button margin-top-bottom filled-button">RECRUIT A FRIEND</button></a>
-            <a href="#hall-of-fame-section"><button class="button margin-top-bottom hollow-button">HALL OF FAME</button></a>
+            <a href="#recruiting-section"><button class="button margin-top-bottom filled-button">RECRUIT A
+                    FRIEND</button></a>
+            <a href="#hall-of-fame-section"><button class="button margin-top-bottom hollow-button">HALL OF
+                    FAME</button></a>
         </div>
     </div>
     <div class="section">
@@ -42,7 +45,7 @@
                     <h3>COACH TV</h3>
                 </div>
                 <div class="textBox">
-                    We regularly 
+                    We regularly
                     <a href="https://www.twitch.tv/dotafromzero" target="_blank">
                         <p class="paragraph">stream</p>
                     </a>
@@ -139,11 +142,11 @@
     </div>
     <div id="recruiting-section" class="section accent">
         <h1>RECRUIT A FRIEND</h1>
-        
+
         <h2>Create a referral link</h2>
         <table class="dfz-table">
             <tr>
-                <td class="bigTableCell">Your 
+                <td class="bigTableCell">Your
                     <span id="popUpTag" class="popUpOnHover">
                         Discord tag
                     </span>
@@ -155,16 +158,19 @@
             </tr>
             <tr>
                 <td class="bigTableCell">
-                    <button class="button margin-top-bottom filled-button autoFontSize" onclick="copyToClipboard('referralLink')">
+                    <button class="button margin-top-bottom filled-button autoFontSize"
+                        onclick="copyToClipboard('referralLink')">
                         <span class="visible-when-large">Copy to clipboard</span>
                         <span class="visible-when-small">Copy</span>
                     </button>
                 </td>
-                <td class="smallTableCell"><textarea class="dfz-textarea" id="referralLink" placeholder="" disabled> </textarea> </td>
+                <td class="smallTableCell"><textarea class="dfz-textarea" id="referralLink" placeholder=""
+                        disabled> </textarea> </td>
             </tr>
         </table>
         <p>Share your referral-link with Dota-Beginners.</p>
-        <p>If new players join DFZ and finish their tryout game using your Discord Tag as referral, your referral count goes up.</p>
+        <p>If new players join DFZ and finish their tryout game using your Discord Tag as referral, your referral count
+            goes up.</p>
         <p>Best referrers are displayed below.</p>
         <h1>REFERRAL HALL OF FAME</h1>
         <table>
@@ -179,7 +185,8 @@
             </tr>
             {{/each}}
         </table>
-        {{!-- <iframe class="dfz-yt-frame" src="https://www.youtube.com/embed/jPTXe2VxP0g?rel=0&controls=1&autoplay=0&mute=0&start=0"></iframe> --}}
+        {{!-- <iframe class="dfz-yt-frame"
+            src="https://www.youtube.com/embed/jPTXe2VxP0g?rel=0&controls=1&autoplay=0&mute=0&start=0"></iframe> --}}
     </div>
     <div id="hall-of-fame-section" class="section">
         <h1>COACH HALL OF FAME</h1>
@@ -210,11 +217,11 @@
 {{>scripts}}
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {    
-        document.getElementById("userName").oninput = function() {
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("userName").oninput = function () {
             var tagParts = document.getElementById("userName").value.split('#');
             var link = "https://dotafromzero.com/join?name=";
-            if(tagParts.length !== 2) {
+            if (tagParts.length !== 2) {
                 document.getElementById("referralLink").value = "Incorrect tag. Tag has form 'name'#'number'";
                 return;
             }
