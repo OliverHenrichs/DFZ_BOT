@@ -1,5 +1,5 @@
-const c = require("../misc/constants");
-const g = require("../misc/generics");
+const c = require("./constants");
+const g = require("./generics");
 const rM = require("./roleManagement");
 
 /**

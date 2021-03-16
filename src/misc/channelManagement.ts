@@ -39,7 +39,7 @@ module.exports = {
   scheduleChannels: sc,
   lobbyChannels: lc,
   channelStrings: cs,
-  isWatchingChannel: function (channelId) {
+  isWatchingChannel: function (channelId: string) {
     return lc.includes(channelId) || sc.includes(channelId);
   },
 };

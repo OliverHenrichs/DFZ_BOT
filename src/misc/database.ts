@@ -1,9 +1,22 @@
-const c = require("./coach");
+import {
+  Pool,
+  RowDataPacket,
+  OkPacket,
+  ResultSetHeader,
+  FieldPacket,
+} from "mysql2/promise.js";
+
+const c = require("./types/coach");
 const mysql = require("mysql2/promise");
-const l = require("./lobby");
-const p = require("./player");
-const r = require("./referrer");
-const s = require("./schedule");
+const l = require("./types/lobby");
+const p = require("./types/player");
+const r = require("./types/referrer");
+const s = require("./types/schedule");
+
+interface SqlTableColumn {
+  id: string;
+  type: string;
+}
 
 function getCoachTableJson() {
   return {
@@ -157,42 +170,42 @@ function getOptionsTableJson() {
   };
 }
 
-function createPlayerTable(dbHandle) {
+function createPlayerTable(dbHandle: Pool) {
   var json = getPlayerTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createReferrerTable(dbHandle) {
+function createReferrerTable(dbHandle: Pool) {
   var json = getReferrerTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createCoachTable(dbHandle) {
+function createCoachTable(dbHandle: Pool) {
   var json = getCoachTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createScheduleTable(dbHandle) {
+function createScheduleTable(dbHandle: Pool) {
   var json = getScheduleTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createLobbyTable(dbHandle) {
+function createLobbyTable(dbHandle: Pool) {
   var json = getLobbyTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createOptionsTable(dbHandle) {
+function createOptionsTable(dbHandle: Pool) {
   var json = getOptionsTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
 /**
- * @param {String} tableName table to return
- * @param {String} column column to sort by
+ * @param {string} tableName table to return
+ * @param {string} column column to sort by
  * @returns sorted table
  */
-function getSortedTableCommand(tableName, columnName) {
+function getSortedTableCommand(tableName: string, columnName: string) {
   //SELECT * FROM table_name ORDER BY column_name ASC|DESC
   return "SELECT * FROM " + tableName + " ORDER BY " + columnName + " DESC";
 }
@@ -202,7 +215,10 @@ function getSortedTableCommand(tableName, columnName) {
  * @param {string} table_name name of table
  * @param {Array<String>} table_columns names of table columns
  */
-function createCreateTableCommand(table_name, table_columns) {
+function createCreateTableCommand(
+  table_name: string,
+  table_columns: Array<SqlTableColumn>
+) {
   var command = "CREATE TABLE IF NOT EXISTS " + table_name + " (";
   command += table_name + "_id INT AUTO_INCREMENT, ";
   table_columns.forEach((col) => {
@@ -213,16 +229,27 @@ function createCreateTableCommand(table_name, table_columns) {
 }
 /**
  *
- * @param {mysql.Pool} dbHandle dbHandle bot database handle
- * @param {*} command
+ * @param {Pool} dbHandle dbHandle bot database handle
+ * @param {string} command
  */
-async function executeDBCommand(dbHandle, command) {
-  return new Promise(function (resolve, reject) {
+async function executeDBCommand(dbHandle: Pool, command: string) {
+  return new Promise<
+    [
+      (
+        | RowDataPacket[]
+        | RowDataPacket[][]
+        | OkPacket
+        | OkPacket[]
+        | ResultSetHeader
+      ),
+      FieldPacket[]
+    ]
+  >(function (resolve, reject) {
     dbHandle
       .execute(command)
       .then((res) => resolve(res))
       .catch((err) => {
-        reject("Could not reconnect to MYSQL database. Reason: " + err);
+        reject(err);
         console.log("Could not reconnect to MYSQL database. Reason: " + err);
       });
   });
@@ -230,23 +257,32 @@ async function executeDBCommand(dbHandle, command) {
 
 /**
  * Creates new table in mysql-database
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {string} table_name name of table
  * @param {Array<String>} table_columns names of table columns
  */
-async function createTable(dbHandle, table_name, table_columns) {
+async function createTable(
+  dbHandle: Pool,
+  table_name: string,
+  table_columns: Array<SqlTableColumn>
+) {
   var command = createCreateTableCommand(table_name, table_columns);
   return dbHandle.execute(command);
 }
 
 /**
  * Executes insert command in mysql-db
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {string} table table id
  * @param {Array<String>} columnNames column IDs
- * @param {Array<String>} columnValues column values
+ * @param {(string | number)[]} columnValues column values
  */
-async function insertRow(dbHandle, table, columnNames, columnValues) {
+async function insertRow(
+  dbHandle: Pool,
+  table: string,
+  columnNames: Array<String>,
+  columnValues: (string | number)[]
+) {
   var command =
     "INSERT INTO " +
     table +
@@ -260,10 +296,10 @@ async function insertRow(dbHandle, table, columnNames, columnValues) {
 
 /**
  * inserts coach into database
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {Array<String>} values
  */
-async function insertCoachRow(dbHandle, values) {
+async function insertCoachRow(dbHandle: Pool, values: (string | number)[]) {
   return insertRow(
     dbHandle,
     "coaches",
@@ -280,10 +316,10 @@ async function insertCoachRow(dbHandle, values) {
 
 /**
  * inserts player into database
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {Array<String>} values
+ * @param {Pool} dbHandle bot database handle
+ * @param {(string | number)[]} values
  */
-async function insertPlayerRow(dbHandle, values) {
+async function insertPlayerRow(dbHandle: Pool, values: (string | number)[]) {
   return insertRow(
     dbHandle,
     "players",
@@ -305,10 +341,10 @@ async function insertPlayerRow(dbHandle, values) {
 
 /**
  * inserts player into database
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {Array<String>} values
+ * @param {Pool} dbHandle bot database handle
+ * @param {(string | number)[]} values
  */
-async function insertReferrerRow(dbHandle, values) {
+async function insertReferrerRow(dbHandle: Pool, values: (string | number)[]) {
   return insertRow(
     dbHandle,
     "referrers",
@@ -319,10 +355,10 @@ async function insertReferrerRow(dbHandle, values) {
 
 /**
  * inserts lobby into database
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {Array<String>} values values for channel_id, message_id and data
+ * @param {Pool} dbHandle bot database handle
+ * @param {(string | number)[]} values values for channel_id, message_id and data
  */
-async function insertLobbyRow(dbHandle, values) {
+async function insertLobbyRow(dbHandle: Pool, values: (string | number)[]) {
   return insertRow(
     dbHandle,
     "lobbies",
@@ -333,10 +369,10 @@ async function insertLobbyRow(dbHandle, values) {
 
 /**
  * inserts schedule into database
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {Array<String>} values values for emoji, messageId and data
+ * @param {Pool} dbHandle bot database handle
+ * @param {(string | number)[]} values values for emoji, messageId and data
  */
-async function insertScheduleRow(dbHandle, values) {
+async function insertScheduleRow(dbHandle: Pool, values: (string | number)[]) {
   return insertRow(
     dbHandle,
     "schedules",
@@ -347,11 +383,11 @@ async function insertScheduleRow(dbHandle, values) {
 
 /**
  * Insert coach into DB
- * @param {mysql.Pool} dbHandle
- * @param {c.Coach} coach
+ * @param {Pool} dbHandle
+ * @param {Coach} coach
  */
-async function insertCoach(dbHandle, coach) {
-  values = [
+async function insertCoach(dbHandle: Pool, coach: Coach) {
+  const values = [
     coach.userId,
     coach.lobbyCount,
     coach.lobbyCountTryout,
@@ -363,11 +399,11 @@ async function insertCoach(dbHandle, coach) {
 
 /**
  * Insert player into DB
- * @param {mysql.Pool} dbHandle
- * @param {p.Player} player
+ * @param {Pool} dbHandle
+ * @param {Player} player
  */
-async function insertPlayer(dbHandle, player) {
-  values = [
+async function insertPlayer(dbHandle: Pool, player: Player) {
+  const values = [
     player.userId,
     player.tag,
     player.referredBy,
@@ -384,59 +420,70 @@ async function insertPlayer(dbHandle, player) {
 
 /**
  * Insert referrer into DB
- * @param {mysql.Pool} dbHandle
- * @param {r.Referrer} referrer
+ * @param {Pool} dbHandle
+ * @param {Referrer} referrer
  */
-async function insertReferrer(dbHandle, referrer) {
-  values = [referrer.userId, referrer.tag, referrer.referralCount];
+async function insertReferrer(dbHandle: Pool, referrer: Referrer) {
+  const values = [referrer.userId, referrer.tag, referrer.referralCount];
   return insertReferrerRow(dbHandle, values);
 }
 
 /**
  * Insert lobby into DB
- * @param {mysql.Pool} dbHandle
- * @param {l.Lobby} lobby
+ * @param {Pool} dbHandle
+ * @param {Lobby} lobby
  */
-async function insertLobby(dbHandle, lobby) {
-  values = [lobby.channelId, lobby.messageId, JSON.stringify(lobby)];
+async function insertLobby(dbHandle: Pool, lobby: Lobby) {
+  const values = [lobby.channelId, lobby.messageId, JSON.stringify(lobby)];
   return insertLobbyRow(dbHandle, values);
 }
 
 /**
  * Insert schedule into DB
- * @param {mysql.Pool} dbHandle
- * @param {s.Schedule} schedule
+ * @param {Pool} dbHandle
+ * @param {Schedule} schedule
  */
-async function insertSchedule(dbHandle, schedule) {
-  values = [schedule.emoji, schedule.messageId, JSON.stringify(schedule)];
+async function insertSchedule(dbHandle: Pool, schedule: Schedule) {
+  const values = [schedule.emoji, schedule.messageId, JSON.stringify(schedule)];
   return insertScheduleRow(dbHandle, values);
 }
 
 /**
  * Setup function for day in options in database
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {int} day day
+ * @param {Pool} dbHandle bot database handle
+ * @param {number} day day
  */
-async function insertDay(dbHandle, day) {
+async function insertDay(dbHandle: Pool, day: number) {
   return insertRow(dbHandle, "options", ["name", "value"], ["day", day]);
 }
 
 /**
  * updates a table with new values according to given conditions
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {string} table table id
- * @param {Array<String>} columns column ids
- * @param {Array<String>} values new values
- * @param {Array<String>} conditions array of strings containing sql conditions
+ * @param {Array<string>} columns column ids
+ * @param {(string | number)[]} values new values
+ * @param {Array<string>} conditions array of strings containing sql conditions
  */
 async function updateTableEntriesByConditions(
-  dbHandle,
-  table,
-  columns,
-  values,
-  conditions
+  dbHandle: Pool,
+  table: string,
+  columns: Array<string>,
+  values: (string | number)[],
+  conditions: Array<string>
 ) {
-  return new Promise(function (resolve, reject) {
+  return new Promise<
+    [
+      (
+        | RowDataPacket[]
+        | RowDataPacket[][]
+        | OkPacket
+        | OkPacket[]
+        | ResultSetHeader
+      ),
+      FieldPacket[]
+    ]
+  >(function (resolve, reject) {
     var command = "Update " + table + " SET ";
     let cols = columns.length;
     if (cols === 0 || cols !== values.length) {
@@ -467,10 +514,10 @@ async function updateTableEntriesByConditions(
 
 /**
  * updates lobby in db with current state of lobby
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {JSON} lobby lobby object
  */
-async function updateLobby(dbHandle, lobby) {
+async function updateLobby(dbHandle: Pool, lobby: Lobby) {
   return updateTableEntriesByConditions(
     dbHandle,
     "lobbies",
@@ -482,10 +529,10 @@ async function updateLobby(dbHandle, lobby) {
 
 /**
  * updates schedule in db with current state of schedule
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {s.Schedule} schedule schedule object
  */
-async function updateSchedule(dbHandle, schedule) {
+async function updateSchedule(dbHandle: Pool, schedule: Schedule) {
   return updateTableEntriesByConditions(
     dbHandle,
     "schedules",
@@ -497,25 +544,25 @@ async function updateSchedule(dbHandle, schedule) {
 
 /**
  * updates current day in DB
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {int} day current day of the week (0=sun, 1=mon, ...)
+ * @param {Pool} dbHandle bot database handle
+ * @param {number} day current day of the week (0=sun, 1=mon, ...)
  */
-async function updateDay(dbHandle, day) {
+async function updateDay(dbHandle: Pool, day: number) {
   return updateTableEntriesByConditions(
     dbHandle,
     "options",
     ["value"],
-    [day],
+    ["" + day],
     ["name = 'day'"]
   );
 }
 
 /**
  * updates coach in db
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {c.Coach} coach coach
+ * @param {Pool} dbHandle bot database handle
+ * @param {Coach} coach coach
  */
-async function updateCoach(dbHandle, coach) {
+async function updateCoach(dbHandle: Pool, coach: Coach) {
   return updateTableEntriesByConditions(
     dbHandle,
     "coaches",
@@ -537,10 +584,10 @@ async function updateCoach(dbHandle, coach) {
 
 /**
  * updates player in db
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {p.Player} player player
  */
-async function updatePlayer(dbHandle, player) {
+async function updatePlayer(dbHandle: Pool, player: Player) {
   return updateTableEntriesByConditions(
     dbHandle,
     "players",
@@ -570,10 +617,10 @@ async function updatePlayer(dbHandle, player) {
 
 /**
  * updates referrer in db
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {r.Referrer} referrer referrer
  */
-async function updateReferrer(dbHandle, referrer) {
+async function updateReferrer(dbHandle: Pool, referrer: Referrer) {
   return updateTableEntriesByConditions(
     dbHandle,
     "referrers",
@@ -585,18 +632,25 @@ async function updateReferrer(dbHandle, referrer) {
 
 /**
  * Compiles input to mysql command and resolves the database answer as the result
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  * @param {string} table
  * @param {string} column
  * @param {Array<String>} conditions
  */
+
 async function selectTableValueByConditions(
-  dbHandle,
-  table,
-  column,
-  conditions
+  dbHandle: Pool,
+  table: string,
+  column: string,
+  conditions: Array<string>
 ) {
-  return new Promise(function (resolve, reject) {
+  return new Promise<
+    | RowDataPacket[]
+    | RowDataPacket[][]
+    | OkPacket
+    | OkPacket[]
+    | ResultSetHeader
+  >(function (resolve, reject) {
     var command = "SELECT " + column + " FROM " + table;
 
     if (conditions.length > 0) {
@@ -609,9 +663,23 @@ async function selectTableValueByConditions(
     }
 
     executeDBCommand(dbHandle, command)
-      .then((res) => {
-        resolve(res[0].length === 0 ? undefined : res[0]);
-      })
+      .then(
+        (
+          res: [
+            (
+              | RowDataPacket[]
+              | RowDataPacket[][]
+              | OkPacket
+              | OkPacket[]
+              | ResultSetHeader
+            ),
+            FieldPacket[]
+          ]
+        ) => {
+          let temp: any = res[0];
+          resolve(temp.length === 0 ? undefined : temp);
+        }
+      )
       .catch((err) => {
         reject(err);
       });
@@ -623,7 +691,7 @@ async function selectTableValueByConditions(
  * @param {string} message_id
  * @param {string} emoji
  */
-function getScheduleConditions(message_id, emoji) {
+function getScheduleConditions(message_id: string, emoji: string) {
   var conditions = [];
   if (message_id !== "") conditions.push("message_id = '" + message_id + "'");
   if (emoji !== "") conditions.push("emoji = '" + emoji + "'");
@@ -635,20 +703,33 @@ function getScheduleConditions(message_id, emoji) {
  * @param {string} channelId
  * @param {string} messageId
  */
-function getLobbyConditions(channelId, messageId) {
+function getLobbyConditions(channelId: string, messageId: string) {
   var conditions = [];
   if (channelId !== "") conditions.push("channel_id = '" + channelId + "'");
   if (messageId !== "") conditions.push("message_id = '" + messageId + "'");
   return conditions;
 }
 
+function hasData(
+  response: RowDataPacket | RowDataPacket[] | OkPacket
+): response is RowDataPacket {
+  if ("data" in response) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * returns all lobbies given channel and message id
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  * @param {string} channelId
  * @param {string} messageId
  */
-async function getLobbies(dbHandle, channelId = "", messageId = "") {
+async function getLobbies(
+  dbHandle: Pool,
+  channelId: string = "",
+  messageId: string = ""
+) {
   return new Promise(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
@@ -658,8 +739,17 @@ async function getLobbies(dbHandle, channelId = "", messageId = "") {
     ).then((dB_response) => {
       if (!Array.isArray(dB_response) || dB_response.length === 0) resolve([]);
       else {
-        lobbies = [];
-        dB_response.forEach((resp) => lobbies.push(resp.data));
+        const lobbies: (RowDataPacket | RowDataPacket[] | OkPacket)[] = [];
+        dB_response.forEach(function (
+          resp: RowDataPacket | RowDataPacket[] | OkPacket
+        ) {
+          if (hasData(resp)) {
+            lobbies.push(resp.data);
+            return true;
+          }
+          return false;
+        });
+
         resolve(lobbies);
       }
     });
@@ -668,11 +758,15 @@ async function getLobbies(dbHandle, channelId = "", messageId = "") {
 
 /**
  * Returns all schedules fitting given message id and emoji
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  * @param {string} message_id
  * @param {string} emoji
  */
-async function getSchedules(dbHandle, message_id = "", emoji = "") {
+async function getSchedules(
+  dbHandle: Pool,
+  message_id: string = "",
+  emoji: string = ""
+) {
   return new Promise(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
@@ -682,37 +776,60 @@ async function getSchedules(dbHandle, message_id = "", emoji = "") {
     ).then((dB_response) => {
       if (!Array.isArray(dB_response) || dB_response.length === 0) resolve([]);
       else {
-        schedules = [];
-        dB_response.forEach((resp) =>
-          schedules.push(s.Schedule.fromObject(resp.data))
-        );
+        const schedules: Schedule[] = [];
+        dB_response.forEach(function (
+          resp: RowDataPacket | RowDataPacket[] | OkPacket
+        ) {
+          if (hasData(resp)) {
+            var schedule = Schedule.fromObject(resp.data);
+            if (schedule !== undefined) {
+              schedules.push(schedule);
+            }
+          }
+        });
         resolve(schedules);
       }
     });
   });
 }
 
+function hasValue(
+  response: RowDataPacket | RowDataPacket[] | OkPacket
+): response is RowDataPacket {
+  if ("value" in response) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * returns day from options-table in database
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  */
-async function getDay(dbHandle) {
+async function getDay(dbHandle: Pool) {
   return new Promise(function (resolve, reject) {
     selectTableValueByConditions(dbHandle, "options", "value", [
       "name = 'day'",
     ]).then((dB_response) => {
-      if (!Array.isArray(dB_response) || dB_response.length === 0) resolve(NaN);
-      else resolve(parseInt(dB_response[0].value));
+      if (
+        !Array.isArray(dB_response) ||
+        dB_response.length === 0 ||
+        !hasValue(dB_response[0])
+      )
+        resolve(NaN);
+      else {
+        resolve(parseInt(dB_response[0].value));
+      }
     });
   });
 }
 
 /**
  * Returns all players in DB sorted by specific column
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  * @param {string} columnName name of column to sort by
  */
-async function getSortedPlayers(dbHandle, columnName = "lobbyCount") {
+async function getSortedPlayers(dbHandle: Pool, columnName = "lobbyCount") {
   return new Promise(function (resolve, reject) {
     var command = getSortedTableCommand("players", columnName);
 
@@ -728,10 +845,13 @@ async function getSortedPlayers(dbHandle, columnName = "lobbyCount") {
 
 /**
  * Returns all referrers in DB sorted by specific column
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  * @param {string} columnName name of column to sort by
  */
-async function getSortedReferrers(dbHandle, columnName = "referralCount") {
+async function getSortedReferrers(
+  dbHandle: Pool,
+  columnName = "referralCount"
+) {
   return new Promise(function (resolve, reject) {
     var command = getSortedTableCommand("referrers", columnName);
 
@@ -747,10 +867,10 @@ async function getSortedReferrers(dbHandle, columnName = "referralCount") {
 
 /**
  * Returns all coaches in DB sorted by specific column
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  * @param {string} columnName name of column to sort by
  */
-async function getSortedCoaches(dbHandle, columnName = "lobbyCount") {
+async function getSortedCoaches(dbHandle: Pool, columnName = "lobbyCount") {
   return new Promise(function (resolve, reject) {
     var command = getSortedTableCommand("coaches", columnName);
 
@@ -764,12 +884,26 @@ async function getSortedCoaches(dbHandle, columnName = "lobbyCount") {
   });
 }
 
+function isCoach(
+  response: RowDataPacket | RowDataPacket[] | OkPacket
+): response is RowDataPacket {
+  if (
+    "lobbyCount" in response &&
+    "lobbyCountTryout" in response &&
+    "lobbyCountNormal" in response &&
+    "lobbyCountReplayAnalysis" in response
+  ) {
+    return true;
+  }
+  return false;
+}
+
 /**
  * Returns coach given user ID, resolves undefined if not found
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  * @param {string} userId
  */
-async function getCoach(dbHandle, userId = "") {
+async function getCoach(dbHandle: Pool, userId = "") {
   return new Promise(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
@@ -777,26 +911,37 @@ async function getCoach(dbHandle, userId = "") {
       "lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis",
       ["user_id = '" + userId + "'"]
     ).then((dB_response) => {
-      if (!Array.isArray(dB_response) || dB_response.length === 0) {
+      if (
+        !Array.isArray(dB_response) ||
+        dB_response.length === 0 ||
+        !isCoach(dB_response[0])
+      ) {
         resolve(undefined);
         return;
       }
       var c_content = dB_response[0];
-      c_content.userId = userId;
-      resolve(c.Coach.fromObject(c_content));
+      resolve(
+        new Coach(
+          userId,
+          c_content.lobbyCount,
+          c_content.lobbyCountTryout,
+          c_content.lobbyCountNormal,
+          c_content.lobbyCountReplayAnalysis
+        )
+      );
     });
   });
 }
 
-async function getPlayerByID(dbHandle, userId = "") {
+async function getPlayerByID(dbHandle: Pool, userId = "") {
   return getPlayer(dbHandle, ["userId = '" + userId + "'"]);
 }
 
-async function getPlayerByTag(dbHandle, tag = "") {
+async function getPlayerByTag(dbHandle: Pool, tag = "") {
   return getPlayer(dbHandle, ["tag = '" + tag + "'"]);
 }
 
-async function getPlayer(dbHandle, filter) {
+async function getPlayer(dbHandle: Pool, filter: string[]) {
   return new Promise(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
@@ -813,15 +958,15 @@ async function getPlayer(dbHandle, filter) {
   });
 }
 
-async function getReferrerByID(dbHandle, userId = "") {
+async function getReferrerByID(dbHandle: Pool, userId = "") {
   return getReferrer(dbHandle, ["userId = '" + userId + "'"]);
 }
 
-async function getReferrerByTag(dbHandle, tag = "") {
+async function getReferrerByTag(dbHandle: Pool, tag = "") {
   return getReferrer(dbHandle, ["tag = '" + tag + "'"]);
 }
 
-async function getReferrer(dbHandle, filter) {
+async function getReferrer(dbHandle: Pool, filter: string[]) {
   return new Promise(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
@@ -840,11 +985,15 @@ async function getReferrer(dbHandle, filter) {
 
 /**
  * Deletes table rows in given table according to the laid out conditions
- * @param {mysql.Pool} dbHandle bot database handle
+ * @param {Pool} dbHandle bot database handle
  * @param {string} table table name
  * @param {Array<String>} conditions array of strings containing the conditions (will be combined with 'AND')
  */
-async function deleteTableRows(dbHandle, table, conditions) {
+async function deleteTableRows(
+  dbHandle: Pool,
+  table: string,
+  conditions: Array<String>
+) {
   return new Promise(function (resolve, reject) {
     var command = "DELETE FROM " + table;
     if (conditions.length > 0) {
@@ -868,10 +1017,10 @@ async function deleteTableRows(dbHandle, table, conditions) {
 
 /**
  * Remove lobby from database
- * @param {mysql.Pool} dbHandle
- * @param {JSON} lobby
+ * @param {Pool} dbHandle
+ * @param {Lobby} lobby
  */
-async function removeLobby(dbHandle, lobby) {
+async function removeLobby(dbHandle: Pool, lobby: Lobby) {
   return deleteTableRows(
     dbHandle,
     "lobbies",
@@ -881,10 +1030,10 @@ async function removeLobby(dbHandle, lobby) {
 
 /**
  * Remove all schedules belonging to a message-ID
- * @param {mysql.Pool} dbHandle
+ * @param {Pool} dbHandle
  * @param {Array<String>} messageIDs
  */
-async function removeSchedules(dbHandle, messageIDs) {
+async function removeSchedules(dbHandle: Pool, messageIDs: Array<String>) {
   var conditions = [
     "message_id = '" + messageIDs.join("' OR message_id = '") + "'",
   ];
@@ -893,7 +1042,7 @@ async function removeSchedules(dbHandle, messageIDs) {
 
 module.exports = {
   /**
-   * @return {mysql.Pool}
+   * @return {Pool}
    */
   createPool: function () {
     return mysql.createPool({

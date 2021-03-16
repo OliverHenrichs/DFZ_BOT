@@ -1,6 +1,6 @@
 const dB = require("../misc/database");
 const rM = require("../misc/roleManagement");
-const pL = require("../misc/player");
+const pL = require("../misc/types/player");
 
 /**
  * Checks if member has nickname

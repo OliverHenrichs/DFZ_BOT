@@ -1,6 +1,6 @@
 const path = require("path");
 const fs = require("fs");
-const tr = require("../misc/tracker");
+const tr = require("../src/misc/tracker");
 const express = require("express");
 const hbs = require("express-handlebars");
 //const bodyParser = require('body-parser')

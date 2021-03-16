@@ -1,15 +1,4 @@
 module.exports = {
-  /**
-   * Async foreach ...
-   * @param {Array} array
-   * @param {Function} callback
-   */
-  asyncForEach: async function (array, callback) {
-    for (let index = 0; index < array.length; index++) {
-      await callback(array[index], index, array);
-    }
-  },
-
   // 50:50 because .random is between 0 and 1, rounding happens at 0.5
   coinFlip: function () {
     return Math.round(Math.random()) === 1;
@@ -21,7 +10,7 @@ module.exports = {
    * @param {Array} a items An array containing the items.
    * @param return the shuffled array
    */
-  shuffle: function (a) {
+  shuffle: function<T> (a: Array<T>) {
     var j, x, i;
     for (i = a.length - 1; i > 0; i--) {
       j = Math.floor(Math.random() * (i + 1));
@@ -39,7 +28,7 @@ module.exports = {
         @param max max number value
         @return {[boolean, string]} true if correct, false + error msg if not
     */
-  checkNumbers: function (positions, min = 0, max = 5) {
+  checkNumbers: function (positions: Set<number>, min: number = 0, max: number = 5) {
     // error if empty
     if (positions.size == 0 || (positions.size == 1 && positions.has(NaN))) {
       return [false, "Did not find any numbers"];
@@ -66,14 +55,15 @@ module.exports = {
    * @return {[boolean, set<int>, string]}[true if success, unique numbers, error message if not success]
    */
   getNumbersFromString: function (
-    stringWithCommaSeperatedNumbers,
-    min = 0,
-    max = 5
+    stringWithCommaSeperatedNumbers: string,
+    min: number = 0,
+    max: number = 5
   ) {
-    var numbers = stringWithCommaSeperatedNumbers.split(",");
+    var strings: string[] = stringWithCommaSeperatedNumbers.split(",");
+    var numbers: number[] = [];
     // get integers
-    for (pos in numbers) {
-      numbers[pos] = Number(numbers[pos]);
+    for (const pos in strings) {
+      numbers.push(Number(strings[pos]));
     }
     // remove duplicates
     numbers.sort();

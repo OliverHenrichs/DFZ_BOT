@@ -1,6 +1,6 @@
 const db = require("../misc/database");
-const pl = require("../misc/player");
-const r = require("../misc/referrer");
+const pl = require("../misc/types/player");
+const r = require("../misc/types/referrer");
 
 /**
  * Adds player to db on application

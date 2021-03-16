@@ -1,6 +1,6 @@
-const cM = require("../misc/channelManagement");
-const lM = require("../misc/lobbyManagement");
-const rM = require("../misc/roleManagement");
+const cM = require("./channelManagement");
+const lM = require("./lobbyManagement");
+const rM = require("./roleManagement");
 
 /**
  * Extracts affected lobby, user who sent the message reaction and their role from a message reaction

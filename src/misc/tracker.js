@@ -1,7 +1,7 @@
-const c = require("../misc/constants");
-const co = require("../misc/coach");
-const db = require("../misc/database");
-const pl = require("../misc/player");
+const c = require("./constants");
+const co = require("./types/coach");
+const db = require("./database");
+const pl = require("./types/player");
 const { DiscordAPIError } = require("discord.js");
 
 /**

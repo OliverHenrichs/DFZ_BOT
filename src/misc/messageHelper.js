@@ -1,7 +1,7 @@
-const c = require("../misc/constants");
-const g = require("../misc/generics");
-const rM = require("../misc/roleManagement");
-const tZ = require("../misc/timeZone");
+const c = require("./constants");
+const g = require("./generics");
+const rM = require("./roleManagement");
+const tZ = require("./timeZone");
 
 /**
  * Reacts to message using reply and emoji

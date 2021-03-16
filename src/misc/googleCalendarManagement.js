@@ -1,7 +1,7 @@
 const { google } = require("googleapis");
 const tz = require("./timeZone");
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
-const s = require("./schedule");
+const s = require("./types/schedule");
 
 // const TOKEN_PATH = 'token.json';
 // let oAuth2Client = "";
@@ -72,7 +72,7 @@ let jwtClient = "";
 let calendar = "";
 try {
   // get private key
-  const privateKey = require("./../service_key.json");
+  const privateKey = require("../../service_key.json");
 
   jwtClient = new google.auth.JWT(
     privateKey.client_email,

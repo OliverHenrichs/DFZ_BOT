@@ -5,7 +5,7 @@ const fs = require("fs");
 var ws = {};
 const client = new Discord.Client({ autoReconnect: true });
 
-const dB = require("./misc/database");
+const dB = require("./src/misc/database");
 // get db-access
 client.dbHandle = dB.createPool();
 // client.dbHandle.dfz_debugMode = true;

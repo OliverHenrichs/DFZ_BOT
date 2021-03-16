@@ -1,3 +1,5 @@
+import Discord from "discord.js";
+
 const lobbyTypes = {
   inhouse: 1,
   unranked: 2,
@@ -39,9 +41,9 @@ module.exports = {
    * Returns true if lobbytype is found in simpleLobbyTypes
    * @param {number} lobbyType
    */
-  isSimpleLobbyType: function (lobbyType) {
+  isSimpleLobbyType: function (lobbyType: number) {
     return (
-      this.simpleLobbyTypes.find((s_type) => s_type === lobbyType) !== undefined
+      this.simpleLobbyTypes.find((s_type: number) => s_type === lobbyType) !== undefined
     );
   },
 
@@ -49,9 +51,9 @@ module.exports = {
    * Returns true if lobbytype is found in roleBasedLobbyTypes
    * @param {number} lobbyType
    */
-  isRoleBasedLobbyType: function (lobbyType) {
+  isRoleBasedLobbyType: function (lobbyType: number) {
     return (
-      this.roleBasedLobbyTypes.find((s_type) => s_type === lobbyType) !==
+      this.roleBasedLobbyTypes.find((s_type: number) => s_type === lobbyType) !==
       undefined
     );
   },
@@ -61,7 +63,7 @@ module.exports = {
    * @param {number} lobbyType given lobby type
    * @return communication string according to lobby type
    */
-  getLobbyNameByType: function (lobbyType) {
+  getLobbyNameByType: function (lobbyType: number) {
     switch (lobbyType) {
       case lobbyTypes.inhouse:
         return "Inhouse";
@@ -76,7 +78,7 @@ module.exports = {
     }
   },
 
-  getLobbyPostNameByType: function (lobbyType) {
+  getLobbyPostNameByType: function (lobbyType: number) {
     switch (lobbyType) {
       case lobbyTypes.inhouse:
         return "an INHOUSE lobby";
@@ -97,7 +99,7 @@ module.exports = {
    * checks reaction emoji for ingame position
    * @param {string} reactionEmoji given emoji
    */
-  getReactionEmojiPosition: function (reactionEmoji) {
+  getReactionEmojiPosition: function (reactionEmoji: Discord.GuildEmoji) {
     var idx = positionReactionEmojis.findIndex((type) => {
       return reactionEmoji.name === type;
     });
@@ -105,15 +107,15 @@ module.exports = {
     return idx + 1; // +1 to match pos 1-5 instead of 0-4...
   },
 
-  isKnownPositionEmoji: function (reactionEmoji) {
+  isKnownPositionEmoji: function (reactionEmoji: Discord.GuildEmoji) {
     return positionReactionEmojis.includes(reactionEmoji.name);
   },
 
-  isKnownSimpleLobbyEmoji: function (reactionEmoji) {
+  isKnownSimpleLobbyEmoji: function (reactionEmoji: Discord.GuildEmoji) {
     return tryoutReactionEmoji === reactionEmoji.name;
   },
 
-  isKnownLobbyManagementEmoji: function (reactionEmoji) {
+  isKnownLobbyManagementEmoji: function (reactionEmoji: Discord.GuildEmoji) {
     return lobbyManagementReactionEmojis.includes(reactionEmoji.name);
   },
 };
