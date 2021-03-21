@@ -1,9 +1,12 @@
 {
   "name": "DFZ_discord_bot",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "build": "tsc -p ./",
+    "prestart": "npm run build",
+    "start": "node ./build/index.js",
+    "predev": "npm run build",
     "dev": "nodemon index.js"
   },
   "dependencies": {
