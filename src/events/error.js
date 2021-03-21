@@ -1,3 +1,5 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var counter = 0;
 var maxCounter = 3;
 /**
@@ -5,9 +7,8 @@ var maxCounter = 3;
  * @param {Client} client discord client
  * @param {Event} event The disconnect event
  */
-module.exports = async (client, event) => {
-  console.error(
-    `client's WebSocket encountered a connection error: ${event.message}`
-  );
-  if (++counter >= maxCounter) return process.exit(1);
+module.exports = async function (client, event) {
+    console.error(`client's WebSocket encountered a connection error: ${event.message}`);
+    if (++counter >= maxCounter)
+        return process.exit(1);
 };

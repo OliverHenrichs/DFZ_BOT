@@ -5,10 +5,10 @@ import {
   ResultSetHeader,
   FieldPacket,
 } from "mysql2/promise.js";
+import { Lobby } from "./types/lobby";
 
 const c = require("./types/coach");
 const mysql = require("mysql2/promise");
-const l = require("./types/lobby");
 const p = require("./types/player");
 const r = require("./types/referrer");
 const s = require("./types/schedule");
@@ -781,7 +781,7 @@ async function getSchedules(
           resp: RowDataPacket | RowDataPacket[] | OkPacket
         ) {
           if (hasData(resp)) {
-            var schedule = Schedule.fromObject(resp.data);
+            var schedule = s.Schedule.fromObject(resp.data);
             if (schedule !== undefined) {
               schedules.push(schedule);
             }
@@ -921,7 +921,7 @@ async function getCoach(dbHandle: Pool, userId = "") {
       }
       var c_content = dB_response[0];
       resolve(
-        new Coach(
+        new c.Coach(
           userId,
           c_content.lobbyCount,
           c_content.lobbyCountTryout,
@@ -1040,21 +1040,23 @@ async function removeSchedules(dbHandle: Pool, messageIDs: Array<String>) {
   return deleteTableRows(dbHandle, "schedules", conditions);
 }
 
+function createPool () {
+  return mysql.createPool({
+    host: "localhost",
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+  });
+}
+
 module.exports = {
   /**
    * @return {Pool}
    */
-  createPool: function () {
-    return mysql.createPool({
-      host: "localhost",
-      user: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      database: process.env.DB_NAME,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-    });
-  },
+  createPool: createPool,
   createPlayerTable: createPlayerTable,
   createReferrerTable: createReferrerTable,
   createCoachTable: createCoachTable,

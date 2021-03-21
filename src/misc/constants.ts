@@ -43,7 +43,8 @@ module.exports = {
    */
   isSimpleLobbyType: function (lobbyType: number) {
     return (
-      this.simpleLobbyTypes.find((s_type: number) => s_type === lobbyType) !== undefined
+      this.simpleLobbyTypes.find((s_type: number) => s_type === lobbyType) !==
+      undefined
     );
   },
 
@@ -53,8 +54,9 @@ module.exports = {
    */
   isRoleBasedLobbyType: function (lobbyType: number) {
     return (
-      this.roleBasedLobbyTypes.find((s_type: number) => s_type === lobbyType) !==
-      undefined
+      this.roleBasedLobbyTypes.find(
+        (s_type: number) => s_type === lobbyType
+      ) !== undefined
     );
   },
 

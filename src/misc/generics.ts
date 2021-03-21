@@ -62,9 +62,10 @@ module.exports = {
     var strings: string[] = stringWithCommaSeperatedNumbers.split(",");
     var numbers: number[] = [];
     // get integers
-    for (const pos in strings) {
-      numbers.push(Number(strings[pos]));
-    }
+    strings.forEach((s: string) => {
+      numbers.push(Number(s));
+    })
+
     // remove duplicates
     numbers.sort();
     var uniqueNumbers = new Set(numbers);
