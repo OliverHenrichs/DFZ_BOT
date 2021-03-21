@@ -1,11 +1,11 @@
 {
-  "name": "DFZ_discord_bot",
+  "name": "dfz_discord_bot",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "build": "tsc -p ./",
     "prestart": "npm run build",
-    "start": "node ./build/index.js",
+    "start": "node ./index.js",
     "predev": "npm run build",
     "dev": "nodemon index.js"
   },
