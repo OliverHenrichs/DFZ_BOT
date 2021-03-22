@@ -9,5 +9,6 @@ credentials.json
 service_key.json
 token.json
 visits.sqlite
+built/
+**/*.js
 
-events/rateLimit.js
