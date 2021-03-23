@@ -1,14 +1,11 @@
 import {
-  Channel,
   DMChannel,
   Guild,
   GuildChannel,
   Message,
-  MessageAdditions,
   MessageEmbed,
   MessageReaction,
   NewsChannel,
-  Role,
   TextChannel,
   User,
 } from "discord.js";
@@ -30,7 +27,6 @@ const uH = require("./userHelper");
 const rM = require("./roleManagement");
 const tr = require("./tracker");
 const tZ = require("./timeZone");
-const _tZ = require("timezone-support");
 const fiveMinInMs = 300000;
 
 /**
@@ -567,11 +563,9 @@ async function getMessageFromChannel(
 function getLobbyPostFooter(type: number, regionRole: string) {
   var res = "";
   if (c.isRoleBasedLobbyType(type)) {
-    res +=
-      footerStringBeginner +
-      "\n\nPlayers from " +
-      rM.getRegionalRoleString(regionRole) +
-      "-region will be moved up.";
+    res += `${footerStringBeginner} \n\nPlayers from ${rM.getRegionalRoleString(
+      regionRole
+    )}-region will be moved up.`;
   } else if (type === c.lobbyTypes.tryout) {
     res += footerStringTryout;
   } else if (type === c.lobbyTypes.meeting) {
@@ -624,7 +618,7 @@ module.exports = {
    * @param {number} lobbyType type of lobby
    * @param {Array<String>} lobbyBeginnerRoles
    * @param {String} lobbyRegionRole
-   * @param {_tZ.Time} zonedTime time of lobby
+   * @param {Time} zonedTime time of lobby
    */
   postLobby: async function (
     dbHandle: Pool,
@@ -635,13 +629,9 @@ module.exports = {
     lobbyRegionRole: string,
     zonedTime: Time
   ) {
-    var title =
-      "We host " +
-      c.getLobbyPostNameByType(lobbyType) +
-      " on " +
-      tZ.getTimeString(zonedTime) +
-      " " +
-      zonedTime.zone.abbreviation;
+    var title = `We host ${c.getLobbyPostNameByType(
+      lobbyType
+    )} on ${tZ.getTimeString(zonedTime)} ${zonedTime.zone.abbreviation}`;
     var text = getLobbyPostText(
       lobbyBeginnerRoles,
       lobbyType,
@@ -969,7 +959,7 @@ module.exports = {
       }
 
       if (updateTiers) {
-        const minTier = 1; // Beginner tiers 1-4
+        const minTier = 0; // Beginner tiers 0-4
         const maxTier = 4;
         var res: boolean = false,
           numbers: number[] = [],

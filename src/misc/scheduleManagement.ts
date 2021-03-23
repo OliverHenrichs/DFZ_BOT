@@ -253,12 +253,12 @@ async function createScheduledLobby(
     channel = channels.cache.find(
       (chan) => chan.id === process.env.BOT_LOBBY_CHANNEL_TRYOUT
     );
-    lobbyBeginnerRoles = rM.beginnerRoles.slice(0, 1);
+    lobbyBeginnerRoles = [rM.tryoutRole];
   } else if (type === c.lobbyTypes.botbash) {
     channel = channels.cache.find(
       (chan) => chan.id === process.env.BOT_LOBBY_CHANNEL_BOTBASH
     );
-    lobbyBeginnerRoles = rM.beginnerRoles.slice(1, 2);
+    lobbyBeginnerRoles = rM.beginnerRoles.slice(0, 2);
   } else {
     var channelId = rM.getRegionalRoleLobbyChannel(lobbyRegionRole);
     channel = channels.cache.find((chan) => chan.id === channelId);
@@ -545,6 +545,7 @@ async function createSchedules(
   channels: GuildChannelManager,
   chanId: string,
   coachCount: number,
+  type: string,
   days: Array<Array<number>>,
   times: Array<Array<string>>,
   monAndSun: NextMondayAndSunday
@@ -557,7 +558,7 @@ async function createSchedules(
       monAndSun.monday,
       monAndSun.sunday,
       days,
-      scheduleTypes.lobby,
+      type,
       coachCount,
       times
     );
@@ -647,6 +648,7 @@ module.exports = {
       channels,
       cM.scheduleChannel5v5,
       coachCount5v5,
+      scheduleTypes.lobby,
       days5v5,
       times5v5,
       monAndSun
@@ -661,6 +663,7 @@ module.exports = {
       channels,
       cM.scheduleChannelTryout,
       coachCountTryout,
+      scheduleTypes.tryout,
       daysTryout,
       timesTryout,
       monAndSun
@@ -675,6 +678,7 @@ module.exports = {
       channels,
       cM.scheduleChannelBotbash,
       coachCountBotbash,
+      scheduleTypes.botbash,
       daysBotbash,
       timesBotbash,
       monAndSun

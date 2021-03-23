@@ -190,16 +190,9 @@ interface TimeZoneInfo {
 }
 
 function getTimeString(zonedTime: Time) {
+  const { dayOfWeek, month, day, hours, minutes} = zonedTime
   return (
-    weekDays[zonedTime.dayOfWeek] +
-    ", " +
-    months[zonedTime.month] +
-    " " +
-    zonedTime.day +
-    " at " +
-    zonedTime.hours +
-    ":" +
-    (zonedTime.minutes < 10 ? "0" + zonedTime.minutes : zonedTime.minutes)
+    `${weekDays[dayOfWeek]}, ${months[month]} ${day} at ${hours}:${minutes < 10 ? "0" + minutes : minutes}`
   );
 }
 

@@ -15,9 +15,9 @@ Discord-bot providing scheduling and planning of lobbies for coached inhouse-gam
 # Usage
 
 1. Users: Coach and Player
-1.1 Coaches correspond to user with the roles COACH and COACH_TRYOUT specified in the .env file.
+1.1 Coaches correspond to users with the roles COACH and COACH_TRYOUT specified in the .env file.
 	Coaches can join and leave scheduled events and can create/delete/start lobbies; A new schedule is automatically added every sunday for the coming week.
-1.2 Players correspond to user with the roles TRYOUT, TIER_1, TIER_2, TIER_3, TIER_4 and TIER_grad specified in the .env file.
+1.2 Players correspond to users with the roles TRYOUT, TIER 0, TIER_1, TIER_2, TIER_3, TIER_4 and TIER_grad specified in the .env file.
 	Players can join and leave lobbies.
 2. Bot listening behaviour:
 	The bot listens to the channels specified by the channel IDs BOT_LOBBY_CHANNEL_1 to BOT_LOBBY_CHANNEL_5 corresponding to lobby channels as well as BOT_SCHEDULE_CHANNEL_TRYOUT and BOT_SCHEDULE_CHANNEL_5V5 which are scheduling channels

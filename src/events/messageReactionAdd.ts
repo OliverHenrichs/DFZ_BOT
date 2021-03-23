@@ -133,10 +133,10 @@ function handleSimpleLobbyEmoji(
 
   if (
     lobby.type === c.lobbyTypes.replayAnalysis &&
-    rM.tierRoles.find((tr: string) => tr === role.id) === undefined
+    rM.beginnerRoles.find((tr: string) => tr === role.id) === undefined
   ) {
     user.send(
-      "⛔ You cannot join because you do not have a beginner role role."
+      "⛔ You cannot join because you do not have a beginner role."
     );
     return false;
   }

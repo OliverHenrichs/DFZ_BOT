@@ -33,7 +33,7 @@ module.exports = async (message: Message, dbHandle: Pool) => {
       );
 
     // get beginner roles
-    const minRole = 1;
+    const minRole = 0;
     const maxRole = 4;
     [res, beginnerRoleNumbers, errormsg] = mH.getNumbersFromMessage(
       message,
@@ -48,9 +48,9 @@ module.exports = async (message: Message, dbHandle: Pool) => {
     type === c.lobbyTypes.replayAnalysis ||
     type === c.lobbyTypes.meeting
   ) {
-    beginnerRoleNumbers = [1, 2, 3, 4];
+    beginnerRoleNumbers = [0, 1, 2, 3, 4];
   } else if (type === c.lobbyTypes.tryout) {
-    beginnerRoleNumbers = [0];
+    beginnerRoleNumbers = [5];
   }
 
   var lobbyBeginnerRoles = rM.getBeginnerRolesFromNumbers(beginnerRoleNumbers);

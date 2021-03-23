@@ -65,8 +65,8 @@ async function handleFirstBeginnerRole(
   oldMember: GuildMember,
   newMember: GuildMember
 ) {
-  var oldRole = rM.findRole(oldMember, rM.beginnerRolesWithoutTryout);
-  var newRole = rM.findRole(newMember, rM.beginnerRolesWithoutTryout);
+  var oldRole = rM.findRole(oldMember, rM.beginnerRoles);
+  var newRole = rM.findRole(newMember, rM.beginnerRoles);
   if (oldRole !== undefined || newRole === undefined) {
     return false;
   }

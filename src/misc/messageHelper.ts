@@ -95,11 +95,7 @@ function getNumbersFromMessage(
     return [
       false,
       [],
-      "you need to provide a list of numbers ranging from " +
-        min +
-        " to " +
-        max +
-        " in your post",
+      `you need to provide a list of numbers ranging from ${min} to ${max} in your post`,
     ];
 
   return g.getNumbersFromString(args[index]);

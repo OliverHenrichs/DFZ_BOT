@@ -1,13 +1,13 @@
 import { GuildMember, Role } from "discord.js";
 
 const beginnerRoles = [
-  process.env.TRYOUT,
+  process.env.TIER_0,
   process.env.TIER_1,
   process.env.TIER_2,
   process.env.TIER_3,
   process.env.TIER_4,
 ];
-const beginnerRolesWithoutTryout = beginnerRoles.slice(1);
+const tryoutRole = process.env.TRYOUT;
 const regionRoleIDs = [
   process.env.REGION_EU_ROLE,
   process.env.REGION_NA_ROLE,
@@ -21,9 +21,8 @@ module.exports = {
     process.env.COACH_TRYOUT,
     process.env.COMPANION,
   ],
-  tierRoles: beginnerRoles.slice(1),
   beginnerRoles: beginnerRoles,
-  beginnerRolesWithoutTryout: beginnerRolesWithoutTryout,
+  tryoutRole: tryoutRole,
   regionRoleIDs: regionRoleIDs,
 
   isAdminRole: function (role: string) {
@@ -54,11 +53,12 @@ module.exports = {
   getBeginnerRolesFromNumbers: function (numbers: Array<number>) {
     var roles: Array<string | undefined> = [];
     numbers.forEach((num) => {
-      if (num == 0) roles.push(process.env.TRYOUT);
-      else if (num == 1) roles.push(process.env.TIER_1);
-      else if (num == 2) roles.push(process.env.TIER_2);
-      else if (num == 3) roles.push(process.env.TIER_3);
-      else if (num == 4) roles.push(process.env.TIER_4);
+      if (num == 0) roles.push(beginnerRoles[0]);
+      else if (num == 1) roles.push(beginnerRoles[1]);
+      else if (num == 2) roles.push(beginnerRoles[2]);
+      else if (num == 3) roles.push(beginnerRoles[3]);
+      else if (num == 4) roles.push(beginnerRoles[4]);
+      else if (num == 5) roles.push(tryoutRole);
       else
         console.log(
           "current number " + num + " is not corresponding to a role"
@@ -85,6 +85,8 @@ module.exports = {
         return 3;
       case beginnerRoles[4]:
         return 4;
+      case tryoutRole:
+        return 5;
     }
   },
 
