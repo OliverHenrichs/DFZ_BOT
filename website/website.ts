@@ -136,9 +136,9 @@ class WebSocket {
 
   async setupHallOfFame() {
     await this.updateCoachList();
-    setInterval(this.updateCoachList, 2 * 60 * 60000);
+    setInterval(this.updateCoachList.bind(this), 2*1000);//2 * 60 * 60000);
     await this.updateReferrerList();
-    setInterval(this.updateReferrerList, 2 * 60 * 60000);
+    setInterval(this.updateReferrerList.bind(this), 2 * 60 * 60000);
   }
 
   redirectHttps(req: Request, res: Response) {
