@@ -53,6 +53,9 @@ async function getInfoFromLobbyReaction(
   if (role === undefined || role === null) {
     role = rM.findRole(guildMember, rM.adminRoles);
   }
+  if (role === undefined || role === null) {
+      role = rM.findRole(guildMember, rM.tryoutRole);
+  }
 
   if (role === undefined || role === null) {
     user.send(
