@@ -157,7 +157,6 @@ class WebSocket {
       var vc = await visitCounter.Loader.getCount();
       res.render("index", {
         title: _title,
-        coaches: this.coachList,
         referrers: this.referrerList,
         visitorCount: vc,
       });
@@ -169,6 +168,18 @@ class WebSocket {
       var vc = await visitCounter.Loader.getCount();
       res.render("joinLink", {
         title: _title,
+        visitorCount: vc,
+      });
+    });
+
+    this.app.get("/halloffame", async (req: Request, res: Response) => {
+      if (this.redirectHttps(req, res)) {
+        return;
+      }
+      var vc = await visitCounter.Loader.getCount();
+      res.render("hallOfFame", {
+        title: _title,
+        coaches: this.coachList,
         visitorCount: vc,
       });
     });

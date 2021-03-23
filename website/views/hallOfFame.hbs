@@ -1,0 +1,32 @@
+{{>smallHeader}}
+<title >Coach Hall of Fame</title>
+<meta name="Description" content="Our coaches dedicate their free time to this cause! Here their deeds become immortal.">
+<div class="dfz-abstract-container main-container">
+    <div id="hall-of-fame-section" class="section">
+        <div class="fade-in-animation-scroll">
+            <h1>COACH HALL OF FAME</h1>
+            <h3>Our coaches dedicate their free time to this cause! Here their deeds become immortal (until the server burns
+                down).
+            </h3>
+        </div>
+        <table>
+            <tr>
+                <td>Coach</td>
+                <td>Total Matches</td>
+                <td>Unranked / 5v5</td>
+                <td>Tryouts</td>
+                <td>Replay Analyses</td>
+            </tr>
+            {{#each coaches}}
+            <tr>
+                <td>{{this.nick}}</td>
+                <td>{{this.lobbyCount}}</td>
+                <td>{{this.lobbyCountNormal}}</td>
+                <td>{{this.lobbyCountTryout}}</td>
+                <td>{{this.lobbyCountReplayAnalysis}}</td>
+            </tr>
+            {{/each}}
+        </table>
+    </div>
+</div>
+{{>about}}
