@@ -103,6 +103,8 @@ function addUserWithPositionsToUserTable(
   startIndex = 0,
   mention = false
 ) {
+  console.log("User: " + user);
+  console.log("Positions: " + positions);
   tableBase[startIndex].value =
     tableBase[startIndex].value +
     "\r\n" +
