@@ -18,7 +18,7 @@ module.exports = async (message: Message, dbHandle: Pool) => {
       message,
       "No message ID given. \r\n Add the message ID of the lobby you want to update."
     );
-    return undefined;
+    return;
   }
 
   var lobby = await lM.findLobbyByMessage(
@@ -26,8 +26,10 @@ module.exports = async (message: Message, dbHandle: Pool) => {
     message.channel.id,
     args[0]
   );
-  if (lobby === undefined)
+  if (lobby === undefined) {
     mH.reactNegative(message, "Did not find lobby given the Id.");
+    return;
+  }
 
   // remove message ID from args
   args.shift();

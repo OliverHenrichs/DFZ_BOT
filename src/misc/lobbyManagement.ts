@@ -684,6 +684,11 @@ module.exports = {
     // generate new embed
     var new_embed = new Discord.MessageEmbed(old_embed);
 
+    // generate new title
+    var title = `We host ${c.getLobbyPostNameByType(
+      lobby.type
+    )} on ` + new_embed.title.split(" on ")[1];
+    new_embed.title = title;
     // generate new embed description
     // save old time
     var descriptionLines = new_embed.description.split("\n");
@@ -947,8 +952,10 @@ module.exports = {
    * @param {Lobby} lobby
    */
   updateLobbyParameters: function (args: string[], lobby: Lobby) {
-    var updateTiers = false;
-    var changedLobby = false;
+    var updateTiers = false,
+        updateType = false,
+        updateRegion = false,
+        changedLobby = false;
 
     while (args.length > 0) {
       let arg = args[0];
@@ -956,6 +963,16 @@ module.exports = {
 
       if (arg === "-tiers") {
         updateTiers = true;
+        continue;
+      }
+
+      if (arg === "-type") {
+        updateType = true;
+        continue;
+      }
+
+      if (arg === "-region") {
+        updateRegion = true;
         continue;
       }
 
@@ -982,6 +999,38 @@ module.exports = {
         }
 
         updateTiers = false;
+        continue;
+      }
+      
+      if (updateType) {
+
+        var lobbyType = Object.keys(c.lobbyTypes).find((t) => {
+          return t == arg;
+        });
+        
+        if (lobbyType == undefined) {
+          continue;
+        }
+        
+        lobby.type = c.lobbyTypes[lobbyType];
+        changedLobby = true;
+
+        updateType = false;
+        continue;
+      }
+      
+      if (updateRegion) {
+
+        var regionId = rM.getRegionalRoleFromString(arg);
+        
+        if (regionId == undefined) {
+          continue;
+        }
+        
+        lobby.regionId = regionId;
+        changedLobby = true;
+
+        updateRegion = false;
         continue;
       }
     }

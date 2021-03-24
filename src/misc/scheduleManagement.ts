@@ -243,10 +243,13 @@ async function createScheduledLobby(
   dbHandle: Pool,
   schedule: Schedule
 ) {
+
   var lobbyRegionRole = rM.getRegionalRoleFromString(schedule.region);
+  var timezoneName = rM.getRegionalRoleTimeZoneString(lobbyRegionRole);
+  var zonedTime = tZ.getZonedTimeFromTimeZoneName(schedule.date, timezoneName);
+  const { dayOfWeek} = zonedTime;
 
   var type = getLobbyType(schedule);
-
   var lobbyBeginnerRoles: Array<String> | undefined = undefined;
   var channel: GuildChannel | undefined = undefined;
   if (type === c.lobbyTypes.tryout) {
@@ -262,15 +265,13 @@ async function createScheduledLobby(
   } else {
     var channelId = rM.getRegionalRoleLobbyChannel(lobbyRegionRole);
     channel = channels.cache.find((chan) => chan.id === channelId);
-    lobbyBeginnerRoles = rM.beginnerRoles.slice(1, 3);
+    lobbyBeginnerRoles = dayOfWeek === tZ.weekDayNumbers.Friday ? rM.beginnerRoles.slice(1, 4) : rM.beginnerRoles.slice(1, 3);
   }
 
   if (channel === undefined) {
     return;
   }
-
-  var timezoneName = rM.getRegionalRoleTimeZoneString(lobbyRegionRole);
-  var zonedTime = tZ.getZonedTimeFromTimeZoneName(schedule.date, timezoneName);
+  
 
   await lM.postLobby(
     dbHandle,
