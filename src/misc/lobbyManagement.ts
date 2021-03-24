@@ -311,8 +311,8 @@ function getTeamTable(
       var players = assignedUsers[pos]; // 2 players per position assured by being full team inhouse 5v5
       const teamAIndex = 1;
       const teamBIndex = 5;
-      addUserToTeam(tableBaseInhouse, teamAIndex, players[0], pos, mention);
-      addUserToTeam(tableBaseInhouse, teamBIndex, players[1], pos, mention);
+      addUserToTeam(tableBaseInhouse, teamAIndex, players[0], pos+1, mention);
+      addUserToTeam(tableBaseInhouse, teamBIndex, players[1], pos+1, mention);
     }
 
     return tableBaseInhouse;
@@ -343,7 +343,7 @@ function getTeamTable(
     for (let pos = 0; pos < 5; pos++) {
       // 5 players/positions
       var players = assignedUsers[pos]; // 1 player per position assured by being full team inhouse 5v5
-      addUserToTeam(tableBase, teamIndex, players[0], pos, mention);
+      addUserToTeam(tableBase, teamIndex, players[0], pos+1, mention);
     }
 
     return tableBase;
@@ -451,9 +451,7 @@ function createLobbyStartPost(
 
   var counter = -1;
   userSets.forEach((us) => {
-    console.log("user set: " + JSON.stringify(us));
     var teams = uH.createTeams(us, lobby.type);
-    console.log("teams: " + JSON.stringify(teams));
     var teamTable = getTeamTable(teams, lobby.type, true);
     console.log(us);
 
