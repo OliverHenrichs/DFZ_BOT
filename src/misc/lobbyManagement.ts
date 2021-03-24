@@ -950,7 +950,7 @@ module.exports = {
     var updateTiers = false;
     var changedLobby = false;
 
-    while (arguments.length > 0) {
+    while (args.length > 0) {
       let arg = args[0];
       args.shift();
 
