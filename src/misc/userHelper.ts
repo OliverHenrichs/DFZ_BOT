@@ -242,9 +242,10 @@ function createNonCompetitionTeams(
     }
 
     // take position with fewest available players
-    const pos = playersPerPosition[0].pos;
+    const pos = playersPerPosition[0].pos - 1;// positions from 1-5, entries from 0-4, so substract 1
     const players = playersPerPosition[0].users;
 
+    
     if (players.length >= 1) playerPositionMap[pos] = [players[0]];
     else playerPositionMap[pos] = [openUsers[0]];
 
