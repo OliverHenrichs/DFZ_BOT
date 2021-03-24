@@ -451,8 +451,9 @@ function createLobbyStartPost(
 
   var counter = -1;
   userSets.forEach((us) => {
-    console.log("user set: " + us);
+    console.log("user set: " + JSON.stringify(us));
     var teams = uH.createTeams(us, lobby.type);
+    console.log("teams: " + JSON.stringify(teams));
     var teamTable = getTeamTable(teams, lobby.type, true);
     console.log(us);
 
