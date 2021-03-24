@@ -449,14 +449,14 @@ function createLobbyStartPost(
     return;
   }
 
-  var counter = -1;
+  var counter = 0;
   userSets.forEach((us) => {
     var teams = uH.createTeams(us, lobby.type);
     var teamTable = getTeamTable(teams, lobby.type, true);
     console.log(us);
 
     const _embed = aE.generateEmbedding(
-      getCompleteTeamPostTitle(lobby.type, counter++),
+      getCompleteTeamPostTitle(lobby.type, ++counter),
       "",
       "",
       teamTable
