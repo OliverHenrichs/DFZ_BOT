@@ -311,6 +311,7 @@ function getTeamTable(
       var players = assignedUsers[pos]; // 2 players per position assured by being full team inhouse 5v5
       const teamAIndex = 1;
       const teamBIndex = 5;
+      console.log(JSON.stringify(players));
       addUserToTeam(tableBaseInhouse, teamAIndex, players[0], pos+1, mention);
       addUserToTeam(tableBaseInhouse, teamBIndex, players[1], pos+1, mention);
     }
