@@ -422,7 +422,6 @@ function createLobbyStartPost(
   channel: TextChannel | NewsChannel,
   playersPerLobby: number
 ) {
-  console.log(JSON.stringify(lobby.users));
   var userSets: LobbyPlayer[][] = [];
   var userSet: LobbyPlayer[] = [];
 
@@ -452,10 +451,7 @@ function createLobbyStartPost(
 
   var counter = 0;
   userSets.forEach((us) => {
-    
-    console.log(JSON.stringify(us));
     var teams = uH.createTeams(us, lobby.type);
-    console.log(JSON.stringify(teams));
     var teamTable = getTeamTable(teams, lobby.type, true);
     console.log(us);
 
