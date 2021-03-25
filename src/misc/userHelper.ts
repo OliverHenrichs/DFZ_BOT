@@ -114,7 +114,7 @@ function createInhouseTeams(
     if (playersPerPosition.length === 0) break;
 
     // take position with fewest available players
-    var pos = playersPerPosition[0].pos;
+    var pos = playersPerPosition[0].pos - 1;
     var players = playersPerPosition[0].users;
 
     // not enough players want to play this position, but we gotta make do
