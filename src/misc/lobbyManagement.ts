@@ -453,7 +453,6 @@ function createLobbyStartPost(
   userSets.forEach((us) => {
     var teams = uH.createTeams(us, lobby.type);
     var teamTable = getTeamTable(teams, lobby.type, true);
-    console.log(us);
 
     const _embed = aE.generateEmbedding(
       getCompleteTeamPostTitle(lobby.type, ++counter),
@@ -463,7 +462,6 @@ function createLobbyStartPost(
     );
     channel.send({ embed: _embed });
   });
-  console.log("bench set: " + userSet);
   if (userSet.length != 0) {
     // bench
     const _embed = aE.generateEmbedding(

@@ -637,7 +637,6 @@ async function updateReferrer(dbHandle: Pool, referrer: Referrer) {
  * @param {string} column
  * @param {Array<String>} conditions
  */
-
 async function selectTableValueByConditions(
   dbHandle: Pool,
   table: string,
@@ -1053,9 +1052,6 @@ function createPool () {
 }
 
 module.exports = {
-  /**
-   * @return {Pool}
-   */
   createPool: createPool,
   createPlayerTable: createPlayerTable,
   createReferrerTable: createReferrerTable,

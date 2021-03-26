@@ -234,7 +234,12 @@ async function handleLobbyRelatedEmoji(
     );
   }
 
-  if (changedLobby) await dB.updateLobby(client.dbHandle, lri.lobby);
+  if (changedLobby){
+    dB.updateLobby(client.dbHandle, lri.lobby)
+    .catch((err: string) => {
+      console.log("Failed updating lobby. Error: " + err);
+    });
+  } 
 }
 
 /**

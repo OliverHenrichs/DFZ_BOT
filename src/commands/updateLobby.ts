@@ -46,5 +46,8 @@ module.exports = async (message: Message, dbHandle: Pool) => {
 
   dB.updateLobby(dbHandle, lobby)
     .then(lM.updateLobbyPost(lobby, message.channel))
-    .then(mH.reactPositive(message, "Updated lobby parameters."));
+    .then(mH.reactPositive(message, "Updated lobby parameters."))
+    .catch((err: string) => {
+      console.log("Failed updating lobby. Error: " + err);
+    });
 };
