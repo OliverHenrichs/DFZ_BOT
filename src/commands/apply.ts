@@ -12,6 +12,7 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
   var player = await db.getPlayerByID(client.dbHandle, message.author.id);
   if (player !== undefined) {
     // only add once
+    console.log("Player " + message.author.id + "already exists");
     return;
   }
 
@@ -24,9 +25,11 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
   if (args.length > 4 && args[4] !== undefined) {
     var refTag = args[4].trim();
   }
+  console.log("refTag = " + refTag);
 
   var re = /\S+#\d{4,5}/i; // matching user tag syntax asdf#1234
   if (refTag.match(re)) {
+    console.log("matched refTag");
     var existingReferrer: Referrer = await db.getReferrerByTag(
       client.dbHandle,
       refTag
