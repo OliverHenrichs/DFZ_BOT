@@ -5,6 +5,7 @@ import { FieldElement } from "../misc/interfaces/EmbedInterface";
 const aE = require("../misc/answerEmbedding");
 const t = require("../misc/tracker");
 const mH = require("../misc/messageHelper");
+const c = require("../misc/types/coach");
 
 /**
  *
@@ -231,7 +232,7 @@ module.exports = async (message: Message, dbHandle: Pool) => {
     } else if (ut === "coaches") {
       addDBCoachRowToTable(
         tableBase,
-        new Coach(
+        new c.Coach(
           dbResponse[i].user_id,
           dbResponse[i].lobbyCount,
           dbResponse[i].lobbyCountTryout,
