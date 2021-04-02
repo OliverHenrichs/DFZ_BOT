@@ -7,8 +7,8 @@ const client = new disc.Client({ autoReconnect: true });
 
 const dB = require("./src/misc/database");
 // get db-access
-client.dbHandle = dB.createPool();
-//client.dbHandle.dfz_debugMode = true;
+client.dbHandle = dB.createPool("localhost");
+//lient.dbHandle.dfz_debugMode = true;
 
 // setup discord event handlers
 fs.readdir("./src/events/", (_err: any, files: any[]) => {

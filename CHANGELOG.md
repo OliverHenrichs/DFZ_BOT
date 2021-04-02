@@ -1,5 +1,12 @@
 *@Coach The bot received some new features today!*
 
+**DFZ-Bot v0.10 - Changelog**
+
+1. T3/T4 scheduling system
+> Introduced T3/T4 lobby schedule strictly for Beginner Tier 3 and 4.
+
+---
+
 **DFZ-Bot v0.9 - Changelog**
 
 1. We now have a **Website**. It's fancy but unfinished.
@@ -14,8 +21,6 @@
 > Posting the !apply message generated with a referral-link is picked up by the bot s.t. we can track player's referral-count
 > Referrers get a point, when a new player receives a Beginner-role (after a tryout-match)
 4. Updated discord.js to v12.5.1 and fixed all API-changes
-
----
 
 **DFZ-Bot v0.8 - Changelog**
 

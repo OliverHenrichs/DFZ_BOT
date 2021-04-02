@@ -109,23 +109,27 @@ class WebSocket {
   }
 
   async updateCoachList() {
-    if (this.client.dbHandle === undefined) return;
+    try {
+      if (this.client.dbHandle === undefined) return;
 
-    var guild = await this.client.guilds.fetch(guildId);
-    var nativeCoachList = await tr.getCoachList(
-      this.client.dbHandle,
-      "lobbyCount"
-    );
-    for (let i = 0; i < nativeCoachList.length; i++) {
-      var coach = nativeCoachList[i];
-      try {
-        var member = await guild.members.fetch(coach.user_id);
-        coach.nick = member.displayName;
-      } catch {
-        coach.nick = "Unknown";
+      var guild = await this.client.guilds.fetch(guildId);
+      var nativeCoachList = await tr.getCoachList(
+        this.client.dbHandle,
+        "lobbyCount"
+      );
+      for (let i = 0; i < nativeCoachList.length; i++) {
+        var coach = nativeCoachList[i];
+        try {
+          var member = await guild.members.fetch(coach.user_id);
+          coach.nick = member.displayName;
+        } catch {
+          coach.nick = "Unknown";
+        }
       }
+      this.coachList = nativeCoachList;
+    } catch (e) {
+      console.log(`Failed updating coaches\nReason:\n${e}`);
     }
-    this.coachList = nativeCoachList;
   }
 
   async updateReferrerList() {
@@ -136,7 +140,7 @@ class WebSocket {
 
   async setupHallOfFame() {
     await this.updateCoachList();
-    setInterval(this.updateCoachList.bind(this), 2*1000);//2 * 60 * 60000);
+    setInterval(this.updateCoachList.bind(this), 2 * 1000); //2 * 60 * 60000);
     await this.updateReferrerList();
     setInterval(this.updateReferrerList.bind(this), 2 * 60 * 60000);
   }

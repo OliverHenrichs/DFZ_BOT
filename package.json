@@ -6,8 +6,7 @@
     "build": "tsc -p ./",
     "prestart": "npm run build",
     "start": "node ./index.js",
-    "predev": "npm run build",
-    "dev": "nodemon index.js"
+    "dev": "node ./index.js"
   },
   "dependencies": {
     "body-parser": "^1.19.0",

@@ -1,10 +1,11 @@
-import { Client} from "discord.js";
+import { Client } from "discord.js";
 import { Auth, calendar_v3 } from "googleapis";
 
 const { google } = require("googleapis");
 const tz = require("./timeZone");
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 const s = require("./types/schedule");
+const st = require("./types/scheduleTypes");
 
 // const TOKEN_PATH = 'token.json';
 // let oAuth2Client = "";
@@ -113,10 +114,19 @@ function getCalendarIDByRegion(region: string) {
 function createEventSummary(schedule: Schedule) {
   var lobbyType = "";
 
-  if (schedule.type === "Tryouts") lobbyType = "tryout lobby";
-  else if (schedule.type === "Botbash") lobbyType = "botbash lobby";
-  else if (schedule.coaches.length == 1) lobbyType = "unranked lobby";
-  else lobbyType = "5v5 lobby";
+  if (schedule.type === st.scheduleTypes.tryout) lobbyType = "tryout lobby";
+  else if (schedule.type === st.scheduleTypes.botbash)
+    lobbyType = "botbash lobby";
+  else if (schedule.type === "lobbies") {
+    if (schedule.coaches.length == 1) lobbyType = "unranked lobby";
+    else lobbyType = "5v5 lobby";
+  } else if (schedule.type === st.scheduleTypes.lobbyt1) {
+    if (schedule.coaches.length == 1) lobbyType = "unranked T1/T2 lobby";
+    else lobbyType = "5v5 T1/T2 lobby";
+  } else if (schedule.type === st.scheduleTypes.lobbyt3) {
+    if (schedule.coaches.length == 1) lobbyType = "unranked T3/T4 lobby";
+    else lobbyType = "5v5 T3/T4 lobby";
+  }
 
   return schedule.region + " " + lobbyType;
 }
@@ -184,27 +194,27 @@ async function updateGoogleEvent(
   schedule: Schedule,
   client: Client
 ) {
-    try {
-      const description: string = await getEventDescription(schedule, client);
-      const params: calendar_v3.Params$Resource$Events$Update = {
-        auth: jwtClient,
-        calendarId: getCalendarIDByRegion(schedule.region),
-        eventId: schedule.eventId,
-        requestBody: createEvent(
-          createEventSummary(schedule),
-          description,
-          eventToChange.start,
-          eventToChange.end
-        ),
-      };
-      const res = await calendar?.events.update(params);
-      if (res === undefined)
-        throw "calendar event update returned 'undefined' while trying to get the event";
-      
-      return res;
-    } catch (e) {
-      console.log(e);
-    }
+  try {
+    const description: string = await getEventDescription(schedule, client);
+    const params: calendar_v3.Params$Resource$Events$Update = {
+      auth: jwtClient,
+      calendarId: getCalendarIDByRegion(schedule.region),
+      eventId: schedule.eventId,
+      requestBody: createEvent(
+        createEventSummary(schedule),
+        description,
+        eventToChange.start,
+        eventToChange.end
+      ),
+    };
+    const res = await calendar?.events.update(params);
+    if (res === undefined)
+      throw "calendar event update returned 'undefined' while trying to get the event";
+
+    return res;
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 /**

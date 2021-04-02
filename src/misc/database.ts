@@ -991,19 +991,24 @@ async function getReferrer(dbHandle: Pool, filter: string[]) {
 async function deleteTableRows(
   dbHandle: Pool,
   table: string,
-  conditions: Array<String>
+  where: String,
+  tableRows: String
 ) {
-  return new Promise(function (resolve, reject) {
-    var command = "DELETE FROM " + table;
-    if (conditions.length > 0) {
-      command += " WHERE ";
-      conditions.forEach((condition) => {
-        command += condition + " AND ";
-      });
-
-      command = command.substr(0, command.length - 5);
-    }
-
+  return new Promise<
+    [
+      (
+        | OkPacket
+        | ResultSetHeader
+        | RowDataPacket[]
+        | RowDataPacket[][]
+        | OkPacket[]
+      ),
+      FieldPacket[]
+    ]
+  >(function (resolve, reject) {
+    var command = `DELETE FROM ${table} ${
+      where !== "" ? `WHERE ${where}` : ""
+    } ${tableRows !== "" ? `IN ${tableRows}` : ""}`;
     executeDBCommand(dbHandle, command)
       .then((res) => {
         resolve(res);
@@ -1014,13 +1019,66 @@ async function deleteTableRows(
   });
 }
 
+function concatStrings(
+  strings: Array<string>,
+  sep: string,
+  surOpen: string,
+  surClose: string
+) {
+  var res: string = "";
+  if (strings.length > 0) {
+    res += surOpen;
+    strings.forEach((string) => {
+      res += string + sep;
+    });
+    res = res.substr(0, res.length - sep.length);
+    res += surClose;
+  }
+  return res;
+}
+
+/**
+ * Deletes table rows in given table according to the laid out conditions
+ * @param {Pool} dbHandle bot database handle
+ * @param {string} table table name
+ * @param {Array<string>} conditions array of strings containing the conditions (will be combined with 'AND')
+ */
+async function deleteSomeUniqueTableRows(
+  dbHandle: Pool,
+  table: string,
+  columns: Array<string>,
+  values: Array<string>
+) {
+  const where = concatStrings(columns, ",", "(", ")"),
+    tableRows = concatStrings(values, ",", "(", ")");
+
+  return deleteTableRows(dbHandle, table, where, tableRows);
+}
+
+/**
+ * Deletes table rows in given table according to the laid out conditions
+ * @param {Pool} dbHandle bot database handle
+ * @param {string} table table name
+ * @param {Array<String>} conditions array of strings containing the conditions (will be combined with 'AND')
+ */
+async function deleteFromAllTableRows(
+  dbHandle: Pool,
+  table: string,
+  conditions: Array<string>
+) {
+  const where = concatStrings(conditions, " AND ", "", ""),
+    tableRows = "";
+
+  deleteTableRows(dbHandle, table, where, tableRows);
+}
+
 /**
  * Remove lobby from database
  * @param {Pool} dbHandle
  * @param {Lobby} lobby
  */
 async function removeLobby(dbHandle: Pool, lobby: Lobby) {
-  return deleteTableRows(
+  return deleteFromAllTableRows(
     dbHandle,
     "lobbies",
     getLobbyConditions(lobby.channelId, lobby.messageId)
@@ -1030,18 +1088,20 @@ async function removeLobby(dbHandle: Pool, lobby: Lobby) {
 /**
  * Remove all schedules belonging to a message-ID
  * @param {Pool} dbHandle
- * @param {Array<String>} messageIDs
+ * @param {Array<Schedule>} messageIDs
  */
-async function removeSchedules(dbHandle: Pool, messageIDs: Array<String>) {
-  var conditions = [
-    "message_id = '" + messageIDs.join("' OR message_id = '") + "'",
-  ];
-  return deleteTableRows(dbHandle, "schedules", conditions);
+async function removeSchedules(dbHandle: Pool, schedules: Array<Schedule>) {
+  const columns = ["emoji", "message_id"];
+  var values: Array<string> = [];
+  schedules.forEach((schedule) => {
+    values.push(`(${schedule.emoji},${schedule.messageId})`);
+  });
+  return deleteSomeUniqueTableRows(dbHandle, "schedules", columns, values);
 }
 
-function createPool () {
+function createPool(host: string) {
   return mysql.createPool({
-    host: "localhost",
+    host: host,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
