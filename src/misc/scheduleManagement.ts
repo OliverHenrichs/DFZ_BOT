@@ -24,7 +24,7 @@ const tZ = require("./timeZone");
 const rM = require("./roleManagement");
 const st = require("./types/scheduleTypes")
 
-const lobbyPostTime = 60000 * 60 * 24* 8; // at the moment 8 hours
+const lobbyPostTime = 60000 * 60 * 8; // at the moment 8 hours
 const lobbyOverlapTime = 60000 * 60 * 3; // at the moment 3 hours
 
 interface ScheduleSetup {
