@@ -1,19 +1,20 @@
-const Discord = require("discord.js");
-module.exports = {
+import { FieldElement } from "./interfaces/EmbedInterface";
+import { MessageEmbed } from "discord.js"
+//const Discord = require("discord.js");
   /**
    * Generate embedding given the content
    * @param {string} _title title
    * @param {string} _text text
    * @param {string} _footer footer
-   * @param {Array<string>} [table] optional table
+   * @param {Array<FieldElement>} [table] optional table
    */
-  generateEmbedding: function (
+  export function generateEmbedding(
     _title: string,
     _text: string,
     _footer: string,
-    table: Array<string> = []
+    table: Array<FieldElement> = []
   ) {
-    return new Discord.MessageEmbed({
+    return new MessageEmbed({
       title: _title,
       description: _text,
       fields: table,
@@ -22,5 +23,4 @@ module.exports = {
       },
       timestamp: new Date(),
     });
-  },
-};
+  }

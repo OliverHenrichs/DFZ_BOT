@@ -12,16 +12,7 @@ export class Lobby {
   regionId: string;
   channelId: string;
   messageId: string;
-  /**
-   * constructor
-   * @param {number} type
-   * @param {number} date
-   * @param {Array<string>} coaches
-   * @param {Array<string>} beginnerRoleIds
-   * @param {string} regionId
-   * @param {string} channelId
-   * @param {string} messageId
-   */
+  
   constructor(
     type: number = -1,
     date: number = 0,
@@ -40,14 +31,4 @@ export class Lobby {
     this.channelId = channelId;
     this.messageId = messageId;
   }
-  static fromObject(obj: any) {
-    if (obj == null) return;
-    var lobby = new Lobby();
-    Object.assign(lobby, obj);
-    return lobby;
-  }
 }
-
-module.exports = {
-  Lobby,
-};

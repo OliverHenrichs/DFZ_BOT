@@ -1,10 +1,10 @@
-import { User } from "discord.js";
-import Pool from "mysql2/typings/mysql/lib/Pool";
-
-const c = require("./constants");
-const co = require("./types/coach");
-const db = require("./database");
-const pl = require("./types/player");
+import { Pool } from "mysql2/promise";
+import { lobbyTypes } from "./constants";
+import { getCoach, insertCoach, updateCoach, getSortedPlayers, getPlayerByID, insertPlayer, updatePlayer } from "./database";
+import { LobbyPlayer } from "./interfaces/LobbyInterfaces";
+import { Coach } from "./types/coach";
+import { DFZDiscordClient } from "./types/DFZDiscordClient";
+import { Player } from "./types/player";
 
 /**
  *
@@ -12,22 +12,22 @@ const pl = require("./types/player");
  * @param {Array<string>} coaches coach ids
  * @param {number} lobbyType lobby type
  */
-async function saveCoachParticipation(
+export async function saveCoachParticipation(
   dbHandle: Pool,
   coaches: Array<string>,
   lobbyType: number
 ) {
-  var isTryout = lobbyType === c.lobbyTypes.tryout;
-  var isReplayAnalysis = lobbyType === c.lobbyTypes.replayAnalysis;
+  var isTryout = lobbyType === lobbyTypes.tryout;
+  var isReplayAnalysis = lobbyType === lobbyTypes.replayAnalysis;
   var isNormal = !isTryout && !isReplayAnalysis;
   
   for (let i = 0; i < coaches.length; i++) {
     var coachId = coaches[i];
-    var dBCoach = await db.getCoach(dbHandle, coachId);
-    if (dBCoach === undefined) {
-      await db.insertCoach(
+    var dBCoach = await getCoach(dbHandle, coachId);
+    if (dBCoach === undefined || dBCoach.userId !== coachId) {
+      await insertCoach(
         dbHandle,
-        new co.Coach(
+        new Coach(
           coachId,
           1,
           isTryout ? 1 : 0,
@@ -42,81 +42,36 @@ async function saveCoachParticipation(
       else if (isReplayAnalysis) dBCoach.lobbyCountReplayAnalysis += 1;
       else dBCoach.lobbyCountNormal += 1;
 
-      await db.updateCoach(dbHandle, dBCoach);
+      await updateCoach(dbHandle, dBCoach);
     }
   }
 }
 
-/**
- * Calls db to get coach list sorted by columnName
- * @param {pool} dbHandle
- * @param {string} columnName
- */
-async function getCoachList(dbHandle: Pool, columnName: string) {
-  return new Promise(function (resolve, reject) {
-    db.getSortedCoaches(dbHandle, columnName)
-      .then((coaches: any) => resolve(coaches[0]))
-      .catch((err: Error) => reject(err));
-  });
-}
-
-/**
- * Calls db to get player list sorted by columnName
- * @param {Pool} dbHandle
- * @param {string} columnName
- */
-async function getPlayerList(dbHandle: Pool, columnName: string) {
-  return new Promise(function (resolve, reject) {
-    db.getSortedPlayers(dbHandle, columnName)
-      .then((players: any) => resolve(players[0]))
-      .catch((err: Error) => reject(err));
-  });
-}
-
-/**
- * Calls db to get player list sorted by columnName
- * @param {mysql.Pool} dbHandle
- * @param {String} columnName
- */
-async function getReferrerList(dbHandle: Pool, columnName = "referralCount") {
-  return new Promise(function (resolve, reject) {
-    db.getSortedReferrers(dbHandle, columnName)
-      .then((referrers: any) => resolve(referrers[0]))
-      .catch((err: Error) => reject(err));
-  });
-}
-
-/**
- * Increase Player lobby count
- * @param {mysql.Pool} dbHandle
- * @param {Discord.User} users
- * @param {int} lobbyType
- * @param {int} playersPerLobby
- */
-async function savePlayerParticipation(
-  dbHandle: Pool,
-  users: Array<User>,
+export async function savePlayerParticipation(
+  client: DFZDiscordClient,
+  users: Array<LobbyPlayer>,
   lobbyType: number,
   playersPerLobby: number
 ) {
-  var isReplayAnalysis = lobbyType === c.lobbyTypes.replayAnalysis;
-  var isUnranked = lobbyType === c.lobbyTypes.unranked;
-  var is5v5 = lobbyType === c.lobbyTypes.inhouse;
-  var isBotbash = lobbyType === c.lobbyTypes.botbash;
+  var isReplayAnalysis = lobbyType === lobbyTypes.replayAnalysis;
+  var isUnranked = lobbyType === lobbyTypes.unranked;
+  var is5v5 = lobbyType === lobbyTypes.inhouse;
+  var isBotbash = lobbyType === lobbyTypes.botbash;
 
   var referredBy = "",
     referralLock = 0,
     lobbyCount = 1;
 
   for (let i = 0; i < Math.min(users.length, playersPerLobby); i++) {
-    var player = await db.getPlayerByID(dbHandle, users[i].id);
+    var player = await getPlayerByID(client.dbHandle, users[i].id);
 
     if (player === undefined) {
-      await db.insertPlayer(
-        dbHandle,
-        new pl.Player(
+      var user = await client.users.fetch(users[i].id);
+      await insertPlayer(
+        client.dbHandle,
+        new Player(
           users[i].id,
-          users[i].tag,
+          user.tag,
           referredBy,
           referralLock,
           lobbyCount,
@@ -135,15 +90,7 @@ async function savePlayerParticipation(
       else if (is5v5) player.lobbyCount5v5 += 1;
       else if (isBotbash) player.lobbyCountBotBash += 1;
 
-      await db.updatePlayer(dbHandle, player);
+      await updatePlayer(client.dbHandle, player);
     }
   }
 }
-
-module.exports = {
-  saveCoachParticipation: saveCoachParticipation,
-  savePlayerParticipation: savePlayerParticipation,
-  getCoachList: getCoachList,
-  getPlayerList: getPlayerList,
-  getReferrerList: getReferrerList,
-};

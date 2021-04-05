@@ -1,5 +1,5 @@
 import { GuildMember, MessageReaction, Role, User } from "discord.js";
-import { DFZDiscordClient } from "./interfaces/DFZDiscordClient";
+import { DFZDiscordClient } from "./types/DFZDiscordClient";
 import { Lobby } from "./types/lobby";
 
 const cM = require("./channelManagement");
@@ -29,7 +29,7 @@ export class LobbyReactionInfo {
  * @param {Discord.MessageReaction} reaction
  * @param {Discord.User} reaction
  */
-async function getInfoFromLobbyReaction(
+export async function getInfoFromLobbyReaction(
   client: DFZDiscordClient,
   reaction: MessageReaction,
   user: User
@@ -71,7 +71,7 @@ async function getInfoFromLobbyReaction(
   return res;
 }
 
-function isValidLobbyReaction(reaction: MessageReaction, user: User) {
+export function isValidLobbyReaction(reaction: MessageReaction, user: User) {
   // only care for messages from self
   if (reaction.message.author.id !== process.env.BOT_ID) return false;
 
@@ -86,8 +86,3 @@ function isValidLobbyReaction(reaction: MessageReaction, user: User) {
 
   return true;
 }
-
-module.exports = {
-  isValidLobbyReaction: isValidLobbyReaction,
-  getInfoFromLobbyReaction: getInfoFromLobbyReaction,
-};

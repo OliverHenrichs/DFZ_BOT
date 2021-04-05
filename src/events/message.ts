@@ -1,14 +1,14 @@
 import { Message } from "discord.js";
-import { DFZDiscordClient } from "../misc/interfaces/DFZDiscordClient";
+import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
 
-const pL = require("../commands/postLobby");
-const rM = require("../misc/roleManagement");
-const cM = require("../misc/channelManagement");
-const mH = require("../misc/messageHelper");
-const hU = require("../commands/helpUser");
-const uL = require("../commands/updateLobby");
-const hS = require("../commands/highScore.js");
-const ap = require("../commands/apply.js");
+import apply from "../commands/apply"
+import helpUser from "../commands/helpUser"
+import postLobby from "../commands/postLobby"
+import highScore from "../commands/highScore"
+import updateLobby from "../commands/updateLobby"
+import { signupChannel, isWatchingChannel, channelStrings } from "../misc/channelManagement";
+import { reactNegative } from "../misc/messageHelper";
+import { findRole, adminRoles } from "../misc/roleManagement";
 
 const PREFIX = "!";
 
@@ -32,37 +32,41 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
     return;
   }
 
+  // Ignore non-guild-members
+  if (message.member === null)
+    return;
+
   // Ignore DMs
   if (message.channel.type === "dm") {
-    return mH.reactNegative(message, "Bot doesn't support DMs!");
+    return reactNegative(message, "Bot doesn't support DMs!");
   }
 
   // handle applications
-  if (cM.signupChannel === message.channel.id && content.startsWith("!apply")) {
-    return ap(client, message);
+  if (signupChannel === message.channel.id && content.startsWith("!apply")) {
+    return apply(client, message);
   }
 
   // Ignore messages outside of bot channels
-  if (!cM.isWatchingChannel(message.channel.id)) {
-    return mH.reactNegative(
+  if (!isWatchingChannel(message.channel.id)) {
+    return reactNegative(
       message,
-      "I only listen to messages in the channels " + cM.channelStrings
+      "I only listen to messages in the channels " + channelStrings
     );
   }
 
   // handle admin commands
-  if (rM.findRole(message.member, rM.adminRoles) != undefined) {
+  if (findRole(message.member, adminRoles) != undefined) {
     if (content.startsWith("!help") || content.startsWith("!helpme")) {
-      return hU(message);
+      return helpUser(message);
     }
     if (content.startsWith("!post")) {
-      return pL(message, client.dbHandle);
+      return postLobby(message, client.dbHandle);
     }
     if (content.startsWith("!update")) {
-      return uL(message, client.dbHandle);
+      return updateLobby(message, client.dbHandle);
     }
     if (content.startsWith("!highscore")) {
-      return hS(message, client.dbHandle);
+      return highScore(message, client.dbHandle);
     }
   }
 };

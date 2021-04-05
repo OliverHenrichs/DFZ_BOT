@@ -1,9 +1,9 @@
-import { DFZDiscordClient } from "../misc/interfaces/DFZDiscordClient";
-
-const cM = require("../misc/channelManagement");
-const dB = require("../misc/database");
-const lM = require("../misc/lobbyManagement");
-const sM = require("../misc/scheduleManagement");
+import { lobbyChannels } from "../misc/channelManagement";
+import { getLobbies, getSchedules } from "../misc/database";
+import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
+import { updateLobbyTimes } from "../misc/lobbyManagement";
+import { updateSchedules, insertScheduledLobbies } from "../misc/scheduleManagement";
+import { Schedule } from "../misc/types/schedule";
 
 const guildId: string =
   process.env.GUILD !== undefined ? process.env.GUILD : "";
@@ -39,13 +39,13 @@ module.exports = async (client: DFZDiscordClient) => {
   console.log("Ready at " + new Date().toLocaleString());
   try {
     var guild = await client.guilds.fetch(guildId);
-    for (const channel of cM.lobbyChannels) {
+    for (const channel of lobbyChannels) {
       var gc = guild.channels.cache.find((chan) => chan.id === channel);
       if (gc === undefined || !gc.isText()) {
         continue;
       }
 
-      var lobbies = await dB.getLobbies(client.dbHandle, channel);
+      var lobbies = await getLobbies(client.dbHandle, channel);
       if (lobbies.length === 0 || lobbies === [] || lobbies === undefined)
         continue;
 
@@ -57,7 +57,7 @@ module.exports = async (client: DFZDiscordClient) => {
     (err: string) => console.log(err);
   }
 
-  dB.getSchedules(client.dbHandle, "", "")
+  getSchedules(client.dbHandle, "", "")
     .then(
       (schedules: Array<Schedule>) =>
         new Promise<void>(async function (resolve) {
@@ -96,7 +96,7 @@ module.exports = async (client: DFZDiscordClient) => {
             try {
               var guild = await client.guilds.fetch(guildId);
               if (guild === undefined || guild === null) return;
-              await lM.updateLobbyTimes(guild, client.dbHandle);
+              await updateLobbyTimes(guild, client.dbHandle);
             } catch {
               (err: string) => console.log(err);
             }
@@ -108,7 +108,7 @@ module.exports = async (client: DFZDiscordClient) => {
           const scheduleWriter = async () => {
             var guild = await client.guilds.fetch(guildId);
             if (guild === undefined || guild === null) return;
-            sM.updateSchedules(client.dbHandle, guild.channels);
+            updateSchedules(client.dbHandle, guild.channels);
           };
           await scheduleWriter();
 
@@ -118,7 +118,7 @@ module.exports = async (client: DFZDiscordClient) => {
           const lobbyPoster = async () => {
             var guild = await client.guilds.fetch(guildId);
             if (guild === undefined || guild === null) return;
-            await sM.insertScheduledLobbies(guild.channels, client.dbHandle);
+            await insertScheduledLobbies(guild.channels, client.dbHandle);
           };
           await lobbyPoster();
           setInterval(lobbyPoster, 60 * 60000); // once per hour

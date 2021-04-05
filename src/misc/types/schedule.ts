@@ -1,7 +1,7 @@
 /**
  * Just some pod that make up a schedule
  */
-class Schedule {
+export class Schedule {
   channelId: string;
   messageId: string;
   type: string;
@@ -11,18 +11,8 @@ class Schedule {
   region: string;
   coaches: any[];
   lobbyPosted: boolean;
-  eventId: undefined | string;
+  eventId: undefined | null | string;
 
-  /**
-   * constructor
-   * @param {string} channelId
-   * @param {string} messageId
-   * @param {string} type
-   * @param {number} coachCount
-   * @param {string} emoji
-   * @param {string} date
-   * @param {string} region
-   */
   constructor(
     channelId: string = "",
     messageId: string = "",
@@ -42,15 +32,6 @@ class Schedule {
     this.region = region;
     this.coaches = [];
     this.lobbyPosted = false;
-  }
-
-  static fromObject(obj: any) {
-    if (obj == null) return;
-    var schedule: Schedule = new Schedule();
-    Object.assign(schedule, obj);
-    return schedule;
+    this.eventId = eventId;
   }
 }
-module.exports = {
-  Schedule,
-};

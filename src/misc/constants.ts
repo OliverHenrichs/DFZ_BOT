@@ -1,6 +1,6 @@
-import Discord from "discord.js";
+import { GuildEmoji, ReactionEmoji } from "discord.js";
 
-const lobbyTypes = {
+export const lobbyTypes = {
   inhouse: 1,
   unranked: 2,
   botbash: 3,
@@ -8,7 +8,8 @@ const lobbyTypes = {
   replayAnalysis: 5,
   meeting: 6,
 };
-const lobbyTypePlayerCount = {
+
+export const lobbyTypePlayerCount = {
   inhouse: 10,
   unranked: 5,
   botbash: 5,
@@ -16,108 +17,104 @@ const lobbyTypePlayerCount = {
   replayAnalysis: 1000,
   meeting: 1000,
 };
-const positionReactionEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
-const tryoutReactionEmoji = "✅";
-const lobbyManagementReactionEmojis = ["🔒", "❌", "🧑‍🏫"];
+export const positionReactionEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
+export const tryoutReactionEmoji = "✅";
+export const lobbyManagementReactionEmojis = ["🔒", "❌", "🧑‍🏫"];
 
-module.exports = {
-  tryoutReactionEmoji: tryoutReactionEmoji,
-  positionReactionEmojis: positionReactionEmojis,
-  lobbyManagementReactionEmojis: lobbyManagementReactionEmojis,
-  lobbyTypes: lobbyTypes,
-  simpleLobbyTypes: [
-    lobbyTypes.tryout,
-    lobbyTypes.replayAnalysis,
-    lobbyTypes.meeting,
-  ],
-  roleBasedLobbyTypes: [
-    lobbyTypes.inhouse,
-    lobbyTypes.unranked,
-    lobbyTypes.botbash,
-  ],
-  lobbyTypePlayerCount: lobbyTypePlayerCount,
+export const simpleLobbyTypes = [
+  lobbyTypes.tryout,
+  lobbyTypes.replayAnalysis,
+  lobbyTypes.meeting,
+];
 
-  /**
-   * Returns true if lobbytype is found in simpleLobbyTypes
-   * @param {number} lobbyType
-   */
-  isSimpleLobbyType: function (lobbyType: number) {
-    return (
-      this.simpleLobbyTypes.find((s_type: number) => s_type === lobbyType) !==
-      undefined
-    );
-  },
+export const roleBasedLobbyTypes = [
+  lobbyTypes.inhouse,
+  lobbyTypes.unranked,
+  lobbyTypes.botbash,
+];
 
-  /**
-   * Returns true if lobbytype is found in roleBasedLobbyTypes
-   * @param {number} lobbyType
-   */
-  isRoleBasedLobbyType: function (lobbyType: number) {
-    return (
-      this.roleBasedLobbyTypes.find(
-        (s_type: number) => s_type === lobbyType
-      ) !== undefined
-    );
-  },
+/**
+ * Returns true if lobbytype is found in simpleLobbyTypes
+ * @param {number} lobbyType
+ */
+export function isSimpleLobbyType(lobbyType: number) {
+  return (
+    simpleLobbyTypes.find((s_type: number) => s_type === lobbyType) !==
+    undefined
+  );
+};
 
-  /**
-   * Returns lobby name for usage in communication strings
-   * @param {number} lobbyType given lobby type
-   * @return communication string according to lobby type
-   */
-  getLobbyNameByType: function (lobbyType: number) {
-    switch (lobbyType) {
-      case lobbyTypes.inhouse:
-        return "Inhouse";
-      case lobbyTypes.unranked:
-        return "Unranked";
-      case lobbyTypes.botbash:
-        return "Botbash";
-      case lobbyTypes.tryout:
-        return "Tryout";
-      case lobbyTypes.replayAnalysis:
-        return "Replay analysis";
-    }
-  },
+/**
+ * Returns true if lobbytype is found in roleBasedLobbyTypes
+ * @param {number} lobbyType
+ */
+ export function isRoleBasedLobbyType(lobbyType: number) {
+  return (
+    roleBasedLobbyTypes.find(
+      (s_type: number) => s_type === lobbyType
+    ) !== undefined
+  );
+};
 
-  getLobbyPostNameByType: function (lobbyType: number) {
-    switch (lobbyType) {
-      case lobbyTypes.inhouse:
-        return "an INHOUSE lobby";
-      case lobbyTypes.unranked:
-        return "an UNRANKED lobby";
-      case lobbyTypes.botbash:
-        return "a BOTBASH lobby";
-      case lobbyTypes.tryout:
-        return "a TRYOUT lobby";
-      case lobbyTypes.replayAnalysis:
-        return "a REPLAY ANALYSIS session";
-      case lobbyTypes.meeting:
-        return "a meeting";
-    }
-  },
+/**
+ * Returns lobby name for usage in communication strings
+ * @param {number} lobbyType given lobby type
+ * @return communication string according to lobby type
+ */
+ export function getLobbyNameByType(lobbyType: number) {
+  switch (lobbyType) {
+    case lobbyTypes.inhouse:
+      return "Inhouse";
+    case lobbyTypes.unranked:
+      return "Unranked";
+    case lobbyTypes.botbash:
+      return "Botbash";
+    case lobbyTypes.tryout:
+      return "Tryout";
+    case lobbyTypes.replayAnalysis:
+      return "Replay analysis";
+    default:
+      return "Unknown"
+  }
+};
 
-  /**
-   * checks reaction emoji for ingame position
-   * @param {string} reactionEmoji given emoji
-   */
-  getReactionEmojiPosition: function (reactionEmoji: Discord.GuildEmoji) {
-    var idx = positionReactionEmojis.findIndex((type) => {
-      return reactionEmoji.name === type;
-    });
+export function getLobbyPostNameByType(lobbyType: number) {
+  switch (lobbyType) {
+    case lobbyTypes.inhouse:
+      return "an INHOUSE lobby";
+    case lobbyTypes.unranked:
+      return "an UNRANKED lobby";
+    case lobbyTypes.botbash:
+      return "a BOTBASH lobby";
+    case lobbyTypes.tryout:
+      return "a TRYOUT lobby";
+    case lobbyTypes.replayAnalysis:
+      return "a REPLAY ANALYSIS session";
+    case lobbyTypes.meeting:
+      return "a meeting";
+  }
+};
 
-    return idx + 1; // +1 to match pos 1-5 instead of 0-4...
-  },
+/**
+ * checks reaction emoji for ingame position
+ * @param {string} reactionEmoji given emoji
+ */
+ export function getReactionEmojiPosition(reactionEmoji:  GuildEmoji | ReactionEmoji) {
+  var idx = positionReactionEmojis.findIndex((type) => {
+    return reactionEmoji.name === type;
+  });
 
-  isKnownPositionEmoji: function (reactionEmoji: Discord.GuildEmoji) {
-    return positionReactionEmojis.includes(reactionEmoji.name);
-  },
+  return idx + 1; // +1 to match pos 1-5 instead of 0-4...
+};
 
-  isKnownSimpleLobbyEmoji: function (reactionEmoji: Discord.GuildEmoji) {
-    return tryoutReactionEmoji === reactionEmoji.name;
-  },
+export function isKnownPositionEmoji(reactionEmoji: GuildEmoji | ReactionEmoji) {
+  return positionReactionEmojis.includes(reactionEmoji.name);
+};
 
-  isKnownLobbyManagementEmoji: function (reactionEmoji: Discord.GuildEmoji) {
-    return lobbyManagementReactionEmojis.includes(reactionEmoji.name);
-  },
+export function isKnownSimpleLobbyEmoji(reactionEmoji: GuildEmoji | ReactionEmoji) {
+  return tryoutReactionEmoji === reactionEmoji.name;
+};
+
+export function isKnownLobbyManagementEmoji(reactionEmoji: GuildEmoji | ReactionEmoji) {
+  return lobbyManagementReactionEmojis.includes(reactionEmoji.name);
 };

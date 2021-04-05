@@ -1,7 +1,7 @@
 /**
  * Just some pod that make up a player
  */
-class Player {
+export class Player {
   userId: string;
   tag: string;
   referredBy: string;
@@ -13,19 +13,6 @@ class Player {
   lobbyCountReplayAnalysis: number;
   offenses: number;
 
-  /**
-   * constructor
-   * @param {string} userId
-   * @param {string} tag
-   * @param {string} referredBy
-   * @param {number} referralLock
-   * @param {number} lobbyCount
-   * @param {number} lobbyCountUnranked
-   * @param {number} lobbyCountBotBash
-   * @param {number} lobbyCount5v5
-   * @param {number} lobbyCountReplayAnalysis
-   * @param {number} offenses
-   */
   constructor(
     userId: string = "",
     tag: string = "",
@@ -49,13 +36,4 @@ class Player {
     this.lobbyCountReplayAnalysis = lobbyCountReplayAnalysis;
     this.offenses = offenses;
   }
-  static fromObject(obj: any) {
-    if (obj == null) return;
-    var player = new Player();
-    Object.assign(player, obj);
-    return player;
-  }
 }
-module.exports = {
-  Player,
-};

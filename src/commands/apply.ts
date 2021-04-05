@@ -1,15 +1,14 @@
 import { Message } from "discord.js";
-import { DFZDiscordClient } from "../misc/interfaces/DFZDiscordClient";
-
-const db = require("../misc/database");
-const pl = require("../misc/types/player");
-const r = require("../misc/types/referrer");
+import { getPlayerByID, getReferrerByTag, insertReferrer, insertPlayer } from "../misc/database";
+import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
+import { Player } from "../misc/types/player";
+import { Referrer } from "../misc/types/referrer";
 
 /**
  * Adds player to db on application
  */
-module.exports = async (client: DFZDiscordClient, message: Message) => {
-  var player = await db.getPlayerByID(client.dbHandle, message.author.id);
+export default async (client: DFZDiscordClient, message: Message) => {
+  var player = await getPlayerByID(client.dbHandle, message.author.id);
   if (player !== undefined) {
     // only add once
     console.log("Player " + message.author.id + "already exists");
@@ -30,7 +29,7 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
   var re = /\S+#\d{4,5}/i; // matching user tag syntax asdf#1234
   if (refTag.match(re)) {
     console.log("matched refTag");
-    var existingReferrer: Referrer = await db.getReferrerByTag(
+    var existingReferrer: Referrer | undefined = await getReferrerByTag(
       client.dbHandle,
       refTag
     );
@@ -42,15 +41,15 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
       if (referrerUser !== undefined) {
         referrerId = referrerUser.id;
       }
-      await db.insertReferrer(
+      await insertReferrer(
         client.dbHandle,
-        new r.Referrer(referrerId === undefined ? "" : referrerId, refTag, 0)
+        new Referrer(referrerId === undefined ? "" : referrerId, refTag, 0)
       );
     }
   }
 
-  db.insertPlayer(
+  insertPlayer(
     client.dbHandle,
-    new pl.Player(message.author.id, message.author.tag, refTag)
+    new Player(message.author.id, message.author.tag, refTag)
   );
 };

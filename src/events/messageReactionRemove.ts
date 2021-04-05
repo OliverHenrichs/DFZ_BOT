@@ -1,13 +1,11 @@
 import { MessageReaction, User } from "discord.js";
-import { DFZDiscordClient } from "../misc/interfaces/DFZDiscordClient";
-import { LobbyReactionInfo } from "../misc/messageReactionHelper";
-
-const lM = require("../misc/lobbyManagement");
-const cM = require("../misc/channelManagement");
-const c = require("../misc/constants");
-const mrH = require("../misc/messageReactionHelper");
-const rM = require("../misc/roleManagement");
-const sM = require("../misc/scheduleManagement");
+import { scheduleChannels } from "../misc/channelManagement";
+import { lobbyManagementReactionEmojis } from "../misc/constants";
+import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
+import { removeCoach, updatePlayerInLobby } from "../misc/lobbyManagement";
+import { getInfoFromLobbyReaction, isValidLobbyReaction, LobbyReactionInfo } from "../misc/messageReactionHelper";
+import { adminRoles } from "../misc/roleManagement";
+import { removeCoachFromSchedule } from "../misc/scheduleManagement";
 
 /**
  * Handles reactions that will change existing posted lobbies
@@ -20,7 +18,7 @@ async function handleLobbyRelatedEmoji(
   reaction: MessageReaction,
   user: User
 ) {
-  const lri: LobbyReactionInfo = await mrH.getInfoFromLobbyReaction(
+  const lri: LobbyReactionInfo = await getInfoFromLobbyReaction(
     client,
     reaction,
     user
@@ -33,10 +31,11 @@ async function handleLobbyRelatedEmoji(
     return;
 
   if (
-    rM.adminRoles.includes(lri.role.id) &&
-    reaction.emoji.name === c.lobbyManagementReactionEmojis[2]
+    adminRoles.includes(lri.role.id) &&
+    reaction.emoji.name === lobbyManagementReactionEmojis[2] && 
+    reaction.message.channel.type !== "dm"
   ) {
-    lM.removeCoach(
+    removeCoach(
       client.dbHandle,
       reaction.message.channel,
       lri.lobby,
@@ -47,7 +46,7 @@ async function handleLobbyRelatedEmoji(
         user.send("⛔ I could not remove you as a coach. Reason: " + error)
       );
   } // if not admin, then it was a user
-  else lM.updatePlayerInLobby(client.dbHandle, reaction, lri.lobby, user);
+  else updatePlayerInLobby(client.dbHandle, reaction, lri.lobby, user);
 }
 
 /**
@@ -62,10 +61,10 @@ module.exports = async (
   reaction: MessageReaction,
   user: User
 ) => {
-  if (!mrH.isValidLobbyReaction(reaction, user)) return;
+  if (!isValidLobbyReaction(reaction, user)) return;
 
-  if (cM.scheduleChannels.includes(reaction.message.channel.id)) {
-    sM.removeCoachFromSchedule(client, reaction, user);
+  if (scheduleChannels.includes(reaction.message.channel.id)) {
+    removeCoachFromSchedule(client, reaction, user);
   } else {
     await handleLobbyRelatedEmoji(client, reaction, user);
   }

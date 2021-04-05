@@ -2,17 +2,17 @@ import tZ = require("timezone-support");
 
 const msPerDay = 86400000;
 
-const weekDays = {
-  0: "Sunday",
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-};
+export const weekDays = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
-const weekDayNumbers = {
+export const weekDayNumbers = {
   Sunday: 0,
   Monday: 1,
   Tuesday: 2,
@@ -22,35 +22,35 @@ const weekDayNumbers = {
   Saturday: 6,
 };
 
-const months = {
-  1: "Jan",
-  2: "Feb",
-  3: "Mar",
-  4: "Apr",
-  5: "May",
-  6: "Jun",
-  7: "Jul",
-  8: "Aug",
-  9: "Sep",
-  10: "Oct",
-  11: "Nov",
-  12: "Dec",
-};
+export const months = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 // get current time zone short names (daylight savings time vs normal time)
-const regions = ["EU", "NA", "SEA"];
-const regionStrings = ["🇪🇺 EU", "🇺🇸 NA", "🌏 SEA"];
-const scheduleTimezoneNames = [
+export const regions = ["EU", "NA", "SEA"];
+export const regionStrings = ["🇪🇺 EU", "🇺🇸 NA", "🌏 SEA"];
+export const scheduleTimezoneNames = [
   "Europe/Berlin",
   "America/New_York",
   "Asia/Singapore",
 ];
 
-const scheduleTimezoneNames_short = getTimeZoneShortNames(
+export const scheduleTimezoneNames_short = getTimeZoneShortNames(
   scheduleTimezoneNames
 );
 
-function getTimeZoneShortNames(timezoneNames: Array<string>) {
+export function getTimeZoneShortNames(timezoneNames: Array<string>) {
   var date = Date.now();
   var timezoneShortNames: Array<string> = [];
   timezoneNames.forEach((name) => {
@@ -173,27 +173,27 @@ export interface TimeZoneOffset {
 
 // the month and day indices align.
 export interface Time {
-  year: number;
-  month: keyof typeof months;
-  day: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-  milliseconds: number;
-  dayOfWeek: keyof typeof weekDays;
-  epoch: number;
-  zone: TimeZoneOffset;
+  year: number
+  month: number
+  day: number
+  hours: number
+  minutes: number
+  seconds?: number
+  milliseconds?: number
+  dayOfWeek?: number
+  epoch?: number
+  zone?: TimeZoneOffset
 }
 
 interface TimeZoneInfo {
   name: string;
 }
 
-function getTimeString(zonedTime: Time) {
-  const { dayOfWeek, month, day, hours, minutes} = zonedTime
-  return (
-    `${weekDays[dayOfWeek]}, ${months[month]} ${day} at ${hours}:${minutes < 10 ? "0" + minutes : minutes}`
-  );
+export function getTimeString(zonedTime: Time) {
+  const { dayOfWeek, month, day, hours, minutes } = zonedTime;
+  return `${weekDays[dayOfWeek? dayOfWeek : 0]}, ${months[month]} ${day} at ${hours}:${
+    minutes < 10 ? "0" + minutes : minutes
+  }`;
 }
 
 const dayInMs = 24 * 1000 * 60 * 60;
@@ -210,177 +210,159 @@ export interface NextMondayAndSunday {
   sunday: Date;
 }
 
-module.exports = {
-  weekDays: weekDays,
-  weekDayNumbers: weekDayNumbers,
-  months: months,
+/**
+ * self-explanatory...
+ * @param {string} region
+ */
+export function getTimeZoneStringFromRegion(_region: string) {
+  var idx = regions.findIndex((region) => {
+    return region === _region;
+  });
+  if (idx === -1) return scheduleTimezoneNames[0];
 
-  regions: regions,
-  regionStrings: regionStrings,
-  scheduleTimezoneNames: scheduleTimezoneNames,
-  scheduleTimezoneNames_short: scheduleTimezoneNames_short,
+  return scheduleTimezoneNames[idx];
+}
 
-  /**
-   * self-explanatory...
-   * @param {string} region
-   */
-  getTimeZoneStringFromRegion: function (_region: string) {
-    var idx = regions.findIndex((region) => {
-      return region === _region;
-    });
-    if (idx === -1) return scheduleTimezoneNames[0];
+/**
+ * Thx @ https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
+ * @param {Date} date
+ */
+export function getWeekNumber(date: Date) {
+  var d = new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+  var dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(((Number(d) - Number(yearStart)) / msPerDay + 1) / 7);
+}
 
-    return scheduleTimezoneNames[idx];
-  },
+/**
+ * Thx @ https://stackoverflow.com/questions/4156434/javascript-get-the-first-day-of-the-week-from-current-date
+ * Returns the dates for given date's next week's monday and sunday
+ */
+export function getNextMondayAndSundayDate() {
+  var now = new Date();
+  var day = now.getDay(),
+    diffToMondayNextWeek = day == 0 ? 1 : 8 - day,
+    diffToSundayOfNextWeek = diffToMondayNextWeek + 6;
 
-  /**
-   * Thx @ https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
-   * @param {Date} date
-   */
-  getWeekNumber: function (date: Date) {
-    var d = new Date(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-    );
-    var dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil(((Number(d) - Number(yearStart)) / msPerDay + 1) / 7);
-  },
+  return {
+    monday: new Date(Date.now() + diffToMondayNextWeek * msPerDay),
+    sunday: new Date(Date.now() + diffToSundayOfNextWeek * msPerDay),
+  };
+}
 
-  /**
-   * Thx @ https://stackoverflow.com/questions/4156434/javascript-get-the-first-day-of-the-week-from-current-date
-   * Returns the dates for given date's next week's monday and sunday
-   */
-  getNextMondayAndSundayDate: function () {
-    var now = new Date();
-    var day = now.getDay(),
-      diffToMondayNextWeek = day == 0 ? 1 : 8 - day,
-      diffToSundayOfNextWeek = diffToMondayNextWeek + 6;
+/**
+ *
+ * @param {date} mondayDate start date of the schedule week
+ * @param {int} day week day of schedule
+ * @param {string} timeString time of schedule
+ * @param {string} timezoneName time zone name
+ */
+export function getScheduledDate(
+  mondayDate: Date,
+  day: number,
+  timeString: string,
+  timezoneName: string
+) {
+  const hourAndMinute: ValidatedTime = validateTime(timeString);
+  if (hourAndMinute.hour === undefined || hourAndMinute.minute === undefined)
+    return undefined;
 
-    return {
-      monday: new Date(Date.now() + diffToMondayNextWeek * msPerDay),
-      sunday: new Date(Date.now() + diffToSundayOfNextWeek * msPerDay),
-    };
-  },
+  // get time zone
+  const zone = findTimeZone(timezoneName);
+  if (zone === undefined) return undefined;
 
-  getTimeZoneShortNames: getTimeZoneShortNames,
+  // set date
+  var scheduledDate = new Date(mondayDate);
+  var newDate = scheduledDate.getDate() + (day == 0 ? 6 : day - 1);
+  scheduledDate.setDate(newDate);
+  scheduledDate.setHours(hourAndMinute.hour);
+  scheduledDate.setMinutes(
+    hourAndMinute.minute - scheduledDate.getTimezoneOffset()
+  ); // remove time zone offset of server, offset given in minutes
+  //var utcDate = Date.UTC(scheduledDate.getUTCFullYear(), scheduledDate.getUTCMonth(), scheduledDate.getUTCDate(), scheduledDate.getUTCHours(), scheduledDate.getUTCMinutes(), scheduledDate.getUTCSeconds(), scheduledDate.getUTCMilliseconds());
+  // transform into correct time zone
+  var scheduledDateZoned = tZ.setTimeZone(scheduledDate, zone, {
+    useUTC: true,
+  });
 
-  /**
-   *
-   * @param {date} mondayDate start date of the schedule week
-   * @param {int} day week day of schedule
-   * @param {string} timeString time of schedule
-   * @param {string} timezoneName time zone name
-   */
-  getScheduledDate: function (
-    mondayDate: Date,
-    day: number,
-    timeString: string,
-    timezoneName: string
-  ) {
-    const hourAndMinute: ValidatedTime = validateTime(timeString);
-    if (hourAndMinute.hour === undefined || hourAndMinute.minute === undefined)
-      return undefined;
+  //var diff = (scheduledDateZoned.epoch - utcDate)/1000;
+  return scheduledDateZoned.epoch;
+}
 
-    // get time zone
-    const zone = findTimeZone(timezoneName);
-    if (zone === undefined) return undefined;
+/**
+ * use user given time to derive a UTC time for lobby
+ * @param {string} time time string
+ * @param {string} timezoneName timezone name
+ */
+export function createLobbyTime(time: string, timezoneName: string) {
+  var ltr: LobbyTimeResult = {
+    time: undefined,
+    timeZoneName: undefined,
+    error: "",
+  };
 
-    // set date
-    var scheduledDate = new Date(mondayDate);
-    var newDate = scheduledDate.getDate() + (day == 0 ? 6 : day - 1);
-    scheduledDate.setDate(newDate);
-    scheduledDate.setHours(hourAndMinute.hour);
-    scheduledDate.setMinutes(
-      hourAndMinute.minute - scheduledDate.getTimezoneOffset()
-    ); // remove time zone offset of server, offset given in minutes
-    //var utcDate = Date.UTC(scheduledDate.getUTCFullYear(), scheduledDate.getUTCMonth(), scheduledDate.getUTCDate(), scheduledDate.getUTCHours(), scheduledDate.getUTCMinutes(), scheduledDate.getUTCSeconds(), scheduledDate.getUTCMilliseconds());
-    // transform into correct time zone
-    var scheduledDateZoned = tZ.setTimeZone(scheduledDate, zone, {
-      useUTC: true,
-    });
+  // get time
+  const hourAndMinute: ValidatedTime = validateTime(time);
+  if (hourAndMinute.hour === undefined || hourAndMinute.minute === undefined) {
+    ltr.error =
+      "you need to provide a valid time (e.g. 9:30pm, 6:04am, ...) in your post";
+    return ltr;
+  }
 
-    //var diff = (scheduledDateZoned.epoch - utcDate)/1000;
-    return scheduledDateZoned.epoch;
-  },
+  // get time zone
+  const zone = findTimeZone(timezoneName);
+  if (zone === undefined) {
+    ltr.error = "Could not find time zone";
+    return ltr;
+  }
 
-  /**
-   * use user given time to derive a UTC time for lobby
-   * @param {string} time time string
-   * @param {string} timezoneName timezone name
-   */
-  createLobbyTime: function (time: string, timezoneName: string) {
-    var ltr: LobbyTimeResult = {
-      time: undefined,
-      timeZoneName: undefined,
-      error: "",
-    };
+  // get 'now'
+  var date = new Date();
+  // get 'now' in timezone
+  var zonedDate = tZ.getZonedTime(date, zone);
+  // check if hour, minute has already past in their time zone
+  var timeDif =
+    (hourAndMinute.hour - zonedDate.hours) * 1000 * 60 * 60 +
+    (hourAndMinute.minute - zonedDate.minutes) * 1000 * 60;
+  if (timeDif < 0)
+    // go for next day if it did
+    timeDif = dayInMs + timeDif;
 
-    // get time
-    const hourAndMinute: ValidatedTime = validateTime(time);
-    if (
-      hourAndMinute.hour === undefined ||
-      hourAndMinute.minute === undefined
-    ) {
-      ltr.error =
-        "you need to provide a valid time (e.g. 9:30pm, 6:04am, ...) in your post";
-      return ltr;
-    }
+  // create date "in milliseconds since 01.01.1970 00:00"
+  if (zonedDate.epoch === undefined) {
+    ltr.error = "zonedDate.epoch was undefined";
+    return ltr;
+  }
+  var lobbyDate = new Date(zonedDate.epoch + timeDif);
 
-    // get time zone
-    const zone = findTimeZone(timezoneName);
-    if (zone === undefined) {
-      ltr.error = "Could not find time zone";
-      return ltr;
-    }
+  // return zoned lobby date
+  var zonedLobbyDate = tZ.getZonedTime(lobbyDate, zone);
+  return [true, zonedLobbyDate, ""];
+}
 
-    // get 'now'
-    var date = new Date();
-    // get 'now' in timezone
-    var zonedDate = tZ.getZonedTime(date, zone);
-    // check if hour, minute has already past in their time zone
-    var timeDif =
-      (hourAndMinute.hour - zonedDate.hours) * 1000 * 60 * 60 +
-      (hourAndMinute.minute - zonedDate.minutes) * 1000 * 60;
-    if (timeDif < 0)
-      // go for next day if it did
-      timeDif = dayInMs + timeDif;
+/**
+ *
+ * @param {Date} date
+ * @param {tZ.timezone} timezone
+ */
+export function getZonedTime(date: Date, timezone: TimeZoneInfo) {
+  return tZ.getZonedTime(date, timezone);
+}
 
-    // create date "in milliseconds since 01.01.1970 00:00"
-    if (zonedDate.epoch === undefined) {
-      ltr.error = "zonedDate.epoch was undefined";
-      return ltr;
-    }
-    var lobbyDate = new Date(zonedDate.epoch + timeDif);
+/**
+ * Returns time in given time zone if time zone name is being recognized
+ * @param {Date} date
+ * @param {string} timezoneName
+ * @return {tZ.Time} zoned time
+ */
+export function getZonedTimeFromTimeZoneName(date: Date | number, timezoneName: string) {
+  const zone = findTimeZone(timezoneName);
+  if (zone === undefined) {
+    return undefined;
+  }
 
-    // return zoned lobby date
-    var zonedLobbyDate = tZ.getZonedTime(lobbyDate, zone);
-    return [true, zonedLobbyDate, ""];
-  },
-
-  /**
-   *
-   * @param {Date} date
-   * @param {tZ.timezone} timezone
-   */
-  getZonedTime: function (date: Date, timezone: TimeZoneInfo) {
-    return tZ.getZonedTime(date, timezone);
-  },
-
-  /**
-   * Returns time in given time zone if time zone name is being recognized
-   * @param {Date} date
-   * @param {string} timezoneName
-   * @return {tZ.Time} zoned time
-   */
-  getZonedTimeFromTimeZoneName: function (date: Date, timezoneName: string) {
-    const zone = findTimeZone(timezoneName);
-    if (zone === undefined) {
-      return "Could not find timeZone in getZonedTimeFromTimeZoneName";
-    }
-
-    return tZ.getZonedTime(date, zone);
-  },
-
-  getTimeString: getTimeString,
-};
+  return tZ.getZonedTime(date, zone);
+}

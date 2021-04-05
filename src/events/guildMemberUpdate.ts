@@ -1,10 +1,9 @@
 import { GuildMember } from "discord.js";
-import Pool from "mysql2/typings/mysql/lib/Pool";
-import { DFZDiscordClient } from "../misc/interfaces/DFZDiscordClient";
-
-const dB = require("../misc/database");
-const rM = require("../misc/roleManagement");
-const pL = require("../misc/types/player");
+import { Pool } from "mysql2/promise";
+import { getPlayerByID, insertPlayer, getReferrerByTag, updateReferrer, updatePlayer } from "../misc/database";
+import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
+import { findRole, regionRoleIDs, getRegionalRolePrefix, beginnerRoles } from "../misc/roleManagement";
+import { Player } from "../misc/types/player";
 
 /**
  * Checks if member has nickname
@@ -20,18 +19,24 @@ function hasNickname(member: GuildMember) {
  * @param {GuildMember} newMember
  */
 function updateNickname(oldMember: GuildMember, newMember: GuildMember) {
-  var oldRole = rM.findRole(oldMember, rM.regionRoleIDs);
-  var newRole = rM.findRole(newMember, rM.regionRoleIDs);
+  var oldRole = findRole(oldMember, regionRoleIDs);
+  var newRole = findRole(newMember, regionRoleIDs);
   if (oldRole === newRole) return false;
 
   // add or remove?
-  var addRole = newRole !== undefined;
+  var roleId = "";
+  var hasNewRole = newRole !== undefined;
+  var hasOldRole = oldRole !== undefined;
+  if(!hasNewRole && !hasOldRole)
+    return false;
+  if(newRole !== undefined) roleId = newRole.id;
+  else if (oldRole !== undefined) roleId = oldRole.id;
 
   // which prefix to look for?
-  var prefix = rM.getRegionalRolePrefix(addRole ? newRole.id : oldRole.id);
+  var prefix = getRegionalRolePrefix(roleId);
   if (prefix == "") return false;
 
-  if (addRole) {
+  if (hasNewRole) {
     // set nick to reflect role
     newMember
       .setNickname(
@@ -65,25 +70,27 @@ async function handleFirstBeginnerRole(
   oldMember: GuildMember,
   newMember: GuildMember
 ) {
-  var oldRole = rM.findRole(oldMember, rM.beginnerRoles);
-  var newRole = rM.findRole(newMember, rM.beginnerRoles);
+  var oldRole = findRole(oldMember, beginnerRoles);
+  var newRole = findRole(newMember, beginnerRoles);
   if (oldRole !== undefined || newRole === undefined) {
     return false;
   }
 
-  var player = await dB.getPlayerByID(dbHandle, newMember.user.id);
+  var player = await getPlayerByID(dbHandle, newMember.user.id);
   if (player === undefined) {
-    dB.insertPlayer(
+    insertPlayer(
       dbHandle,
-      new pL.Player(newMember.user.id, newMember.user.tag)
+      new Player(newMember.user.id, newMember.user.tag)
     );
   } else if (player.referredBy !== "" && !player.referralLock) {
-    var referrer = await dB.getReferrerByTag(dbHandle, player.referredBy);
-    referrer.referralCount += 1;
-    await dB.updateReferrer(dbHandle, referrer);
-
+    var referrer = await getReferrerByTag(dbHandle, player.referredBy);
+    if (referrer !== undefined) {
+      referrer.referralCount += 1;
+      await updateReferrer(dbHandle, referrer);
+    }
+    
     player.referralLock = 1;
-    await dB.updatePlayer(dbHandle, player);
+    await updatePlayer(dbHandle, player);
   }
 
   return true;

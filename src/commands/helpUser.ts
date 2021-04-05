@@ -1,9 +1,9 @@
 import { Message, MessageEmbed } from "discord.js";
+import { generateEmbedding } from "../misc/answerEmbedding";
+import { lobbyTypes } from "../misc/constants";
+import { reactPositive } from "../misc/messageHelper";
+import { findRole, adminRoles, getRegionalRoleStringsForCommand } from "../misc/roleManagement";
 
-const c = require("../misc/constants");
-const rM = require("../misc/roleManagement");
-const aE = require("../misc/answerEmbedding");
-const mH = require("../misc/messageHelper");
 
 /**
  * Creates string to add to help-embedding and augments embed with it
@@ -50,9 +50,9 @@ function addHelpToTable(
 /**
  * Returns available bot commands depending on role
  */
-module.exports = async (message: Message) => {
+export default async (message: Message) => {
   // create embed
-  var _embed = aE.generateEmbedding("Bot commands", "", "");
+  var _embed = generateEmbedding("Bot commands", "", "");
 
   addHelpToTable(
     _embed,
@@ -63,28 +63,28 @@ module.exports = async (message: Message) => {
   );
 
   // help admin commands
-  if (rM.findRole(message.member, rM.adminRoles) != undefined) {
+  if (message.member !== null && findRole(message.member, adminRoles) != undefined) {
     addHelpToTable(
       _embed,
       "post",
       "!post <lobbytype> <region> <tiers> <time> <timezone>",
       "Creates a lobby in the channel in which you write the command.\nLobby types: " +
-        Object.keys(c.lobbyTypes).join(", ") +
+        Object.keys(lobbyTypes).join(", ") +
         "\nRegions: " +
-        rM.getRegionalRoleStringsForCommand().join(", ") +
+        getRegionalRoleStringsForCommand().join(", ") +
         "\n Allowed tiers: 1,2,3,4; Give no tiers nor regions for lobby types 'tryout' and 'replayAnalysis'." +
         "\n time format: 1-12:00-59am/pm " +
         "\n timezone: CET, ... check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",
       "!post " +
-        Object.keys(c.lobbyTypes)[0] +
+        Object.keys(lobbyTypes)[0] +
         " EU 1,2 9:55pm GMT+2\n\n!post " +
-        Object.keys(c.lobbyTypes)[1] +
+        Object.keys(lobbyTypes)[1] +
         " SEA 4,3 10:00am Asia/Singapore\n\n!post " +
-        Object.keys(c.lobbyTypes)[3] +
+        Object.keys(lobbyTypes)[3] +
         " 9:55pm America/New_York\n\n!post " +
-        Object.keys(c.lobbyTypes)[4] +
+        Object.keys(lobbyTypes)[4] +
         " 1:03am Arctic/Longyearbyen\n\n!post " +
-        Object.keys(c.lobbyTypes)[5] +
+        Object.keys(lobbyTypes)[5] +
         " 10:00am CET"
     );
 
@@ -108,6 +108,6 @@ module.exports = async (message: Message) => {
     );
 
     message.author.send({ embed: _embed });
-    mH.reactPositive(message, "");
+    reactPositive(message, "");
   }
 };

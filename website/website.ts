@@ -1,21 +1,25 @@
-import { Request, Response } from "express";
-import { DFZDiscordClient } from "../src/misc/interfaces/DFZDiscordClient";
+import express, { Request, Response } from "express";
+import { getSortedCoaches, getSortedReferrers } from "../src/misc/database";
+import { DFZDiscordClient } from "../src/misc/types/DFZDiscordClient";
 
-const path = require("path");
-const fs = require("fs");
-const tr = require("../src/misc/tracker");
-const express = require("express");
-const hbs = require("express-handlebars");
-//const bodyParser = require('body-parser')
-var visitCounter = require("express-visit-counter");
-const https = require("https");
-const http = require("http");
+import hbs from "express-handlebars";
+import http from "http";
+import https from "https";
+import path from "path";
+import { readFileSync } from "fs";
+
+var visitCounter = require("express-visit-counter"); // no types in npm
 
 const guildId: string =
   process.env.GUILD !== undefined ? process.env.GUILD : "";
 
 // SSL credentials
-const credentials = {
+interface credentials {
+  key: undefined | string,
+  cert: undefined | string,
+  ca: undefined | string,
+}
+var credentials: credentials = {
   key: undefined,
   cert: undefined,
   ca: undefined,
@@ -23,15 +27,15 @@ const credentials = {
 
 var justHttp = false;
 try {
-  credentials.key = fs.readFileSync(
+  credentials.key = readFileSync(
     "/etc/letsencrypt/live/dotafromzero.com/privkey.pem",
     "utf8"
   );
-  credentials.cert = fs.readFileSync(
+  credentials.cert = readFileSync(
     "/etc/letsencrypt/live/dotafromzero.com/cert.pem",
     "utf8"
   );
-  credentials.ca = fs.readFileSync(
+  credentials.ca = readFileSync(
     "/etc/letsencrypt/live/dotafromzero.com/chain.pem",
     "utf8"
   );
@@ -50,7 +54,7 @@ var limiter = new RateLimit({
 
 const _title = "No Bullshit. No Ads. Just DOTA.";
 
-class WebSocket {
+export default class WebSocket {
   token: string;
   coachList: {};
   referrerList: {};
@@ -58,7 +62,7 @@ class WebSocket {
   app: any;
   httpServer: any;
   useHttps: boolean;
-  credentials: { key: undefined; cert: undefined; ca: undefined };
+  credentials: { key: undefined | string; cert: undefined | string; ca: undefined | string};
   httpsServer: any;
 
   constructor(token: string, client: DFZDiscordClient) {
@@ -113,14 +117,14 @@ class WebSocket {
       if (this.client.dbHandle === undefined) return;
 
       var guild = await this.client.guilds.fetch(guildId);
-      var nativeCoachList = await tr.getCoachList(
+      var nativeCoachList = await getSortedCoaches(
         this.client.dbHandle,
         "lobbyCount"
       );
       for (let i = 0; i < nativeCoachList.length; i++) {
-        var coach = nativeCoachList[i];
+        const coach: any = nativeCoachList[i]; // in order to add nick, change type to any
         try {
-          var member = await guild.members.fetch(coach.user_id);
+          var member = await guild.members.fetch(coach.userId);
           coach.nick = member.displayName;
         } catch {
           coach.nick = "Unknown";
@@ -135,12 +139,12 @@ class WebSocket {
   async updateReferrerList() {
     if (this.client.dbHandle === undefined) return;
 
-    this.referrerList = await tr.getReferrerList(this.client.dbHandle);
+    this.referrerList = await getSortedReferrers(this.client.dbHandle);
   }
 
   async setupHallOfFame() {
     await this.updateCoachList();
-    setInterval(this.updateCoachList.bind(this), 2 * 1000); //2 * 60 * 60000);
+    setInterval(this.updateCoachList.bind(this), 2 * 60 * 60000); //2 * 60 * 60000);
     await this.updateReferrerList();
     setInterval(this.updateReferrerList.bind(this), 2 * 60 * 60000);
   }
@@ -203,5 +207,3 @@ class WebSocket {
     // })
   }
 }
-
-module.exports = WebSocket;

@@ -1,11 +1,9 @@
-import { Role, User } from "discord.js";
+import { Role } from "discord.js";
+import { lobbyTypes } from "./constants";
+import { coinFlip, shuffle } from "./generics";
 import { LobbyPlayer, PositionPlayers } from "./interfaces/LobbyInterfaces";
+import { getNumberFromBeginnerRole } from "./roleManagement";
 import { Lobby } from "./types/lobby";
-
-const c = require("./constants");
-const g = require("./generics");
-const rM = require("./roleManagement");
-const l = require("./types/lobby");
 
 /**
  * Swap two array elements in place
@@ -84,7 +82,7 @@ function getPlayersPerPosition(_users: LobbyPlayer[]) {
     });
 
     // randomly reverse order
-    if (g.coinFlip() === true) playersPerPosition[position - 1].users.reverse();
+    if (coinFlip() === true) playersPerPosition[position - 1].users.reverse();
   }
 
   // sort to get 'tightest' positions (least amount of players) come first
@@ -105,7 +103,7 @@ function createInhouseTeams(
   openUsers: LobbyPlayer[]
 ) {
   // now sort by tier
-  openUsers.sort(g.coinFlip() === true ? tier_sorter : reverse_tier_sorter);
+  openUsers.sort(coinFlip() === true ? tier_sorter : reverse_tier_sorter);
 
   var playersPerPosition = getPlayersPerPosition(openUsers);
   var skillPoints = { radiant: 0, dire: 0 };
@@ -242,10 +240,9 @@ function createNonCompetitionTeams(
     }
 
     // take position with fewest available players
-    const pos = playersPerPosition[0].pos - 1;// positions from 1-5, entries from 0-4, so substract 1
+    const pos = playersPerPosition[0].pos - 1; // positions from 1-5, entries from 0-4, so substract 1
     const players = playersPerPosition[0].users;
 
-    
     if (players.length >= 1) playerPositionMap[pos] = [players[0]];
     else playerPositionMap[pos] = [openUsers[0]];
 
@@ -278,94 +275,92 @@ function createNonCompetitionTeams(
   }
 }
 
-module.exports = {
-  /**
-   *
-   * @param {Lobby} lobby
-   * @param {string} name
-   * @param {string} id
-   * @param {Array<number>} positions
-   * @param {Role} beginnerRole
-   * @param {Role | undefined} regionRole
-   */
-  addUser: function (
-    lobby: Lobby,
-    name: string,
-    id: string,
-    positions: Array<number>,
-    beginnerRole: Role,
-    regionRole: Role | undefined
-  ) {
-    // create user
-    var user: LobbyPlayer = {
-      name: name,
-      id: id,
-      positions: positions,
-      tier: {
-        id: beginnerRole.id,
-        number: rM.getNumberFromBeginnerRole(beginnerRole.id),
-        name: beginnerRole.name,
-      },
-      region: {
-        id: regionRole ? regionRole.id : "No region set",
-        name: regionRole ? regionRole.name : "",
-      },
-    };
-    user.positions.sort();
+/**
+ *
+ * @param {Lobby} lobby
+ * @param {string} name
+ * @param {string} id
+ * @param {Array<number>} positions
+ * @param {Role} beginnerRole
+ * @param {Role | undefined} regionRole
+ */
+export function addUser(
+  lobby: Lobby,
+  name: string,
+  id: string,
+  positions: Array<number>,
+  beginnerRole: Role,
+  regionRole: Role | undefined
+) {
+  // create user
+  var user: LobbyPlayer = {
+    name: name,
+    id: id,
+    positions: positions,
+    tier: {
+      id: beginnerRole.id,
+      number: getNumberFromBeginnerRole(beginnerRole.id),
+      name: beginnerRole.name,
+    },
+    region: {
+      id: regionRole ? regionRole.id : "No region set",
+      name: regionRole ? regionRole.name : "",
+    },
+  };
+  user.positions.sort();
 
-    // user is from region => append before other regions
-    if (user.region.id === lobby.regionId) {
-      for (let idx = 0; idx < lobby.users.length; idx++) {
-        var curUser = lobby.users[idx];
-        if (curUser.region.id !== lobby.regionId) {
-          lobby.users.splice(idx, 0, user);
-          return;
-        }
+  // user is from region => append before other regions
+  if (user.region.id === lobby.regionId) {
+    for (let idx = 0; idx < lobby.users.length; idx++) {
+      var curUser = lobby.users[idx];
+      if (curUser.region.id !== lobby.regionId) {
+        lobby.users.splice(idx, 0, user);
+        return;
       }
     }
+  }
 
-    // user is not from region or all users are from the lobby region
-    lobby.users.push(user);
-  },
+  // user is not from region or all users are from the lobby region
+  lobby.users.push(user);
+}
 
-  userExists: function (lobby: Lobby, userId: string) {
-    return lobby.users.find((element) => element.id == userId) !== undefined;
-  },
+export function userExists(lobby: Lobby, userId: string) {
+  return lobby.users.find((element) => element.id == userId) !== undefined;
+}
 
-  getUserIndex: function (lobby: Lobby, userId: string) {
-    return lobby.users.findIndex((user) => user.id == userId);
-  },
+export function getUserIndex(lobby: Lobby, userId: string) {
+  return lobby.users.findIndex((user) => user.id == userId);
+}
 
-  getUser: function (lobby: Lobby, userId: string) {
-    return lobby.users.find((element) => element.id == userId);
-  },
+export function getUser(lobby: Lobby, userId: string) {
+  return lobby.users.find((element) => element.id == userId);
+}
 
-  filterAndSortByPositionAndTier: function (lobby: Lobby, position: number) {
-    return filterAndSortByPositionAndTier_int(lobby.users, position);
-  },
+export function filterAndSortByPositionAndTier(lobby: Lobby, position: number) {
+  return filterAndSortByPositionAndTier_int(lobby.users, position);
+}
 
-  /**
-   * Creates teams based on users and lobby type
-   * @param {list} users
-   * @param {int} lobbyType
-   */
-  createTeams: function (users: LobbyPlayer[], lobbyType: number) {
-    var playerPositionMap: LobbyPlayer[][] = [[], [], [], [], []]; // all positions empty; for 1 team every pos gets one player, for two teams two players
-    var openUsers = users;
+/**
+ * Creates teams based on users and lobby type
+ * @param {list} users
+ * @param {int} lobbyType
+ */
+export function createTeams(users: LobbyPlayer[], lobbyType: number) {
+  var playerPositionMap: LobbyPlayer[][] = [[], [], [], [], []]; // all positions empty; for 1 team every pos gets one player, for two teams two players
+  var openUsers = users;
 
-    // randomize users to not have e.g. first person to subscribe be pos 1 guaranteed etc.
-    g.shuffle(openUsers);
+  // randomize users to not have e.g. first person to subscribe be pos 1 guaranteed etc.
+  shuffle(openUsers);
 
-    if (lobbyType === c.lobbyTypes.inhouse) {
-      createInhouseTeams(playerPositionMap, openUsers);
-    } else if (
-      lobbyType === c.lobbyTypes.unranked ||
-      lobbyType === c.lobbyTypes.botbash ||
-      lobbyType === c.lobbyTypes.tryout
-    ) {
-      createNonCompetitionTeams(playerPositionMap, openUsers);
-    }
+  if (lobbyType === lobbyTypes.inhouse) {
+    createInhouseTeams(playerPositionMap, openUsers);
+  } else if (
+    lobbyType === lobbyTypes.unranked ||
+    lobbyType === lobbyTypes.botbash ||
+    lobbyType === lobbyTypes.tryout
+  ) {
+    createNonCompetitionTeams(playerPositionMap, openUsers);
+  }
 
-    return playerPositionMap;
-  },
-};
+  return playerPositionMap;
+}

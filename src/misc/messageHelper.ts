@@ -34,7 +34,7 @@ async function reactMessage(message: Message, reply: string, emoji: string) {
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
-function reactNegative(message: Message, reply = "") {
+export function reactNegative(message: Message, reply = "") {
   reactMessage(message, reply, "⛔");
 }
 
@@ -43,7 +43,7 @@ function reactNegative(message: Message, reply = "") {
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
-function reactNeutral(message: Message, reply = "") {
+export function reactNeutral(message: Message, reply = "") {
   reactMessage(message, reply, "😐");
 }
 
@@ -52,7 +52,7 @@ function reactNeutral(message: Message, reply = "") {
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
-function reactPositive(message: Message, reply = "") {
+export function reactPositive(message: Message, reply = "") {
   reactMessage(message, reply, "✅");
 }
 
@@ -61,7 +61,7 @@ function reactPositive(message: Message, reply = "") {
  * @param {number} lobbyType
  * @param {Discord.Message} message
  */
-function createLobbyPostReactions(lobbyType: number, message: Message) {
+export function createLobbyPostReactions(lobbyType: number, message: Message) {
   if (c.isSimpleLobbyType(lobbyType)) {
     message.react(c.tryoutReactionEmoji);
   } else {
@@ -83,7 +83,7 @@ function createLobbyPostReactions(lobbyType: number, message: Message) {
  * @param {number} max max allowed number
  * @return [true if success, unique numbers, error message if not success]
  */
-function getNumbersFromMessage(
+export function getNumbersFromMessage(
   message: Message,
   index: number,
   min = 0,
@@ -107,7 +107,7 @@ function getNumbersFromMessage(
  * @param {Message} message
  * @param {number} index
  */
-function getLobbyRegionRoleFromMessage(message: Message, index: number) {
+export function getLobbyRegionRoleFromMessage(message: Message, index: number) {
   var args = getArguments(message);
 
   // message to short
@@ -121,7 +121,7 @@ function getLobbyRegionRoleFromMessage(message: Message, index: number) {
  * @param {Message} message message containing the time
  * @param {number} index position of time in the message
  */
-function getTimeFromMessage(message: Message, index: number) {
+export function getTimeFromMessage(message: Message, index: number) {
   var args = getArguments(message);
 
   if (args.length <= index + 1)
@@ -138,7 +138,7 @@ function getTimeFromMessage(message: Message, index: number) {
  * returns arguments of message of form "command arg1 arg2 ... argN"
  * @param {Message} message
  */
-function getArguments(message: Message) {
+export function getArguments(message: Message) {
   var content = message.content.split(" ");
   content.shift();
   return content;
@@ -148,7 +148,7 @@ function getArguments(message: Message) {
  * Derives lobby type from message and reacts based on evaluation
  * @param {Message} message message from which to derive lobby type
  */
-function getLobbyType(message: Message) {
+export function getLobbyType(message: Message) {
   var args = getArguments(message);
 
   if (args.length == 0) {
@@ -176,13 +176,3 @@ function getLobbyType(message: Message) {
 
   return c.lobbyTypes[lobbyType];
 }
-
-module.exports.reactNeutral = reactNeutral;
-module.exports.reactNegative = reactNegative;
-module.exports.reactPositive = reactPositive;
-module.exports.createLobbyPostReactions = createLobbyPostReactions;
-module.exports.getNumbersFromMessage = getNumbersFromMessage;
-module.exports.getLobbyRegionRoleFromMessage = getLobbyRegionRoleFromMessage;
-module.exports.getArguments = getArguments;
-module.exports.getLobbyType = getLobbyType;
-module.exports.getTimeFromMessage = getTimeFromMessage;

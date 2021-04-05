@@ -1,11 +1,12 @@
 import { Message } from "discord.js";
-import { Pool } from "mysql2";
+import { Pool } from "mysql2/promise";
+import { generateEmbedding } from "../misc/answerEmbedding";
+import { getSortedCoaches, getSortedPlayers, getSortedReferrers } from "../misc/database";
 import { FieldElement } from "../misc/interfaces/EmbedInterface";
-
-const aE = require("../misc/answerEmbedding");
-const t = require("../misc/tracker");
-const mH = require("../misc/messageHelper");
-const c = require("../misc/types/coach");
+import { getArguments, reactPositive } from "../misc/messageHelper";
+import { Coach } from "../misc/types/coach";
+import { Player } from "../misc/types/player";
+import { Referrer } from "../misc/types/referrer";
 
 /**
  *
@@ -121,11 +122,6 @@ const tableBasePlayersTemplate = [
     value: "",
     inline: true,
   },
-  {
-    name: "Referral Count",
-    value: "",
-    inline: true,
-  },
 ];
 
 /**
@@ -133,8 +129,8 @@ const tableBasePlayersTemplate = [
  * @param {Message} message triggering message
  * @param {Pool} dbHandle bot database handle
  */
-module.exports = async (message: Message, dbHandle: Pool) => {
-  var args = mH.getArguments(message);
+export default  async (message: Message, dbHandle: Pool) => {
+  var args = getArguments(message);
 
   var nextisLobbyType = false,
     lobbyType = "",
@@ -168,7 +164,7 @@ module.exports = async (message: Message, dbHandle: Pool) => {
     }
   }
 
-  var dbResponse = [];
+  var dbResponse : Array<Player | Coach | Referrer> = [];
 
   var ut = "";
   var tableBase = undefined;
@@ -205,7 +201,7 @@ module.exports = async (message: Message, dbHandle: Pool) => {
       default:
         lt = "lobbyCount";
     }
-    dbResponse = await t.getPlayerList(dbHandle, lt);
+    dbResponse = await getSortedPlayers(dbHandle, lt);
   } else if (ut === "coaches") {
     switch (lobbyType) {
       case "tryout":
@@ -220,34 +216,39 @@ module.exports = async (message: Message, dbHandle: Pool) => {
       default:
         lt = "lobbyCount";
     }
-    dbResponse = await t.getCoachList(dbHandle, lt);
+    dbResponse = await getSortedCoaches(dbHandle, lt);
   } else if (ut === "referrers") {
-    dbResponse = await t.getReferrerList(dbHandle);
+    dbResponse = await getSortedReferrers(dbHandle);
+  }
+
+
+  function isPlayer(type: Player | Coach | Referrer): type is Player {
+    return (type as Player).offenses !== undefined;
+  }
+  
+  function isCoach(type: Player | Coach | Referrer): type is Coach {
+    return (type as Coach).lobbyCount !== undefined;
+  }
+  
+  function isReferrer(type: Player | Coach | Referrer): type is Referrer {
+    return (type as Referrer).referralCount !== undefined;
   }
 
   const maxNum = 10;
   for (let i = 0; i < Math.min(maxNum, dbResponse.length); i++) {
+    var responseRow = dbResponse[i];
     if (ut === "players") {
-      addDBPlayerRowToTable(tableBase, dbResponse[i]);
+      if(isPlayer(responseRow)) addDBPlayerRowToTable(tableBase, responseRow);
     } else if (ut === "coaches") {
-      addDBCoachRowToTable(
-        tableBase,
-        new c.Coach(
-          dbResponse[i].user_id,
-          dbResponse[i].lobbyCount,
-          dbResponse[i].lobbyCountTryout,
-          dbResponse[i].lobbyCountNormal,
-          dbResponse[i].lobbyCountReplayAnalysis
-        )
-      );
+      if(isCoach(responseRow)) addDBCoachRowToTable(tableBase, responseRow);
     } else if (ut === "referrers") {
-      addDBReferrerRowToTable(tableBase, dbResponse[i]);
+      if(isReferrer(responseRow)) addDBReferrerRowToTable(tableBase, responseRow);
     }
   }
 
-  mH.reactPositive(message);
+  reactPositive(message);
   if(dbResponse.length > 0) {
-    var _embed = aE.generateEmbedding(
+    var _embed = generateEmbedding(
       "Lobby Highscores (" + ut + ") Top 10",
       "Hall of Fame of DFZ " + ut + "!",
       "",

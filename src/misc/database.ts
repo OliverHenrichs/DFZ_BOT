@@ -4,14 +4,13 @@ import {
   OkPacket,
   ResultSetHeader,
   FieldPacket,
-} from "mysql2/promise.js";
+  createPool,
+} from "mysql2/promise";
 import { Lobby } from "./types/lobby";
-
-const c = require("./types/coach");
-const mysql = require("mysql2/promise");
-const p = require("./types/player");
-const r = require("./types/referrer");
-const s = require("./types/schedule");
+import { Player } from "./types/player";
+import { Referrer } from "./types/referrer";
+import { Schedule } from "./types/schedule";
+import { Coach } from "./types/coach";
 
 interface SqlTableColumn {
   id: string;
@@ -23,7 +22,7 @@ function getCoachTableJson() {
     table_name: "coaches",
     table_columns: [
       {
-        id: "user_id",
+        id: "userId",
         type: "VARCHAR(255)",
       },
       {
@@ -170,32 +169,32 @@ function getOptionsTableJson() {
   };
 }
 
-function createPlayerTable(dbHandle: Pool) {
+export function createPlayerTable(dbHandle: Pool) {
   var json = getPlayerTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createReferrerTable(dbHandle: Pool) {
+export function createReferrerTable(dbHandle: Pool) {
   var json = getReferrerTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createCoachTable(dbHandle: Pool) {
+export function createCoachTable(dbHandle: Pool) {
   var json = getCoachTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createScheduleTable(dbHandle: Pool) {
+export function createScheduleTable(dbHandle: Pool) {
   var json = getScheduleTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createLobbyTable(dbHandle: Pool) {
+export function createLobbyTable(dbHandle: Pool) {
   var json = getLobbyTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
 
-function createOptionsTable(dbHandle: Pool) {
+export function createOptionsTable(dbHandle: Pool) {
   var json = getOptionsTableJson();
   return createTable(dbHandle, json.table_name, json.table_columns);
 }
@@ -245,12 +244,21 @@ async function executeDBCommand(dbHandle: Pool, command: string) {
       FieldPacket[]
     ]
   >(function (resolve, reject) {
+    
     dbHandle
-      .execute(command)
+      .execute(command
+        .replace(/[\\]/g, '\\\\')
+        .replace(/[\"]/g, '\\\"')
+        .replace(/[\/]/g, '\\/')
+        .replace(/[\b]/g, '\\b')
+        .replace(/[\f]/g, '\\f')
+        .replace(/[\n]/g, '\\n')
+        .replace(/[\r]/g, '\\r')
+        .replace(/[\t]/g, '\\t'))
       .then((res) => resolve(res))
       .catch((err) => {
+        console.log("Could not execute MYSQL-command.\nReason: " + err + "\ncommand: " + command);
         reject(err);
-        console.log("Could not reconnect to MYSQL database. Reason: " + err);
       });
   });
 }
@@ -304,7 +312,7 @@ async function insertCoachRow(dbHandle: Pool, values: (string | number)[]) {
     dbHandle,
     "coaches",
     [
-      "user_id",
+      "userId",
       "lobbyCount",
       "lobbyCountTryout",
       "lobbyCountNormal",
@@ -386,7 +394,7 @@ async function insertScheduleRow(dbHandle: Pool, values: (string | number)[]) {
  * @param {Pool} dbHandle
  * @param {Coach} coach
  */
-async function insertCoach(dbHandle: Pool, coach: Coach) {
+export async function insertCoach(dbHandle: Pool, coach: Coach) {
   const values = [
     coach.userId,
     coach.lobbyCount,
@@ -402,7 +410,7 @@ async function insertCoach(dbHandle: Pool, coach: Coach) {
  * @param {Pool} dbHandle
  * @param {Player} player
  */
-async function insertPlayer(dbHandle: Pool, player: Player) {
+export async function insertPlayer(dbHandle: Pool, player: Player) {
   const values = [
     player.userId,
     player.tag,
@@ -423,7 +431,7 @@ async function insertPlayer(dbHandle: Pool, player: Player) {
  * @param {Pool} dbHandle
  * @param {Referrer} referrer
  */
-async function insertReferrer(dbHandle: Pool, referrer: Referrer) {
+export async function insertReferrer(dbHandle: Pool, referrer: Referrer) {
   const values = [referrer.userId, referrer.tag, referrer.referralCount];
   return insertReferrerRow(dbHandle, values);
 }
@@ -433,7 +441,7 @@ async function insertReferrer(dbHandle: Pool, referrer: Referrer) {
  * @param {Pool} dbHandle
  * @param {Lobby} lobby
  */
-async function insertLobby(dbHandle: Pool, lobby: Lobby) {
+export async function insertLobby(dbHandle: Pool, lobby: Lobby) {
   const values = [lobby.channelId, lobby.messageId, JSON.stringify(lobby)];
   return insertLobbyRow(dbHandle, values);
 }
@@ -443,7 +451,7 @@ async function insertLobby(dbHandle: Pool, lobby: Lobby) {
  * @param {Pool} dbHandle
  * @param {Schedule} schedule
  */
-async function insertSchedule(dbHandle: Pool, schedule: Schedule) {
+export async function insertSchedule(dbHandle: Pool, schedule: Schedule) {
   const values = [schedule.emoji, schedule.messageId, JSON.stringify(schedule)];
   return insertScheduleRow(dbHandle, values);
 }
@@ -453,7 +461,7 @@ async function insertSchedule(dbHandle: Pool, schedule: Schedule) {
  * @param {Pool} dbHandle bot database handle
  * @param {number} day day
  */
-async function insertDay(dbHandle: Pool, day: number) {
+export async function insertDay(dbHandle: Pool, day: number) {
   return insertRow(dbHandle, "options", ["name", "value"], ["day", day]);
 }
 
@@ -517,7 +525,7 @@ async function updateTableEntriesByConditions(
  * @param {Pool} dbHandle bot database handle
  * @param {JSON} lobby lobby object
  */
-async function updateLobby(dbHandle: Pool, lobby: Lobby) {
+export async function updateLobby(dbHandle: Pool, lobby: Lobby) {
   return updateTableEntriesByConditions(
     dbHandle,
     "lobbies",
@@ -532,7 +540,7 @@ async function updateLobby(dbHandle: Pool, lobby: Lobby) {
  * @param {Pool} dbHandle bot database handle
  * @param {s.Schedule} schedule schedule object
  */
-async function updateSchedule(dbHandle: Pool, schedule: Schedule) {
+export async function updateSchedule(dbHandle: Pool, schedule: Schedule) {
   return updateTableEntriesByConditions(
     dbHandle,
     "schedules",
@@ -547,7 +555,7 @@ async function updateSchedule(dbHandle: Pool, schedule: Schedule) {
  * @param {Pool} dbHandle bot database handle
  * @param {number} day current day of the week (0=sun, 1=mon, ...)
  */
-async function updateDay(dbHandle: Pool, day: number) {
+export async function updateDay(dbHandle: Pool, day: number) {
   return updateTableEntriesByConditions(
     dbHandle,
     "options",
@@ -562,7 +570,7 @@ async function updateDay(dbHandle: Pool, day: number) {
  * @param {Pool} dbHandle bot database handle
  * @param {Coach} coach coach
  */
-async function updateCoach(dbHandle: Pool, coach: Coach) {
+export async function updateCoach(dbHandle: Pool, coach: Coach) {
   return updateTableEntriesByConditions(
     dbHandle,
     "coaches",
@@ -578,7 +586,7 @@ async function updateCoach(dbHandle: Pool, coach: Coach) {
       coach.lobbyCountNormal,
       coach.lobbyCountReplayAnalysis,
     ],
-    ["user_id = '" + coach.userId + "'"]
+    ["userId = '" + coach.userId + "'"]
   );
 }
 
@@ -587,7 +595,7 @@ async function updateCoach(dbHandle: Pool, coach: Coach) {
  * @param {Pool} dbHandle bot database handle
  * @param {p.Player} player player
  */
-async function updatePlayer(dbHandle: Pool, player: Player) {
+export async function updatePlayer(dbHandle: Pool, player: Player) {
   return updateTableEntriesByConditions(
     dbHandle,
     "players",
@@ -620,7 +628,7 @@ async function updatePlayer(dbHandle: Pool, player: Player) {
  * @param {Pool} dbHandle bot database handle
  * @param {r.Referrer} referrer referrer
  */
-async function updateReferrer(dbHandle: Pool, referrer: Referrer) {
+export async function updateReferrer(dbHandle: Pool, referrer: Referrer) {
   return updateTableEntriesByConditions(
     dbHandle,
     "referrers",
@@ -644,11 +652,16 @@ async function selectTableValueByConditions(
   conditions: Array<string>
 ) {
   return new Promise<
-    | RowDataPacket[]
-    | RowDataPacket[][]
-    | OkPacket
-    | OkPacket[]
-    | ResultSetHeader
+    [
+      (
+        | RowDataPacket[]
+        | RowDataPacket[][]
+        | OkPacket
+        | OkPacket[]
+        | ResultSetHeader
+      ),
+      FieldPacket[]
+    ]
   >(function (resolve, reject) {
     var command = "SELECT " + column + " FROM " + table;
 
@@ -675,8 +688,7 @@ async function selectTableValueByConditions(
             FieldPacket[]
           ]
         ) => {
-          let temp: any = res[0];
-          resolve(temp.length === 0 ? undefined : temp);
+          resolve(res);
         }
       )
       .catch((err) => {
@@ -724,33 +736,21 @@ function hasData(
  * @param {string} channelId
  * @param {string} messageId
  */
-async function getLobbies(
+export async function getLobbies(
   dbHandle: Pool,
   channelId: string = "",
   messageId: string = ""
 ) {
-  return new Promise(function (resolve, reject) {
+  return new Promise<Lobby[]>(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
       "lobbies",
       "data",
       getLobbyConditions(channelId, messageId)
     ).then((dB_response) => {
-      if (!Array.isArray(dB_response) || dB_response.length === 0) resolve([]);
-      else {
-        const lobbies: (RowDataPacket | RowDataPacket[] | OkPacket)[] = [];
-        dB_response.forEach(function (
-          resp: RowDataPacket | RowDataPacket[] | OkPacket
-        ) {
-          if (hasData(resp)) {
-            lobbies.push(resp.data);
-            return true;
-          }
-          return false;
-        });
-
-        resolve(lobbies);
-      }
+      resolve(
+        getTypedArrayFromDBResponseWithJSONData<Lobby>(dB_response, Lobby)
+      );
     });
   });
 }
@@ -761,33 +761,21 @@ async function getLobbies(
  * @param {string} message_id
  * @param {string} emoji
  */
-async function getSchedules(
+export async function getSchedules(
   dbHandle: Pool,
   message_id: string = "",
   emoji: string = ""
 ) {
-  return new Promise(function (resolve, reject) {
+  return new Promise<Schedule[]>(function (resolve) {
     selectTableValueByConditions(
       dbHandle,
       "schedules",
       "data",
       getScheduleConditions(message_id, emoji)
     ).then((dB_response) => {
-      if (!Array.isArray(dB_response) || dB_response.length === 0) resolve([]);
-      else {
-        const schedules: Schedule[] = [];
-        dB_response.forEach(function (
-          resp: RowDataPacket | RowDataPacket[] | OkPacket
-        ) {
-          if (hasData(resp)) {
-            var schedule = s.Schedule.fromObject(resp.data);
-            if (schedule !== undefined) {
-              schedules.push(schedule);
-            }
-          }
-        });
-        resolve(schedules);
-      }
+      resolve(
+        getTypedArrayFromDBResponseWithJSONData<Schedule>(dB_response, Schedule)
+      );
     });
   });
 }
@@ -805,22 +793,79 @@ function hasValue(
  * returns day from options-table in database
  * @param {Pool} dbHandle
  */
-async function getDay(dbHandle: Pool) {
-  return new Promise(function (resolve, reject) {
+export async function getDay(dbHandle: Pool) {
+  return new Promise<number>(function (resolve, reject) {
     selectTableValueByConditions(dbHandle, "options", "value", [
       "name = 'day'",
     ]).then((dB_response) => {
       if (
-        !Array.isArray(dB_response) ||
-        dB_response.length === 0 ||
-        !hasValue(dB_response[0])
+        !Array.isArray(dB_response[0]) ||
+        dB_response[0].length === 0 ||
+        !hasValue(dB_response[0][0])
       )
         resolve(NaN);
       else {
-        resolve(parseInt(dB_response[0].value));
+        resolve(parseInt(dB_response[0][0].value));
       }
     });
   });
+}
+
+type Constructor<T> = new (...args: any[]) => T;
+
+const input2Instance = <T>(
+  source: any,
+  destinationConstructor: Constructor<T>
+): T => Object.assign(new destinationConstructor(), source);
+
+function getTypedArrayFromDBResponse<T>(
+  res: [
+    (
+      | OkPacket
+      | ResultSetHeader
+      | RowDataPacket[]
+      | RowDataPacket[][]
+      | OkPacket[]
+    ),
+    FieldPacket[]
+  ],
+  type: Constructor<T>
+): Array<T> {
+  var rawData = res[0];
+  var typedArray: Array<T> = [];
+
+  if (Array.isArray(rawData) && rawData.length > 0) {
+    rawData.forEach((data: any) => {
+      const typedDatum = input2Instance<T>(data, type);
+      if (typedDatum !== undefined) typedArray.push(typedDatum);
+    });
+  }
+  return typedArray;
+}
+
+function getTypedArrayFromDBResponseWithJSONData<T>(
+  res: [
+    (
+      | OkPacket
+      | ResultSetHeader
+      | RowDataPacket[]
+      | RowDataPacket[][]
+      | OkPacket[]
+    ),
+    FieldPacket[]
+  ],
+  type: Constructor<T>
+): Array<T> {
+  var rawData = res[0];
+  var typedArray: Array<T> = [];
+
+  if (Array.isArray(rawData) && rawData.length > 0) {
+    rawData.forEach((data: any) => {
+      const typedDatum = input2Instance<T>(data.data, type);
+      if (typedDatum !== undefined) typedArray.push(typedDatum);
+    });
+  }
+  return typedArray;
 }
 
 /**
@@ -828,13 +873,16 @@ async function getDay(dbHandle: Pool) {
  * @param {Pool} dbHandle
  * @param {string} columnName name of column to sort by
  */
-async function getSortedPlayers(dbHandle: Pool, columnName = "lobbyCount") {
-  return new Promise(function (resolve, reject) {
+export async function getSortedPlayers(
+  dbHandle: Pool,
+  columnName = "lobbyCount"
+) {
+  return new Promise<Array<Player>>(function (resolve, reject) {
     var command = getSortedTableCommand("players", columnName);
 
     executeDBCommand(dbHandle, command)
       .then((res) => {
-        resolve(res);
+        resolve(getTypedArrayFromDBResponse<Player>(res, Player));
       })
       .catch((err) => {
         reject(err);
@@ -847,16 +895,16 @@ async function getSortedPlayers(dbHandle: Pool, columnName = "lobbyCount") {
  * @param {Pool} dbHandle
  * @param {string} columnName name of column to sort by
  */
-async function getSortedReferrers(
+export async function getSortedReferrers(
   dbHandle: Pool,
   columnName = "referralCount"
 ) {
-  return new Promise(function (resolve, reject) {
+  return new Promise<Referrer[]>(function (resolve, reject) {
     var command = getSortedTableCommand("referrers", columnName);
 
     executeDBCommand(dbHandle, command)
       .then((res) => {
-        resolve(res);
+        resolve(getTypedArrayFromDBResponse<Referrer>(res, Referrer));
       })
       .catch((err) => {
         reject(err);
@@ -869,13 +917,16 @@ async function getSortedReferrers(
  * @param {Pool} dbHandle
  * @param {string} columnName name of column to sort by
  */
-async function getSortedCoaches(dbHandle: Pool, columnName = "lobbyCount") {
-  return new Promise(function (resolve, reject) {
+export async function getSortedCoaches(
+  dbHandle: Pool,
+  columnName = "lobbyCount"
+) {
+  return new Promise<Array<Coach>>(function (resolve, reject) {
     var command = getSortedTableCommand("coaches", columnName);
 
     executeDBCommand(dbHandle, command)
       .then((res) => {
-        resolve(res);
+        resolve(getTypedArrayFromDBResponse<Coach>(res, Coach));
       })
       .catch((err) => {
         reject(err);
@@ -898,86 +949,70 @@ function isCoach(
 }
 
 /**
- * Returns coach given user ID, resolves undefined if not found
+ * Returns coach given user ID, returns empty coach if it didnt find one
  * @param {Pool} dbHandle
  * @param {string} userId
  */
-async function getCoach(dbHandle: Pool, userId = "") {
-  return new Promise(function (resolve, reject) {
+export async function getCoach(dbHandle: Pool, userId = "") {
+  return new Promise<Coach | undefined>(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
       "coaches",
       "lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis",
-      ["user_id = '" + userId + "'"]
+      ["userId = '" + userId + "'"]
     ).then((dB_response) => {
-      if (
-        !Array.isArray(dB_response) ||
-        dB_response.length === 0 ||
-        !isCoach(dB_response[0])
-      ) {
-        resolve(undefined);
-        return;
-      }
-      var c_content = dB_response[0];
-      resolve(
-        new c.Coach(
-          userId,
-          c_content.lobbyCount,
-          c_content.lobbyCountTryout,
-          c_content.lobbyCountNormal,
-          c_content.lobbyCountReplayAnalysis
-        )
-      );
+      var coachArray = getTypedArrayFromDBResponse<Coach>(dB_response, Coach);
+      resolve(coachArray.length > 0 ? coachArray[0] : undefined);
     });
   });
 }
 
-async function getPlayerByID(dbHandle: Pool, userId = "") {
+export async function getPlayerByID(dbHandle: Pool, userId = "") {
   return getPlayer(dbHandle, ["userId = '" + userId + "'"]);
 }
 
-async function getPlayerByTag(dbHandle: Pool, tag = "") {
+export async function getPlayerByTag(dbHandle: Pool, tag = "") {
   return getPlayer(dbHandle, ["tag = '" + tag + "'"]);
 }
 
 async function getPlayer(dbHandle: Pool, filter: string[]) {
-  return new Promise(function (resolve, reject) {
+  return new Promise<Player | undefined>(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
       "players",
       "userId, tag, referredBy, referralLock, lobbyCount, lobbyCountUnranked, lobbyCountBotBash, lobbyCount5v5, lobbyCountReplayAnalysis, offenses",
       filter
     ).then((dB_response) => {
-      if (!Array.isArray(dB_response) || dB_response.length === 0) {
-        resolve(undefined);
-        return;
-      }
-      resolve(p.Player.fromObject(dB_response[0]));
+      var playerArray = getTypedArrayFromDBResponse<Player>(
+        dB_response,
+        Player
+      );
+      resolve(playerArray.length > 0 ? playerArray[0] : undefined);
     });
   });
 }
 
-async function getReferrerByID(dbHandle: Pool, userId = "") {
+export async function getReferrerByID(dbHandle: Pool, userId = "") {
   return getReferrer(dbHandle, ["userId = '" + userId + "'"]);
 }
 
-async function getReferrerByTag(dbHandle: Pool, tag = "") {
+export async function getReferrerByTag(dbHandle: Pool, tag = "") {
   return getReferrer(dbHandle, ["tag = '" + tag + "'"]);
 }
 
 async function getReferrer(dbHandle: Pool, filter: string[]) {
-  return new Promise(function (resolve, reject) {
+  return new Promise<Referrer | undefined>(function (resolve, reject) {
     selectTableValueByConditions(
       dbHandle,
       "referrers",
       "userId, tag, referralCount",
       filter
     ).then((dB_response) => {
-      if (!Array.isArray(dB_response) || dB_response.length === 0) {
-        resolve(undefined);
-        return;
-      }
-      resolve(r.Referrer.fromObject(dB_response[0]));
+      var referrerArray = getTypedArrayFromDBResponse<Referrer>(
+        dB_response,
+        Referrer
+      );
+      resolve(referrerArray.length > 0 ? referrerArray[0] : undefined);
     });
   });
 }
@@ -1077,7 +1112,7 @@ async function deleteFromAllTableRows(
  * @param {Pool} dbHandle
  * @param {Lobby} lobby
  */
-async function removeLobby(dbHandle: Pool, lobby: Lobby) {
+export async function removeLobby(dbHandle: Pool, lobby: Lobby) {
   return deleteFromAllTableRows(
     dbHandle,
     "lobbies",
@@ -1090,7 +1125,10 @@ async function removeLobby(dbHandle: Pool, lobby: Lobby) {
  * @param {Pool} dbHandle
  * @param {Array<Schedule>} messageIDs
  */
-async function removeSchedules(dbHandle: Pool, schedules: Array<Schedule>) {
+export async function removeSchedules(
+  dbHandle: Pool,
+  schedules: Array<Schedule>
+) {
   const columns = ["emoji", "message_id"];
   var values: Array<string> = [];
   schedules.forEach((schedule) => {
@@ -1099,8 +1137,8 @@ async function removeSchedules(dbHandle: Pool, schedules: Array<Schedule>) {
   return deleteSomeUniqueTableRows(dbHandle, "schedules", columns, values);
 }
 
-function createPool(host: string) {
-  return mysql.createPool({
+export function createDBHandle(host: string) {
+  return createPool({
     host: host,
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
@@ -1110,38 +1148,3 @@ function createPool(host: string) {
     queueLimit: 0,
   });
 }
-
-module.exports = {
-  createPool: createPool,
-  createPlayerTable: createPlayerTable,
-  createReferrerTable: createReferrerTable,
-  createCoachTable: createCoachTable,
-  createScheduleTable: createScheduleTable,
-  createLobbyTable: createLobbyTable,
-  createOptionsTable: createOptionsTable,
-  insertCoach: insertCoach,
-  insertPlayer: insertPlayer,
-  insertReferrer: insertReferrer,
-  insertLobby: insertLobby,
-  insertSchedule: insertSchedule,
-  insertDay: insertDay,
-  updateLobby: updateLobby,
-  updateSchedule: updateSchedule,
-  updateDay: updateDay,
-  updateCoach: updateCoach,
-  updatePlayer: updatePlayer,
-  updateReferrer: updateReferrer,
-  getLobbies: getLobbies,
-  getSchedules: getSchedules,
-  getDay: getDay,
-  getCoach: getCoach,
-  getSortedCoaches: getSortedCoaches,
-  getSortedPlayers: getSortedPlayers,
-  getSortedReferrers: getSortedReferrers,
-  getPlayerByID: getPlayerByID,
-  getPlayerByTag: getPlayerByTag,
-  getReferrerByID: getReferrerByID,
-  getReferrerByTag: getReferrerByTag,
-  removeLobby: removeLobby,
-  removeSchedules: removeSchedules,
-};

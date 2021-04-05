@@ -1,19 +1,18 @@
 import { Message } from "discord.js";
-import { Pool } from "mysql2";
+import { Pool } from "mysql2/promise";
+import { isRoleBasedLobbyType, lobbyTypes, isSimpleLobbyType } from "../misc/constants";
+import { postLobby } from "../misc/lobbyManagement";
+import { getLobbyType, getLobbyRegionRoleFromMessage, reactNegative, getNumbersFromMessage, getTimeFromMessage, reactPositive } from "../misc/messageHelper";
+import { getRegionalRoleStringsForCommand, getBeginnerRolesFromNumbers } from "../misc/roleManagement";
 import { Time } from "../misc/timeZone";
-
-const c = require("../misc/constants");
-const mH = require("../misc/messageHelper");
-const rM = require("../misc/roleManagement");
-const lM = require("../misc/lobbyManagement");
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
  * @param {Discord.Message} message coaches message that triggered the lobby post
  * @param {mysql.Pool} dbHandle bot database handle
  */
-module.exports = async (message: Message, dbHandle: Pool) => {
-  var type = mH.getLobbyType(message);
+export default async (message: Message, dbHandle: Pool) => {
+  var type = getLobbyType(message);
   if (type == undefined) return;
   // tryout 'region' and role
   var lobbyRegionRole = undefined;
@@ -21,56 +20,56 @@ module.exports = async (message: Message, dbHandle: Pool) => {
   var res: Boolean = false;
   var errormsg: string = "";
 
-  if (c.isRoleBasedLobbyType(type)) {
+  if (isRoleBasedLobbyType(type)) {
     // get region role
-    var lobbyRegionRole = mH.getLobbyRegionRoleFromMessage(message, 1);
+    var lobbyRegionRole = getLobbyRegionRoleFromMessage(message, 1);
     if (lobbyRegionRole === undefined)
-      return mH.reactNegative(
+      return reactNegative(
         message,
         "Failed to recognize region, has to be any of '" +
-          rM.getRegionalRoleStringsForCommand().join("', '") +
+          getRegionalRoleStringsForCommand().join("', '") +
           "'"
       );
 
     // get beginner roles
     const minRole = 0;
     const maxRole = 4;
-    [res, beginnerRoleNumbers, errormsg] = mH.getNumbersFromMessage(
+    [res, beginnerRoleNumbers, errormsg] = getNumbersFromMessage(
       message,
       2,
       minRole,
       maxRole
     );
     if (!res) {
-      return mH.reactNegative(message, errormsg);
+      return reactNegative(message, errormsg);
     }
   } else if (
-    type === c.lobbyTypes.replayAnalysis ||
-    type === c.lobbyTypes.meeting
+    type === lobbyTypes.replayAnalysis ||
+    type === lobbyTypes.meeting
   ) {
     beginnerRoleNumbers = [0, 1, 2, 3, 4];
-  } else if (type === c.lobbyTypes.tryout) {
+  } else if (type === lobbyTypes.tryout) {
     beginnerRoleNumbers = [5];
   }
 
-  var lobbyBeginnerRoles = rM.getBeginnerRolesFromNumbers(beginnerRoleNumbers);
+  var lobbyBeginnerRoles = getBeginnerRolesFromNumbers(beginnerRoleNumbers);
 
   // get zoned time
   const simpleLobbyIndex = 1;
   const roleBasedLobbyIndex = 3;
-  const lobbyIndex = c.isSimpleLobbyType(type)
+  const lobbyIndex = isSimpleLobbyType(type)
     ? simpleLobbyIndex
     : roleBasedLobbyIndex;
   var zonedTime: Time;
-  [res, zonedTime, errormsg] = mH.getTimeFromMessage(message, lobbyIndex);
+  [res, zonedTime, errormsg] = getTimeFromMessage(message, lobbyIndex);
   if (!res) {
-    return mH.reactNegative(message, errormsg);
+    return reactNegative(message, errormsg);
   }
 
   // author is coach
   var coaches: string[] = [message.author.id];
 
-  lM.postLobby(
+  postLobby(
     dbHandle,
     message.channel,
     coaches,
@@ -80,6 +79,6 @@ module.exports = async (message: Message, dbHandle: Pool) => {
     zonedTime
   ).then(() => {
     // react to coach's command
-    mH.reactPositive(message);
+    reactPositive(message);
   });
 };

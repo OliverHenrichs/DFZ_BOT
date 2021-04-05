@@ -1,17 +1,17 @@
-require("dotenv").config();
-const disc = require("discord.js");
-const Website = require("./website/website");
-const fs = require("fs");
-var ws = {};
-const client = new disc.Client({ autoReconnect: true });
+import * as dotenv from 'dotenv';
+import { readdir } from 'fs';
+import { createDBHandle, createScheduleTable, createLobbyTable, createOptionsTable, createCoachTable, createPlayerTable, createReferrerTable } from './src/misc/database';
+import { DFZDiscordClient } from './src/misc/types/DFZDiscordClient';
+dotenv.config();
+import Website from "./website/website";
 
-const dB = require("./src/misc/database");
-// get db-access
-client.dbHandle = dB.createPool("localhost");
-//lient.dbHandle.dfz_debugMode = true;
+const client = new DFZDiscordClient(createDBHandle("localhost"));
+//client.dbHandle.dfz_debugMode = true;
+
+var ws = {};
 
 // setup discord event handlers
-fs.readdir("./src/events/", (_err: any, files: any[]) => {
+readdir("./src/events/", (_err: any, files: any[]) => {
   files.forEach((file) => {
     if (file.endsWith("ts")) return;
     const eventHandler = require(`./src/events/${file}`);
@@ -21,21 +21,21 @@ fs.readdir("./src/events/", (_err: any, files: any[]) => {
 });
 
 // setup-chain
-dB.createScheduleTable(client.dbHandle)
+createScheduleTable(client.dbHandle)
   .then(() => {
-    return dB.createLobbyTable(client.dbHandle);
+    return createLobbyTable(client.dbHandle);
   })
   .then(() => {
-    return dB.createOptionsTable(client.dbHandle);
+    return createOptionsTable(client.dbHandle);
   })
   .then(() => {
-    return dB.createCoachTable(client.dbHandle);
+    return createCoachTable(client.dbHandle);
   })
   .then(() => {
-    return dB.createPlayerTable(client.dbHandle);
+    return createPlayerTable(client.dbHandle);
   })
   .then(() => {
-    return dB.createReferrerTable(client.dbHandle);
+    return createReferrerTable(client.dbHandle);
   })
   .then(() => {
     // login to discord client
@@ -43,6 +43,6 @@ dB.createScheduleTable(client.dbHandle)
   })
   .then(() => {
     // login to discord client
-    ws = new Website(process.env.WEBSITE_PASSWD, client);
+    ws = new Website(process.env.WEBSITE_PASSWD ? process.env.WEBSITE_PASSWD : "", client);
   })
   .catch((err: any) => console.log(err));
