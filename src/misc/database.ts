@@ -248,7 +248,6 @@ async function executeDBCommand(dbHandle: Pool, command: string) {
     dbHandle
       .execute(command
         .replace(/[\\]/g, '\\\\')
-        .replace(/[\"]/g, '\\\"')
         .replace(/[\/]/g, '\\/')
         .replace(/[\b]/g, '\\b')
         .replace(/[\f]/g, '\\f')
