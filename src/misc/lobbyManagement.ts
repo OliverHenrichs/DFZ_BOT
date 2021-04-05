@@ -70,15 +70,15 @@ function addUserWithPositionsToUserTable(
   startIndex = 0,
   mention = false
 ) {
-  tableBase[startIndex].value =
-    tableBase[startIndex].value +
-    "\r\n" +
-    (user.region.name !== "" ? "[" + user.region.name + "]" : "") +
-    (mention ? "<@" + user.id + ">" : user.name);
-  tableBase[startIndex + 1].value =
-    tableBase[startIndex + 1].value + "\r\n" + positions.join(", ");
-  tableBase[startIndex + 2].value =
-    tableBase[startIndex + 2].value + "\r\n" + user.tier.name;
+  tableBase[startIndex].value = `${tableBase[startIndex].value}\r\n${
+    user.region.name !== "" ? `[${user.region.name}]` : ""
+  }${mention ? `<@${user.id}>` : user.name}`;
+
+  tableBase[startIndex + 1].value = `${tableBase[startIndex + 1].value}
+${positions.length === 1 && positions[0] === -1 ? "-" : positions.join(", ")}`;
+
+  tableBase[startIndex + 2].value = `${tableBase[startIndex + 2].value}
+${user.tier.name}`;
 }
 
 /**
@@ -141,7 +141,7 @@ function getUserTable(
     {
       name: "Bench",
       value: "If people leave, you get pushed up",
-      inline: false
+      inline: false,
     },
     {
       name: "Name",
@@ -238,7 +238,7 @@ function getTeamTable(
       {
         name: "Side",
         value: "Radiant",
-        inline: false
+        inline: false,
       },
       {
         name: "Name",
@@ -258,7 +258,7 @@ function getTeamTable(
       {
         name: "Side",
         value: "Dire",
-        inline: false
+        inline: false,
       },
       {
         name: "Name",
@@ -652,10 +652,10 @@ export async function updateLobbyPost(
   // save old time
   var descriptionLines = new_embed.description?.split("\n");
   var timeString = "";
-  if(descriptionLines !== undefined)
+  if (descriptionLines !== undefined)
     timeString = descriptionLines[descriptionLines.length - 1];
   if (!timeString.startsWith(remainingLobbyTimeStartString)) timeString = "";
-  
+
   new_embed.description =
     getLobbyPostText(
       lobby.beginnerRoleIds,
@@ -842,12 +842,7 @@ export async function startLobby(
 
   // save coaches and players lobbies
   saveCoachParticipation(client.dbHandle, lobby.coaches, lobby.type);
-  savePlayerParticipation(
-    client, 
-    lobby.users,
-    lobby.type,
-    playersPerLobby
-  );
+  savePlayerParticipation(client, lobby.users, lobby.type, playersPerLobby);
 
   user.send("🔒 I started the lobby.");
   return true;
@@ -944,7 +939,7 @@ export function updateLobbyParameters(
       const minTier = 0; // Beginner tiers 0-4
       const maxTier = 4;
       var res: boolean = false,
-        numbers: Set<number> | undefined=  undefined,
+        numbers: Set<number> | undefined = undefined,
         errormsg: string = "";
 
       [res, numbers, errormsg] = getNumbersFromString(arg, minTier, maxTier);
@@ -970,7 +965,7 @@ export function updateLobbyParameters(
       if (lobbyType == undefined) {
         continue;
       }
-      
+
       lobby.type = lobbyTypes[lobbyType as keyof typeof lobbyTypes];
       changedLobby = true;
 
