@@ -957,7 +957,7 @@ export async function getCoach(dbHandle: Pool, userId = "") {
     selectTableValueByConditions(
       dbHandle,
       "coaches",
-      "lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis",
+      "userId, lobbyCount, lobbyCountTryout, lobbyCountNormal, lobbyCountReplayAnalysis",
       ["userId = '" + userId + "'"]
     ).then((dB_response) => {
       var coachArray = getTypedArrayFromDBResponse<Coach>(dB_response, Coach);
