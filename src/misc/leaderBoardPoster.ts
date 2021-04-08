@@ -22,6 +22,7 @@ const getChannel = async (client: DFZDiscordClient, channelId: string | undefine
   return channel;
 };
 export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
+  console.log("In postReferralLeaderboard");
   var channel = await getChannel(client, process.env.BOT_LEADERBOARD_CHANNEL);
   if (channel === undefined)
     return;
@@ -34,7 +35,6 @@ export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
       console.log(e);
     }
   }
-
 
   var referrers = await getSortedReferrers(client.dbHandle);
   if (referrers.length > 0) {
@@ -52,10 +52,12 @@ export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
       tableBase
     );
     if (!message) {
+      console.log("In postReferralLeaderboard sending message");
       const msg = await channel.send({ embed: _embed });
       _messageId = msg.id;
     } else {
       // update embed
+      console.log("In postReferralLeaderboard editing message");
       await message.edit(_embed);
     }
 
