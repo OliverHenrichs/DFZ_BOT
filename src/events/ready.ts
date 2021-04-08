@@ -4,6 +4,7 @@ import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
 import { updateLobbyTimes } from "../misc/lobbyManagement";
 import { updateSchedules, insertScheduledLobbies } from "../misc/scheduleManagement";
 import { Schedule } from "../misc/types/schedule";
+import { postReferralLeaderboard, findClientMessage } from "../misc/leaderBoardPoster";
 
 const guildId: string =
   process.env.GUILD !== undefined ? process.env.GUILD : "";
@@ -122,6 +123,15 @@ module.exports = async (client: DFZDiscordClient) => {
           };
           await lobbyPoster();
           setInterval(lobbyPoster, 60 * 60000); // once per hour
+
+          // post current leaderboard for referrers in channel
+          const leaderBordPoster = async () => {
+            await postReferralLeaderboard(client);
+          };
+          await findClientMessage(client);
+          await postReferralLeaderboard(client);
+          setInterval(leaderBordPoster, 60 * 60000); // once per hour
+
 
           resolve("Interval tasks set");
         })
