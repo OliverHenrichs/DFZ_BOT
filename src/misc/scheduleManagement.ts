@@ -63,7 +63,7 @@ import {
   adminRoles,
 } from "./roleManagement";
 
-const lobbyPostTime = 60000 * 60 * 8; // at the moment 8 hours
+const lobbyPostTime = 60000 * 60 * 5; // at the moment 5 hours
 
 interface ScheduleSetup {
   mondayDate: Date;

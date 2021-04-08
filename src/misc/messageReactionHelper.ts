@@ -54,7 +54,7 @@ export async function getInfoFromLobbyReaction(
     role = rM.findRole(guildMember, rM.adminRoles);
   }
   if (role === undefined || role === null) {
-      role = rM.findRole(guildMember, rM.tryoutRole);
+    role = rM.findRole(guildMember, rM.tryoutRole);
   }
 
   if (role === undefined || role === null) {

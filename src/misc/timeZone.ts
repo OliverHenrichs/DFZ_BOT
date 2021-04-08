@@ -191,7 +191,7 @@ interface TimeZoneInfo {
 
 export function getTimeString(zonedTime: Time) {
   const { dayOfWeek, month, day, hours, minutes } = zonedTime;
-  return `${weekDays[dayOfWeek? dayOfWeek : 0]}, ${months[month]} ${day} at ${hours}:${
+  return `${weekDays[dayOfWeek? dayOfWeek : 0]}, ${months[month > 0 ? month-1 : month]} ${day} at ${hours}:${
     minutes < 10 ? "0" + minutes : minutes
   }`;
 }
