@@ -86,9 +86,9 @@ function getWeekScheduleString(scheduleSetup: ScheduleSetup) {
   return `Schedule for Week #${getWeekNumber(
     scheduleSetup.mondayDate
   )} in ${scheduleSetup.mondayDate.getFullYear()} (${
-    months[scheduleSetup.mondayDate.getMonth() + 1]
+    months[scheduleSetup.mondayDate.getMonth()]
   } ${scheduleSetup.mondayDate.getDate()} - ${
-    months[scheduleSetup.sundayDate.getMonth() + 1]
+    months[scheduleSetup.sundayDate.getMonth()]
   } ${scheduleSetup.sundayDate.getDate()})`;
 }
 
@@ -288,10 +288,10 @@ async function createScheduledLobby(
   }
 
   const timezoneName = getRegionalRoleTimeZoneString(lobbyRegionRole),
-    zonedTime = getZonedTimeFromTimeZoneName(
-      Number(schedule.date),
-      timezoneName
-    );
+        zonedTime    = getZonedTimeFromTimeZoneName(
+          Number(schedule.date),
+          timezoneName
+        );
 
   if (zonedTime === undefined || lobbyRegionRole === undefined) return;
 
@@ -326,31 +326,6 @@ async function createScheduledLobby(
 }
 
 /**
- * Checks if in the scheduled lobby's channel is currently a posted lobby
- * @param {Pool} dbHandle
- * @param {Schedule} schedule
- */
-async function isScheduleOverlapping(dbHandle: Pool, schedule: Schedule) {
-  var lobbies = await getLobbies(dbHandle);
-
-  for (let i = 0; i < lobbies.length; i++) {
-    var lobby = lobbies[i];
-    if (schedule.type === scheduleTypes.tryout) {
-      if (lobby.type == lobbyTypes.tryout)
-        // all tryout games are in the same channel
-        return true;
-      continue;
-    }
-
-    // all normal games of the same region are in the same channel
-    if (getRegionalRoleFromString(schedule.region) === lobby.regionId)
-      return true;
-  }
-
-  return false;
-}
-
-/**
  * Inserts all necessary lobbies, i.e. all lobbies due in the next x hours that havent been posted yet
  * @param {GuildChannelManager} channels
  * @param {Pool} dbHandle
@@ -381,12 +356,6 @@ export async function insertScheduledLobbies(
     if (diff > lobbyPostTime)
       // dont post lobbies that are too far in the future
       continue;
-
-    // dont post lobbies that would overlap with another lobby
-    // except for if the new lobby is urgent
-    // var overlapping = await isScheduleOverlapping(dbHandle, s);
-    // if(overlapping && diff > lobbyOverlapTime)
-    //     return;
 
     s.lobbyPosted = true;
     await createScheduledLobby(channels, dbHandle, s);
@@ -748,12 +717,10 @@ export async function updateSchedulePost(
 
       // coach change
       lines[j + 1] =
-        "coach 1: " +
-        (schedule.coaches.length > 0 ? "<@" + schedule.coaches[0] + ">" : "");
+        `coach 1: ${schedule.coaches.length > 0 ? "<@" + schedule.coaches[0] + ">" : ""}`;
       if (schedule.coachCount > 1)
         lines[j + 2] =
-          "coach 2: " +
-          (schedule.coaches.length > 1 ? "<@" + schedule.coaches[1] + ">" : "");
+          `coach 2: ${schedule.coaches.length > 1 ? "<@" + schedule.coaches[1] + ">" : ""}`;
 
       var new_embed = new MessageEmbed(old_embed);
       new_embed.fields[i].value = lines.join("\n");
@@ -824,7 +791,6 @@ export async function addCoachToSchedule(
   const guildMember = await reaction.message.guild?.members.fetch(user.id);
   if (guildMember === undefined) {
     user.send("⛔ I could not find your ID in the DotaFromZero Discord.");
-    console.log("addCoach: Did not find guild member");
     return;
   }
 

@@ -6,6 +6,7 @@ export const lobbyChannels = [
   process.env.BOT_LOBBY_CHANNEL_TEST ? process.env.BOT_LOBBY_CHANNEL_TEST : "",
   process.env.BOT_LOBBY_CHANNEL_BOTBASH ? process.env.BOT_LOBBY_CHANNEL_BOTBASH : "",
   process.env.BOT_LOBBY_CHANNEL_REPLAYANALYSIS ? process.env.BOT_LOBBY_CHANNEL_REPLAYANALYSIS : "",
+  process.env.BOT_LOBBY_CHANNEL_T3 ? process.env.BOT_LOBBY_CHANNEL_T3 : "",
   process.env.BOT_MEETING_CHANNEL ? process.env.BOT_MEETING_CHANNEL : "",
 ];
 export const scheduleChannels = [
@@ -27,6 +28,8 @@ export const channelStrings =
   process.env.BOT_LOBBY_CHANNEL_TEST +
   ">, <#" +
   process.env.BOT_LOBBY_CHANNEL_REPLAYANALYSIS +
+  ">, <#" +
+  process.env.BOT_LOBBY_CHANNEL_T3 +
   ">, <#" +
   process.env.BOT_LOBBY_CHANNEL_BOTBASH +
   ">";

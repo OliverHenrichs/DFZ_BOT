@@ -6,7 +6,6 @@ import { scheduleTypes } from "./types/scheduleTypes";
 
 const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 
-
 // const TOKEN_PATH = 'token.json';
 // let oAuth2Client = "";
 // // Load client secrets from a local file.
@@ -92,8 +91,7 @@ try {
   // authenticate client on startup
   jwtClient.authorize().then(() => {
     console.log("Successfully connected to Google API!");
-    if(jwtClient !== undefined)
-      calendar = google.calendar({ version: "v3"});
+    if (jwtClient !== undefined) calendar = google.calendar({ version: "v3" });
   });
 } catch (e) {
   console.log(e);
@@ -116,8 +114,7 @@ function createEventSummary(schedule: Schedule) {
   var lobbyType = "";
 
   if (schedule.type === scheduleTypes.tryout) lobbyType = "tryout lobby";
-  else if (schedule.type === scheduleTypes.botbash)
-    lobbyType = "botbash lobby";
+  else if (schedule.type === scheduleTypes.botbash) lobbyType = "botbash lobby";
   else if (schedule.type === "lobbies") {
     if (schedule.coaches.length == 1) lobbyType = "unranked lobby";
     else lobbyType = "5v5 lobby";
@@ -160,7 +157,10 @@ async function getEventDescription(schedule: Schedule, client: Client) {
  * @param {s.Schedule} schedule dfz-schedule
  */
 function insertEvent(event: calendar_v3.Schema$Event, schedule: Schedule) {
-  return new Promise<string | null | undefined>(async function (resolve, reject) {
+  return new Promise<string | null | undefined>(async function (
+    resolve,
+    reject
+  ) {
     const params: calendar_v3.Params$Resource$Events$Insert = {
       auth: jwtClient,
       calendarId: getCalendarIDByRegion(schedule.region),
@@ -318,7 +318,7 @@ export async function createCalendarEvent(schedule: Schedule, client: Client) {
 
   // time
   var start = new Date(Number(schedule.date));
-  var end  = new Date(Number(schedule.date) + 1000 * 60 * 60 * 2); // 2h later
+  var end = new Date(Number(schedule.date) + 1000 * 60 * 60 * 2); // 2h later
   var timeZoneString = getTimeZoneStringFromRegion(schedule.region);
 
   // create event
@@ -332,7 +332,7 @@ export async function createCalendarEvent(schedule: Schedule, client: Client) {
 
   // insert event in calendar
   return insertEvent(event, schedule);
-};
+}
 
 export async function editCalendarEvent(schedule: Schedule, client: Client) {
   if (!calendarAvailable)

@@ -198,7 +198,6 @@ export function getTimeString(zonedTime: Time) {
 
 const dayInMs = 24 * 1000 * 60 * 60;
 
-//[false, undefined, timezoneName, error];
 export interface LobbyTimeResult {
   time: Time | undefined;
   timeZoneName: string | undefined;
@@ -210,10 +209,6 @@ export interface NextMondayAndSunday {
   sunday: Date;
 }
 
-/**
- * self-explanatory...
- * @param {string} region
- */
 export function getTimeZoneStringFromRegion(_region: string) {
   var idx = regions.findIndex((region) => {
     return region === _region;
