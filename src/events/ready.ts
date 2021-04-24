@@ -63,7 +63,7 @@ module.exports = async (client: DFZDiscordClient) => {
   } catch {
     (err: string) => console.log(err);
   }
-  console.log("Fetching schedule messages.");
+
   try {
     var schedules: Array<Schedule> = await getSchedules(
       client.dbHandle,
@@ -92,7 +92,6 @@ module.exports = async (client: DFZDiscordClient) => {
       console.log("Error while posting lobbies from schedule:\n" + err);
   }
 
-  console.log("updating lobby post times");
   try {// update lobby posts
     const timeUpdater = async () => {
       try {
@@ -109,7 +108,6 @@ module.exports = async (client: DFZDiscordClient) => {
     (err: string) => console.log("Error in timeUpdater:\n" + err);
   }
 
-  console.log("writing schedule messages.");
   try { // update lobby schedule
     const scheduleWriter = async () => {
       var guild = await client.guilds.fetch(guildId);
@@ -123,7 +121,6 @@ module.exports = async (client: DFZDiscordClient) => {
     (err: string) => console.log("Error in scheduleWriter:\n" + err);
   }
 
-  console.log("inserting scheduled lobbies.");
   try {// post lobbies from schedule
     const lobbyPoster = async () => {
       var guild = await client.guilds.fetch(guildId);
@@ -136,16 +133,17 @@ module.exports = async (client: DFZDiscordClient) => {
     (err: string) => console.log("Error in lobbyPoster:\n" + err);
   }
 
-  console.log("updating leaderboard.");
   try {// post current leaderboard for referrers in channel
+    console.log("start leaderBordPoster");
     const leaderBordPoster = async () => {
       await postReferralLeaderboard(client);
     };
+    console.log("mid leaderBordPoster");
     await findClientMessage(client);
     await postReferralLeaderboard(client);
     setInterval(leaderBordPoster, 60 * 60000); // once per hour
+    console.log("end leaderBordPoster");
   } catch {
     (err: string) => console.log("Error in leaderBordPoster:\n" + err);
   }
-  console.log("Finished ready.ts");
 };
