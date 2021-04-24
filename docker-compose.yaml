@@ -15,6 +15,8 @@ services:
       - ./credentials.json:/usr/src/bot/credentials.json 
       - ./service_key.json:/usr/src/bot/service_key.json
       - ./token.json:/usr/src/bot/token.json
+      # counter
+      - ./visits.sqlite:/usr/src/bot/visits.sqlite
       # https
       - ./privkey.pem:/etc/letsencrypt/live/dotafromzero.com/privkey.pem
       - ./cert.pem:/etc/letsencrypt/live/dotafromzero.com/cert.pem
