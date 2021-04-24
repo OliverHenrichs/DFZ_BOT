@@ -140,7 +140,9 @@ module.exports = async (client: DFZDiscordClient) => {
     };
     console.log("mid leaderBordPoster");
     await findClientMessage(client);
+    console.log("mid2 leaderBordPoster");
     await postReferralLeaderboard(client);
+    console.log("mid3 leaderBordPoster");
     setInterval(leaderBordPoster, 60 * 60000); // once per hour
     console.log("end leaderBordPoster");
   } catch {

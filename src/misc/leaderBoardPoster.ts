@@ -64,19 +64,21 @@ export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
   }
 };
 export const findClientMessage = async (client: DFZDiscordClient) => {
-  var channel = await getChannel(client, process.env.BOT_LEADERBOARD_CHANNEL);
-  if (channel === undefined) return;
-
-  var message: Message | undefined = undefined;
   try {
+    console.log("start findClientMessage");
+    var channel = await getChannel(client, process.env.BOT_LEADERBOARD_CHANNEL);
+    if (channel === undefined) return;
+    console.log("mid findClientMessage");
+    var message: Message | undefined = undefined;
     const messages = await channel.messages.fetch();
     message = messages.find((msg) => {
       return msg.author === client.user;
     });
+
+    console.log("end findClientMessage");
+    if (message) _messageId = message.id;
   } catch (e) {
     console.log(e);
   }
-
-  if (message) _messageId = message.id;
 };
 var _messageId: string | undefined = undefined;
