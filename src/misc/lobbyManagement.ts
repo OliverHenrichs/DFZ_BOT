@@ -336,20 +336,25 @@ async function updateAndUnpinLobbyEmbedding(
   unpin = true
 ) {
   // fetch message
-  const message = await channel.messages.fetch(messageId);
-  if (unpin === true) message.unpin();
+  try {
 
-  // generate new embed
-  const old_embed: MessageEmbed = message.embeds[0];
-  var newEmbedTitle = titleUpdate + "\n~~" + old_embed.title + "~~";
-  if (newEmbedTitle.length > 256) newEmbedTitle = newEmbedTitle.slice(0, 256);
-
-  var new_embed: MessageEmbed = new MessageEmbed(old_embed).setTitle(
-    newEmbedTitle
-  );
-
-  // update embed
-  message.edit(new_embed);
+    const message = await channel.messages.fetch(messageId);
+    if (unpin === true) message.unpin();
+  
+    // generate new embed
+    const old_embed: MessageEmbed = message.embeds[0];
+    var newEmbedTitle = titleUpdate + "\n~~" + old_embed.title + "~~";
+    if (newEmbedTitle.length > 256) newEmbedTitle = newEmbedTitle.slice(0, 256);
+  
+    var new_embed: MessageEmbed = new MessageEmbed(old_embed).setTitle(
+      newEmbedTitle
+    );
+  
+    // update embed
+    message.edit(new_embed);
+  } catch (e){ 
+    console.log(`Error in updateAndUnpinLobbyEmbedding:\n${e}`);
+  }
 }
 
 function getIncompleteTeamPostTitle(type: number) {
@@ -637,38 +642,43 @@ export async function updateLobbyPost(
   channel: TextChannel | DMChannel | NewsChannel
 ) {
   // fetch message
-  const message = await channel.messages.fetch(lobby.messageId);
-  const old_embed: MessageEmbed = message.embeds[0];
+  try {
+    const message = await channel.messages.fetch(lobby.messageId);
 
-  // generate new embed
-  var new_embed = new MessageEmbed(old_embed);
+    const old_embed: MessageEmbed = message.embeds[0];
 
-  // generate new title
-  var title =
-    `We host ${getLobbyPostNameByType(lobby.type)} on ` +
-    new_embed.title?.split(" on ")[1];
-  new_embed.title = title;
-  // generate new embed description
-  // save old time
-  var descriptionLines = new_embed.description?.split("\n");
-  var timeString = "";
-  if (descriptionLines !== undefined)
-    timeString = descriptionLines[descriptionLines.length - 1];
-  if (!timeString.startsWith(remainingLobbyTimeStartString)) timeString = "";
-
-  new_embed.description =
-    getLobbyPostText(
-      lobby.beginnerRoleIds,
-      lobby.type,
-      lobby.regionId,
-      lobby.coaches
-    ) + (timeString !== "" ? "\n" + timeString : "");
-
-  const fields = getCurrentUsersAsTable(lobby, true);
-  new_embed.fields = fields !== undefined ? fields : [];
-
-  // update embed
-  await message.edit(new_embed);
+    // generate new embed
+    var new_embed = new MessageEmbed(old_embed);
+  
+    // generate new title
+    var title =
+      `We host ${getLobbyPostNameByType(lobby.type)} on ` +
+      new_embed.title?.split(" on ")[1];
+    new_embed.title = title;
+    // generate new embed description
+    // save old time
+    var descriptionLines = new_embed.description?.split("\n");
+    var timeString = "";
+    if (descriptionLines !== undefined)
+      timeString = descriptionLines[descriptionLines.length - 1];
+    if (!timeString.startsWith(remainingLobbyTimeStartString)) timeString = "";
+  
+    new_embed.description =
+      getLobbyPostText(
+        lobby.beginnerRoleIds,
+        lobby.type,
+        lobby.regionId,
+        lobby.coaches
+      ) + (timeString !== "" ? "\n" + timeString : "");
+  
+    const fields = getCurrentUsersAsTable(lobby, true);
+    new_embed.fields = fields !== undefined ? fields : [];
+  
+    // update embed
+    await message.edit(new_embed);
+  } catch (e) {
+    console.log(`Error in updateLobbyPost: ${e}`);
+  }
 }
 
 /**

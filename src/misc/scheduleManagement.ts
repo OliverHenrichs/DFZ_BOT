@@ -288,10 +288,10 @@ async function createScheduledLobby(
   }
 
   const timezoneName = getRegionalRoleTimeZoneString(lobbyRegionRole),
-        zonedTime    = getZonedTimeFromTimeZoneName(
-          Number(schedule.date),
-          timezoneName
-        );
+    zonedTime = getZonedTimeFromTimeZoneName(
+      Number(schedule.date),
+      timezoneName
+    );
 
   if (zonedTime === undefined || lobbyRegionRole === undefined) return;
 
@@ -696,39 +696,45 @@ export async function updateSchedulePost(
   schedule: Schedule,
   channel: TextChannel
 ) {
-  // fetch message
-  const message = await channel.messages.fetch(schedule.messageId);
-  if (message === undefined || message === null) return;
+  try {
+    // fetch message
+    const message = await channel.messages.fetch(schedule.messageId);
+    if (message === undefined || message === null) return;
 
-  // generate new embed
-  var old_embed = message.embeds[0];
-  for (let i = 0; i < old_embed.fields.length; i++) {
-    var field = old_embed.fields[i];
-    if (field.value.indexOf(schedule.emoji) === -1) continue;
+    // generate new embed
+    var old_embed = message.embeds[0];
+    for (let i = 0; i < old_embed.fields.length; i++) {
+      var field = old_embed.fields[i];
+      if (field.value.indexOf(schedule.emoji) === -1) continue;
 
-    var lines = field.value.split("\n");
-    for (let j = 0; j < lines.length; j++) {
-      var line = lines[j];
-      if (
-        line.indexOf(schedule.emoji) === -1 ||
-        j + schedule.coachCount >= lines.length
-      )
-        continue;
+      var lines = field.value.split("\n");
+      for (let j = 0; j < lines.length; j++) {
+        var line = lines[j];
+        if (
+          line.indexOf(schedule.emoji) === -1 ||
+          j + schedule.coachCount >= lines.length
+        )
+          continue;
 
-      // coach change
-      lines[j + 1] =
-        `coach 1: ${schedule.coaches.length > 0 ? "<@" + schedule.coaches[0] + ">" : ""}`;
-      if (schedule.coachCount > 1)
-        lines[j + 2] =
-          `coach 2: ${schedule.coaches.length > 1 ? "<@" + schedule.coaches[1] + ">" : ""}`;
+        // coach change
+        lines[j + 1] = `coach 1: ${
+          schedule.coaches.length > 0 ? "<@" + schedule.coaches[0] + ">" : ""
+        }`;
+        if (schedule.coachCount > 1)
+          lines[j + 2] = `coach 2: ${
+            schedule.coaches.length > 1 ? "<@" + schedule.coaches[1] + ">" : ""
+          }`;
 
-      var new_embed = new MessageEmbed(old_embed);
-      new_embed.fields[i].value = lines.join("\n");
+        var new_embed = new MessageEmbed(old_embed);
+        new_embed.fields[i].value = lines.join("\n");
 
-      // update embed
-      await message.edit(new_embed);
-      return;
+        // update embed
+        await message.edit(new_embed);
+        return;
+      }
     }
+  } catch (e) {
+    console.log(`Error in UpdateSchedulePost: ${e}`);
   }
 }
 
