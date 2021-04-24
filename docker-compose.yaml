@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+  app:
+    image: valarm/moba-schedule-bot:latest
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      # google creds
+      - ./.env:/usr/src/bot/.env
+      - ./credentials.json:/usr/src/bot/credentials.json 
+      - ./service_key.json:/usr/src/bot/service_key.json
+      - ./token.json:/usr/src/bot/token.json
+      # https
+      - ./privkey.pem:/etc/letsencrypt/live/dotafromzero.com/privkey.pem
+      - ./cert.pem:/etc/letsencrypt/live/dotafromzero.com/cert.pem
+      - ./chain.pem:/etc/letsencrypt/live/dotafromzero.com/chain.pem
+  mysql:
+    image: mysql/mysql-server:latest
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    volumes:
+    - ./../mysql-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_HOST=%
+    healthcheck:
+      test: "mysqladmin ping -h localhost"
+      interval: 1s
+      timeout: 1s
+      retries: 60

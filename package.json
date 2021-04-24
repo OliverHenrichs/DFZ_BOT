@@ -20,7 +20,11 @@
     "googleapis": "^65.0.0",
     "mysql2": "^2.2.5",
     "timezone-support": "^2.0.2",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "@tsconfig/node14": "^1.0.0",
+    "@types/express": "^4.17.11",
+    "@types/express-handlebars": "^3.1.0",
+    "@types/node": "^14.14.35"
   },
   "devDependencies": {
     "@tsconfig/node14": "^1.0.0",

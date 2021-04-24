@@ -1,0 +1,7 @@
+services:
+  app:
+    volumes:
+      # https
+      - /etc/letsencrypt/live/dotafromzero.com/privkey.pem:/etc/letsencrypt/live/dotafromzero.com/privkey.pem
+      - /etc/letsencrypt/live/dotafromzero.com/cert.pem:/etc/letsencrypt/live/dotafromzero.com/cert.pem
+      - /etc/letsencrypt/live/dotafromzero.com/chain.pem:/etc/letsencrypt/live/dotafromzero.com/chain.pem

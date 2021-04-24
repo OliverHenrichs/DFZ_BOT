@@ -1136,12 +1136,14 @@ export async function removeSchedules(
   return deleteSomeUniqueTableRows(dbHandle, "schedules", columns, values);
 }
 
-export function createDBHandle(host: string) {
+export function createDBHandle() {
+  console.log(`trying to connect to MYSQL-DB on \nhost ${process.env.MYSQL_HOST}\nuser ${process.env.MYSQL_USER}\npw ${process.env.MYSQL_PASSWORD}\ndb ${process.env.MYSQL_DATABASE}\n`);
+
   return createPool({
-    host: host,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,

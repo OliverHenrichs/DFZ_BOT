@@ -5,7 +5,7 @@ import { DFZDiscordClient } from './src/misc/types/DFZDiscordClient';
 dotenv.config();
 import Website from "./website/website";
 
-const client = new DFZDiscordClient(createDBHandle("localhost"));
+const client = new DFZDiscordClient(createDBHandle());
 //client.dbHandle.dfz_debugMode = true;
 
 var ws = {};
