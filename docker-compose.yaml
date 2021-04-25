@@ -10,11 +10,9 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      # google creds
       - ./.env:/usr/src/bot/.env
-      - ./credentials.json:/usr/src/bot/credentials.json 
+      # google creds
       - ./service_key.json:/usr/src/bot/service_key.json
-      - ./token.json:/usr/src/bot/token.json
       # counter
       - ./visits.sqlite:/usr/src/bot/visits.sqlite
       # https
