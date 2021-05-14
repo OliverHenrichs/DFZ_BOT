@@ -8,13 +8,34 @@ import {
   TextChannel,
 } from "discord.js";
 import { scheduleChannels } from "../misc/channelManagement";
-import { lobbyTypes, getReactionEmojiPosition, isSimpleLobbyType, isKnownPositionEmoji, isKnownSimpleLobbyEmoji, isKnownLobbyManagementEmoji } from "../misc/constants";
+import {
+  lobbyTypes,
+  getReactionEmojiPosition,
+  isSimpleLobbyType,
+  isKnownPositionEmoji,
+  isKnownSimpleLobbyEmoji,
+  isKnownLobbyManagementEmoji,
+} from "../misc/constants";
 import { removeLobby, updateLobby } from "../misc/database";
 import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
-import { updateLobbyPost, startLobby, cancelLobbyPost, addCoach} from "../misc/lobbyManagement";
-import { addCoachToSchedule} from "../misc/scheduleManagement";
-import { getInfoFromLobbyReaction, isValidLobbyReaction, LobbyReactionInfo } from "../misc/messageReactionHelper";
-import { findRole, regionRoleIDs, beginnerRoles, adminRoles } from "../misc/roleManagement";
+import {
+  updateLobbyPost,
+  startLobby,
+  cancelLobbyPost,
+  addCoach,
+} from "../misc/lobbyManagement";
+import { addCoachToSchedule } from "../misc/scheduleManagement";
+import {
+  getInfoFromLobbyReaction,
+  isValidLobbyReaction,
+  LobbyReactionInfo,
+} from "../misc/messageReactionHelper";
+import {
+  findRole,
+  regionRoleIDs,
+  beginnerRoles,
+  adminRoles,
+} from "../misc/roleManagement";
 import { Lobby } from "../misc/types/lobby";
 import { addUser, getUserIndex } from "../misc/userHelper";
 
@@ -36,9 +57,9 @@ function addUserOrPosition(
   lobby: Lobby,
   channel: TextChannel | DMChannel | NewsChannel
 ) {
-  var userIdx = getUserIndex(lobby, user.id)
+  var userIdx = getUserIndex(lobby, user.id);
   // check if it contains user
-  if ( userIdx === -1) {
+  if (userIdx === -1) {
     // add user
     addUser(
       lobby,
@@ -99,7 +120,6 @@ function handlePositionEmoji(
 
   // get region role
   var regionRole = findRole(guildMember, regionRoleIDs);
-  if (regionRole === undefined) return false;
 
   return addUserOrPosition(
     user,
@@ -136,9 +156,7 @@ function handleSimpleLobbyEmoji(
     lobby.type === lobbyTypes.replayAnalysis &&
     beginnerRoles.find((tr: string) => tr === role.id) === undefined
   ) {
-    user.send(
-      "⛔ You cannot join because you do not have a beginner role."
-    );
+    user.send("⛔ You cannot join because you do not have a beginner role.");
     return false;
   }
 
@@ -239,13 +257,12 @@ async function handleLobbyRelatedEmoji(
       lri.role
     );
   }
-  
-  if (changedLobby){
-    updateLobby(client.dbHandle, lri.lobby)
-    .catch((err: string) => {
+
+  if (changedLobby) {
+    updateLobby(client.dbHandle, lri.lobby).catch((err: string) => {
       console.log("Failed updating lobby. Error: " + err);
     });
-  } 
+  }
 }
 
 /**
