@@ -276,7 +276,6 @@ function createNonCompetitionTeams(
 }
 
 /**
- *
  * @param {Lobby} lobby
  * @param {string} name
  * @param {string} id

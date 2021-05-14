@@ -337,22 +337,21 @@ async function updateAndUnpinLobbyEmbedding(
 ) {
   // fetch message
   try {
-
     const message = await channel.messages.fetch(messageId);
     if (unpin === true) message.unpin();
-  
+
     // generate new embed
     const old_embed: MessageEmbed = message.embeds[0];
     var newEmbedTitle = titleUpdate + "\n~~" + old_embed.title + "~~";
     if (newEmbedTitle.length > 256) newEmbedTitle = newEmbedTitle.slice(0, 256);
-  
+
     var new_embed: MessageEmbed = new MessageEmbed(old_embed).setTitle(
       newEmbedTitle
     );
-  
+
     // update embed
     message.edit(new_embed);
-  } catch (e){ 
+  } catch (e) {
     console.log(`Error in updateAndUnpinLobbyEmbedding:\n${e}`);
   }
 }
@@ -649,7 +648,7 @@ export async function updateLobbyPost(
 
     // generate new embed
     var new_embed = new MessageEmbed(old_embed);
-  
+
     // generate new title
     var title =
       `We host ${getLobbyPostNameByType(lobby.type)} on ` +
@@ -662,7 +661,7 @@ export async function updateLobbyPost(
     if (descriptionLines !== undefined)
       timeString = descriptionLines[descriptionLines.length - 1];
     if (!timeString.startsWith(remainingLobbyTimeStartString)) timeString = "";
-  
+
     new_embed.description =
       getLobbyPostText(
         lobby.beginnerRoleIds,
@@ -670,10 +669,10 @@ export async function updateLobbyPost(
         lobby.regionId,
         lobby.coaches
       ) + (timeString !== "" ? "\n" + timeString : "");
-  
+
     const fields = getCurrentUsersAsTable(lobby, true);
     new_embed.fields = fields !== undefined ? fields : [];
-  
+
     // update embed
     await message.edit(new_embed);
   } catch (e) {
@@ -948,16 +947,13 @@ export function updateLobbyParameters(
     if (updateTiers) {
       const minTier = 0; // Beginner tiers 0-4
       const maxTier = 4;
-      var res: boolean = false,
-        numbers: Set<number> | undefined = undefined,
-        errormsg: string = "";
 
-      [res, numbers, errormsg] = getNumbersFromString(arg, minTier, maxTier);
-      if (!res) {
-        return [false, errormsg];
+      const numResult = getNumbersFromString(arg, minTier, maxTier);
+      if (!numResult.status || numResult.numbers === undefined) {
+        return [false, numResult.errorMessage];
       }
 
-      var roles = getBeginnerRolesFromNumbers(Array.from(numbers));
+      var roles = getBeginnerRolesFromNumbers(numResult.numbers);
       if (roles.length !== 0) {
         lobby.beginnerRoleIds = roles;
         changedLobby = true;

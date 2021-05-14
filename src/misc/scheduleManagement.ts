@@ -800,7 +800,6 @@ export async function addCoachToSchedule(
     return;
   }
 
-  // get role
   var role = findRole(guildMember, adminRoles);
   if (role === undefined || role === null) {
     user.send("⛔ You cannot interact because you are not a coach.");

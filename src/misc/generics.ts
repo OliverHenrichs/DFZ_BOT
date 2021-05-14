@@ -50,6 +50,12 @@ export function checkNumbers(
   return [true, ""];
 }
 
+export interface NumberResult {
+  numbers: Set<number> | undefined;
+  status: Boolean;
+  errorMessage: string;
+}
+
 /**
  * Retrieves a sequence of unique integer values from a string containing comma-separated values
  * @param stringWithCommaSeperatedNumbers string like this "5,6,8"
@@ -61,7 +67,7 @@ export function getNumbersFromString(
   stringWithCommaSeperatedNumbers: string,
   min: number = 0,
   max: number = 5
-) : [boolean, Set<number>, string] {
+): NumberResult {
   var strings: string[] = stringWithCommaSeperatedNumbers.split(",");
   var numbers: number[] = [];
   // get integers
@@ -76,5 +82,9 @@ export function getNumbersFromString(
   // check numbers
   var checkResult = checkNumbers(uniqueNumbers, min, max);
 
-  return [checkResult[0], uniqueNumbers, checkResult[1]];
+  return {
+    numbers: uniqueNumbers,
+    status: checkResult[0],
+    errorMessage: checkResult[1],
+  };
 }

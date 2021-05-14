@@ -173,16 +173,16 @@ export interface TimeZoneOffset {
 
 // the month and day indices align.
 export interface Time {
-  year: number
-  month: number
-  day: number
-  hours: number
-  minutes: number
-  seconds?: number
-  milliseconds?: number
-  dayOfWeek?: number
-  epoch?: number
-  zone?: TimeZoneOffset
+  year: number;
+  month: number;
+  day: number;
+  hours: number;
+  minutes: number;
+  seconds?: number;
+  milliseconds?: number;
+  dayOfWeek?: number;
+  epoch?: number;
+  zone?: TimeZoneOffset;
 }
 
 interface TimeZoneInfo {
@@ -191,9 +191,9 @@ interface TimeZoneInfo {
 
 export function getTimeString(zonedTime: Time) {
   const { dayOfWeek, month, day, hours, minutes } = zonedTime;
-  return `${weekDays[dayOfWeek? dayOfWeek : 0]}, ${months[month > 0 ? month-1 : month]} ${day} at ${hours}:${
-    minutes < 10 ? "0" + minutes : minutes
-  }`;
+  return `${weekDays[dayOfWeek ? dayOfWeek : 0]}, ${
+    months[month > 0 ? month - 1 : month]
+  } ${day} at ${hours}:${minutes < 10 ? "0" + minutes : minutes}`;
 }
 
 const dayInMs = 24 * 1000 * 60 * 60;
@@ -334,8 +334,9 @@ export function createLobbyTime(time: string, timezoneName: string) {
   var lobbyDate = new Date(zonedDate.epoch + timeDif);
 
   // return zoned lobby date
-  var zonedLobbyDate = tZ.getZonedTime(lobbyDate, zone);
-  return [true, zonedLobbyDate, ""];
+  ltr.time = tZ.getZonedTime(lobbyDate, zone);
+  ltr.timeZoneName = zone.name;
+  return ltr;
 }
 
 /**
@@ -353,7 +354,10 @@ export function getZonedTime(date: Date, timezone: TimeZoneInfo) {
  * @param {string} timezoneName
  * @return {tZ.Time} zoned time
  */
-export function getZonedTimeFromTimeZoneName(date: Date | number, timezoneName: string) {
+export function getZonedTimeFromTimeZoneName(
+  date: Date | number,
+  timezoneName: string
+) {
   const zone = findTimeZone(timezoneName);
   if (zone === undefined) {
     return undefined;

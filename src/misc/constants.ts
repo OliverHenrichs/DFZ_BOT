@@ -9,6 +9,13 @@ export const lobbyTypes = {
   meeting: 6,
 };
 
+export const lobbyTypeKeys = Object.keys(lobbyTypes);
+
+export function getLobbyTypeByString(type: string) {
+  const idx = Object.keys(lobbyTypes).findIndex((key) => type === key);
+  return idx === -1 ? undefined : idx + 1;
+}
+
 export const lobbyTypePlayerCount = {
   inhouse: 10,
   unranked: 5,
@@ -42,26 +49,25 @@ export function isSimpleLobbyType(lobbyType: number) {
     simpleLobbyTypes.find((s_type: number) => s_type === lobbyType) !==
     undefined
   );
-};
+}
 
 /**
  * Returns true if lobbytype is found in roleBasedLobbyTypes
  * @param {number} lobbyType
  */
- export function isRoleBasedLobbyType(lobbyType: number) {
+export function isRoleBasedLobbyType(lobbyType: number) {
   return (
-    roleBasedLobbyTypes.find(
-      (s_type: number) => s_type === lobbyType
-    ) !== undefined
+    roleBasedLobbyTypes.find((s_type: number) => s_type === lobbyType) !==
+    undefined
   );
-};
+}
 
 /**
  * Returns lobby name for usage in communication strings
  * @param {number} lobbyType given lobby type
  * @return communication string according to lobby type
  */
- export function getLobbyNameByType(lobbyType: number) {
+export function getLobbyNameByType(lobbyType: number) {
   switch (lobbyType) {
     case lobbyTypes.inhouse:
       return "Inhouse";
@@ -74,9 +80,9 @@ export function isSimpleLobbyType(lobbyType: number) {
     case lobbyTypes.replayAnalysis:
       return "Replay analysis";
     default:
-      return "Unknown"
+      return "Unknown";
   }
-};
+}
 
 export function getLobbyPostNameByType(lobbyType: number) {
   switch (lobbyType) {
@@ -93,28 +99,36 @@ export function getLobbyPostNameByType(lobbyType: number) {
     case lobbyTypes.meeting:
       return "a meeting";
   }
-};
+}
 
 /**
  * checks reaction emoji for ingame position
  * @param {string} reactionEmoji given emoji
  */
- export function getReactionEmojiPosition(reactionEmoji:  GuildEmoji | ReactionEmoji) {
+export function getReactionEmojiPosition(
+  reactionEmoji: GuildEmoji | ReactionEmoji
+) {
   var idx = positionReactionEmojis.findIndex((type) => {
     return reactionEmoji.name === type;
   });
 
   return idx + 1; // +1 to match pos 1-5 instead of 0-4...
-};
+}
 
-export function isKnownPositionEmoji(reactionEmoji: GuildEmoji | ReactionEmoji) {
+export function isKnownPositionEmoji(
+  reactionEmoji: GuildEmoji | ReactionEmoji
+) {
   return positionReactionEmojis.includes(reactionEmoji.name);
-};
+}
 
-export function isKnownSimpleLobbyEmoji(reactionEmoji: GuildEmoji | ReactionEmoji) {
+export function isKnownSimpleLobbyEmoji(
+  reactionEmoji: GuildEmoji | ReactionEmoji
+) {
   return tryoutReactionEmoji === reactionEmoji.name;
-};
+}
 
-export function isKnownLobbyManagementEmoji(reactionEmoji: GuildEmoji | ReactionEmoji) {
+export function isKnownLobbyManagementEmoji(
+  reactionEmoji: GuildEmoji | ReactionEmoji
+) {
   return lobbyManagementReactionEmojis.includes(reactionEmoji.name);
-};
+}

@@ -1,4 +1,4 @@
-import { GuildMember, Role } from "discord.js";
+import { Collection, GuildMember, Role } from "discord.js";
 
 export const beginnerRoles = [
   process.env.TIER_0 ? process.env.TIER_0 : "",
@@ -40,11 +40,27 @@ export function findRole(member: GuildMember, rolesToCheck: Array<string>) {
 }
 
 /**
+  Return all roles matching the rolesToCheck role IDs
+*/
+export function findRoles(
+  member: GuildMember,
+  rolesToCheck: Array<string>
+): Collection<string, Role> {
+  if (rolesToCheck.length === 0) {
+    return new Collection<string, Role>();
+  }
+
+  return member.roles.cache.filter((role: Role) =>
+    rolesToCheck.includes(role.id)
+  );
+}
+
+/**
 		takes a sequence of numbers and returns the respective role names for numbers 0-4
 		@param {Array<Int>} number list of numbers, e.g. [0,1,2,3,4]
 		@return {Array<Int>} list of roles corresponding to given numbers
 	*/
-export function getBeginnerRolesFromNumbers(numbers: Array<number>) {
+export function getBeginnerRolesFromNumbers(numbers: Set<number>) {
   var roles: Array<string> = [];
   numbers.forEach((num) => {
     if (num == 0) roles.push(beginnerRoles[0]);
@@ -53,8 +69,7 @@ export function getBeginnerRolesFromNumbers(numbers: Array<number>) {
     else if (num == 3) roles.push(beginnerRoles[3]);
     else if (num == 4) roles.push(beginnerRoles[4]);
     else if (num == 5) roles.push(tryoutRole);
-    else
-      console.log(`current number ${num} is not corresponding to a role`);
+    else console.log(`current number ${num} is not corresponding to a role`);
   });
 
   return roles;
@@ -78,8 +93,9 @@ export function getNumberFromBeginnerRole(roleId: string | undefined) {
     case beginnerRoles[4]:
       return 4;
     case tryoutRole:
-    default:
       return 5;
+    default:
+      return NaN;
   }
 }
 

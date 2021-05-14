@@ -244,19 +244,25 @@ async function executeDBCommand(dbHandle: Pool, command: string) {
       FieldPacket[]
     ]
   >(function (resolve, reject) {
-    
     dbHandle
-      .execute(command
-        .replace(/[\\]/g, '\\\\')
-        .replace(/[\/]/g, '\\/')
-        .replace(/[\b]/g, '\\b')
-        .replace(/[\f]/g, '\\f')
-        .replace(/[\n]/g, '\\n')
-        .replace(/[\r]/g, '\\r')
-        .replace(/[\t]/g, '\\t'))
+      .execute(
+        command
+          .replace(/[\\]/g, "\\\\")
+          .replace(/[\/]/g, "\\/")
+          .replace(/[\b]/g, "\\b")
+          .replace(/[\f]/g, "\\f")
+          .replace(/[\n]/g, "\\n")
+          .replace(/[\r]/g, "\\r")
+          .replace(/[\t]/g, "\\t")
+      )
       .then((res) => resolve(res))
       .catch((err) => {
-        console.log("Could not execute MYSQL-command.\nReason: " + err + "\ncommand: " + command);
+        console.log(
+          "Could not execute MYSQL-command.\nReason: " +
+            err +
+            "\ncommand: " +
+            command
+        );
         reject(err);
       });
   });
@@ -632,7 +638,10 @@ export async function updateReferrer(dbHandle: Pool, referrer: Referrer) {
     dbHandle,
     "referrers",
     ["userId", "referralCount"],
-    [referrer.userId, referrer.referralCount],
+    [
+      referrer.userId === "" ? "'Unknown'" : referrer.userId,
+      referrer.referralCount,
+    ],
     ["tag = '" + referrer.tag + "'"]
   );
 }
@@ -1137,7 +1146,9 @@ export async function removeSchedules(
 }
 
 export function createDBHandle() {
-  console.log(`trying to connect to MYSQL-DB on \nhost ${process.env.MYSQL_HOST}\nuser ${process.env.MYSQL_USER}\npw ${process.env.MYSQL_PASSWORD}\ndb ${process.env.MYSQL_DATABASE}\n`);
+  console.log(
+    `trying to connect to MYSQL-DB on \nhost ${process.env.MYSQL_HOST}\nuser ${process.env.MYSQL_USER}\npw ${process.env.MYSQL_PASSWORD}\ndb ${process.env.MYSQL_DATABASE}\n`
+  );
 
   return createPool({
     host: process.env.MYSQL_HOST,

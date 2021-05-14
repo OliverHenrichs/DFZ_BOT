@@ -1,9 +1,15 @@
 import { Message } from "discord.js";
-
-const c = require("./constants");
-const g = require("./generics");
-const rM = require("./roleManagement");
-const tZ = require("./timeZone");
+import {
+  getLobbyTypeByString,
+  isSimpleLobbyType,
+  lobbyManagementReactionEmojis,
+  lobbyTypes,
+  positionReactionEmojis,
+  tryoutReactionEmoji,
+} from "./constants";
+import { getNumbersFromString, NumberResult } from "./generics";
+import { getRegionalRoleFromString } from "./roleManagement";
+import { createLobbyTime, LobbyTimeResult } from "./timeZone";
 
 /**
  * Reacts to message using reply and emoji
@@ -62,16 +68,16 @@ export function reactPositive(message: Message, reply = "") {
  * @param {Discord.Message} message
  */
 export function createLobbyPostReactions(lobbyType: number, message: Message) {
-  if (c.isSimpleLobbyType(lobbyType)) {
-    message.react(c.tryoutReactionEmoji);
+  if (isSimpleLobbyType(lobbyType)) {
+    message.react(tryoutReactionEmoji);
   } else {
-    for (let idx = 0; idx < c.positionReactionEmojis.length; idx++) {
-      message.react(c.positionReactionEmojis[idx]);
+    for (let idx = 0; idx < positionReactionEmojis.length; idx++) {
+      message.react(positionReactionEmojis[idx]);
     }
   }
 
-  for (let idx = 0; idx < c.lobbyManagementReactionEmojis.length; idx++) {
-    message.react(c.lobbyManagementReactionEmojis[idx]);
+  for (let idx = 0; idx < lobbyManagementReactionEmojis.length; idx++) {
+    message.react(lobbyManagementReactionEmojis[idx]);
   }
 }
 
@@ -88,17 +94,17 @@ export function getNumbersFromMessage(
   index: number,
   min = 0,
   max = 5
-) {
+): NumberResult {
   var args = getArguments(message);
 
   if (args.length <= index)
-    return [
-      false,
-      [],
-      `you need to provide a list of numbers ranging from ${min} to ${max} in your post`,
-    ];
+    return {
+      numbers: undefined,
+      status: false,
+      errorMessage: `you need to provide a list of numbers ranging from ${min} to ${max}`,
+    };
 
-  return g.getNumbersFromString(args[index]);
+  return getNumbersFromString(args[index]);
 }
 
 /**
@@ -113,7 +119,7 @@ export function getLobbyRegionRoleFromMessage(message: Message, index: number) {
   // message to short
   if (args.length <= index) return undefined;
 
-  return rM.getRegionalRoleFromString(args[index]);
+  return getRegionalRoleFromString(args[index]);
 }
 
 /**
@@ -121,17 +127,21 @@ export function getLobbyRegionRoleFromMessage(message: Message, index: number) {
  * @param {Message} message message containing the time
  * @param {number} index position of time in the message
  */
-export function getTimeFromMessage(message: Message, index: number) {
+export function getTimeFromMessage(
+  message: Message,
+  index: number
+): LobbyTimeResult {
   var args = getArguments(message);
 
   if (args.length <= index + 1)
-    return [
-      false,
-      "",
-      "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post",
-    ];
+    return {
+      time: undefined,
+      timeZoneName: undefined,
+      error:
+        "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post",
+    };
 
-  return tZ.createLobbyTime(args[index], args[index + 1]);
+  return createLobbyTime(args[index], args[index + 1]);
 }
 
 /**
@@ -148,31 +158,28 @@ export function getArguments(message: Message) {
  * Derives lobby type from message and reacts based on evaluation
  * @param {Message} message message from which to derive lobby type
  */
-export function getLobbyType(message: Message) {
+export function getLobbyTypeFromMessage(message: Message) {
   var args = getArguments(message);
 
-  if (args.length == 0) {
+  if (args.length === 0) {
     reactNegative(
       message,
       "no lobby type given. \r\n Lobby types are (" +
-        Object.keys(c.lobbyTypes).join(", ") +
+        Object.keys(lobbyTypes).join(", ") +
         ")"
     );
     return undefined;
   }
 
-  var type = args[0];
-  var lobbyType = Object.keys(c.lobbyTypes).find((t) => {
-    return t == type;
-  });
-  if (lobbyType == undefined) {
+  const lobbyType = getLobbyTypeByString(args[0]);
+  if (lobbyType === undefined) {
     reactNegative(
       message,
       "Invalid lobby type. Lobby types are " +
-        Object.keys(c.lobbyTypes).join(", ")
+        Object.keys(lobbyTypes).join(", ")
     );
     return undefined;
   }
 
-  return c.lobbyTypes[lobbyType];
+  return lobbyType;
 }
