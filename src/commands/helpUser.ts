@@ -2,8 +2,11 @@ import { Message, MessageEmbed } from "discord.js";
 import { generateEmbedding } from "../misc/answerEmbedding";
 import { lobbyTypes } from "../misc/constants";
 import { reactPositive } from "../misc/messageHelper";
-import { findRole, adminRoles, getRegionalRoleStringsForCommand } from "../misc/roleManagement";
-
+import {
+  findRole,
+  adminRoles,
+  getRegionalRoleStringsForCommand,
+} from "../misc/roleManagement";
 
 /**
  * Creates string to add to help-embedding and augments embed with it
@@ -63,7 +66,10 @@ export default async (message: Message) => {
   );
 
   // help admin commands
-  if (message.member !== null && findRole(message.member, adminRoles) != undefined) {
+  if (
+    message.member !== null &&
+    findRole(message.member, adminRoles) !== undefined
+  ) {
     addHelpToTable(
       _embed,
       "post",
@@ -103,7 +109,7 @@ export default async (message: Message) => {
       _embed,
       "highscore",
       "!highscore -type <type>",
-      "Shows you an all-time coach ranking displaying who coached how much",
+      "Shows you an all-time ranking displaying who coached or played how much",
       "!highscore\n!highscore -type normal\n!highscore -type tryout"
     );
 

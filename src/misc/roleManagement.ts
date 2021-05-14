@@ -54,7 +54,7 @@ export function getBeginnerRolesFromNumbers(numbers: Array<number>) {
     else if (num == 4) roles.push(beginnerRoles[4]);
     else if (num == 5) roles.push(tryoutRole);
     else
-      console.log("current number " + num + " is not corresponding to a role");
+      console.log(`current number ${num} is not corresponding to a role`);
   });
 
   return roles;

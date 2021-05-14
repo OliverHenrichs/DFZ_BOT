@@ -44,6 +44,8 @@ function getUniqueSchedulePosts(schedules: Array<Schedule>) {
  */
 module.exports = async (client: DFZDiscordClient) => {
   console.log("Ready at " + new Date().toLocaleString());
+
+  
   try {
     var guild = await client.guilds.fetch(guildId);
     for (const channel of lobbyChannels) {
@@ -134,17 +136,12 @@ module.exports = async (client: DFZDiscordClient) => {
   }
 
   try {// post current leaderboard for referrers in channel
-    console.log("start leaderBordPoster");
     const leaderBordPoster = async () => {
       await postReferralLeaderboard(client);
     };
-    console.log("mid leaderBordPoster");
     await findClientMessage(client);
-    console.log("mid2 leaderBordPoster");
     await postReferralLeaderboard(client);
-    console.log("mid3 leaderBordPoster");
     setInterval(leaderBordPoster, 60 * 60000); // once per hour
-    console.log("end leaderBordPoster");
   } catch {
     (err: string) => console.log("Error in leaderBordPoster:\n" + err);
   }
