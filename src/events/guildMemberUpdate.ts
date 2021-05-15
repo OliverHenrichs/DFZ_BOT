@@ -21,7 +21,6 @@ function getRoleBasedPrefixes(roles: Collection<string, Role>) {
   var prefixes: string[] = [];
   roles.forEach((role) => {
     const prefix = getRegionalRolePrefix(role.id);
-    console.log(prefix);
     if (prefix !== "") prefixes.push(prefix);
   });
   return prefixes;

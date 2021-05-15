@@ -1,7 +1,6 @@
 import {
   DMChannel,
   Guild,
-  GuildChannel,
   Message,
   MessageEmbed,
   MessageReaction,
@@ -389,7 +388,7 @@ function fillUserSets(
     // add in batches of lobbyTypePlayerCount
     userSet.push(lobby.users[i]);
 
-    if ((i + 1) % playersPerLobby == 0) {
+    if ((i + 1) % playersPerLobby === 0) {
       userSets.push(userSet);
       userSet = [];
     }
@@ -466,7 +465,7 @@ function createLobbyStartPost(
 
   postCompleteTeams(channel, lobby, userSets);
 
-  if (userSet.length != 0) {
+  if (userSet.length > 0 && userSet.length < playersPerLobby) {
     postBench(channel, userSet);
   }
 }
@@ -823,15 +822,15 @@ export async function updateLobbyPosts(guild: Guild, dbHandle: Pool) {
       continue;
     }
 
-    var description = pruneEmbedDescription(lobbyFetchResult.embed);
-
     const remainingTime = calculateRemainingTime(lobby);
-
     if (remainingTime.totalMs < 0 && remainingTime.hours >= 3) {
       cancelDeprecatedLobby(lobby, channel, dbHandle);
       continue;
     }
 
+    if (lobby.started) continue;
+
+    var description = pruneEmbedDescription(lobbyFetchResult.embed);
     updateDescriptionTime(
       description,
       remainingTime,
@@ -881,6 +880,27 @@ function testLobbyStartTime(lobby: Lobby, user: User): boolean {
   return true;
 }
 
+export async function deleteLobbyAfterStart(
+  lobby: Lobby,
+  client: DFZDiscordClient
+) {
+  await savePlayerParticipation(
+    client,
+    lobby.users,
+    lobby.type,
+    getPlayersPerLobbyByLobbyType(lobby.type)
+  );
+  await removeLobby(client.dbHandle, lobby);
+}
+
+export function writeLobbyStartPost(
+  lobby: Lobby,
+  channel: TextChannel | NewsChannel
+) {
+  const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
+  createLobbyStartPost(lobby, channel, playersPerLobby);
+}
+
 /**
  * Starts lobby if time is up
  * @param {Discord.Client} client discord client
@@ -906,9 +926,9 @@ export async function startLobby(
     return true;
   }
 
-  const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
-  createLobbyStartPost(lobby, channel, playersPerLobby);
+  writeLobbyStartPost(lobby, channel);
 
+  const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
   notifyPlayers(
     client,
     lobby,
@@ -928,7 +948,9 @@ export async function startLobby(
   );
 
   saveCoachParticipation(client.dbHandle, lobby.coaches, lobby.type);
-  savePlayerParticipation(client, lobby.users, lobby.type, playersPerLobby);
+
+  lobby.started = true;
+  await updateLobby(client.dbHandle, lobby);
 
   return true;
 }
@@ -1019,7 +1041,7 @@ function updateLobbyRegion(lobby: Lobby, region: string) {
 
 function updateLobbyType(lobby: Lobby, type: string) {
   var lobbyType = getLobbyTypeByString(type);
-  if (lobbyType == undefined) {
+  if (lobbyType === undefined) {
     return {
       success: false,
       errorMessage: `There is no lobby type ${type}; Lobby types are ${lobbyTypeKeys.join(
@@ -1030,7 +1052,7 @@ function updateLobbyType(lobby: Lobby, type: string) {
 
   const oldIsRoleBased = isRoleBasedLobbyType(lobbyType);
   const newIsRoleBased = isRoleBasedLobbyType(lobby.type);
-  if (oldIsRoleBased != newIsRoleBased) {
+  if (oldIsRoleBased !== newIsRoleBased) {
     return {
       success: false,
       errorMessage:

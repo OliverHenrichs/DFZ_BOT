@@ -1,14 +1,19 @@
 import { Message } from "discord.js";
 import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
 
-import apply from "../commands/apply"
-import helpUser from "../commands/helpUser"
-import postLobby from "../commands/postLobby"
-import highScore from "../commands/highScore"
-import updateLobby from "../commands/updateLobby"
-import { signupChannel, isWatchingChannel, channelStrings } from "../misc/channelManagement";
+import apply from "../commands/apply";
+import helpUser from "../commands/helpUser";
+import postLobby from "../commands/postLobby";
+import highScore from "../commands/highScore";
+import updateLobby from "../commands/updateLobby";
+import {
+  signupChannel,
+  isWatchingChannel,
+  channelStrings,
+} from "../misc/channelManagement";
 import { reactNegative } from "../misc/messageHelper";
 import { findRole, adminRoles } from "../misc/roleManagement";
+import kick from "../commands/kick";
 
 const PREFIX = "!";
 
@@ -33,8 +38,7 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
   }
 
   // Ignore non-guild-members
-  if (message.member === null)
-    return;
+  if (message.member === null) return;
 
   // Ignore DMs
   if (message.channel.type === "dm") {
@@ -67,6 +71,9 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
     }
     if (content.startsWith("!highscore")) {
       return highScore(message, client.dbHandle);
+    }
+    if (content.startsWith("!kick")) {
+      return kick(message, client.dbHandle);
     }
   }
 };

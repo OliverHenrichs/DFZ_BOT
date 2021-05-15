@@ -53,7 +53,7 @@ export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
   }
 };
 
-export const findClientMessage = async (client: DFZDiscordClient) => {
+export const findLeaderBoardMessage = async (client: DFZDiscordClient) => {
   try {
     var channel = await getChannel(client, process.env.BOT_LEADERBOARD_CHANNEL);
     if (channel === undefined) return;

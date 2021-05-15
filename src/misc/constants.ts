@@ -1,5 +1,8 @@
 import { GuildEmoji, ReactionEmoji } from "discord.js";
 
+export const guildId: string =
+  process.env.GUILD !== undefined ? process.env.GUILD : "";
+
 export const lobbyTypes = {
   inhouse: 1,
   unranked: 2,
@@ -39,9 +42,6 @@ export const roleBasedLobbyTypes = [
   lobbyTypes.unranked,
   lobbyTypes.botbash,
 ];
-
-export const guildId: string =
-  process.env.GUILD !== undefined ? process.env.GUILD : "";
 
 /**
  * Returns true if lobbytype is found in simpleLobbyTypes

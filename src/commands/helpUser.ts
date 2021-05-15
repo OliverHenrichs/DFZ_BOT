@@ -113,6 +113,16 @@ export default async (message: Message) => {
       "!highscore\n!highscore -type normal\n!highscore -type tryout"
     );
 
+    addHelpToTable(
+      _embed,
+      "kick",
+      "!kick <msgId> <playerId>",
+      "Kicks a player from the lobby that is associated \
+      with the given message-ID using their user-ID (rightclick them in the lobby-post). \
+      The intend of this is to remove players who did not show up and to then reroll teams based on the remaining players.",
+      "!kick 843255195735031829 366594625210679309"
+    );
+
     message.author.send({ embed: _embed });
     reactPositive(message, "");
   }

@@ -3,9 +3,31 @@ import { scheduleChannels } from "../misc/channelManagement";
 import { lobbyManagementReactionEmojis } from "../misc/constants";
 import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
 import { removeCoach, updatePlayerInLobby } from "../misc/lobbyManagement";
-import { getInfoFromLobbyReaction, isValidLobbyReaction, LobbyReactionInfo } from "../misc/messageReactionHelper";
+import { Pool } from "mysql2/promise";
+import {
+  getInfoFromLobbyReaction,
+  isValidLobbyReaction,
+  LobbyReactionInfo,
+} from "../misc/messageReactionHelper";
 import { adminRoles } from "../misc/roleManagement";
 import { removeCoachFromSchedule } from "../misc/scheduleManagement";
+import { Lobby } from "../misc/types/lobby";
+
+function handleCoachReaction(
+  dbHandle: Pool,
+  reaction: MessageReaction,
+  lobby: Lobby,
+  user: User
+) {
+  if (reaction.emoji.name !== lobbyManagementReactionEmojis[2]) return;
+  if (reaction.message.channel.type === "dm") return;
+
+  removeCoach(dbHandle, reaction.message.channel, lobby, user.id)
+    .then(() => user.send("✅ Removed you as a coach!"))
+    .catch((error: string) =>
+      user.send("⛔ I could not remove you as a coach. Reason: " + error)
+    );
+}
 
 /**
  * Handles reactions that will change existing posted lobbies
@@ -18,34 +40,15 @@ async function handleLobbyRelatedEmoji(
   reaction: MessageReaction,
   user: User
 ) {
-  const lri: LobbyReactionInfo = await getInfoFromLobbyReaction(
+  const lri: LobbyReactionInfo | undefined = await getInfoFromLobbyReaction(
     client,
     reaction,
     user
   );
-  if (
-    lri.lobby === undefined ||
-    lri.member === undefined ||
-    lri.role === undefined
-  )
-    return;
+  if (!lri) return;
 
-  if (
-    adminRoles.includes(lri.role.id) &&
-    reaction.emoji.name === lobbyManagementReactionEmojis[2] && 
-    reaction.message.channel.type !== "dm"
-  ) {
-    removeCoach(
-      client.dbHandle,
-      reaction.message.channel,
-      lri.lobby,
-      user.id
-    )
-      .then(() => user.send("✅ Removed you as a coach!"))
-      .catch((error: string) =>
-        user.send("⛔ I could not remove you as a coach. Reason: " + error)
-      );
-  } // if not admin, then it was a user
+  if (adminRoles.includes(lri.role.id))
+    handleCoachReaction(client.dbHandle, reaction, lri.lobby, user);
   else updatePlayerInLobby(client.dbHandle, reaction, lri.lobby, user);
 }
 

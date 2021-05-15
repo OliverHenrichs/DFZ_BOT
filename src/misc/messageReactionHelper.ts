@@ -1,21 +1,21 @@
 import { GuildMember, MessageReaction, Role, User } from "discord.js";
+import { isWatchingChannel } from "./channelManagement";
+import { findLobbyByMessage } from "./lobbyManagement";
+import {
+  findRole,
+  beginnerRoles,
+  adminRoles,
+  tryoutRole,
+} from "./roleManagement";
 import { DFZDiscordClient } from "./types/DFZDiscordClient";
 import { Lobby } from "./types/lobby";
 
-const cM = require("./channelManagement");
-const lM = require("./lobbyManagement");
-const rM = require("./roleManagement");
-
 export class LobbyReactionInfo {
-  lobby: Lobby | undefined;
-  member: GuildMember | undefined;
-  role: Role | undefined;
+  lobby: Lobby;
+  member: GuildMember;
+  role: Role;
 
-  constructor(
-    lobby: Lobby | undefined,
-    member: GuildMember | undefined,
-    role: Role | undefined
-  ) {
+  constructor(lobby: Lobby, member: GuildMember, role: Role) {
     this.lobby = lobby;
     this.member = member;
     this.role = role;
@@ -33,42 +33,33 @@ export async function getInfoFromLobbyReaction(
   client: DFZDiscordClient,
   reaction: MessageReaction,
   user: User
-) {
+): Promise<LobbyReactionInfo | undefined> {
   // find lobby
-  const lobby = await lM.findLobbyByMessage(
+  const lobby = await findLobbyByMessage(
     client.dbHandle,
     reaction.message.channel.id,
     reaction.message.id
   );
-
-  var res = new LobbyReactionInfo(undefined, undefined, undefined);
-
-  if (lobby === undefined) return res;
+  if (lobby === undefined) return undefined;
 
   // get guild member (has role)
   const guildMember = await reaction.message.guild?.members.fetch(user.id);
+  if (guildMember === undefined) return undefined;
 
   // get role
-  var role = rM.findRole(guildMember, rM.beginnerRoles);
-  if (role === undefined || role === null) {
-    role = rM.findRole(guildMember, rM.adminRoles);
-  }
-  if (role === undefined || role === null) {
-    role = rM.findRole(guildMember, rM.tryoutRole);
-  }
+  var role = findRole(
+    guildMember,
+    beginnerRoles.concat(adminRoles, [tryoutRole])
+  );
 
   if (role === undefined || role === null) {
     user.send(
       "⛔ You cannot interact because you do not have the appropriate role."
     );
-    return res;
+    return undefined;
   }
 
-  res.lobby = lobby;
-  res.member = guildMember;
-  res.role = role;
-
-  return res;
+  return new LobbyReactionInfo(lobby, guildMember, role);
 }
 
 export function isValidLobbyReaction(reaction: MessageReaction, user: User) {
@@ -82,7 +73,7 @@ export function isValidLobbyReaction(reaction: MessageReaction, user: User) {
   if (reaction.message.channel === undefined) return false;
 
   // Ignore messages outside of bot channels
-  if (!cM.isWatchingChannel(reaction.message.channel.id)) return;
+  if (!isWatchingChannel(reaction.message.channel.id)) return;
 
   return true;
 }

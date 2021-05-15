@@ -7,6 +7,7 @@ import {
   NewsChannel,
   TextChannel,
 } from "discord.js";
+import { Pool } from "mysql2/promise";
 import { scheduleChannels } from "../misc/channelManagement";
 import {
   lobbyTypes,
@@ -23,6 +24,8 @@ import {
   startLobby,
   cancelLobbyPost,
   addCoach,
+  deleteLobbyAfterStart,
+  writeLobbyStartPost,
 } from "../misc/lobbyManagement";
 import { addCoachToSchedule } from "../misc/scheduleManagement";
 import {
@@ -169,6 +172,51 @@ function handleSimpleLobbyEmoji(
   );
 }
 
+async function removeLobbyDelayed(lobby: Lobby, client: DFZDiscordClient) {
+  setTimeout(deleteLobbyAfterStart, 15 * 60 * 1000, lobby, client);
+}
+
+function handleLobbyStart(
+  client: DFZDiscordClient,
+  lobby: Lobby,
+  channel: TextChannel | NewsChannel,
+  user: User
+) {
+  if (lobby.started) {
+    writeLobbyStartPost(lobby, channel);
+    return;
+  }
+
+  startLobby(client, lobby, user, channel).then((hasStarted) => {
+    if (hasStarted) removeLobbyDelayed(lobby, client);
+  });
+}
+
+async function handleLobbyCancel(
+  client: DFZDiscordClient,
+  lobby: Lobby,
+  channel: TextChannel | NewsChannel,
+  user: User
+) {
+  await cancelLobbyPost(lobby, channel);
+  removeLobby(client.dbHandle, lobby);
+  user.send("❌ I cancelled the lobby.");
+  return;
+}
+
+function handleCoachAdd(
+  client: DFZDiscordClient,
+  lobby: Lobby,
+  channel: TextChannel | NewsChannel,
+  user: User
+) {
+  addCoach(client.dbHandle, channel, lobby, user.id)
+    .then(() => user.send("✅ Added you as a coach!"))
+    .catch((error: string) =>
+      user.send("⛔ I did not add you as a coach. Reason: " + error)
+    );
+}
+
 /**
  * Checks if player is coach, and if, then removes or starts lobby
  * @param {DFZDiscordClient} client
@@ -184,29 +232,26 @@ async function handleLobbyManagementEmoji(
   reaction: MessageReaction,
   role: Role
 ) {
-  // Ignore DMs
-  if (reaction.message.channel.type === "dm") {
-    return;
-  }
-
   if (adminRoles.find((roleId: string) => roleId == role.id) === undefined) {
     user.send("⛔ Only Coaches can use these functions.");
     return;
   }
 
-  if (reaction.emoji.name === "🔒") {
-    if (startLobby(client, lobby, user, reaction.message.channel))
-      removeLobby(client.dbHandle, lobby);
-  } else if (reaction.emoji.name === "❌") {
-    await cancelLobbyPost(lobby, reaction.message.channel);
-    removeLobby(client.dbHandle, lobby);
-    user.send("❌ I cancelled the lobby.");
-  } else if (reaction.emoji.name === "🧑‍🏫") {
-    addCoach(client.dbHandle, reaction.message.channel, lobby, user.id)
-      .then(() => user.send("✅ Added you as a coach!"))
-      .catch((error: string) =>
-        user.send("⛔ I did not add you as a coach. Reason: " + error)
-      );
+  // Ignore DMs to pacify typescript...
+  const channel = reaction.message.channel;
+  if (channel.type === "dm") {
+    return;
+  }
+
+  switch (reaction.emoji.name) {
+    case "🔒":
+      return handleLobbyStart(client, lobby, channel, user);
+    case "❌":
+      return handleLobbyCancel(client, lobby, channel, user);
+    case "🧑‍🏫":
+      return handleCoachAdd(client, lobby, channel, user);
+    default:
+      break;
   }
 }
 
@@ -221,17 +266,12 @@ async function handleLobbyRelatedEmoji(
   reaction: MessageReaction,
   user: User
 ) {
-  const lri: LobbyReactionInfo = await getInfoFromLobbyReaction(
+  const lri: LobbyReactionInfo | undefined = await getInfoFromLobbyReaction(
     client,
     reaction,
     user
   );
-  if (
-    lri.lobby === undefined ||
-    lri.member === undefined ||
-    lri.role === undefined
-  )
-    return;
+  if (!lri) return;
 
   var changedLobby: boolean = false;
 

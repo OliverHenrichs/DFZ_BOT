@@ -12,7 +12,8 @@ export class Lobby {
   regionId: string;
   channelId: string;
   messageId: string;
-  
+  started: boolean = false;
+
   constructor(
     type: number = -1,
     date: number = 0,

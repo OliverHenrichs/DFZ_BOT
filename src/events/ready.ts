@@ -9,11 +9,9 @@ import {
 import { Schedule } from "../misc/types/schedule";
 import {
   postReferralLeaderboard,
-  findClientMessage,
+  findLeaderBoardMessage,
 } from "../misc/leaderBoardPoster";
-
-const guildId: string =
-  process.env.GUILD !== undefined ? process.env.GUILD : "";
+import { guildId } from "../misc/constants";
 
 function getUniqueSchedulePosts(schedules: Array<Schedule>) {
   var fetchedSchedulePosts = [];
@@ -32,8 +30,89 @@ function getUniqueSchedulePosts(schedules: Array<Schedule>) {
       channelId: schedule.channelId,
     });
   }
-
   return fetchedSchedulePosts;
+}
+
+async function fetchLobbyMessages(client: DFZDiscordClient) {
+  var guild = await client.guilds.fetch(guildId);
+  for (const channel of lobbyChannels) {
+    var gc = guild.channels.cache.find((chan) => chan.id === channel);
+    if (gc === undefined || !gc.isText()) {
+      continue;
+    }
+
+    var lobbies = await getLobbies(client.dbHandle, channel);
+    if (lobbies.length === 0 || lobbies === [] || lobbies === undefined)
+      continue;
+
+    for (const lobby of lobbies) {
+      await gc.messages.fetch(lobby.messageId);
+    }
+  }
+}
+
+async function fetchScheduleMessages(client: DFZDiscordClient) {
+  var schedules: Array<Schedule> = await getSchedules(client.dbHandle);
+  if (schedules === undefined || schedules.length === 0) return;
+
+  var fetchedSchedulePosts = getUniqueSchedulePosts(schedules);
+
+  var guild = await client.guilds.fetch(guildId);
+  for (const post of fetchedSchedulePosts) {
+    var gc = guild.channels.cache.find((chan) => chan.id === post.channelId);
+
+    if (gc === undefined || !gc.isText()) {
+      continue;
+    }
+    gc.messages.fetch(post.messageId);
+  }
+}
+
+async function setLobbyPostUpdateTimer(client: DFZDiscordClient) {
+  const timeUpdater = async () => {
+    try {
+      var guild = await client.guilds.fetch(guildId);
+      if (guild === undefined || guild === null) return;
+      await updateLobbyPosts(guild, client.dbHandle);
+    } catch {
+      (err: string) => console.log(err);
+    }
+  };
+  await timeUpdater();
+  setInterval(timeUpdater, 60000); // once per minute
+}
+
+async function setSchedulePostUpdateTimer(client: DFZDiscordClient) {
+  const scheduleWriter = async () => {
+    try {
+      var guild = await client.guilds.fetch(guildId);
+      if (guild === undefined || guild === null) return;
+      updateSchedules(client.dbHandle, guild.channels);
+    } catch {
+      (err: string) => console.log(err);
+    }
+  };
+  await scheduleWriter();
+  setInterval(scheduleWriter, 60 * 60000); // once per hour
+}
+
+async function setPostLobbyFromScheduleTimer(client: DFZDiscordClient) {
+  const lobbyPoster = async () => {
+    var guild = await client.guilds.fetch(guildId);
+    if (guild === undefined || guild === null) return;
+    await insertScheduledLobbies(guild.channels, client.dbHandle);
+  };
+  await lobbyPoster();
+  setInterval(lobbyPoster, 60 * 60000); // once per hour
+}
+
+async function setLeaderBoardPostTimer(client: DFZDiscordClient) {
+  const leaderBordPoster = async () => {
+    await postReferralLeaderboard(client);
+  };
+  await findLeaderBoardMessage(client);
+  await postReferralLeaderboard(client);
+  setInterval(leaderBordPoster, 60 * 60000); // once per hour
 }
 
 /**
@@ -46,106 +125,22 @@ module.exports = async (client: DFZDiscordClient) => {
   console.log("Ready at " + new Date().toLocaleString());
 
   try {
-    var guild = await client.guilds.fetch(guildId);
-    for (const channel of lobbyChannels) {
-      var gc = guild.channels.cache.find((chan) => chan.id === channel);
-      if (gc === undefined || !gc.isText()) {
-        continue;
-      }
-
-      var lobbies = await getLobbies(client.dbHandle, channel);
-      if (lobbies.length === 0 || lobbies === [] || lobbies === undefined)
-        continue;
-
-      for (const lobby of lobbies) {
-        await gc.messages.fetch(lobby.messageId);
-      }
-    }
-  } catch {
-    (err: string) => console.log(err);
-  }
-
-  try {
-    var schedules: Array<Schedule> = await getSchedules(
-      client.dbHandle,
-      "",
-      ""
-    );
-
-    if (schedules !== undefined && schedules.length !== 0) {
-      // we have many schedules per messages => only fetch each message once
-      var fetchedSchedulePosts = getUniqueSchedulePosts(schedules);
-
-      var guild = await client.guilds.fetch(guildId);
-      for (const post of fetchedSchedulePosts) {
-        var gc = guild.channels.cache.find(
-          (chan) => chan.id === post.channelId
-        );
-
-        if (gc === undefined || !gc.isText()) {
-          continue;
-        }
-        gc.messages.fetch(post.messageId);
-      }
-    }
+    await fetchLobbyMessages(client);
+    await fetchScheduleMessages(client);
   } catch {
     (err: string) =>
-      console.log("Error while posting lobbies from schedule:\n" + err);
+      console.log(`Error while fetching messages:\
+      ${err}`);
   }
 
   try {
-    // update lobby posts
-    const timeUpdater = async () => {
-      try {
-        var guild = await client.guilds.fetch(guildId);
-        if (guild === undefined || guild === null) return;
-        await updateLobbyPosts(guild, client.dbHandle);
-      } catch {
-        (err: string) => console.log(err);
-      }
-    };
-    await timeUpdater();
-    setInterval(timeUpdater, 60000); // once per minute
+    await setLobbyPostUpdateTimer(client);
+    await setSchedulePostUpdateTimer(client);
+    await setPostLobbyFromScheduleTimer(client);
+    await setLeaderBoardPostTimer(client);
   } catch {
-    (err: string) => console.log("Error in timeUpdater:\n" + err);
-  }
-
-  try {
-    // update lobby schedule
-    const scheduleWriter = async () => {
-      var guild = await client.guilds.fetch(guildId);
-      if (guild === undefined || guild === null) return;
-      updateSchedules(client.dbHandle, guild.channels);
-    };
-    await scheduleWriter();
-
-    setInterval(scheduleWriter, 60 * 60000); // once per hour
-  } catch {
-    (err: string) => console.log("Error in scheduleWriter:\n" + err);
-  }
-
-  try {
-    // post lobbies from schedule
-    const lobbyPoster = async () => {
-      var guild = await client.guilds.fetch(guildId);
-      if (guild === undefined || guild === null) return;
-      await insertScheduledLobbies(guild.channels, client.dbHandle);
-    };
-    await lobbyPoster();
-    setInterval(lobbyPoster, 60 * 60000); // once per hour
-  } catch {
-    (err: string) => console.log("Error in lobbyPoster:\n" + err);
-  }
-
-  try {
-    // post current leaderboard for referrers in channel
-    const leaderBordPoster = async () => {
-      await postReferralLeaderboard(client);
-    };
-    await findClientMessage(client);
-    await postReferralLeaderboard(client);
-    setInterval(leaderBordPoster, 60 * 60000); // once per hour
-  } catch {
-    (err: string) => console.log("Error in leaderBordPoster:\n" + err);
+    (err: string) =>
+      console.log(`Error while setting up timers:\
+      ${err}`);
   }
 };
