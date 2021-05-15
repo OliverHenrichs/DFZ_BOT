@@ -18,9 +18,11 @@ import { Lobby } from "./types/lobby";
 import {
   getLobbyNameByType,
   getLobbyPostNameByType,
+  getLobbyTypeByString,
   getReactionEmojiPosition,
   isRoleBasedLobbyType,
   isSimpleLobbyType,
+  lobbyTypeKeys,
   lobbyTypePlayerCount,
   lobbyTypes,
   tryoutReactionEmoji,
@@ -38,6 +40,7 @@ import { createTeams, getUser } from "./userHelper";
 import { createLobbyPostReactions } from "./messageHelper";
 import { getNumbersFromString } from "./generics";
 import { saveCoachParticipation, savePlayerParticipation } from "./tracker";
+import { getLobbyChannelFromGuildManager } from "./channelManagement";
 const fiveMinInMs = 300000;
 
 /**
@@ -376,6 +379,70 @@ function getCompleteTeamPostTitle(type: number, counter: number) {
   return res;
 }
 
+function fillUserSets(
+  lobby: Lobby,
+  playersPerLobby: number,
+  userSets: LobbyPlayer[][],
+  userSet: LobbyPlayer[]
+) {
+  for (let i = 0; i < lobby.users.length; i++) {
+    // add in batches of lobbyTypePlayerCount
+    userSet.push(lobby.users[i]);
+
+    if ((i + 1) % playersPerLobby == 0) {
+      userSets.push(userSet);
+      userSet = [];
+    }
+  }
+}
+
+function postIncompleteTeam(
+  channel: TextChannel | NewsChannel,
+  lobby: Lobby,
+  playersPerLobby: number,
+  userSet: LobbyPlayer[]
+) {
+  var title = getIncompleteTeamPostTitle(lobby.type);
+  const _embed = generateEmbedding(
+    title,
+    "",
+    "",
+    getUserTable(userSet, playersPerLobby, true)
+  );
+  channel.send({ embed: _embed });
+}
+
+function postCompleteTeams(
+  channel: TextChannel | NewsChannel,
+  lobby: Lobby,
+  userSets: LobbyPlayer[][]
+) {
+  var counter = 0;
+  userSets.forEach((us) => {
+    var teams = createTeams(us, lobby.type);
+    var teamTable = getTeamTable(teams, lobby.type, true);
+
+    const _embed = generateEmbedding(
+      getCompleteTeamPostTitle(lobby.type, ++counter),
+      "",
+      "",
+      teamTable
+    );
+    channel.send({ embed: _embed });
+  });
+}
+
+function postBench(channel: TextChannel | NewsChannel, userSet: LobbyPlayer[]) {
+  // bench
+  const _embed = generateEmbedding(
+    "Today's bench",
+    "",
+    "",
+    getUserTable(userSet, -1, true)
+  );
+  channel.send({ embed: _embed });
+}
+
 /**
  *  Creates an embedding for a starting lobby
  *  @param lobby lobby to start
@@ -390,52 +457,17 @@ function createLobbyStartPost(
   var userSets: LobbyPlayer[][] = [];
   var userSet: LobbyPlayer[] = [];
 
-  for (let i = 0; i < lobby.users.length; i++) {
-    // add in batches of lobbyTypePlayerCount
-    userSet.push(lobby.users[i]);
-
-    if ((i + 1) % playersPerLobby == 0) {
-      userSets.push(userSet);
-      userSet = [];
-    }
-  }
+  fillUserSets(lobby, playersPerLobby, userSets, userSet);
 
   if (userSets.length === 0 && userSet.length !== 0) {
-    // Not enough players but forced
-    var title = getIncompleteTeamPostTitle(lobby.type);
-
-    const _embed = generateEmbedding(
-      title,
-      "",
-      "",
-      getUserTable(userSet, playersPerLobby, true)
-    );
-    channel.send({ embed: _embed });
+    postIncompleteTeam(channel, lobby, playersPerLobby, userSet);
     return;
   }
 
-  var counter = 0;
-  userSets.forEach((us) => {
-    var teams = createTeams(us, lobby.type);
-    var teamTable = getTeamTable(teams, lobby.type, true);
+  postCompleteTeams(channel, lobby, userSets);
 
-    const _embed = generateEmbedding(
-      getCompleteTeamPostTitle(lobby.type, ++counter),
-      "",
-      "",
-      teamTable
-    );
-    channel.send({ embed: _embed });
-  });
   if (userSet.length != 0) {
-    // bench
-    const _embed = generateEmbedding(
-      "Today's bench",
-      "",
-      "",
-      getUserTable(userSet, -1, true)
-    );
-    channel.send({ embed: _embed });
+    postBench(channel, userSet);
   }
 }
 
@@ -631,6 +663,13 @@ export async function postLobby(
   );
 }
 
+function getLobbyPostTitle(lobby: Lobby, embed: MessageEmbed) {
+  return (
+    `We host ${getLobbyPostNameByType(lobby.type)} on ` +
+    embed.title?.split(" on ")[1]
+  );
+}
+
 /**
  *  Update lobby post to account for current lobby state
  *  @param lobby lobby state
@@ -640,139 +679,171 @@ export async function updateLobbyPost(
   lobby: Lobby,
   channel: TextChannel | DMChannel | NewsChannel
 ) {
-  // fetch message
   try {
     const message = await channel.messages.fetch(lobby.messageId);
 
-    const old_embed: MessageEmbed = message.embeds[0];
+    var embed = new MessageEmbed(
+      message.embeds.length > 0 ? message.embeds[0] : undefined
+    );
 
-    // generate new embed
-    var new_embed = new MessageEmbed(old_embed);
+    embed.title = getLobbyPostTitle(lobby, embed);
 
-    // generate new title
-    var title =
-      `We host ${getLobbyPostNameByType(lobby.type)} on ` +
-      new_embed.title?.split(" on ")[1];
-    new_embed.title = title;
-    // generate new embed description
-    // save old time
-    var descriptionLines = new_embed.description?.split("\n");
-    var timeString = "";
-    if (descriptionLines !== undefined)
-      timeString = descriptionLines[descriptionLines.length - 1];
-    if (!timeString.startsWith(remainingLobbyTimeStartString)) timeString = "";
+    embed.description = getLobbyPostText(
+      lobby.beginnerRoleIds,
+      lobby.type,
+      lobby.regionId,
+      lobby.coaches
+    );
 
-    new_embed.description =
-      getLobbyPostText(
-        lobby.beginnerRoleIds,
-        lobby.type,
-        lobby.regionId,
-        lobby.coaches
-      ) + (timeString !== "" ? "\n" + timeString : "");
+    const remainingTime = calculateRemainingTime(lobby);
+    updateDescriptionTime(
+      embed.description,
+      remainingTime,
+      remainingTime.totalMs > 0
+    );
 
     const fields = getCurrentUsersAsTable(lobby, true);
-    new_embed.fields = fields !== undefined ? fields : [];
+    embed.fields = fields !== undefined ? fields : [];
 
-    // update embed
-    await message.edit(new_embed);
+    await message.edit(embed);
   } catch (e) {
     console.log(`Error in updateLobbyPost: ${e}`);
   }
 }
 
+interface LobbyFetchResult {
+  message: Message;
+  embed: MessageEmbed;
+}
+
+async function fetchLobbyFromDiscord(
+  lobby: Lobby,
+  channel: TextChannel | NewsChannel
+): Promise<LobbyFetchResult | undefined> {
+  // fetch message
+  const message = await getMessageFromChannel(channel, lobby.messageId);
+  if (message === undefined) {
+    return undefined;
+  }
+
+  const old_embed: MessageEmbed = message.embeds[0];
+  if (old_embed === undefined) {
+    return undefined;
+  }
+
+  return { message: message, embed: old_embed };
+}
+
+interface RemainingTime {
+  totalMs: number;
+  minutes: number;
+  hours: number;
+}
+
+function calculateRemainingTime(lobby: Lobby): RemainingTime {
+  var res = {
+    totalMs: lobby.date - Date.now(),
+    minutes: -1,
+    hours: -1,
+  };
+  if (res.totalMs > 0) {
+    res.minutes = Math.floor((res.totalMs / (1000 * 60)) % 60);
+    res.hours = Math.floor(res.totalMs / (1000 * 60 * 60));
+  } else {
+    res.minutes = Math.floor((-res.totalMs / (1000 * 60)) % 60);
+    res.hours = Math.floor(-res.totalMs / (1000 * 60 * 60));
+  }
+
+  return res;
+}
+
+function pruneEmbedDescription(embed: MessageEmbed): string[] {
+  var description = embed.description?.split("\n");
+  if (description === undefined || description.length === 0) {
+    return [];
+  }
+
+  const lastEntry = description[description.length - 1];
+  if (
+    lastEntry.startsWith(remainingLobbyTimeStartString) ||
+    lastEntry.startsWith(alreadyStartedLobbyTimeStartString)
+  )
+    description.pop();
+
+  return description;
+}
+
+function updateDescriptionTime(
+  description: string[] | string,
+  remainingTime: RemainingTime,
+  isPrior: boolean
+) {
+  const addition = `${
+    isPrior ? remainingLobbyTimeStartString : alreadyStartedLobbyTimeStartString
+  }\
+    ${remainingTime.hours > 0 ? `${remainingTime.hours}h ` : ""}\
+    ${remainingTime.minutes}min ${isPrior ? "" : " ago"}`;
+
+  typeof description === "string"
+    ? (description += "\n" + addition)
+    : description.push(addition);
+}
+
+async function cancelDeprecatedLobby(
+  lobby: Lobby,
+  channel: TextChannel | NewsChannel,
+  dbHandle: Pool
+) {
+  await cancelLobbyPost(
+    lobby,
+    channel,
+    "Lobby is deprecated: The coach didn't show up? Pitchforks out! 😾"
+  );
+  await removeLobby(dbHandle, lobby);
+}
+
 /**
- *  Update lobby time of each lobby post and delete deprecated lobbies
+ *  Update each lobby post and prune deleted and deprecated lobbies
  *  @param dbHandle handle to data base
  *  @param channels the bot's message channels on the server
  */
-export async function updateLobbyTimes(guild: Guild, dbHandle: Pool) {
+export async function updateLobbyPosts(guild: Guild, dbHandle: Pool) {
   var lobbies: Lobby[] = await getLobbies(dbHandle);
 
   var channels = guild.channels;
 
   for (const lobby of lobbies) {
-    var channel: GuildChannel | undefined = channels.cache.find((chan) => {
-      return chan.id == lobby.channelId;
-    });
-    if (!channel || !channel.isText()) continue;
+    const channel = getLobbyChannelFromGuildManager(lobby, channels);
+    if (!channel) continue;
 
-    // fetch message
-    const message = await getMessageFromChannel(channel, lobby.messageId);
-    if (message === undefined) {
+    const lobbyFetchResult = await fetchLobbyFromDiscord(lobby, channel);
+    if (!lobbyFetchResult) {
+      // remove if e.g. an admin deleted the message
       await removeLobby(dbHandle, lobby);
       continue;
     }
 
-    const old_embed: MessageEmbed = message.embeds[0];
-    if (old_embed === undefined) {
-      await removeLobby(dbHandle, lobby);
+    var description = pruneEmbedDescription(lobbyFetchResult.embed);
+
+    const remainingTime = calculateRemainingTime(lobby);
+
+    if (remainingTime.totalMs < 0 && remainingTime.hours >= 3) {
+      cancelDeprecatedLobby(lobby, channel, dbHandle);
       continue;
     }
 
-    var description = old_embed.description?.split("\n");
-    if (description === undefined) description = [];
-    if (
-      description.length > 0 &&
-      description[description.length - 1].startsWith(
-        remainingLobbyTimeStartString
-      )
-    )
-      description.pop();
-
-    // get new time
-    var remainingMs = lobby.date - Date.now();
-    if (remainingMs > 0) {
-      // if(lobby.notified === undefined && remainingMs < (1000*60*5)) {
-      //     lobby.notified = true;
-      //     updateLobby(dbHandle, lobby);
-      //     lobby.users.forEach(user => {
-
-      //     })
-      // }
-
-      var minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
-      var hours = Math.floor(remainingMs / (1000 * 60 * 60));
-      description.push(
-        remainingLobbyTimeStartString +
-          (hours > 0 ? hours + "h " : "") +
-          minutes +
-          "min"
-      );
-    } else {
-      var minutes = Math.floor((-remainingMs / (1000 * 60)) % 60);
-      var hours = Math.floor(-remainingMs / (1000 * 60 * 60));
-
-      // more than 3 hours ago => delete lobby
-      if (hours >= 3) {
-        await updateAndUnpinLobbyEmbedding(
-          lobby.messageId,
-          channel,
-          "[⛔ Removed deprecated lobby 😾]"
-        );
-        await removeLobby(dbHandle, lobby);
-        continue;
-      } else {
-        if (
-          description[description.length - 1].startsWith(
-            alreadyStartedLobbyTimeStartString
-          )
-        )
-          description.pop();
-        description.push(
-          alreadyStartedLobbyTimeStartString +
-            (hours > 0 ? hours + "h " : "") +
-            minutes +
-            "min ago"
-        );
-      }
-    }
+    updateDescriptionTime(
+      description,
+      remainingTime,
+      remainingTime.totalMs > 0
+    );
 
     // generate new embed
-    var new_embed = new MessageEmbed(old_embed);
+    var new_embed = new MessageEmbed(lobbyFetchResult.embed);
     new_embed.description = description.join("\n");
 
     // update embed
-    await message.edit(new_embed);
+    await lobbyFetchResult.message.edit(new_embed);
   }
 }
 
@@ -783,13 +854,31 @@ export async function updateLobbyTimes(guild: Guild, dbHandle: Pool) {
  */
 export async function cancelLobbyPost(
   lobby: Lobby,
-  channel: TextChannel | NewsChannel
+  channel: TextChannel | NewsChannel,
+  reason: string = ""
 ) {
   updateAndUnpinLobbyEmbedding(
     lobby.messageId,
     channel,
-    "[⛔ Lobby cancelled! 😢]"
+    `[⛔ Lobby cancelled! 😢]
+    ${reason !== "" ? `Reason: ${reason}` : ""}`
   );
+}
+
+function testLobbyStartTime(lobby: Lobby, user: User): boolean {
+  // prevent premature start of lobby
+  var timeLeftInMS = lobby.date - +new Date();
+  if (timeLeftInMS > fiveMinInMs) {
+    // 5min = 300.000 ms
+    user.send(
+      "It's not time to start the lobby yet (" +
+        Math.floor((timeLeftInMS - fiveMinInMs) / 60000) +
+        " min to go)."
+    );
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -806,41 +895,30 @@ export async function startLobby(
   user: User,
   channel: TextChannel | NewsChannel
 ) {
-  // prevent premature start of lobby
-  var timeLeftInMS = lobby.date - +new Date();
-  if (timeLeftInMS > fiveMinInMs) {
-    // 5min = 300.000 ms
-    user.send(
-      "It's not time to start the lobby yet (" +
-        Math.floor((timeLeftInMS - fiveMinInMs) / 60000) +
-        " min to go)."
-    );
-    return false;
-  }
+  if (!testLobbyStartTime(lobby, user)) return false;
 
   // check player count
   if (lobby.users.length === 0) {
-    updateAndUnpinLobbyEmbedding(
-      lobby.messageId,
-      channel,
-      "[⛔ Cancelled because nobody showed up! 😭]"
-    );
+    cancelLobbyPost(lobby, channel, "Nobody showed up!");
     user.send(
       "🔒 I started the lobby. Nobody signed up tho, so just play some Dotes instead 😎"
     );
-    return;
+    return true;
   }
 
   const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
-  // create new post with match-ups
   createLobbyStartPost(lobby, channel, playersPerLobby);
 
-  // notify players
-  var notification =
-    "Your " +
-    getLobbyNameByType(lobby.type) +
-    "-lobby just started! 😎 Please move to the voice channel and await further instructions.";
-  notifyPlayers(client, lobby, playersPerLobby, notification);
+  notifyPlayers(
+    client,
+    lobby,
+    playersPerLobby,
+    `Your ${getLobbyNameByType(
+      lobby.type
+    )}-lobby just started! 😎 Please move to the voice channel and await further instructions.`
+  );
+  // notify coach
+  user.send("🔒 I started the lobby.");
 
   // delete the lobby and "archive" the lobby post
   updateAndUnpinLobbyEmbedding(
@@ -849,11 +927,9 @@ export async function startLobby(
     "[⛔ Lobby started already! 😎]"
   );
 
-  // save coaches and players lobbies
   saveCoachParticipation(client.dbHandle, lobby.coaches, lobby.type);
   savePlayerParticipation(client, lobby.users, lobby.type, playersPerLobby);
 
-  user.send("🔒 I started the lobby.");
   return true;
 }
 
@@ -911,6 +987,66 @@ export async function updatePlayerInLobby(
   await updateLobbyPostAndDBEntry(lobby, reaction.message.channel, dbHandle);
 }
 
+function updateLobbyTiers(lobby: Lobby, tiers: string): LobbyUpdateResult {
+  console.log(`tiers = ${tiers}`);
+  const minTier = 0; // Beginner tiers 0-4
+  const maxTier = 4;
+
+  const numResult = getNumbersFromString(tiers, minTier, maxTier);
+  if (!numResult.status || numResult.numbers === undefined) {
+    return { success: false, errorMessage: numResult.errorMessage };
+  }
+
+  var roles = getBeginnerRolesFromNumbers(numResult.numbers);
+  if (roles.length !== 0) {
+    lobby.beginnerRoleIds = roles;
+  }
+
+  return { success: true, errorMessage: "" };
+}
+
+function updateLobbyRegion(lobby: Lobby, region: string) {
+  console.log(`region = ${region}`);
+  var regionId = getRegionalRoleFromString(region);
+
+  if (regionId == undefined) {
+    return { success: false, errorMessage: "Did not find lobby region." };
+  }
+
+  lobby.regionId = regionId;
+  return { success: true, errorMessage: "" };
+}
+
+function updateLobbyType(lobby: Lobby, type: string) {
+  var lobbyType = getLobbyTypeByString(type);
+  if (lobbyType == undefined) {
+    return {
+      success: false,
+      errorMessage: `There is no lobby type ${type}; Lobby types are ${lobbyTypeKeys.join(
+        ", "
+      )}.`,
+    };
+  }
+
+  const oldIsRoleBased = isRoleBasedLobbyType(lobbyType);
+  const newIsRoleBased = isRoleBasedLobbyType(lobby.type);
+  if (oldIsRoleBased != newIsRoleBased) {
+    return {
+      success: false,
+      errorMessage:
+        "Cannot change role based lobby type into simple lobby type and vice versa",
+    };
+  }
+
+  lobby.type = lobbyType;
+  return { success: true, errorMessage: "" };
+}
+
+export interface LobbyUpdateResult {
+  success: boolean;
+  errorMessage: string;
+}
+
 /**
  *
  * @param {string[]} arguments
@@ -919,7 +1055,7 @@ export async function updatePlayerInLobby(
 export function updateLobbyParameters(
   args: string[],
   lobby: Lobby
-): [boolean, string] {
+): LobbyUpdateResult {
   var updateTiers = false,
     updateType = false,
     updateRegion = false,
@@ -945,56 +1081,34 @@ export function updateLobbyParameters(
     }
 
     if (updateTiers) {
-      const minTier = 0; // Beginner tiers 0-4
-      const maxTier = 4;
-
-      const numResult = getNumbersFromString(arg, minTier, maxTier);
-      if (!numResult.status || numResult.numbers === undefined) {
-        return [false, numResult.errorMessage];
-      }
-
-      var roles = getBeginnerRolesFromNumbers(numResult.numbers);
-      if (roles.length !== 0) {
-        lobby.beginnerRoleIds = roles;
-        changedLobby = true;
-      }
-
+      const res = updateLobbyTiers(lobby, arg);
+      if (!res.success) return res;
+      changedLobby = true;
       updateTiers = false;
       continue;
     }
 
     if (updateType) {
-      var lobbyType = Object.keys(lobbyTypes).find((t) => {
-        return t == arg;
-      });
-
-      if (lobbyType == undefined) {
-        continue;
-      }
-
-      lobby.type = lobbyTypes[lobbyType as keyof typeof lobbyTypes];
+      const res = updateLobbyType(lobby, arg);
+      if (!res.success) return res;
       changedLobby = true;
-
       updateType = false;
       continue;
     }
 
     if (updateRegion) {
-      var regionId = getRegionalRoleFromString(arg);
-
-      if (regionId == undefined) {
-        continue;
-      }
-
-      lobby.regionId = regionId;
+      const res = updateLobbyRegion(lobby, arg);
+      if (!res.success) return res;
       changedLobby = true;
-
       updateRegion = false;
       continue;
     }
   }
 
-  return [changedLobby, ""];
+  return {
+    success: changedLobby,
+    errorMessage: changedLobby ? "" : "You did not make any changes.",
+  };
 }
 
 /**
@@ -1013,7 +1127,7 @@ export async function addCoach(
 ) {
   return new Promise<boolean>(function (resolve, reject) {
     if (lobby.coaches === undefined) {
-      reject("Lobby does not support coaches yet.");
+      reject("Lobby does not support coaches.");
       return;
     }
 

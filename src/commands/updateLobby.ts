@@ -37,14 +37,11 @@ export default async (message: Message, dbHandle: Pool) => {
   // remove message ID from args
   args.shift();
 
-  //return reactNegative(message, errormsg);
-  var res: boolean = false,
-    errormsg: string = "";
-  [res, errormsg] = updateLobbyParameters(args, lobby);
-  if (res !== true)
+  const lobbyUpdateResult = updateLobbyParameters(args, lobby);
+  if (!lobbyUpdateResult.success)
     return reactNegative(
       message,
-      "Failed updating lobby parameters: " + errormsg
+      "Failed updating lobby parameters: " + lobbyUpdateResult.errorMessage
     );
 
   try {

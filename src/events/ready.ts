@@ -1,7 +1,7 @@
 import { lobbyChannels } from "../misc/channelManagement";
 import { getLobbies, getSchedules } from "../misc/database";
 import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
-import { updateLobbyTimes } from "../misc/lobbyManagement";
+import { updateLobbyPosts } from "../misc/lobbyManagement";
 import {
   updateSchedules,
   insertScheduledLobbies,
@@ -45,7 +45,6 @@ function getUniqueSchedulePosts(schedules: Array<Schedule>) {
 module.exports = async (client: DFZDiscordClient) => {
   console.log("Ready at " + new Date().toLocaleString());
 
-  
   try {
     var guild = await client.guilds.fetch(guildId);
     for (const channel of lobbyChannels) {
@@ -82,7 +81,7 @@ module.exports = async (client: DFZDiscordClient) => {
         var gc = guild.channels.cache.find(
           (chan) => chan.id === post.channelId
         );
-        
+
         if (gc === undefined || !gc.isText()) {
           continue;
         }
@@ -94,12 +93,13 @@ module.exports = async (client: DFZDiscordClient) => {
       console.log("Error while posting lobbies from schedule:\n" + err);
   }
 
-  try {// update lobby posts
+  try {
+    // update lobby posts
     const timeUpdater = async () => {
       try {
         var guild = await client.guilds.fetch(guildId);
         if (guild === undefined || guild === null) return;
-        await updateLobbyTimes(guild, client.dbHandle);
+        await updateLobbyPosts(guild, client.dbHandle);
       } catch {
         (err: string) => console.log(err);
       }
@@ -110,7 +110,8 @@ module.exports = async (client: DFZDiscordClient) => {
     (err: string) => console.log("Error in timeUpdater:\n" + err);
   }
 
-  try { // update lobby schedule
+  try {
+    // update lobby schedule
     const scheduleWriter = async () => {
       var guild = await client.guilds.fetch(guildId);
       if (guild === undefined || guild === null) return;
@@ -123,7 +124,8 @@ module.exports = async (client: DFZDiscordClient) => {
     (err: string) => console.log("Error in scheduleWriter:\n" + err);
   }
 
-  try {// post lobbies from schedule
+  try {
+    // post lobbies from schedule
     const lobbyPoster = async () => {
       var guild = await client.guilds.fetch(guildId);
       if (guild === undefined || guild === null) return;
@@ -135,7 +137,8 @@ module.exports = async (client: DFZDiscordClient) => {
     (err: string) => console.log("Error in lobbyPoster:\n" + err);
   }
 
-  try {// post current leaderboard for referrers in channel
+  try {
+    // post current leaderboard for referrers in channel
     const leaderBordPoster = async () => {
       await postReferralLeaderboard(client);
     };

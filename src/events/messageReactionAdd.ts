@@ -105,8 +105,7 @@ function handlePositionEmoji(
   role: Role,
   guildMember: GuildMember
 ) {
-  // dont do tryout
-  if (lobby.type === lobbyTypes.tryout) return false;
+  if (isSimpleLobbyType(lobby.type)) return false;
 
   if (lobby.beginnerRoleIds.find((roleId) => roleId == role.id) === undefined) {
     user.send(

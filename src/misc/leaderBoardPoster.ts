@@ -1,32 +1,24 @@
 import { getSortedReferrers } from "./database";
 import { DFZDiscordClient } from "./types/DFZDiscordClient";
-import { GuildChannel, Message } from "discord.js";
+import { Message } from "discord.js";
 import { generateEmbedding } from "./answerEmbedding";
 import {
   tableBaseReferrersTemplate,
   addDBReferrerRowToTable,
 } from "./highScoreTables";
+import { getChannel } from "./channelManagement";
+import { Referrer } from "./types/referrer";
 
-export const guildId: string =
-  process.env.GUILD !== undefined ? process.env.GUILD : "";
+function getReferrerTable(referrers: Referrer[]) {
+  var tableBase = JSON.parse(JSON.stringify(tableBaseReferrersTemplate));
+  const maxNum = 50;
+  for (let i = 0; i < Math.min(maxNum, referrers.length); i++) {
+    addDBReferrerRowToTable(tableBase, referrers[i]);
+  }
 
-const getChannel = async (
-  client: DFZDiscordClient,
-  channelId: string | undefined
-) => {
-  if (!client) return undefined;
+  return tableBase;
+}
 
-  var guild = await client.guilds.fetch(guildId);
-  var channel: GuildChannel | undefined = guild.channels.cache.find(
-    (chan: GuildChannel) => {
-      return chan.id == channelId;
-    }
-  );
-
-  if (!channel || !channel.isText()) return undefined;
-
-  return channel;
-};
 export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
   try {
     var channel = await getChannel(client, process.env.BOT_LEADERBOARD_CHANNEL);
@@ -38,31 +30,29 @@ export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
     }
 
     var referrers = await getSortedReferrers(client.dbHandle);
-    if (referrers.length > 0) {
-      var tableBase = JSON.parse(JSON.stringify(tableBaseReferrersTemplate));
-      const maxNum = 50;
-      for (let i = 0; i < Math.min(maxNum, referrers.length); i++) {
-        addDBReferrerRowToTable(tableBase, referrers[i]);
-      }
+    if (referrers.length === 0) return;
 
-      var _embed = generateEmbedding(
-        "Referrer High score",
-        "Hall of Fame of DFZ referrerrs!",
-        "",
-        tableBase
-      );
-      if (!message) {
-        const msg = await channel.send({ embed: _embed });
-        _messageId = msg.id;
-      } else {
-        // update embed
-        await message.edit(_embed);
-      }
+    const table = getReferrerTable(referrers);
+
+    var _embed = generateEmbedding(
+      "Referrer High score",
+      "Hall of Fame of DFZ referrerrs!",
+      "",
+      table
+    );
+
+    if (!message) {
+      const msg = await channel.send({ embed: _embed });
+      _messageId = msg.id;
+    } else {
+      // update embed
+      await message.edit(_embed);
     }
   } catch (e) {
     console.log(e);
   }
 };
+
 export const findClientMessage = async (client: DFZDiscordClient) => {
   try {
     var channel = await getChannel(client, process.env.BOT_LEADERBOARD_CHANNEL);

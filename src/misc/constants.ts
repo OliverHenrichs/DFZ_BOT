@@ -40,6 +40,9 @@ export const roleBasedLobbyTypes = [
   lobbyTypes.botbash,
 ];
 
+export const guildId: string =
+  process.env.GUILD !== undefined ? process.env.GUILD : "";
+
 /**
  * Returns true if lobbytype is found in simpleLobbyTypes
  * @param {number} lobbyType
