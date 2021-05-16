@@ -1,5 +1,20 @@
 _@Coach The bot received some new features today!_
 
+**DFZ-Bot v0.12 - Changelog**
+
+1. Delayed Lobby cancel when pressing ❌ on a lobby
+
+   > When a coach cancels a lobby there now is a 2 min grace period
+   > in which they can undo the harm by pressing ❌ again.
+
+2. Meetings can now invite coaches and can have a topic
+   > _!post meeting 10:00pm CET coaches_ invites coaches
+   > _!post meeting 10:00pm CET players_ invites beginner tiers
+   > _!post meeting 10:00pm CET_ invites both
+   > Also you can add arbitrary text after _coaches/players_ to add Topic text
+
+---
+
 **DFZ-Bot v0.11 - Changelog**
 
 1. Delayed lobby deletion after lobby lock

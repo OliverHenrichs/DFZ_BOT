@@ -192,7 +192,27 @@ function handleLobbyStart(
   });
 }
 
-async function handleLobbyCancel(
+function handleLobbyCancel(
+  client: DFZDiscordClient,
+  lobby: Lobby,
+  channel: TextChannel | NewsChannel,
+  user: User
+) {
+  const to = setTimeout(
+    removeLobbyPermantently,
+    2 * 60 * 1000,
+    client,
+    lobby,
+    channel,
+    user
+  );
+  client.timeouts.push({ lobby: lobby, timeout: to });
+  user.send(
+    "I will cancel the lobby in 2 minutes. Press ❌ again to cancel the cancellation"
+  );
+}
+
+async function removeLobbyPermantently(
   client: DFZDiscordClient,
   lobby: Lobby,
   channel: TextChannel | NewsChannel,

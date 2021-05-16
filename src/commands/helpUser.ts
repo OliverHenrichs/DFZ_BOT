@@ -91,7 +91,7 @@ export default async (message: Message) => {
         Object.keys(lobbyTypes)[4] +
         " 1:03am Arctic/Longyearbyen\n\n!post " +
         Object.keys(lobbyTypes)[5] +
-        " 10:00am CET"
+        " 10:00am CET coaches This is a very important meeting topic"
     );
 
     addHelpToTable(
