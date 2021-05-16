@@ -14,10 +14,13 @@ import {
   getTimeFromMessage,
   reactPositive,
   getLobbyTypeFromMessage,
+  getArguments,
 } from "../misc/messageHelper";
 import {
   getRegionalRoleStringsForCommand,
   getBeginnerRolesFromNumbers,
+  adminRoles,
+  beginnerRoles,
 } from "../misc/roleManagement";
 import { Time } from "../misc/timeZone";
 
@@ -42,8 +45,9 @@ function reactWrongType(message: Message) {
 interface PostLobbyOptions {
   type: number;
   lobbyRegionRole: string;
-  beginnerRoles: string[];
+  allowedRoles: string[];
   time: Time | undefined;
+  text: string;
 }
 
 function verifyLobbyType(message: Message, options: PostLobbyOptions) {
@@ -88,7 +92,7 @@ function verifyBeginnerRoleNumbers(
     reactNegative(message, numResult.errorMessage);
     return false;
   }
-  options.beginnerRoles = getBeginnerRolesFromNumbers(numResult.numbers);
+  options.allowedRoles = getBeginnerRolesFromNumbers(numResult.numbers);
   return true;
 }
 
@@ -109,23 +113,52 @@ function verifyLobbyTime(message: Message, options: PostLobbyOptions) {
   return true;
 }
 
+function setMeetingOptions(message: Message, options: PostLobbyOptions) {
+  const args = getArguments(message);
+
+  if (args.length < 4) {
+    options.allowedRoles = beginnerRoles.concat(adminRoles);
+    return;
+  }
+
+  switch (args[3]) {
+    case "coaches":
+      options.allowedRoles = adminRoles;
+      break;
+    case "players":
+      options.allowedRoles = beginnerRoles;
+      break;
+    default:
+      options.allowedRoles = beginnerRoles.concat(adminRoles);
+  }
+
+  if (args.length > 4) {
+    options.text = args.slice(4).join(" ");
+  }
+}
+
 function setLobbyTypeBasedOptions(message: Message, options: PostLobbyOptions) {
   if (isRoleBasedLobbyType(options.type)) {
     // complex lobby type with region and specific beginner roles
-    if (!verifyLobbyRegionRole(message, options)) return false;
-    if (!verifyBeginnerRoleNumbers(message, options)) return false;
-  } else {
-    // other lobby types that are more open
-    if (
-      options.type === lobbyTypes.replayAnalysis ||
-      options.type === lobbyTypes.meeting
-    ) {
-      options.beginnerRoles = getBeginnerRolesFromNumbers(
-        new Set([0, 1, 2, 3, 4])
-      );
-    } else if (options.type === lobbyTypes.tryout) {
-      options.beginnerRoles = getBeginnerRolesFromNumbers(new Set([5]));
-    }
+    return (
+      verifyLobbyRegionRole(message, options) &&
+      verifyBeginnerRoleNumbers(message, options)
+    );
+  }
+
+  // other lobby types that are more open
+  switch (options.type) {
+    case lobbyTypes.replayAnalysis:
+      options.allowedRoles = beginnerRoles;
+      break;
+    case lobbyTypes.tryout:
+      options.allowedRoles = getBeginnerRolesFromNumbers(new Set([5]));
+      break;
+    case lobbyTypes.meeting:
+      setMeetingOptions(message, options);
+      break;
+    default:
+      options.allowedRoles = beginnerRoles.concat(adminRoles);
   }
 
   return true;
@@ -135,8 +168,9 @@ function setPostLobbyOptions(message: Message): PostLobbyOptions | undefined {
   var options: PostLobbyOptions = {
     type: -1,
     lobbyRegionRole: "",
-    beginnerRoles: [],
+    allowedRoles: [],
     time: undefined,
+    text: "",
   };
 
   if (!verifyLobbyType(message, options)) return undefined;
@@ -157,15 +191,15 @@ export default async (message: Message, dbHandle: Pool) => {
 
   // author is coach
   var coaches: string[] = [message.author.id];
-
   postLobby(
     dbHandle,
     message.channel,
     coaches,
     options.type,
-    options.beginnerRoles,
+    options.allowedRoles,
     options.lobbyRegionRole,
-    options.time
+    options.time,
+    options.text
   ).then(() => {
     reactPositive(message);
   });

@@ -40,7 +40,6 @@ import { createLobbyPostReactions } from "./messageHelper";
 import { getNumbersFromString } from "./generics";
 import { saveCoachParticipation, savePlayerParticipation } from "./tracker";
 import { getLobbyChannelFromGuildManager } from "./channelManagement";
-const fiveMinInMs = 300000;
 
 /**
  * Returns required number of coaches for a given lobby type
@@ -526,7 +525,6 @@ function getLobbyPostText(
     coachString = "Coach";
     coachStringPl = "Coaches";
   }
-
   return (
     "for " +
     getRoleMentions(lobbyBeginnerRoles) +
@@ -621,11 +619,14 @@ export async function postLobby(
   lobbyType: number,
   lobbyBeginnerRoles: Array<string>,
   lobbyRegionRole: string,
-  zonedTime: Time
+  zonedTime: Time,
+  optionalText: string = ""
 ) {
   var title = `We host ${getLobbyPostNameByType(lobbyType)} on ${getTimeString(
     zonedTime
-  )} ${zonedTime.zone ? zonedTime.zone.abbreviation : ""}`;
+  )} ${zonedTime.zone ? zonedTime.zone.abbreviation : ""}${
+    optionalText !== "" ? "\nTopic: " + optionalText : ""
+  }`;
   var text = getLobbyPostText(
     lobbyBeginnerRoles,
     lobbyType,
@@ -796,7 +797,7 @@ async function cancelDeprecatedLobby(
   await cancelLobbyPost(
     lobby,
     channel,
-    "Lobby is deprecated: The coach didn't show up? Pitchforks out! 😾"
+    "Lobby is deprecated. Did the coach not show up? Pitchforks out! 😾"
   );
   await removeLobby(dbHandle, lobby);
 }
@@ -859,11 +860,11 @@ export async function cancelLobbyPost(
   updateAndUnpinLobbyEmbedding(
     lobby.messageId,
     channel,
-    `[⛔ Lobby cancelled! 😢]
-    ${reason !== "" ? `Reason: ${reason}` : ""}`
+    "[⛔ Lobby cancelled! 😢]\n" + `${reason !== "" ? `Reason: ${reason}` : ""}`
   );
 }
 
+const fiveMinInMs = 300000;
 function testLobbyStartTime(lobby: Lobby, user: User): boolean {
   // prevent premature start of lobby
   var timeLeftInMS = lobby.date - +new Date();
