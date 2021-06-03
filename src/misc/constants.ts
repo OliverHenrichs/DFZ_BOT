@@ -13,10 +13,13 @@ export const lobbyTypes = {
 };
 
 export const lobbyTypeKeys = Object.keys(lobbyTypes);
+export const lobbyTypeKeysString = lobbyTypeKeys.join(", ");
 
 export function getLobbyTypeByString(type: string) {
   const idx = Object.keys(lobbyTypes).findIndex((key) => type === key);
-  return idx === -1 ? undefined : idx + 1;
+  if (idx === -1)
+    throw `Invalid lobby type ${type}. Lobby types are ${lobbyTypeKeysString}`;
+  return idx + 1;
 }
 
 export const lobbyTypePlayerCount = {
@@ -87,7 +90,7 @@ export function getLobbyNameByType(lobbyType: number) {
   }
 }
 
-export function getLobbyPostNameByType(lobbyType: number) {
+export function getLobbyPostNameByType(lobbyType: number): string | undefined {
   switch (lobbyType) {
     case lobbyTypes.inhouse:
       return "an INHOUSE lobby";

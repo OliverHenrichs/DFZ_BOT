@@ -9,7 +9,29 @@ import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
 import { Player } from "../misc/types/player";
 import { Referrer } from "../misc/types/referrer";
 
-function getTrimmedArguments(message: string) {
+/**
+ * Adds player to db on application in application channel
+ */
+export default async (client: DFZDiscordClient, message: Message) => {
+  var player = await getPlayerByID(client.dbHandle, message.author.id);
+  if (player !== undefined) return;
+
+  const refTag = getReferralTag(message.content);
+  if (refTag) handleReferrerTag(client, refTag);
+
+  insertPlayer(
+    client.dbHandle,
+    new Player(message.author.id, message.author.tag, refTag ? refTag : "")
+  );
+};
+
+function getReferralTag(message: string): string | undefined {
+  var args = getTrimmedMessageArguments(message);
+  var referralTag = getRefTagFromArgs(args);
+  return validateReferralTag(referralTag);
+}
+
+function getTrimmedMessageArguments(message: string) {
   var args = message.substring(6).split(",");
   args.forEach((element) => {
     element.trim();
@@ -35,25 +57,6 @@ function validateReferralTag(refTag: string): string | undefined {
   return match[0];
 }
 
-function getReferralTag(message: string): string | undefined {
-  var args = getTrimmedArguments(message);
-  var referralTag = getRefTagFromArgs(args);
-  return validateReferralTag(referralTag);
-}
-
-function addReferrer(client: DFZDiscordClient, refTag: string) {
-  // Is referrer part of the server?
-  var referrerId = undefined;
-  const referrerUser = client.users.cache.find((u) => u.tag === refTag);
-  if (referrerUser !== undefined) {
-    referrerId = referrerUser.id;
-  }
-  insertReferrer(
-    client.dbHandle,
-    new Referrer(referrerId === undefined ? "" : referrerId, refTag, 0)
-  );
-}
-
 function handleReferrerTag(client: DFZDiscordClient, refTag: string) {
   getReferrerByTag(client.dbHandle, refTag).then(
     (existingReferrer: Referrer | undefined) => {
@@ -63,18 +66,21 @@ function handleReferrerTag(client: DFZDiscordClient, refTag: string) {
   );
 }
 
-/**
- * Adds player to db on application in application channel
- */
-export default async (client: DFZDiscordClient, message: Message) => {
-  var player = await getPlayerByID(client.dbHandle, message.author.id);
-  if (player !== undefined) return;
-
-  const refTag = getReferralTag(message.content);
-  if (refTag) handleReferrerTag(client, refTag);
-
-  insertPlayer(
+function addReferrer(client: DFZDiscordClient, refTag: string) {
+  const referrerId = findReferrerId(refTag, client);
+  insertReferrer(
     client.dbHandle,
-    new Player(message.author.id, message.author.tag, refTag ? refTag : "")
+    new Referrer(referrerId === undefined ? "" : referrerId, refTag, 0)
   );
-};
+}
+
+function findReferrerId(
+  refTag: string,
+  client: DFZDiscordClient
+): string | undefined {
+  const referrerUser = client.users.cache.find((u) => u.tag === refTag);
+  if (referrerUser !== undefined) {
+    return referrerUser.id;
+  }
+  return undefined;
+}

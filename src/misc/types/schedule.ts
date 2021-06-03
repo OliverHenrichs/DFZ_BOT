@@ -1,3 +1,5 @@
+import { scheduleTypes } from "../types/scheduleTypes";
+
 /**
  * Just some pod that make up a schedule
  */
@@ -9,7 +11,7 @@ export class Schedule {
   emoji: string;
   date: string;
   region: string;
-  coaches: any[];
+  coaches: string[];
   lobbyPosted: boolean;
   eventId: undefined | null | string;
 

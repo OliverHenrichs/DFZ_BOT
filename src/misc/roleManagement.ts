@@ -171,17 +171,17 @@ export function getRegionalRoleLobbyChannel(roleId: string | undefined) {
   }
 }
 
-export function getRegionalRoleStringsForCommand() {
-  var res: Array<string> = [];
-  regionRoleIDs.forEach((rid) => res.push(getRegionalRoleString(rid)));
-  return res;
+export function getAllRegionStrings() {
+  return regionRoleIDs.map((rid) => getRegionalRoleString(rid));
 }
 
 /**
  * Returns role id corresponding to role string
  * @param {string} roleString
  */
-export function getRegionalRoleFromString(roleString: string | undefined) {
+export function getRegionalRoleFromString(
+  roleString: string | undefined
+): string {
   switch (roleString) {
     case "EU":
       return regionRoleIDs[0];
@@ -190,7 +190,7 @@ export function getRegionalRoleFromString(roleString: string | undefined) {
     case "SEA":
       return regionRoleIDs[2];
     default:
-      return undefined;
+      throw `Unknown regional role string ${roleString}`;
   }
 }
 

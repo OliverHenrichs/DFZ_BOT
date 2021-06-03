@@ -1,6 +1,6 @@
 import { Client, ClientOptions } from "discord.js";
 import { Pool } from "mysql2/promise";
-import { LobbyTimeout } from "../interfaces/asdf";
+import { LobbyTimeout } from "../interfaces/LobbyTimeout";
 
 export class DFZDiscordClient extends Client {
   dbHandle: Pool;

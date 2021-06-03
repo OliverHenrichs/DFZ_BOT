@@ -1,8 +1,5 @@
 import { LobbyPlayer } from "../interfaces/LobbyInterfaces";
 
-/**
- * Just some pod that make up a lobby
- */
 export class Lobby {
   type: number;
   date: number;
@@ -15,8 +12,8 @@ export class Lobby {
   started: boolean = false;
 
   constructor(
-    type: number = -1,
-    date: number = 0,
+    type: number,
+    date: number,
     coaches: Array<string> = [],
     beginnerRoleIds: Array<string> = [],
     regionId: string = "",

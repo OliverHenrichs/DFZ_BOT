@@ -3,21 +3,29 @@ import {
   getLobbyTypeByString,
   isSimpleLobbyType,
   lobbyManagementReactionEmojis,
+  lobbyTypeKeysString,
   lobbyTypes,
   positionReactionEmojis,
   tryoutReactionEmoji,
 } from "./constants";
-import { getNumbersFromString, NumberResult } from "./generics";
-import { getRegionalRoleFromString } from "./roleManagement";
-import { createLobbyTime, LobbyTimeResult } from "./timeZone";
+import { getNumbersFromString } from "./generics";
+import {
+  getRegionalRoleFromString,
+  getAllRegionStrings,
+} from "./roleManagement";
+import { createLobbyTime, LobbyTimeResult, Time } from "./timeZone";
 
 /**
- * Reacts to message using reply and emoji
+ * Reacts to message using reply and emoji, then deletes the authors command
  * @param {Discord.Message} message message to be replied to
  * @param {string} reply string containing reply message
  * @param {string} emoji emoji to react with
  */
-async function reactMessage(message: Message, reply: string, emoji: string) {
+async function reactToMessageAndDeleteIt(
+  message: Message,
+  reply: string,
+  emoji: string
+) {
   message.react(emoji).then(() => {
     if (message.channel.type !== "dm") message.delete({ timeout: 5000 });
   });
@@ -25,12 +33,10 @@ async function reactMessage(message: Message, reply: string, emoji: string) {
   if (reply == "") return;
 
   try {
-    await message.author.send(
-      "`" + message.content + "`\n" + emoji + " " + reply
-    );
+    await message.author.send(`\`${message.content}\`` + `\n${emoji} ${reply}`);
   } catch (err) {
     message.reply(
-      "Cannot send messages to you. Enable direct messages in privacy settings to receive bot replies."
+      `Cannot send messages to ${message.author.username}. Enable direct messages in privacy settings to receive bot replies.`
     );
   }
 }
@@ -41,7 +47,7 @@ async function reactMessage(message: Message, reply: string, emoji: string) {
  * @param {string} reply string reply
  */
 export function reactNegative(message: Message, reply = "") {
-  reactMessage(message, reply, "⛔");
+  reactToMessageAndDeleteIt(message, reply, "⛔");
 }
 
 /**
@@ -50,7 +56,7 @@ export function reactNegative(message: Message, reply = "") {
  * @param {string} reply string reply
  */
 export function reactNeutral(message: Message, reply = "") {
-  reactMessage(message, reply, "😐");
+  reactToMessageAndDeleteIt(message, reply, "😐");
 }
 
 /**
@@ -59,7 +65,7 @@ export function reactNeutral(message: Message, reply = "") {
  * @param {string} reply string reply
  */
 export function reactPositive(message: Message, reply = "") {
-  reactMessage(message, reply, "✅");
+  reactToMessageAndDeleteIt(message, reply, "✅");
 }
 
 /**
@@ -94,30 +100,23 @@ export function getNumbersFromMessage(
   index: number,
   min = 0,
   max = 5
-): NumberResult {
+) {
   var args = getArguments(message);
 
   if (args.length <= index)
-    return {
-      numbers: undefined,
-      status: false,
-      errorMessage: `you need to provide a list of numbers ranging from ${min} to ${max}`,
-    };
+    throw `You need to provide a list of numbers ranging from ${min} to ${max}`;
 
   return getNumbersFromString(args[index]);
 }
 
-/**
- * Retrieves a region from an index of a message split at spaces
- * message containing regional role
- * @param {Message} message
- * @param {number} index
- */
-export function getLobbyRegionRoleFromMessage(message: Message, index: number) {
+export function getLobbyRegionRoleFromMessage(
+  message: Message,
+  index: number
+): string {
   var args = getArguments(message);
 
-  // message to short
-  if (args.length <= index) return undefined;
+  if (args.length <= index)
+    throw `Could not get lobby region role from message. Region roles are ${getAllRegionStrings()}`;
 
   return getRegionalRoleFromString(args[index]);
 }
@@ -129,57 +128,35 @@ export function getLobbyRegionRoleFromMessage(message: Message, index: number) {
  */
 export function getTimeFromMessage(
   message: Message,
-  index: number
+  argumentIndex: number
 ): LobbyTimeResult {
   var args = getArguments(message);
 
-  if (args.length <= index + 1)
-    return {
-      time: undefined,
-      timeZoneName: undefined,
-      error:
-        "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post",
-    };
+  if (args.length <= argumentIndex + 1)
+    throw "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post";
 
-  return createLobbyTime(args[index], args[index + 1]);
+  return createLobbyTime(args[argumentIndex], args[argumentIndex + 1]);
+}
+
+/**
+ * Derives lobby type from message and reacts based on evaluation
+ * @throws if it cannot evaluate lobby type
+ * @param {Message} message message from which to derive lobby type
+ */
+export function getLobbyTypeFromMessage(message: Message): number {
+  var args = getArguments(message);
+  if (args.length === 0) {
+    throw `No lobby type given. Lobby types are (${lobbyTypeKeysString})`;
+  }
+  return getLobbyTypeByString(args[0]);
 }
 
 /**
  * returns arguments of message of form "command arg1 arg2 ... argN"
  * @param {Message} message
  */
-export function getArguments(message: Message) {
+export function getArguments(message: Message): string[] {
   var content = message.content.split(" ");
   content.shift();
   return content;
-}
-
-/**
- * Derives lobby type from message and reacts based on evaluation
- * @param {Message} message message from which to derive lobby type
- */
-export function getLobbyTypeFromMessage(message: Message) {
-  var args = getArguments(message);
-
-  if (args.length === 0) {
-    reactNegative(
-      message,
-      "no lobby type given. \r\n Lobby types are (" +
-        Object.keys(lobbyTypes).join(", ") +
-        ")"
-    );
-    return undefined;
-  }
-
-  const lobbyType = getLobbyTypeByString(args[0]);
-  if (lobbyType === undefined) {
-    reactNegative(
-      message,
-      "Invalid lobby type. Lobby types are " +
-        Object.keys(lobbyTypes).join(", ")
-    );
-    return undefined;
-  }
-
-  return lobbyType;
 }

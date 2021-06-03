@@ -64,6 +64,35 @@ function getCoachCountByLobbyType(lobbyType: number) {
   return 0;
 }
 
+function addUserNameToUserTable(
+  tableBase: Array<FieldElement>,
+  user: LobbyPlayer,
+  startIndex = 0,
+  mention = false
+) {
+  tableBase[startIndex].value = `${tableBase[startIndex].value}\r\n${
+    user.region.name !== "" ? `[${user.region.name}]` : ""
+  }${mention ? `<@${user.id}>` : user.name}`;
+}
+
+function addUserPositionsToUserTable(
+  tableBase: Array<FieldElement>,
+  positions: Array<number>,
+  startIndex = 0
+) {
+  tableBase[startIndex + 1].value = `${tableBase[startIndex + 1].value}
+${positions.length === 1 && positions[0] === -1 ? "-" : positions.join(", ")}`;
+}
+
+function addTierToUserTable(
+  tableBase: Array<FieldElement>,
+  user: LobbyPlayer,
+  startIndex = 0
+) {
+  tableBase[startIndex + 2].value = `${tableBase[startIndex + 2].value}
+${user.tier.name}`;
+}
+
 function addUserWithPositionsToUserTable(
   tableBase: Array<FieldElement>,
   user: LobbyPlayer,
@@ -71,15 +100,11 @@ function addUserWithPositionsToUserTable(
   startIndex = 0,
   mention = false
 ) {
-  tableBase[startIndex].value = `${tableBase[startIndex].value}\r\n${
-    user.region.name !== "" ? `[${user.region.name}]` : ""
-  }${mention ? `<@${user.id}>` : user.name}`;
+  addUserNameToUserTable(tableBase, user, startIndex, mention);
 
-  tableBase[startIndex + 1].value = `${tableBase[startIndex + 1].value}
-${positions.length === 1 && positions[0] === -1 ? "-" : positions.join(", ")}`;
+  addUserPositionsToUserTable(tableBase, positions, startIndex);
 
-  tableBase[startIndex + 2].value = `${tableBase[startIndex + 2].value}
-${user.tier.name}`;
+  addTierToUserTable(tableBase, user);
 }
 
 /**
@@ -103,6 +128,36 @@ function addToUserTable(
   );
 }
 
+function createUserTableBase(): Array<FieldElement> {
+  return [
+    {
+      name: "Name",
+      value: "",
+      inline: true,
+    },
+    {
+      name: "Position",
+      value: "",
+      inline: true,
+    },
+    {
+      name: "Tier",
+      value: "",
+      inline: true,
+    },
+  ];
+}
+
+function createUserTableBench(): Array<FieldElement> {
+  return [
+    {
+      name: "Bench",
+      value: "If people leave, you get pushed up",
+      inline: false,
+    },
+  ].concat(createUserTableBase());
+}
+
 /**
  *  returns a table of users
  *  @param tableBase table to which data is added
@@ -112,66 +167,27 @@ function addToUserTable(
  */
 function getUserTable(
   users: LobbyPlayer[],
-  playersPerLobby = -1,
+  playersPerLobby = anyNumberOfPlayers,
   mention = false
 ) {
   if (users.length == 0) {
     return undefined;
   }
 
-  // setup fields for embedding
-  var tableBase: Array<FieldElement> = [
-    {
-      name: "Name",
-      value: "",
-      inline: true,
-    },
-    {
-      name: "Position",
-      value: "",
-      inline: true,
-    },
-    {
-      name: "Tier",
-      value: "",
-      inline: true,
-    },
-  ];
+  var tableBase = createUserTableBase();
+  var tableBench = createUserTableBench();
 
-  var tableBench: Array<FieldElement> = [
-    {
-      name: "Bench",
-      value: "If people leave, you get pushed up",
-      inline: false,
-    },
-    {
-      name: "Name",
-      value: "",
-      inline: true,
-    },
-    {
-      name: "Position",
-      value: "",
-      inline: true,
-    },
-    {
-      name: "Tier",
-      value: "",
-      inline: true,
-    },
-  ];
+  var tableStartIndexPlayers = 0;
+  var tableStartIndexBench = 1;
 
-  var startIndexPlayers = 0;
-  var startIndexBench = 1;
-
-  var usrIndex = 0;
+  var userIndex = 0;
   users.forEach((usr) => {
-    if (usrIndex++ < playersPerLobby || playersPerLobby === -1)
-      addToUserTable(tableBase, usr, startIndexPlayers, mention);
-    else addToUserTable(tableBench, usr, startIndexBench, mention);
+    if (userIndex++ < playersPerLobby || playersPerLobby === anyNumberOfPlayers)
+      addToUserTable(tableBase, usr, tableStartIndexPlayers, mention);
+    else addToUserTable(tableBench, usr, tableStartIndexBench, mention);
   });
 
-  if (usrIndex > playersPerLobby && playersPerLobby !== -1) {
+  if (userIndex > playersPerLobby && playersPerLobby !== anyNumberOfPlayers) {
     var finalTable = tableBase.concat(tableBench);
     return finalTable;
   }
@@ -179,21 +195,16 @@ function getUserTable(
   return tableBase;
 }
 
+const anyNumberOfPlayers = -1;
 function getPlayersPerLobbyByLobbyType(type: number) {
-  var key = (Object.keys(lobbyTypes) as Array<keyof typeof lobbyTypes>).find(
-    (typeKey) => lobbyTypes[typeKey] === type
-  );
-  if (key) return lobbyTypePlayerCount[key];
+  var lobbyTypeKey = (
+    Object.keys(lobbyTypes) as Array<keyof typeof lobbyTypes>
+  ).find((typeKey) => lobbyTypes[typeKey] === type);
+  if (lobbyTypeKey) return lobbyTypePlayerCount[lobbyTypeKey];
 
-  return 5; // just something reasonable...
+  return anyNumberOfPlayers; // just something reasonable...
 }
 
-/**
- *
- * @param lobby
- * @param mention
- * @returns
- */
 function getCurrentUsersAsTable(lobby: Lobby, mention = false) {
   const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
   return getUserTable(lobby.users, playersPerLobby, mention);
@@ -509,7 +520,7 @@ function notifyPlayers(
 }
 
 function getLobbyPostText(
-  lobbyBeginnerRoles: string[],
+  lobbyUserRoles: string[],
   lobbyType: number,
   lobbyRegionRole: string,
   coaches: string[]
@@ -527,7 +538,7 @@ function getLobbyPostText(
   }
   return (
     "for " +
-    getRoleMentions(lobbyBeginnerRoles) +
+    getRoleMentions(lobbyUserRoles) +
     (coachCount === 0
       ? ""
       : coachCount >= 2 && maxCoachCount === 2
@@ -602,43 +613,37 @@ export async function findLobbyByMessage(
   return lobbies[0];
 }
 
-/**
- * Internal function that creates the embedding for the lobby post
- * @param {mysql.Pool} dbHandle db handle
- * @param {Discord.Channel} channel lobby channel
- * @param {Array<String>} coaches lobby's coaches
- * @param {number} lobbyType type of lobby
- * @param {Array<String>} lobbyBeginnerRoles
- * @param {String} lobbyRegionRole
- * @param {Time} zonedTime time of lobby
- */
+export interface PostLobbyOptions {
+  type: number;
+  regionRole: string;
+  userRoles: string[];
+  time: Time;
+  coaches: string[];
+  optionalText: string;
+}
+
 export async function postLobby(
   dbHandle: Pool,
   channel: TextChannel | NewsChannel | DMChannel,
-  coachIDs: Array<string>,
-  lobbyType: number,
-  lobbyBeginnerRoles: Array<string>,
-  lobbyRegionRole: string,
-  zonedTime: Time,
-  optionalText: string = ""
+  options: PostLobbyOptions
 ) {
-  var title = `We host ${getLobbyPostNameByType(lobbyType)} on ${getTimeString(
-    zonedTime
-  )} ${zonedTime.zone ? zonedTime.zone.abbreviation : ""}${
-    optionalText !== "" ? "\nTopic: " + optionalText : ""
-  }`;
+  var title = `We host ${getLobbyPostNameByType(
+    options.type
+  )} on ${getTimeString(options.time)} ${
+    options.time.zone ? options.time.zone.abbreviation : ""
+  }${options.optionalText !== "" ? "\nTopic: " + options.optionalText : ""}`;
   var text = getLobbyPostText(
-    lobbyBeginnerRoles,
-    lobbyType,
-    lobbyRegionRole,
-    coachIDs
+    options.userRoles,
+    options.type,
+    options.regionRole,
+    options.coaches
   );
-  var footer = getLobbyPostFooter(lobbyType, lobbyRegionRole);
+  var footer = getLobbyPostFooter(options.type, options.regionRole);
 
   // send embedding post to lobby signup-channel
   const _embed = generateEmbedding(title, text, footer);
   const lobbyPostMessage = await channel.send(
-    getRoleMentions(lobbyBeginnerRoles),
+    getRoleMentions(options.userRoles),
     { embed: _embed }
   ); // mentioning roles in message again to ping beginners
 
@@ -646,17 +651,17 @@ export async function postLobby(
   lobbyPostMessage.pin();
 
   // add emojis
-  createLobbyPostReactions(lobbyType, lobbyPostMessage);
+  createLobbyPostReactions(options.type, lobbyPostMessage);
 
   // create lobby data in database
   insertLobby(
     dbHandle,
     new Lobby(
-      lobbyType,
-      zonedTime.epoch,
-      coachIDs,
-      lobbyBeginnerRoles,
-      lobbyRegionRole,
+      options.type,
+      options.time.epoch,
+      options.coaches,
+      options.userRoles,
+      options.regionRole,
       channel.id,
       lobbyPostMessage.id
     )
@@ -696,11 +701,8 @@ export async function updateLobbyPost(
     );
 
     const remainingTime = calculateRemainingTime(lobby);
-    updateDescriptionTime(
-      embed.description,
-      remainingTime,
-      remainingTime.totalMs > 0
-    );
+    const isPrior = remainingTime.totalMs > 0;
+    updateDescriptionTime(embed.description, remainingTime, isPrior);
 
     const fields = getCurrentUsersAsTable(lobby, true);
     embed.fields = fields !== undefined ? fields : [];
@@ -720,7 +722,6 @@ async function fetchLobbyFromDiscord(
   lobby: Lobby,
   channel: TextChannel | NewsChannel
 ): Promise<LobbyFetchResult | undefined> {
-  // fetch message
   const message = await getMessageFromChannel(channel, lobby.messageId);
   if (message === undefined) {
     return undefined;
@@ -740,6 +741,9 @@ interface RemainingTime {
   hours: number;
 }
 
+const msToMinutes = 1 / (1000 * 60);
+const msToHours = msToMinutes / 60;
+
 function calculateRemainingTime(lobby: Lobby): RemainingTime {
   var res = {
     totalMs: lobby.date - Date.now(),
@@ -747,11 +751,11 @@ function calculateRemainingTime(lobby: Lobby): RemainingTime {
     hours: -1,
   };
   if (res.totalMs > 0) {
-    res.minutes = Math.floor((res.totalMs / (1000 * 60)) % 60);
-    res.hours = Math.floor(res.totalMs / (1000 * 60 * 60));
+    res.minutes = Math.floor((res.totalMs * msToMinutes) % 60);
+    res.hours = Math.floor(res.totalMs * msToHours);
   } else {
-    res.minutes = Math.floor((-res.totalMs / (1000 * 60)) % 60);
-    res.hours = Math.floor(-res.totalMs / (1000 * 60 * 60));
+    res.minutes = Math.floor((-res.totalMs * msToMinutes) % 60);
+    res.hours = Math.floor(-res.totalMs * msToHours);
   }
 
   return res;
@@ -1008,130 +1012,6 @@ export async function updatePlayerInLobby(
   }
 
   await updateLobbyPostAndDBEntry(lobby, reaction.message.channel, dbHandle);
-}
-
-function updateLobbyTiers(lobby: Lobby, tiers: string): LobbyUpdateResult {
-  console.log(`tiers = ${tiers}`);
-  const minTier = 0; // Beginner tiers 0-4
-  const maxTier = 4;
-
-  const numResult = getNumbersFromString(tiers, minTier, maxTier);
-  if (!numResult.status || numResult.numbers === undefined) {
-    return { success: false, errorMessage: numResult.errorMessage };
-  }
-
-  var roles = getBeginnerRolesFromNumbers(numResult.numbers);
-  if (roles.length !== 0) {
-    lobby.beginnerRoleIds = roles;
-  }
-
-  return { success: true, errorMessage: "" };
-}
-
-function updateLobbyRegion(lobby: Lobby, region: string) {
-  console.log(`region = ${region}`);
-  var regionId = getRegionalRoleFromString(region);
-
-  if (regionId == undefined) {
-    return { success: false, errorMessage: "Did not find lobby region." };
-  }
-
-  lobby.regionId = regionId;
-  return { success: true, errorMessage: "" };
-}
-
-function updateLobbyType(lobby: Lobby, type: string) {
-  var lobbyType = getLobbyTypeByString(type);
-  if (lobbyType === undefined) {
-    return {
-      success: false,
-      errorMessage: `There is no lobby type ${type}; Lobby types are ${lobbyTypeKeys.join(
-        ", "
-      )}.`,
-    };
-  }
-
-  const oldIsRoleBased = isRoleBasedLobbyType(lobbyType);
-  const newIsRoleBased = isRoleBasedLobbyType(lobby.type);
-  if (oldIsRoleBased !== newIsRoleBased) {
-    return {
-      success: false,
-      errorMessage:
-        "Cannot change role based lobby type into simple lobby type and vice versa",
-    };
-  }
-
-  lobby.type = lobbyType;
-  return { success: true, errorMessage: "" };
-}
-
-export interface LobbyUpdateResult {
-  success: boolean;
-  errorMessage: string;
-}
-
-/**
- *
- * @param {string[]} arguments
- * @param {Lobby} lobby
- */
-export function updateLobbyParameters(
-  args: string[],
-  lobby: Lobby
-): LobbyUpdateResult {
-  var updateTiers = false,
-    updateType = false,
-    updateRegion = false,
-    changedLobby = false;
-
-  while (args.length > 0) {
-    let arg = args[0];
-    args.shift();
-
-    if (arg === "-tiers") {
-      updateTiers = true;
-      continue;
-    }
-
-    if (arg === "-type") {
-      updateType = true;
-      continue;
-    }
-
-    if (arg === "-region") {
-      updateRegion = true;
-      continue;
-    }
-
-    if (updateTiers) {
-      const res = updateLobbyTiers(lobby, arg);
-      if (!res.success) return res;
-      changedLobby = true;
-      updateTiers = false;
-      continue;
-    }
-
-    if (updateType) {
-      const res = updateLobbyType(lobby, arg);
-      if (!res.success) return res;
-      changedLobby = true;
-      updateType = false;
-      continue;
-    }
-
-    if (updateRegion) {
-      const res = updateLobbyRegion(lobby, arg);
-      if (!res.success) return res;
-      changedLobby = true;
-      updateRegion = false;
-      continue;
-    }
-  }
-
-  return {
-    success: changedLobby,
-    errorMessage: changedLobby ? "" : "You did not make any changes.",
-  };
 }
 
 /**

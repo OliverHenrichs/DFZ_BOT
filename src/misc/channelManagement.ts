@@ -25,6 +25,7 @@ export const lobbyChannels = [
   process.env.BOT_LOBBY_CHANNEL_T3 ? process.env.BOT_LOBBY_CHANNEL_T3 : "",
   process.env.BOT_MEETING_CHANNEL ? process.env.BOT_MEETING_CHANNEL : "",
 ];
+
 export const scheduleChannels = [
   process.env.BOT_SCHEDULE_CHANNEL_BOTBASH
     ? process.env.BOT_SCHEDULE_CHANNEL_BOTBASH
@@ -39,6 +40,7 @@ export const scheduleChannels = [
     ? process.env.BOT_SCHEDULE_CHANNEL_5V5_T3
     : "",
 ];
+
 export const channelStrings =
   "<#" +
   process.env.BOT_LOBBY_CHANNEL_EU +

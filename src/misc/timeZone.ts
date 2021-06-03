@@ -1,7 +1,5 @@
 import tZ = require("timezone-support");
 
-const msPerDay = 86400000;
-
 export const weekDays = [
   "Sunday",
   "Monday",
@@ -143,7 +141,7 @@ function validateTime(timeString: string) {
 function findTimeZone(timezoneName: string) {
   /*
    * POSIX-Definition causes GMT+X to be GMT-X and vice versa...
-   * In order to not confuse the user we exchange + and - here ;-)
+   * In order to not confuse the user we exchange + and - here
    */
   if (timezoneName.startsWith("GMT")) {
     if (timezoneName.length > 4) {
@@ -165,13 +163,11 @@ function findTimeZone(timezoneName: string) {
   return zone;
 }
 
-// timezone-support does not export these...
 export interface TimeZoneOffset {
   abbreviation?: string;
   offset: number;
 }
 
-// the month and day indices align.
 export interface Time {
   year: number;
   month: number;
@@ -181,7 +177,7 @@ export interface Time {
   seconds?: number;
   milliseconds?: number;
   dayOfWeek?: number;
-  epoch?: number;
+  epoch: number;
   zone?: TimeZoneOffset;
 }
 
@@ -196,13 +192,9 @@ export function getTimeString(zonedTime: Time) {
   } ${day} at ${hours}:${minutes < 10 ? "0" + minutes : minutes}`;
 }
 
-const dayInMs = 24 * 1000 * 60 * 60;
-
-export interface LobbyTimeResult {
-  time: Time | undefined;
-  timeZoneName: string | undefined;
-  error: string;
-}
+const minInMs = 1000 * 60;
+const hInMs = minInMs * 60;
+const dayInMs = hInMs * 24;
 
 export interface NextMondayAndSunday {
   monday: Date;
@@ -229,7 +221,7 @@ export function getWeekNumber(date: Date) {
   var dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((Number(d) - Number(yearStart)) / msPerDay + 1) / 7);
+  return Math.ceil(((Number(d) - Number(yearStart)) / dayInMs + 1) / 7);
 }
 
 /**
@@ -243,8 +235,8 @@ export function getNextMondayAndSundayDate() {
     diffToSundayOfNextWeek = diffToMondayNextWeek + 6;
 
   return {
-    monday: new Date(Date.now() + diffToMondayNextWeek * msPerDay),
-    sunday: new Date(Date.now() + diffToSundayOfNextWeek * msPerDay),
+    monday: new Date(Date.now() + diffToMondayNextWeek * dayInMs),
+    sunday: new Date(Date.now() + diffToSundayOfNextWeek * dayInMs),
   };
 }
 
@@ -277,7 +269,7 @@ export function getScheduledDate(
   scheduledDate.setMinutes(
     hourAndMinute.minute - scheduledDate.getTimezoneOffset()
   ); // remove time zone offset of server, offset given in minutes
-  //var utcDate = Date.UTC(scheduledDate.getUTCFullYear(), scheduledDate.getUTCMonth(), scheduledDate.getUTCDate(), scheduledDate.getUTCHours(), scheduledDate.getUTCMinutes(), scheduledDate.getUTCSeconds(), scheduledDate.getUTCMilliseconds());
+
   // transform into correct time zone
   var scheduledDateZoned = tZ.setTimeZone(scheduledDate, zone, {
     useUTC: true,
@@ -292,51 +284,39 @@ export function getScheduledDate(
  * @param {string} time time string
  * @param {string} timezoneName timezone name
  */
-export function createLobbyTime(time: string, timezoneName: string) {
-  var ltr: LobbyTimeResult = {
-    time: undefined,
-    timeZoneName: undefined,
-    error: "",
-  };
-
-  // get time
+export function createLobbyTime(
+  time: string,
+  timezoneName: string
+): LobbyTimeResult {
   const hourAndMinute: ValidatedTime = validateTime(time);
-  if (hourAndMinute.hour === undefined || hourAndMinute.minute === undefined) {
-    ltr.error =
-      "you need to provide a valid time (e.g. 9:30pm, 6:04am, ...) in your post";
-    return ltr;
-  }
+  if (hourAndMinute.hour === undefined || hourAndMinute.minute === undefined)
+    throw "You need to provide a valid time (e.g. 9:30pm, 6:04am, ...) in your post";
 
-  // get time zone
   const zone = findTimeZone(timezoneName);
-  if (zone === undefined) {
-    ltr.error = "Could not find time zone";
-    return ltr;
-  }
+  if (zone === undefined) throw `Could not find time zone '${timezoneName}'`;
 
-  // get 'now'
   var date = new Date();
-  // get 'now' in timezone
   var zonedDate = tZ.getZonedTime(date, zone);
+  if (zonedDate.epoch === undefined) throw `Could not get zoned time`;
+
   // check if hour, minute has already past in their time zone
   var timeDif =
-    (hourAndMinute.hour - zonedDate.hours) * 1000 * 60 * 60 +
-    (hourAndMinute.minute - zonedDate.minutes) * 1000 * 60;
-  if (timeDif < 0)
-    // go for next day if it did
-    timeDif = dayInMs + timeDif;
+    (hourAndMinute.hour - zonedDate.hours) * hInMs +
+    (hourAndMinute.minute - zonedDate.minutes) * minInMs;
+  if (timeDif < 0) timeDif = dayInMs + timeDif; // go for next day if it did
 
-  // create date "in milliseconds since 01.01.1970 00:00"
-  if (zonedDate.epoch === undefined) {
-    ltr.error = "zonedDate.epoch was undefined";
-    return ltr;
-  }
   var lobbyDate = new Date(zonedDate.epoch + timeDif);
+  const lobbyTime = getZonedTime(lobbyDate, zone);
 
-  // return zoned lobby date
-  ltr.time = tZ.getZonedTime(lobbyDate, zone);
-  ltr.timeZoneName = zone.name;
-  return ltr;
+  return {
+    time: lobbyTime,
+    timeZoneName: zone.name,
+  };
+}
+
+export interface LobbyTimeResult {
+  time: Time;
+  timeZoneName: string;
 }
 
 /**
@@ -344,8 +324,14 @@ export function createLobbyTime(time: string, timezoneName: string) {
  * @param {Date} date
  * @param {tZ.timezone} timezone
  */
-export function getZonedTime(date: Date, timezone: TimeZoneInfo) {
-  return tZ.getZonedTime(date, timezone);
+export function getZonedTime(
+  date: Date | number,
+  timezone: TimeZoneInfo
+): Time {
+  const zonedTime = tZ.getZonedTime(date, timezone);
+  if (zonedTime.epoch === undefined)
+    throw `Could not get zoned time because epoch is undefined`;
+  return zonedTime as Time;
 }
 
 /**
@@ -357,11 +343,10 @@ export function getZonedTime(date: Date, timezone: TimeZoneInfo) {
 export function getZonedTimeFromTimeZoneName(
   date: Date | number,
   timezoneName: string
-) {
+): Time | undefined {
   const zone = findTimeZone(timezoneName);
-  if (zone === undefined) {
-    return undefined;
-  }
+  if (zone === undefined)
+    throw `Could not get zoned time because epoch is undefined`;
 
-  return tZ.getZonedTime(date, zone);
+  return getZonedTime(date, zone);
 }

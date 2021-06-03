@@ -62,7 +62,10 @@ export async function getInfoFromLobbyReaction(
   return new LobbyReactionInfo(lobby, guildMember, role);
 }
 
-export function isValidLobbyReaction(reaction: MessageReaction, user: User) {
+export function isValidLobbyReaction(
+  reaction: MessageReaction,
+  user: User
+): boolean {
   // only care for messages from self
   if (reaction.message.author.id !== process.env.BOT_ID) return false;
 
@@ -73,7 +76,7 @@ export function isValidLobbyReaction(reaction: MessageReaction, user: User) {
   if (reaction.message.channel === undefined) return false;
 
   // Ignore messages outside of bot channels
-  if (!isWatchingChannel(reaction.message.channel.id)) return;
+  if (!isWatchingChannel(reaction.message.channel.id)) return false;
 
   return true;
 }

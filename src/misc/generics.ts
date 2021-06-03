@@ -9,51 +9,15 @@ export function coinFlip() {
  * @param {Array} a items An array containing the items.
  * @param return the shuffled array
  */
-export function shuffle<T>(a: Array<T>) {
-  var j, x, i;
-  for (i = a.length - 1; i > 0; i--) {
+export function shuffle<T>(array: Array<T>) {
+  var i, j, copy;
+  for (i = array.length - 1; i > 0; i--) {
     j = Math.floor(Math.random() * (i + 1));
-    x = a[i];
-    a[i] = a[j];
-    a[j] = x;
+    copy = array[i];
+    array[i] = array[j];
+    array[j] = copy;
   }
-  return a;
-}
-
-/**
-  Check if a set of numbers is within the given range
-  @param positions map of numbers to be checked for correctness
-  @param min min number value
-  @param max max number value
-  @return {[boolean, string]} true if correct, false + error msg if not
-*/
-export function checkNumbers(
-  positions: Set<number>,
-  min: number = 0,
-  max: number = 5
-): [boolean, string] {
-  // error if empty
-  if (positions.size == 0 || (positions.size == 1 && positions.has(NaN))) {
-    return [false, "Did not find any numbers"];
-  }
-
-  // error if not integer values
-  for (let p of positions) {
-    if (Number.isNaN(p)) {
-      return [false, "At least one position is NaN."];
-    } else if (p > max) {
-      return [false, "At least one position is greater than " + max + "."];
-    } else if (p < min) {
-      return [false, "At least one position is smaller than " + min + "."];
-    }
-  }
-  return [true, ""];
-}
-
-export interface NumberResult {
-  numbers: Set<number> | undefined;
-  status: Boolean;
-  errorMessage: string;
+  return array;
 }
 
 /**
@@ -64,27 +28,32 @@ export interface NumberResult {
  * @return {[boolean, set<int>, string]}[true if success, unique numbers, error message if not success]
  */
 export function getNumbersFromString(
-  stringWithCommaSeperatedNumbers: string,
+  csvString: string,
   min: number = 0,
   max: number = 5
-): NumberResult {
-  var strings: string[] = stringWithCommaSeperatedNumbers.split(",");
-  var numbers: number[] = [];
-  // get integers
-  strings.forEach((s: string) => {
-    numbers.push(Number(s));
-  });
+): Set<number> {
+  const numbers = getUniqueSortedNumbersFromCSVString(csvString);
+  assertPositionsBetweenMinMax(numbers, min, max);
+  return numbers;
+}
 
-  // remove duplicates
+function assertPositionsBetweenMinMax(
+  positions: Set<number>,
+  min: number = 0,
+  max: number = 5
+) {
+  if (positions.size == 0) throw "You did not provide positions.";
+  if (positions.has(NaN)) throw "One of your positions is not a number.";
+
+  for (let p of positions) {
+    if (p > max) throw `At least one position is greater than ${max}.`;
+    if (p < min) throw `At least one position is smaller than ${min}.`;
+  }
+}
+
+function getUniqueSortedNumbersFromCSVString(csvString: string) {
+  const strings: string[] = csvString.split(",");
+  var numbers = strings.map((s) => Number(s));
   numbers.sort();
-  var uniqueNumbers = new Set(numbers);
-
-  // check numbers
-  var checkResult = checkNumbers(uniqueNumbers, min, max);
-
-  return {
-    numbers: uniqueNumbers,
-    status: checkResult[0],
-    errorMessage: checkResult[1],
-  };
+  return new Set(numbers);
 }

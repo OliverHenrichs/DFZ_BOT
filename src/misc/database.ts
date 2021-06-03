@@ -749,7 +749,7 @@ export async function getLobbies(
   channelId: string = "",
   messageId: string = ""
 ) {
-  return new Promise<Lobby[]>(function (resolve, reject) {
+  return new Promise<Lobby[]>(function (resolve) {
     selectTableValueByConditions(
       dbHandle,
       "lobbies",
@@ -1009,7 +1009,7 @@ export async function getReferrerByTag(dbHandle: Pool, tag = "") {
 }
 
 async function getReferrer(dbHandle: Pool, filter: string[]) {
-  return new Promise<Referrer | undefined>(function (resolve, reject) {
+  return new Promise<Referrer | undefined>(function (resolve) {
     selectTableValueByConditions(
       dbHandle,
       "referrers",

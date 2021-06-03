@@ -23,6 +23,7 @@ import {
   regionStrings,
   scheduleTimezoneNames,
   scheduleTimezoneNames_short,
+  Time,
   weekDayNumbers,
   weekDays,
 } from "./timeZone";
@@ -51,7 +52,7 @@ import {
   editCalendarEvent,
   noCalendarRejection,
 } from "./googleCalendarManagement";
-import { postLobby } from "./lobbyManagement";
+import { postLobby, PostLobbyOptions } from "./lobbyManagement";
 import { Schedule } from "./types/schedule";
 import {
   getRegionalRoleFromString,
@@ -240,78 +241,47 @@ function getLobbyType(schedule: Schedule) {
   return lobbyTypes.unranked;
 }
 
-/**
- * Creates a lobby post for due schedule
- * @param {GuildChannelManager} channels channels in which to post the lobby
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {s.Schedule} schedule
- */
-async function createScheduledLobby(
-  channels: GuildChannelManager,
-  dbHandle: Pool,
-  schedule: Schedule
+function getScheduledLobbyChannelId(
+  lobbyType: number,
+  scheduleType: string,
+  lobbyRegionRole: string | undefined
+): string | undefined {
+  switch (lobbyType) {
+    case lobbyTypes.tryout:
+      return process.env.BOT_LOBBY_CHANNEL_TRYOUT;
+    case lobbyTypes.botbash:
+      return process.env.BOT_LOBBY_CHANNEL_BOTBASH;
+    default:
+      if (scheduleType === scheduleTypes.lobbyt3)
+        return process.env.BOT_LOBBY_CHANNEL_T3;
+      else return getRegionalRoleLobbyChannel(lobbyRegionRole);
+  }
+}
+
+function getScheduleLobbyBeginnerRoles(
+  lobbyType: number,
+  scheduleType: string
 ) {
-  const lobbyRegionRole = getRegionalRoleFromString(schedule.region);
-  const type = getLobbyType(schedule);
-
-  var lobbyBeginnerRoles: Array<string> | undefined = undefined;
-  var channel: GuildChannel | undefined = undefined;
-  if (type === lobbyTypes.tryout) {
-    channel = channels.cache.find(
-      (chan) => chan.id === process.env.BOT_LOBBY_CHANNEL_TRYOUT
-    );
-    lobbyBeginnerRoles = [tryoutRole];
-  } else if (type === lobbyTypes.botbash) {
-    channel = channels.cache.find(
-      (chan) => chan.id === process.env.BOT_LOBBY_CHANNEL_BOTBASH
-    );
-    lobbyBeginnerRoles = beginnerRoles.slice(0, 2);
-  } else {
-    if (schedule.type === scheduleTypes.lobbyt3) {
-      channel = channels.cache.find(
-        (chan) => chan.id === process.env.BOT_LOBBY_CHANNEL_T3
-      );
-      lobbyBeginnerRoles = beginnerRoles.slice(3, 5);
-    } else {
-      const channelId = getRegionalRoleLobbyChannel(lobbyRegionRole);
-      channel = channels.cache.find((chan) => chan.id === channelId);
-      lobbyBeginnerRoles = beginnerRoles.slice(1, 3);
-    }
+  switch (lobbyType) {
+    case lobbyTypes.tryout:
+      return [tryoutRole];
+    case lobbyTypes.botbash:
+      return beginnerRoles.slice(0, 2);
+    default:
+      if (scheduleType === scheduleTypes.lobbyt3)
+        return beginnerRoles.slice(3, 5);
+      else return beginnerRoles.slice(1, 3);
   }
+}
 
-  if (
-    channel === undefined ||
-    !channel.isText() ||
-    lobbyBeginnerRoles === undefined
-  ) {
-    return;
-  }
-
-  const timezoneName = getRegionalRoleTimeZoneString(lobbyRegionRole),
-    zonedTime = getZonedTimeFromTimeZoneName(
-      Number(schedule.date),
-      timezoneName
-    );
-
-  if (zonedTime === undefined || lobbyRegionRole === undefined) return;
-
-  await postLobby(
-    dbHandle,
-    channel,
-    schedule.coaches,
-    type,
-    lobbyBeginnerRoles,
-    lobbyRegionRole,
-    zonedTime
-  );
-
-  // message coaches
-  schedule.coaches.forEach((c) => {
-    if (channel === undefined) {
-      return;
-    }
+function informCoachesOfSchedulePost(
+  schedule: Schedule,
+  channel: GuildChannel,
+  zonedTime: Time
+) {
+  schedule.coaches.forEach((coach) => {
     channel.guild.members
-      .fetch(c)
+      .fetch(coach)
       .then((guildMember) =>
         guildMember.send(
           `I just posted tonight's ${
@@ -323,6 +293,53 @@ async function createScheduledLobby(
         console.log("error when messaging schedule coaches: " + err)
       );
   });
+}
+
+/**
+ * Creates a lobby post for due schedule
+ * @param {GuildChannelManager} channels channels in which to post the lobby
+ * @param {mysql.Pool} dbHandle bot database handle
+ * @param {s.Schedule} schedule
+ */
+async function createScheduledLobby(
+  channelManager: GuildChannelManager,
+  dbHandle: Pool,
+  schedule: Schedule
+) {
+  const regionRole = getRegionalRoleFromString(schedule.region);
+  const type = getLobbyType(schedule);
+  const beginnerRoles = getScheduleLobbyBeginnerRoles(type, schedule.type);
+  const channelId = getScheduledLobbyChannelId(type, schedule.type, regionRole);
+  const channel = channelManager.cache.find((chan) => chan.id === channelId);
+
+  if (
+    channel === undefined ||
+    !channel.isText() ||
+    beginnerRoles === undefined
+  ) {
+    return;
+  }
+
+  const timezoneName = getRegionalRoleTimeZoneString(regionRole),
+    zonedTime = getZonedTimeFromTimeZoneName(
+      Number(schedule.date),
+      timezoneName
+    );
+
+  if (zonedTime === undefined || regionRole === undefined) return;
+
+  var options: PostLobbyOptions = {
+    type: type,
+    regionRole: regionRole,
+    userRoles: beginnerRoles,
+    time: zonedTime,
+    coaches: schedule.coaches,
+    optionalText: "",
+  };
+
+  await postLobby(dbHandle, channel, options);
+
+  informCoachesOfSchedulePost(schedule, channel, zonedTime);
 }
 
 /**
@@ -425,38 +442,38 @@ async function handleScheduleCoachWithdrawal(
 
 /**
  * verify input data sanity and create common schedule setup
- * @param {Date} _mondayDate
- * @param {Date} _sundayDate
- * @param {Array<Array<int>>} _days
- * @param {int} _type
- * @param {int} _coachCount
- * @param {Array<Array<string>>} _times
+ * @param {Date} mondayDate
+ * @param {Date} sundayDate
+ * @param {Array<Array<int>>} days
+ * @param {int} type
+ * @param {int} coachCount
+ * @param {Array<Array<string>>} times
  */
 function createScheduleSetup(
-  _mondayDate: Date,
-  _sundayDate: Date,
-  _days: Array<Array<number>>,
-  _type: string,
-  _coachCount: number,
-  _times: Array<Array<string>>
-) {
+  mondayDate: Date,
+  sundayDate: Date,
+  days: Array<Array<number>>,
+  type: string,
+  coachCount: number,
+  times: Array<Array<string>>
+): ScheduleSetup | undefined {
   var numRegions = regions.length;
 
   // verify days
-  if (_days.length === 1) {
+  if (days.length === 1) {
     // same days for each region
-    for (let i = 0; i < numRegions - 1; i++) _days.push(_days[0]); // duplicate for other regions
-  } else if (_days.length !== numRegions) {
+    for (let i = 0; i < numRegions - 1; i++) days.push(days[0]); // duplicate for other regions
+  } else if (days.length !== numRegions) {
     // individual days for each region
     // has to be either of two
     return undefined;
   }
 
   // verify times
-  if (_times.length === 1) {
+  if (times.length === 1) {
     // same times for each region
-    for (let i = 0; i < numRegions - 1; i++) _times.push(_times[0]); // duplicate for other regions
-  } else if (_times.length !== numRegions) {
+    for (let i = 0; i < numRegions - 1; i++) times.push(times[0]); // duplicate for other regions
+  } else if (times.length !== numRegions) {
     // individual times for each region
     // has to be either of two
     return undefined;
@@ -464,25 +481,23 @@ function createScheduleSetup(
 
   // verify day-time-combination
   for (let i = 0; i < numRegions; i++) {
-    if (_times[i].length !== _days[i].length) {
+    if (times[i].length !== days[i].length) {
       return undefined;
     }
   }
 
-  var scheduleSetup: ScheduleSetup = {
-    mondayDate: _mondayDate,
-    sundayDate: _sundayDate,
-    days: _days,
-    type: _type,
-    coachCount: _coachCount,
+  return {
+    mondayDate: mondayDate,
+    sundayDate: sundayDate,
+    days: days,
+    type: type,
+    coachCount: coachCount,
     regionStrings: regionStrings,
     regions: regions,
-    times: _times,
+    times: times,
     timezoneShortNames: scheduleTimezoneNames_short,
     timezones: scheduleTimezoneNames,
   };
-
-  return scheduleSetup;
 }
 
 /**
@@ -492,7 +507,7 @@ function createScheduleSetup(
  * @param {string} channelId the channel that is tied to the schedule
  * @param {Schedule} scheduleSetup the setup that was used to create the schedule message
  */
-export function createLobbySchedules(
+export function createSchedulesInDatabase(
   dbHandle: Pool,
   messageId: string,
   channelId: string,
@@ -508,13 +523,13 @@ export function createLobbySchedules(
     for (let j = 0; j < days.length; j++) {
       var day = days[j];
       var time = times[j];
-      var _date = getScheduledDate(
+      var date = getScheduledDate(
         scheduleSetup.mondayDate,
         day,
         time,
         timeZone
       );
-      if (_date === undefined) {
+      if (date === undefined) {
         console.log("Could not determine scheduled date for " + scheduleSetup);
         return;
       }
@@ -527,7 +542,7 @@ export function createLobbySchedules(
           scheduleSetup.type,
           scheduleSetup.coachCount,
           reactionEmoji,
-          _date?.toString(),
+          date?.toString(),
           region
         )
       );
@@ -540,7 +555,7 @@ export function createLobbySchedules(
 async function createSchedules(
   dbHandle: Pool,
   channels: GuildChannelManager,
-  chanId: string,
+  channelId: string,
   coachCount: number,
   type: string,
   days: Array<Array<number>>,
@@ -548,32 +563,171 @@ async function createSchedules(
   monAndSun: NextMondayAndSunday
 ) {
   var channel = channels.cache.find((chan) => {
-    return chan.id == chanId;
+    return chan.id == channelId;
   });
-  if (channel !== undefined && channel.isText()) {
-    var scheduleSetup = createScheduleSetup(
-      monAndSun.monday,
-      monAndSun.sunday,
-      days,
-      type,
-      coachCount,
-      times
-    );
+  if (channel === undefined || !channel.isText()) return;
 
-    if (scheduleSetup === undefined) {
-      console.log(
-        "ScheduleSetup creation returned 'undefined' in updateSchedules"
-      );
-      return;
-    }
-    var msg = await writeSchedule(channel, scheduleSetup);
-    if (msg === undefined) {
-      console.log("Writing schedule failed in updateSchedules");
-      return;
-    }
+  var scheduleSetup = createScheduleSetup(
+    monAndSun.monday,
+    monAndSun.sunday,
+    days,
+    type,
+    coachCount,
+    times
+  );
+  if (!scheduleSetup) return;
 
-    createLobbySchedules(dbHandle, msg.id, channel.id, scheduleSetup);
+  var message = await writeSchedule(channel, scheduleSetup);
+  if (message === undefined) return;
+
+  createSchedulesInDatabase(dbHandle, message.id, channel.id, scheduleSetup);
+}
+
+async function doWeNeedToUpdateSchedules(
+  date: Date,
+  dbHandle: Pool
+): Promise<boolean> {
+  return new Promise<boolean>(async function (resolve, reject) {
+    try {
+      var currentDay = date.getDay();
+      if (currentDay !== weekDayNumbers.Sunday) {
+        resolve(false);
+        return;
+      }
+
+      var currentDayDatabase = await getDay(dbHandle);
+      if (currentDayDatabase === currentDay) {
+        resolve(false);
+        return;
+      }
+
+      if (isNaN(currentDayDatabase)) await insertDay(dbHandle, currentDay);
+      else await updateDay(dbHandle, currentDay);
+      resolve(true);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function removeDeprecatedSchedules(
+  deprecationDate: Date,
+  dbHandle: Pool
+) {
+  var schedules = await getSchedules(dbHandle);
+
+  var schedulesToRemove: Array<Schedule> = [];
+  for (let i = 0; i < schedules.length; i++) {
+    var scheduleDate = new Date(schedules[i].date);
+    if (scheduleDate < deprecationDate) schedulesToRemove.push(schedules[i]);
   }
+
+  if (schedulesToRemove.length === 0) return;
+
+  removeSchedules(dbHandle, schedulesToRemove);
+}
+
+interface WeeklyScheduleData {
+  coachCount: number;
+  daysByRegion: Array<Array<number>>;
+  timesByRegion: Array<Array<string>>;
+  channelId: string;
+  type: string;
+}
+
+function addWeeklySchedule(
+  mondayAndSunday: NextMondayAndSunday,
+  channels: GuildChannelManager,
+  dbHandle: Pool,
+  scheduleData: WeeklyScheduleData
+) {
+  createSchedules(
+    dbHandle,
+    channels,
+    scheduleData.channelId,
+    scheduleData.coachCount,
+    scheduleData.type,
+    scheduleData.daysByRegion,
+    scheduleData.timesByRegion,
+    mondayAndSunday
+  );
+}
+
+const t1_t2_Data: WeeklyScheduleData = {
+  coachCount: 2,
+  daysByRegion: [[3, 5, 0]],
+  timesByRegion: [
+    ["8:00pm", "8:00pm", "4:00pm"],
+    ["8:00pm", "8:00pm", "4:00pm"],
+    ["9:00pm", "9:00pm", "4:00pm"],
+  ],
+  channelId: scheduleChannel5v5,
+  type: scheduleTypes.lobbyt1,
+};
+function addTier_1_2_WeeklySchedule(
+  mondayAndSunday: NextMondayAndSunday,
+  channels: GuildChannelManager,
+  dbHandle: Pool
+) {
+  addWeeklySchedule(mondayAndSunday, channels, dbHandle, t1_t2_Data);
+}
+
+const t3_t4_Data: WeeklyScheduleData = {
+  coachCount: 2,
+  daysByRegion: [[2, 5, 0]],
+  timesByRegion: [
+    ["8:00pm", "8:00pm", "4:00pm"],
+    ["8:00pm", "8:00pm", "4:00pm"],
+    ["9:00pm", "9:00pm", "4:00pm"],
+  ],
+  channelId: scheduleChannel5v5_t3,
+  type: scheduleTypes.lobbyt3,
+};
+function addTier_3_4_WeeklySchedule(
+  mondayAndSunday: NextMondayAndSunday,
+  channels: GuildChannelManager,
+  dbHandle: Pool
+) {
+  addWeeklySchedule(mondayAndSunday, channels, dbHandle, t3_t4_Data);
+}
+
+const tryoutData: WeeklyScheduleData = {
+  coachCount: 1,
+  daysByRegion: [[2, 4, 6]],
+  timesByRegion: [["8:00pm", "8:00pm", "8:00pm"]],
+  channelId: scheduleChannelTryout,
+  type: scheduleTypes.tryout,
+};
+function addTryoutWeeklySchedule(
+  mondayAndSunday: NextMondayAndSunday,
+  channels: GuildChannelManager,
+  dbHandle: Pool
+) {
+  addWeeklySchedule(mondayAndSunday, channels, dbHandle, tryoutData);
+}
+
+const botbashData: WeeklyScheduleData = {
+  coachCount: 1,
+  daysByRegion: [[2, 4, 6]],
+  timesByRegion: [["8:45pm", "8:45pm", "8:45pm"]],
+  channelId: scheduleChannelBotbash,
+  type: scheduleTypes.botbash,
+};
+function addBotbashWeeklySchedule(
+  mondayAndSunday: NextMondayAndSunday,
+  channels: GuildChannelManager,
+  dbHandle: Pool
+) {
+  addWeeklySchedule(mondayAndSunday, channels, dbHandle, botbashData);
+}
+
+function addWeeklySchedules(channels: GuildChannelManager, dbHandle: Pool) {
+  var mondayAndSunday: NextMondayAndSunday = getNextMondayAndSundayDate();
+
+  addTier_1_2_WeeklySchedule(mondayAndSunday, channels, dbHandle);
+  addTier_3_4_WeeklySchedule(mondayAndSunday, channels, dbHandle);
+  addTryoutWeeklySchedule(mondayAndSunday, channels, dbHandle);
+  addBotbashWeeklySchedule(mondayAndSunday, channels, dbHandle);
 }
 
 /**
@@ -587,101 +741,10 @@ export async function updateSchedules(
 ) {
   try {
     var now = new Date();
-    var day = now.getDay();
-    var saved_day = await getDay(dbHandle);
+    if (!(await doWeNeedToUpdateSchedules(now, dbHandle))) return;
 
-    // if (dbHandle.dfz_debugMode === true) {
-    //   dbHandle.dfz_debugMode = false;
-    // } else {
-    if (saved_day === day) return;
-
-    if (isNaN(saved_day)) await insertDay(dbHandle, day);
-    else await updateDay(dbHandle, day);
-
-    if (day !== weekDayNumbers.Sunday) return;
-    //}
-
-    // remove events from the past
-    var schedules = await getSchedules(dbHandle);
-    var schedulesToRemove: Array<Schedule> = [];
-    for (let i = 0; i < schedules.length; i++) {
-      var scheduleDate = new Date(schedules[i].date);
-      if (scheduleDate < now) schedulesToRemove.push(schedules[i]);
-    }
-    if (schedulesToRemove.length > 0)
-      removeSchedules(dbHandle, schedulesToRemove);
-
-    // get dates to add (next week)
-    var monAndSun: NextMondayAndSunday = getNextMondayAndSundayDate(/*new Date(now.setDate(now.getDate()+21))*/);
-
-    // lobby schedule
-
-    // t1 / t2
-    var coachCount5v5 = 2;
-    var days_t1 = [[3, 5, 0]];
-    var times_t1 = [
-      ["8:00pm", "8:00pm", "4:00pm"],
-      ["8:00pm", "8:00pm", "4:00pm"],
-      ["9:00pm", "9:00pm", "4:00pm"],
-    ];
-    createSchedules(
-      dbHandle,
-      channels,
-      scheduleChannel5v5,
-      coachCount5v5,
-      scheduleTypes.lobbyt1,
-      days_t1,
-      times_t1,
-      monAndSun
-    );
-
-    // t3 / t4
-    var days_t3 = [[2, 5, 0]];
-    var times_t3 = [
-      ["8:00pm", "8:00pm", "4:00pm"],
-      ["8:00pm", "8:00pm", "4:00pm"],
-      ["9:00pm", "9:00pm", "4:00pm"],
-    ];
-    createSchedules(
-      dbHandle,
-      channels,
-      scheduleChannel5v5_t3,
-      coachCount5v5,
-      scheduleTypes.lobbyt3,
-      days_t3,
-      times_t3,
-      monAndSun
-    );
-
-    // tryout schedule
-    var coachCountTryout = 1;
-    var daysTryout = [[2, 4, 6]];
-    var timesTryout = [["8:00pm", "8:00pm", "8:00pm"]];
-    createSchedules(
-      dbHandle,
-      channels,
-      scheduleChannelTryout,
-      coachCountTryout,
-      scheduleTypes.tryout,
-      daysTryout,
-      timesTryout,
-      monAndSun
-    );
-
-    // botbash schedule
-    var coachCountBotbash = 1;
-    var daysBotbash = [[2, 4, 6]];
-    var timesBotbash = [["8:45pm", "8:45pm", "8:45pm"]];
-    createSchedules(
-      dbHandle,
-      channels,
-      scheduleChannelBotbash,
-      coachCountBotbash,
-      scheduleTypes.botbash,
-      daysBotbash,
-      timesBotbash,
-      monAndSun
-    );
+    await removeDeprecatedSchedules(now, dbHandle);
+    addWeeklySchedules(channels, dbHandle);
   } catch (e) {
     console.log(`Error in updateSchedules\nReason:\n${e}`);
   }
@@ -697,7 +760,6 @@ export async function updateSchedulePost(
   channel: TextChannel
 ) {
   try {
-    // fetch message
     const message = await channel.messages.fetch(schedule.messageId);
     if (message === undefined || message === null) return;
 
@@ -811,7 +873,6 @@ export async function addCoachToSchedule(
     reaction.message.id,
     reaction.emoji.name
   );
-
   if (schedule === undefined) return;
 
   if (schedule.coaches.find((coach: string) => coach === user.id)) {
