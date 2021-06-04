@@ -104,7 +104,7 @@ function addUserWithPositionsToUserTable(
 
   addUserPositionsToUserTable(tableBase, positions, startIndex);
 
-  addTierToUserTable(tableBase, user);
+  addTierToUserTable(tableBase, user, startIndex);
 }
 
 /**
@@ -179,7 +179,6 @@ function getUserTable(
 
   var tableStartIndexPlayers = 0;
   var tableStartIndexBench = 1;
-
   var userIndex = 0;
   users.forEach((usr) => {
     if (userIndex++ < playersPerLobby || playersPerLobby === anyNumberOfPlayers)
@@ -207,6 +206,7 @@ function getPlayersPerLobbyByLobbyType(type: number) {
 
 function getCurrentUsersAsTable(lobby: Lobby, mention = false) {
   const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
+
   return getUserTable(lobby.users, playersPerLobby, mention);
 }
 
