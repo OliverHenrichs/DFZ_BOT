@@ -16,7 +16,7 @@ export const lobbyTypeKeys = Object.keys(lobbyTypes);
 export const lobbyTypeKeysString = lobbyTypeKeys.join(", ");
 
 export function getLobbyTypeByString(type: string) {
-  const idx = Object.keys(lobbyTypes).findIndex((key) => type === key);
+  const idx = lobbyTypeKeys.findIndex((key) => type === key);
   if (idx === -1)
     throw `Invalid lobby type ${type}. Lobby types are ${lobbyTypeKeysString}`;
   return idx + 1;
