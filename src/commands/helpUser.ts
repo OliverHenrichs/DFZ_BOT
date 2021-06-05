@@ -1,10 +1,6 @@
 import { Message, MessageEmbed } from "discord.js";
 import { generateEmbedding } from "../misc/answerEmbedding";
-import {
-  lobbyTypeKeys,
-  lobbyTypeKeysString,
-  lobbyTypes,
-} from "../misc/constants";
+import { lobbyTypeKeys, lobbyTypeKeysString } from "../misc/constants";
 import { FieldElement } from "../misc/interfaces/EmbedInterface";
 import { reactPositive } from "../misc/messageHelper";
 import {
@@ -104,9 +100,9 @@ function addHighscoreHint(embed: MessageEmbed) {
     embed,
     generateHelpEmbedFields(
       "highscore",
-      "!highscore -type <type>",
+      "!highscore -userType <type>",
       "Shows you an all-time ranking displaying who coached or played how much",
-      "!highscore\n!highscore -type normal\n!highscore -type tryout"
+      "!highscore\n!highscore -userType players\n!highscore -ut coaches"
     )
   );
 }
