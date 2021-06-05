@@ -3,11 +3,6 @@ import { Coach } from "./types/coach";
 import { Player } from "./types/player";
 import { Referrer } from "./types/referrer";
 
-/**
- *
- * @param {Array<FieldElement>} tableBase
- * @param {Coach} coach
- */
 export function addDBCoachRowToTable(
   tableBase: Array<FieldElement>,
   coach: Coach
@@ -19,12 +14,6 @@ export function addDBCoachRowToTable(
   tableBase[4].value =
     tableBase[4].value + "\r\n" + coach.lobbyCountReplayAnalysis;
 }
-
-/**
- *
- * @param {Array<FieldElement>} tableBase
- * @param {Player} player
- */
 export function addDBPlayerRowToTable(
   tableBase: Array<FieldElement>,
   player: Player
@@ -38,11 +27,6 @@ export function addDBPlayerRowToTable(
     tableBase[5].value + "\r\n" + player.lobbyCountReplayAnalysis;
 }
 
-/**
- *
- * @param {JSON} tableBase
- * @param {Referrer} referrer
- */
 export function addDBReferrerRowToTable(
   tableBase: Array<FieldElement>,
   referrer: Referrer

@@ -942,20 +942,6 @@ export async function getSortedCoaches(
   });
 }
 
-function isCoach(
-  response: RowDataPacket | RowDataPacket[] | OkPacket
-): response is RowDataPacket {
-  if (
-    "lobbyCount" in response &&
-    "lobbyCountTryout" in response &&
-    "lobbyCountNormal" in response &&
-    "lobbyCountReplayAnalysis" in response
-  ) {
-    return true;
-  }
-  return false;
-}
-
 /**
  * Returns coach given user ID, returns empty coach if it didnt find one
  * @param {Pool} dbHandle

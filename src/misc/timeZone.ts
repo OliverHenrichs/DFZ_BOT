@@ -134,10 +134,6 @@ function validateTime(timeString: string) {
   return res;
 }
 
-/**
- * gets time zone from time zone name
- * @param {string} timezoneName
- */
 function findTimeZone(timezoneName: string) {
   /*
    * POSIX-Definition causes GMT+X to be GMT-X and vice versa...
