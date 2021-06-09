@@ -1,5 +1,3 @@
-import { scheduleTypes } from "../types/scheduleTypes";
-
 /**
  * Just some pod that make up a schedule
  */

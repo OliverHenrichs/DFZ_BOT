@@ -1,9 +1,9 @@
 import { Role } from "discord.js";
+import { Lobby } from "../types/serializables/lobby";
 import { lobbyTypes } from "./constants";
 import { coinFlip, shuffle } from "./generics";
 import { LobbyPlayer, PositionPlayers } from "./interfaces/LobbyInterfaces";
 import { getNumberFromBeginnerRole } from "./roleManagement";
-import { Lobby } from "./types/lobby";
 
 /**
  * Swap two array elements in place

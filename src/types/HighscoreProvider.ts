@@ -1,12 +1,5 @@
 import { Message } from "discord.js";
-import { Pool } from "mysql2/promise";
 import { generateEmbedding } from "../misc/answerEmbedding";
-import { lobbyTypes } from "../misc/constants";
-import {
-  getSortedPlayers,
-  getSortedCoaches,
-  getSortedReferrers,
-} from "../misc/database";
 import {
   tableBasePlayersTemplate,
   addDBPlayerRowToTable,
@@ -17,9 +10,13 @@ import {
 } from "../misc/highScoreTables";
 import { FieldElement } from "../misc/interfaces/EmbedInterface";
 import { reactPositive } from "../misc/messageHelper";
-import { Coach } from "../misc/types/coach";
-import { Player } from "../misc/types/player";
-import { Referrer } from "../misc/types/referrer";
+import { DFZDataBaseClient } from "./database/DFZDataBaseClient";
+import { Coach } from "./serializables/coach";
+import { Player } from "./serializables/player";
+import { Referrer } from "./serializables/referrer";
+import { CoachSerializer } from "./serializers/coachSerializer";
+import { PlayerSerializer } from "./serializers/playerSerializer";
+import { ReferrerSerializer } from "./serializers/referrerSerializer";
 
 export enum HighscoreUserTypes {
   players = "players",
@@ -28,24 +25,21 @@ export enum HighscoreUserTypes {
 }
 
 interface HighscoreProviderSettings {
-  dbHandle: Pool;
+  dbClient: DFZDataBaseClient;
   tableTemplate: FieldElement[];
   userType: HighscoreUserTypes;
 }
 
 abstract class AbstractHighscoreProvider<T> {
-  dbHandle: Pool;
-  dbColumnName: string;
+  dbClient: DFZDataBaseClient;
   resultTable: FieldElement[];
   userType: HighscoreUserTypes;
 
   constructor(settings: HighscoreProviderSettings) {
-    this.dbHandle = settings.dbHandle;
-    this.dbColumnName = this.getDBColumnName();
+    this.dbClient = settings.dbClient;
     this.resultTable = JSON.parse(JSON.stringify(settings.tableTemplate)); // deep copy...
     this.userType = settings.userType;
   }
-  abstract getDBColumnName(): string;
 
   async generateHighscores(message: Message) {
     const users = await this.getUsersFromDatabase();
@@ -81,9 +75,9 @@ abstract class AbstractHighscoreProvider<T> {
 }
 
 export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
-  constructor(dbHandle: Pool) {
+  constructor(dbClient: DFZDataBaseClient) {
     const settings: HighscoreProviderSettings = {
-      dbHandle: dbHandle,
+      dbClient: dbClient,
       tableTemplate: tableBasePlayersTemplate,
       userType: HighscoreUserTypes.players,
     };
@@ -91,12 +85,9 @@ export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
     super(settings);
   }
 
-  getDBColumnName(): string {
-    return "lobbyCount";
-  }
-
   async getUsersFromDatabase() {
-    const players = await getSortedPlayers(this.dbHandle, this.dbColumnName);
+    const serializer = new PlayerSerializer(this.dbClient);
+    const players = await serializer.getSorted();
     if (players.length === 0) throw "No highscore player entries.";
     return players;
   }
@@ -107,9 +98,9 @@ export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
 }
 
 export class CoachHighscoreProvider extends AbstractHighscoreProvider<Coach> {
-  constructor(dbHandle: Pool) {
+  constructor(dbClient: DFZDataBaseClient) {
     const settings: HighscoreProviderSettings = {
-      dbHandle: dbHandle,
+      dbClient: dbClient,
       tableTemplate: tableBaseCoachesTemplate,
       userType: HighscoreUserTypes.coaches,
     };
@@ -117,12 +108,9 @@ export class CoachHighscoreProvider extends AbstractHighscoreProvider<Coach> {
     super(settings);
   }
 
-  getDBColumnName(): string {
-    return "lobbyCount";
-  }
-
   async getUsersFromDatabase() {
-    const coaches = await getSortedCoaches(this.dbHandle, this.dbColumnName);
+    const serializer = new CoachSerializer(this.dbClient);
+    const coaches = await serializer.getSorted();
     if (coaches.length === 0) throw "No highscore coach entries.";
     return coaches;
   }
@@ -133,9 +121,9 @@ export class CoachHighscoreProvider extends AbstractHighscoreProvider<Coach> {
 }
 
 export class ReferrerHighscoreProvider extends AbstractHighscoreProvider<Referrer> {
-  constructor(dbHandle: Pool) {
+  constructor(dbClient: DFZDataBaseClient) {
     const settings: HighscoreProviderSettings = {
-      dbHandle: dbHandle,
+      dbClient: dbClient,
       tableTemplate: tableBaseReferrersTemplate,
       userType: HighscoreUserTypes.referrers,
     };
@@ -143,15 +131,9 @@ export class ReferrerHighscoreProvider extends AbstractHighscoreProvider<Referre
     super(settings);
   }
 
-  getDBColumnName(): string {
-    return "referralCount";
-  }
-
   async getUsersFromDatabase() {
-    const referrers = await getSortedReferrers(
-      this.dbHandle,
-      this.dbColumnName
-    );
+    const serializer = new ReferrerSerializer(this.dbClient);
+    const referrers = await serializer.getSorted();
     if (referrers.length === 0) throw "No highscore referrer entries.";
     return referrers;
   }

@@ -1,5 +1,4 @@
 import { Message } from "discord.js";
-import { Pool } from "mysql2/promise";
 import {
   isRoleBasedLobbyType,
   lobbyTypes,
@@ -20,17 +19,18 @@ import {
   adminRoles,
   beginnerRoles,
 } from "../misc/roleManagement";
+import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
  * @param {Discord.Message} message coaches message that triggered the lobby post
  * @param {mysql.Pool} dbHandle bot database handle
  */
-export default async (message: Message, dbHandle: Pool) => {
+export default async (message: Message, dbClient: DFZDataBaseClient) => {
   var options = getPostLobbyOptions(message);
   if (options === undefined) return;
 
-  postLobby(dbHandle, message.channel, options).then(() => {
+  postLobby(dbClient, message.channel, options).then(() => {
     reactPositive(message);
   });
 };

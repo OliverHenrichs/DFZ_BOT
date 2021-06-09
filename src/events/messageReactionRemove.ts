@@ -1,7 +1,7 @@
 import { MessageReaction, User } from "discord.js";
 import { scheduleChannels } from "../misc/channelManagement";
 import { lobbyManagementReactionEmojis } from "../misc/constants";
-import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import { removeCoach, updatePlayerInLobby } from "../misc/lobbyManagement";
 import {
   getInfoFromLobbyReaction,
@@ -10,7 +10,7 @@ import {
 } from "../misc/messageReactionHelper";
 import { adminRoles } from "../misc/roleManagement";
 import { removeCoachFromSchedule } from "../misc/scheduleManagement";
-import { Lobby } from "../misc/types/lobby";
+import { Lobby } from "../types/serializables/lobby";
 
 function tryCancelLobbyCancel(
   client: DFZDiscordClient,
@@ -37,7 +37,7 @@ function handleCoachReaction(
 
   switch (reaction.emoji.name) {
     case lobbyManagementReactionEmojis[2]:
-      removeCoach(client.dbHandle, reaction.message.channel, lobby, user.id)
+      removeCoach(client.dbClient, reaction.message.channel, lobby, user.id)
         .then(() => user.send("✅ Removed you as a coach!"))
         .catch((error: string) =>
           user.send("⛔ I could not remove you as a coach. Reason: " + error)
@@ -70,7 +70,7 @@ async function handleLobbyRelatedEmoji(
 
   if (adminRoles.includes(lri.role.id))
     handleCoachReaction(client, reaction, lri.lobby, user);
-  else updatePlayerInLobby(client.dbHandle, reaction, lri.lobby, user);
+  else updatePlayerInLobby(client.dbClient, reaction, lri.lobby, user);
 }
 
 /**

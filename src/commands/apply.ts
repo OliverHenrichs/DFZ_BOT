@@ -1,26 +1,19 @@
 import { Message } from "discord.js";
-import {
-  getPlayerByID,
-  getReferrerByTag,
-  insertReferrer,
-  insertPlayer,
-} from "../misc/database";
-import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
-import { Player } from "../misc/types/player";
-import { Referrer } from "../misc/types/referrer";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { Player } from "../types/serializables/player";
+import { Referrer } from "../types/serializables/referrer";
+import { PlayerSerializer } from "../types/serializers/playerSerializer";
+import { ReferrerSerializer } from "../types/serializers/referrerSerializer";
 
-/**
- * Adds player to db on application in application channel
- */
 export default async (client: DFZDiscordClient, message: Message) => {
-  var player = await getPlayerByID(client.dbHandle, message.author.id);
-  if (player !== undefined) return;
+  const serializer = new PlayerSerializer(client.dbClient, message.author.id);
+  var player = await serializer.get();
+  if (player.length > 0) return;
 
   const refTag = getReferralTag(message.content);
   if (refTag) handleReferrerTag(client, refTag);
 
-  insertPlayer(
-    client.dbHandle,
+  serializer.insert(
     new Player(message.author.id, message.author.tag, refTag ? refTag : "")
   );
 };
@@ -57,20 +50,19 @@ function validateReferralTag(refTag: string): string | undefined {
   return match[0];
 }
 
-function handleReferrerTag(client: DFZDiscordClient, refTag: string) {
-  getReferrerByTag(client.dbHandle, refTag).then(
-    (existingReferrer: Referrer | undefined) => {
-      if (existingReferrer) return;
-      addReferrer(client, refTag);
-    }
-  );
+async function handleReferrerTag(client: DFZDiscordClient, refTag: string) {
+  const serializer = new ReferrerSerializer(client.dbClient, refTag);
+  if (!(await serializer.get())) addReferrer(client, serializer, refTag);
 }
 
-function addReferrer(client: DFZDiscordClient, refTag: string) {
+function addReferrer(
+  client: DFZDiscordClient,
+  serializer: ReferrerSerializer,
+  refTag: string
+) {
   const referrerId = findReferrerId(refTag, client);
-  insertReferrer(
-    client.dbHandle,
-    new Referrer(referrerId === undefined ? "" : referrerId, refTag, 0)
+  serializer.insert(
+    new Referrer(referrerId === undefined ? "Unknown" : referrerId, refTag, 0)
   );
 }
 

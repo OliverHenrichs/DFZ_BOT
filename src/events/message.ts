@@ -1,5 +1,5 @@
 import { Message } from "discord.js";
-import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
 
 import apply from "../commands/apply";
 import helpUser from "../commands/helpUser";
@@ -64,16 +64,16 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
       return helpUser(message);
     }
     if (content.startsWith("!post")) {
-      return postLobby(message, client.dbHandle);
+      return postLobby(message, client.dbClient);
     }
     if (content.startsWith("!update")) {
-      return updateLobby(message, client.dbHandle);
+      return updateLobby(message, client.dbClient);
     }
     if (content.startsWith("!highscore")) {
-      return highScore(message, client.dbHandle);
+      return highScore(message, client.dbClient);
     }
     if (content.startsWith("!kick")) {
-      return kick(message, client.dbHandle);
+      return kick(message, client.dbClient);
     }
   }
 };

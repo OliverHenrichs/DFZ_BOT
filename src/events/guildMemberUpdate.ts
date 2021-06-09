@@ -1,13 +1,5 @@
 import { Collection, GuildMember, Role } from "discord.js";
-import { Pool } from "mysql2/promise";
-import {
-  getPlayerByID,
-  insertPlayer,
-  getReferrerByTag,
-  updateReferrer,
-  updatePlayer,
-} from "../misc/database";
-import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import {
   findRole,
   regionRoleIDs,
@@ -15,7 +7,10 @@ import {
   beginnerRoles,
   findRoles,
 } from "../misc/roleManagement";
-import { Player } from "../misc/types/player";
+import { Player } from "../types/serializables/player";
+import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
+import { PlayerSerializer } from "../types/serializers/playerSerializer";
+import { ReferrerSerializer } from "../types/serializers/referrerSerializer";
 
 function getRoleBasedPrefixes(roles: Collection<string, Role>) {
   var prefixes: string[] = [];
@@ -46,18 +41,24 @@ function updateNickname(member: GuildMember) {
   return true;
 }
 
-function awardPointToReferrer(player: Player, dbHandle: Pool) {
+async function awardPointToReferrer(
+  player: Player,
+  dbClient: DFZDataBaseClient
+) {
   // only award if player named a referrer and isn't already locked
   if (player.referredBy === "" || player.referralLock) return;
+  const serializer = new ReferrerSerializer(dbClient, player.referredBy);
+  const referrers = await serializer.get();
 
-  getReferrerByTag(dbHandle, player.referredBy).then((referrer) => {
-    if (referrer !== undefined) {
-      referrer.referralCount += 1;
-      updateReferrer(dbHandle, referrer);
-    }
-    player.referralLock = 1; // add lock after awarding once
-    updatePlayer(dbHandle, player);
-  });
+  if (referrers.length > 0) {
+    const referrer = referrers[0];
+    referrer.referralCount += 1;
+    serializer.update(referrer);
+  }
+
+  player.referralLock = 1; // add lock after awarding once
+  const playerSerializer = new PlayerSerializer(dbClient, player.referredBy);
+  playerSerializer.update(player);
 }
 
 /**
@@ -69,8 +70,8 @@ function awardPointToReferrer(player: Player, dbHandle: Pool) {
  * @param {GuildMember} oldMember
  * @param {GuildMember} newMember
  */
-function handleFirstBeginnerRole(
-  dbHandle: Pool,
+async function handleFirstBeginnerRole(
+  dbClient: DFZDataBaseClient,
   oldMember: GuildMember,
   newMember: GuildMember
 ) {
@@ -80,13 +81,13 @@ function handleFirstBeginnerRole(
     return;
   }
 
-  getPlayerByID(dbHandle, newMember.user.id).then((player) => {
-    if (player === undefined) {
-      insertPlayer(dbHandle, new Player(newMember.user.id, newMember.user.tag));
-    } else {
-      awardPointToReferrer(player, dbHandle);
-    }
-  });
+  const serializer = new PlayerSerializer(dbClient, newMember.user.id);
+  const players = await serializer.get();
+  if (players.length === 0) {
+    await serializer.insert(new Player(newMember.user.id, newMember.user.tag));
+  } else {
+    await awardPointToReferrer(players[0], dbClient);
+  }
 }
 
 /**
@@ -105,5 +106,5 @@ module.exports = async (
 
   updateNickname(newMember);
 
-  handleFirstBeginnerRole(client.dbHandle, oldMember, newMember);
+  handleFirstBeginnerRole(client.dbClient, oldMember, newMember);
 };

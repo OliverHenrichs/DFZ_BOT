@@ -1,4 +1,4 @@
-import { LobbyPlayer } from "../interfaces/LobbyInterfaces";
+import { LobbyPlayer } from "../../misc/interfaces/LobbyInterfaces";
 
 export class Lobby {
   type: number;

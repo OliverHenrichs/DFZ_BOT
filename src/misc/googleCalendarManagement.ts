@@ -1,7 +1,8 @@
 import { Client } from "discord.js";
 import { Auth, calendar_v3, google } from "googleapis";
+import { Schedule } from "../types/serializables/schedule";
+import { getLobbyNameByType, lobbyTypes } from "./constants";
 import { regions, getTimeZoneStringFromRegion } from "./timeZone";
-import { Schedule } from "./types/schedule";
 import { scheduleTypes } from "./types/scheduleTypes";
 
 const calendarURI = ["https://www.googleapis.com/auth/calendar"];
@@ -11,7 +12,7 @@ let calendarAvailable = true;
 let jwtClient: Auth.JWT | undefined = undefined;
 let calendar: calendar_v3.Calendar | undefined = undefined;
 try {
-  const privateKey = require("../../service_key.json");
+  const privateKey = require("../../../service_key.json");
 
   jwtClient = new Auth.JWT(
     privateKey.client_email,
@@ -45,20 +46,20 @@ function createEventSummary(schedule: Schedule): string {
   var lobbyTypeName = "";
   switch (schedule.type) {
     case scheduleTypes.tryout:
-      lobbyTypeName = "tryout";
+      lobbyTypeName = getLobbyNameByType(lobbyTypes.tryout);
       break;
     case scheduleTypes.botbash:
-      lobbyTypeName = "botbash";
+      lobbyTypeName = getLobbyNameByType(lobbyTypes.botbash);
       break;
     case scheduleTypes.lobbyt1:
-      lobbyTypeName = `${
-        schedule.coaches.length == 1 ? "unranked" : "5v5"
-      } T1/T2`;
+      lobbyTypeName = `${getLobbyNameByType(
+        schedule.coaches.length == 1 ? lobbyTypes.unranked : lobbyTypes.inhouse
+      )} T1/T2`;
       break;
     case scheduleTypes.lobbyt3:
-      lobbyTypeName = `${
-        schedule.coaches.length == 1 ? "unranked" : "5v5"
-      } T3/T4`;
+      lobbyTypeName = `${getLobbyNameByType(
+        schedule.coaches.length == 1 ? lobbyTypes.unranked : lobbyTypes.inhouse
+      )} T3/T4`;
       break;
   }
 

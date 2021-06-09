@@ -1,7 +1,7 @@
 import { FieldElement } from "./interfaces/EmbedInterface";
-import { Coach } from "./types/coach";
-import { Player } from "./types/player";
-import { Referrer } from "./types/referrer";
+import { Coach } from "../types/serializables/coach";
+import { Player } from "../types/serializables/player";
+import { Referrer } from "../types/serializables/referrer";
 
 export function addDBCoachRowToTable(
   tableBase: Array<FieldElement>,

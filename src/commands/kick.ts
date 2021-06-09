@@ -1,23 +1,24 @@
 import { Message } from "discord.js";
 import { Pool } from "mysql2/promise";
-import { updateLobby } from "../misc/database";
 import { findLobbyByMessage, updateLobbyPost } from "../misc/lobbyManagement";
 import {
   getArguments,
   reactNegative,
   reactPositive,
 } from "../misc/messageHelper";
-import { Lobby } from "../misc/types/lobby";
+import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
+import { Lobby } from "../types/serializables/lobby";
+import { LobbySerializer } from "../types/serializers/lobbySerializer";
 
 /**
  * Kicks a player
  * @param {Message} message coaches message that triggered the kick
  * @param {Pool} dbHandle bot database handle
  */
-export default async (message: Message, dbHandle: Pool) => {
+export default async (message: Message, dbClient: DFZDataBaseClient) => {
   try {
-    const kickSpecifics = await getKickSpecificsFromMessage(message, dbHandle);
-    await kickPlayerFromLobby(kickSpecifics, message, dbHandle);
+    const kickSpecifics = await getKickSpecificsFromMessage(message, dbClient);
+    await kickPlayerFromLobby(kickSpecifics, message, dbClient);
   } catch (err) {
     console.log(`Error updating lobby after kicking: ${err}`);
   }
@@ -25,14 +26,14 @@ export default async (message: Message, dbHandle: Pool) => {
 
 async function getKickSpecificsFromMessage(
   message: Message,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ): Promise<KickSpecifics> {
   return new Promise<KickSpecifics>(async (resolve, reject) => {
     try {
       const kickArguments = getKickArguments(message);
       const lobby = await getKickLobby(
         message,
-        dbHandle,
+        dbClient,
         kickArguments.messageId
       );
       const kickeeIndex = await getKickeeIndex(lobby, kickArguments.userId);
@@ -66,12 +67,12 @@ interface KickArguments {
 
 async function getKickLobby(
   message: Message,
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   messageId: string
 ): Promise<Lobby> {
   return new Promise<Lobby>(async (resolve, reject) => {
     var lobby = await findLobbyByMessage(
-      dbHandle,
+      dbClient,
       message.channel.id,
       messageId
     );
@@ -91,10 +92,13 @@ function getKickeeIndex(lobby: Lobby, userId: string) {
 async function kickPlayerFromLobby(
   kickSpecifics: KickSpecifics,
   message: Message,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
   kickSpecifics.lobby.users.splice(kickSpecifics.kickeeIndex, 1);
-  await updateLobby(dbHandle, kickSpecifics.lobby);
+
+  const serializer = new LobbySerializer(dbClient);
+  await serializer.update(kickSpecifics.lobby);
+
   await updateLobbyPost(kickSpecifics.lobby, message.channel);
   reactPositive(message, "Kicked player.");
 }

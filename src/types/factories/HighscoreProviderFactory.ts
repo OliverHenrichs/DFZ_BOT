@@ -1,4 +1,4 @@
-import { Pool } from "mysql2/promise";
+import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import {
   CoachHighscoreProvider,
   HighscoreUserTypes,
@@ -6,13 +6,16 @@ import {
   ReferrerHighscoreProvider,
 } from "../HighscoreProvider";
 
-export default function (userType: HighscoreUserTypes, dbHandle: Pool) {
+export default function (
+  userType: HighscoreUserTypes,
+  dbClient: DFZDataBaseClient
+) {
   switch (userType) {
     case HighscoreUserTypes.players:
-      return new PlayerHighscoreProvider(dbHandle);
+      return new PlayerHighscoreProvider(dbClient);
     case HighscoreUserTypes.coaches:
-      return new CoachHighscoreProvider(dbHandle);
+      return new CoachHighscoreProvider(dbClient);
     case HighscoreUserTypes.referrers:
-      return new ReferrerHighscoreProvider(dbHandle);
+      return new ReferrerHighscoreProvider(dbClient);
   }
 }

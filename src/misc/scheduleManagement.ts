@@ -9,7 +9,7 @@ import {
   User,
 } from "discord.js";
 
-import { DFZDiscordClient } from "./types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import { scheduleTypes, scheduleReactionEmojis } from "./types/scheduleTypes";
 import {
   getNextMondayAndSundayDate,
@@ -36,16 +36,6 @@ import {
   scheduleChannelBotbash,
   scheduleChannelTryout,
 } from "./channelManagement";
-import {
-  getSchedules,
-  removeSchedules,
-  getLobbies,
-  updateSchedule,
-  insertSchedule,
-  getDay,
-  insertDay,
-  updateDay,
-} from "./database";
 import { Pool } from "mysql2/promise";
 import {
   createCalendarEvent,
@@ -53,7 +43,6 @@ import {
   noCalendarRejection,
 } from "./googleCalendarManagement";
 import { postLobby, PostLobbyOptions } from "./lobbyManagement";
-import { Schedule } from "./types/schedule";
 import {
   getRegionalRoleFromString,
   tryoutRole,
@@ -63,6 +52,14 @@ import {
   findRole,
   adminRoles,
 } from "./roleManagement";
+import { Schedule } from "../types/serializables/schedule";
+import { ScheduleSerializer } from "../types/serializers/scheduleSerializer";
+import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
+import {
+  getDay,
+  insertDay,
+  updateDay,
+} from "../types/database/OptionsSerializer";
 
 const lobbyPostTime = 60000 * 60 * 5; // at the moment 5 hours
 
@@ -211,11 +208,12 @@ async function writeSchedule(
  * @param {string} emojiName
  */
 export async function findSchedule(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   messageId: string,
   emojiName: string
 ) {
-  var schedules = await getSchedules(dbHandle, messageId, emojiName);
+  const serializer = new ScheduleSerializer(dbClient, messageId, emojiName);
+  const schedules = await serializer.get();
   if (schedules.length === 0) return undefined;
   if (schedules.length > 1) {
     console.log("Schedules are not unique ??");
@@ -303,7 +301,7 @@ function informCoachesOfSchedulePost(
  */
 async function createScheduledLobby(
   channelManager: GuildChannelManager,
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   schedule: Schedule
 ) {
   const regionRole = getRegionalRoleFromString(schedule.region);
@@ -337,21 +335,20 @@ async function createScheduledLobby(
     optionalText: "",
   };
 
-  await postLobby(dbHandle, channel, options);
+  await postLobby(dbClient, channel, options);
 
   informCoachesOfSchedulePost(schedule, channel, zonedTime);
 }
 
 /**
  * Inserts all necessary lobbies, i.e. all lobbies due in the next x hours that havent been posted yet
- * @param {GuildChannelManager} channels
- * @param {Pool} dbHandle
  */
 export async function insertScheduledLobbies(
   channels: GuildChannelManager,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
-  var schedules = await getSchedules(dbHandle);
+  const serializer = new ScheduleSerializer(dbClient);
+  const schedules = await serializer.get();
   var now = Date.now();
 
   for (let i = 0; i < schedules.length; i++) {
@@ -375,8 +372,8 @@ export async function insertScheduledLobbies(
       continue;
 
     s.lobbyPosted = true;
-    await createScheduledLobby(channels, dbHandle, s);
-    await updateSchedule(dbHandle, s);
+    await createScheduledLobby(channels, dbClient, s);
+    await serializer.update(s);
   }
 }
 
@@ -395,10 +392,12 @@ async function handleScheduleCoachAdd(
 ) {
   return new Promise(async function (resolve, reject) {
     try {
-      await updateSchedule(client.dbHandle, schedule);
+      const serializer = new ScheduleSerializer(client.dbClient);
+      await serializer.update(schedule);
+
       const guild = reaction.message.guild;
       if (guild === null) throw "Did not find guild in handleScheduleCoachAdd";
-      await insertScheduledLobbies(guild.channels, client.dbHandle);
+      await insertScheduledLobbies(guild.channels, client.dbClient);
       await module.exports.updateSchedulePost(
         schedule,
         reaction.message.channel
@@ -431,7 +430,8 @@ async function handleScheduleCoachWithdrawal(
         schedule,
         reaction.message.channel
       );
-      await updateSchedule(client.dbHandle, schedule);
+      const serializer = new ScheduleSerializer(client.dbClient);
+      await serializer.update(schedule);
       user.send("✅ Removed you as coach from the scheduled lobby.");
       resolve("Updated schedules");
     } catch (e) {
@@ -508,7 +508,7 @@ function createScheduleSetup(
  * @param {Schedule} scheduleSetup the setup that was used to create the schedule message
  */
 export function createSchedulesInDatabase(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   messageId: string,
   channelId: string,
   scheduleSetup: ScheduleSetup
@@ -534,8 +534,9 @@ export function createSchedulesInDatabase(
         return;
       }
       var reactionEmoji = scheduleReactionEmojis[dayBaseIndex + j];
-      insertSchedule(
-        dbHandle,
+
+      const serializer = new ScheduleSerializer(dbClient);
+      serializer.insert(
         new Schedule(
           channelId,
           messageId,
@@ -553,7 +554,7 @@ export function createSchedulesInDatabase(
 }
 
 async function createSchedules(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   channels: GuildChannelManager,
   channelId: string,
   coachCount: number,
@@ -580,12 +581,12 @@ async function createSchedules(
   var message = await writeSchedule(channel, scheduleSetup);
   if (message === undefined) return;
 
-  createSchedulesInDatabase(dbHandle, message.id, channel.id, scheduleSetup);
+  createSchedulesInDatabase(dbClient, message.id, channel.id, scheduleSetup);
 }
 
 async function doWeNeedToUpdateSchedules(
   date: Date,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ): Promise<boolean> {
   return new Promise<boolean>(async function (resolve, reject) {
     try {
@@ -595,14 +596,13 @@ async function doWeNeedToUpdateSchedules(
         return;
       }
 
-      var currentDayDatabase = await getDay(dbHandle);
+      var currentDayDatabase = await getDay(dbClient);
       if (currentDayDatabase === currentDay) {
         resolve(false);
         return;
       }
-
-      if (isNaN(currentDayDatabase)) await insertDay(dbHandle, currentDay);
-      else await updateDay(dbHandle, currentDay);
+      if (isNaN(currentDayDatabase)) await insertDay(dbClient, currentDay);
+      else await updateDay(dbClient, currentDay);
       resolve(true);
     } catch (e) {
       reject(e);
@@ -612,9 +612,10 @@ async function doWeNeedToUpdateSchedules(
 
 async function removeDeprecatedSchedules(
   deprecationDate: Date,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
-  var schedules = await getSchedules(dbHandle);
+  const serializer = new ScheduleSerializer(dbClient);
+  var schedules = await serializer.get();
 
   var schedulesToRemove: Array<Schedule> = [];
   for (let i = 0; i < schedules.length; i++) {
@@ -624,7 +625,7 @@ async function removeDeprecatedSchedules(
 
   if (schedulesToRemove.length === 0) return;
 
-  removeSchedules(dbHandle, schedulesToRemove);
+  serializer.delete(schedulesToRemove);
 }
 
 interface WeeklyScheduleData {
@@ -638,11 +639,11 @@ interface WeeklyScheduleData {
 function addWeeklySchedule(
   mondayAndSunday: NextMondayAndSunday,
   channels: GuildChannelManager,
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   scheduleData: WeeklyScheduleData
 ) {
   createSchedules(
-    dbHandle,
+    dbClient,
     channels,
     scheduleData.channelId,
     scheduleData.coachCount,
@@ -667,9 +668,9 @@ const t1_t2_Data: WeeklyScheduleData = {
 function addTier_1_2_WeeklySchedule(
   mondayAndSunday: NextMondayAndSunday,
   channels: GuildChannelManager,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
-  addWeeklySchedule(mondayAndSunday, channels, dbHandle, t1_t2_Data);
+  addWeeklySchedule(mondayAndSunday, channels, dbClient, t1_t2_Data);
 }
 
 const t3_t4_Data: WeeklyScheduleData = {
@@ -686,9 +687,9 @@ const t3_t4_Data: WeeklyScheduleData = {
 function addTier_3_4_WeeklySchedule(
   mondayAndSunday: NextMondayAndSunday,
   channels: GuildChannelManager,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
-  addWeeklySchedule(mondayAndSunday, channels, dbHandle, t3_t4_Data);
+  addWeeklySchedule(mondayAndSunday, channels, dbClient, t3_t4_Data);
 }
 
 const tryoutData: WeeklyScheduleData = {
@@ -701,9 +702,9 @@ const tryoutData: WeeklyScheduleData = {
 function addTryoutWeeklySchedule(
   mondayAndSunday: NextMondayAndSunday,
   channels: GuildChannelManager,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
-  addWeeklySchedule(mondayAndSunday, channels, dbHandle, tryoutData);
+  addWeeklySchedule(mondayAndSunday, channels, dbClient, tryoutData);
 }
 
 const botbashData: WeeklyScheduleData = {
@@ -716,35 +717,36 @@ const botbashData: WeeklyScheduleData = {
 function addBotbashWeeklySchedule(
   mondayAndSunday: NextMondayAndSunday,
   channels: GuildChannelManager,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
-  addWeeklySchedule(mondayAndSunday, channels, dbHandle, botbashData);
+  addWeeklySchedule(mondayAndSunday, channels, dbClient, botbashData);
 }
 
-function addWeeklySchedules(channels: GuildChannelManager, dbHandle: Pool) {
+function addWeeklySchedules(
+  channels: GuildChannelManager,
+  dbClient: DFZDataBaseClient
+) {
   var mondayAndSunday: NextMondayAndSunday = getNextMondayAndSundayDate();
 
-  addTier_1_2_WeeklySchedule(mondayAndSunday, channels, dbHandle);
-  addTier_3_4_WeeklySchedule(mondayAndSunday, channels, dbHandle);
-  addTryoutWeeklySchedule(mondayAndSunday, channels, dbHandle);
-  addBotbashWeeklySchedule(mondayAndSunday, channels, dbHandle);
+  addTier_1_2_WeeklySchedule(mondayAndSunday, channels, dbClient);
+  addTier_3_4_WeeklySchedule(mondayAndSunday, channels, dbClient);
+  addTryoutWeeklySchedule(mondayAndSunday, channels, dbClient);
+  addBotbashWeeklySchedule(mondayAndSunday, channels, dbClient);
 }
 
 /**
  * update schedule: add additional schedules once on sunday and remove deprecated ones
- * @param {mysql.Pool} dbHandle bot database handle
- * @param {GuildChannelManager} channels guild channels
  */
 export async function updateSchedules(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   channels: GuildChannelManager
 ) {
   try {
     var now = new Date();
-    if (!(await doWeNeedToUpdateSchedules(now, dbHandle))) return;
+    if (!(await doWeNeedToUpdateSchedules(now, dbClient))) return;
 
-    await removeDeprecatedSchedules(now, dbHandle);
-    addWeeklySchedules(channels, dbHandle);
+    await removeDeprecatedSchedules(now, dbClient);
+    addWeeklySchedules(channels, dbClient);
   } catch (e) {
     console.log(`Error in updateSchedules\nReason:\n${e}`);
   }
@@ -813,7 +815,7 @@ export async function removeCoachFromSchedule(
   user: User
 ) {
   var schedule = await findSchedule(
-    client.dbHandle,
+    client.dbClient,
     reaction.message.id,
     reaction.emoji.name
   );
@@ -869,7 +871,7 @@ export async function addCoachToSchedule(
   }
 
   var schedule = await findSchedule(
-    client.dbHandle,
+    client.dbClient,
     reaction.message.id,
     reaction.emoji.name
   );

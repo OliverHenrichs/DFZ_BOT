@@ -1,12 +1,13 @@
 import express, { Request, Response } from "express";
-import { getSortedCoaches, getSortedReferrers } from "../src/misc/database";
-import { DFZDiscordClient } from "../src/misc/types/DFZDiscordClient";
+import { DFZDiscordClient } from "../src/types/DFZDiscordClient";
 
 import hbs from "express-handlebars";
 import http from "http";
 import https from "https";
 import path from "path";
 import { readFileSync } from "fs";
+import { CoachSerializer } from "../src/types/serializers/coachSerializer";
+import { ReferrerSerializer } from "../src/types/serializers/referrerSerializer";
 
 var visitCounter = require("express-visit-counter"); // no types in npm
 
@@ -15,9 +16,9 @@ const guildId: string =
 
 // SSL credentials
 interface credentials {
-  key: undefined | string,
-  cert: undefined | string,
-  ca: undefined | string,
+  key: undefined | string;
+  cert: undefined | string;
+  ca: undefined | string;
 }
 var credentials: credentials = {
   key: undefined,
@@ -62,7 +63,11 @@ export default class WebSocket {
   app: any;
   httpServer: any;
   useHttps: boolean;
-  credentials: { key: undefined | string; cert: undefined | string; ca: undefined | string};
+  credentials: {
+    key: undefined | string;
+    cert: undefined | string;
+    ca: undefined | string;
+  };
   httpsServer: any;
 
   constructor(token: string, client: DFZDiscordClient) {
@@ -114,13 +119,12 @@ export default class WebSocket {
 
   async updateCoachList() {
     try {
-      if (this.client.dbHandle === undefined) return;
+      if (this.client.dbClient.pool === undefined) return;
 
       var guild = await this.client.guilds.fetch(guildId);
-      var nativeCoachList = await getSortedCoaches(
-        this.client.dbHandle,
-        "lobbyCount"
-      );
+
+      const serializer = new CoachSerializer(this.client.dbClient);
+      var nativeCoachList = await serializer.getSorted();
       for (let i = 0; i < nativeCoachList.length; i++) {
         const coach: any = nativeCoachList[i]; // in order to add nick, change type to any
         try {
@@ -137,9 +141,10 @@ export default class WebSocket {
   }
 
   async updateReferrerList() {
-    if (this.client.dbHandle === undefined) return;
+    if (this.client.dbClient.pool === undefined) return;
 
-    this.referrerList = await getSortedReferrers(this.client.dbHandle);
+    const serializer = new ReferrerSerializer(this.client.dbClient);
+    this.referrerList = await serializer.getSorted();
   }
 
   async setupHallOfFame() {

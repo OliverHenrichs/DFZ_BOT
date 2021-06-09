@@ -9,37 +9,33 @@ import {
   User,
 } from "discord.js";
 import { Pool } from "mysql2/promise";
-import { DFZDiscordClient } from "./types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import { FieldElement } from "./interfaces/EmbedInterface";
 import { LobbyPlayer } from "./interfaces/LobbyInterfaces";
 import { getTimeString, Time } from "./timeZone";
-import { Lobby } from "./types/lobby";
 import {
   getLobbyNameByType,
   getLobbyPostNameByType,
-  getLobbyTypeByString,
   getReactionEmojiPosition,
   isRoleBasedLobbyType,
   isSimpleLobbyType,
-  lobbyTypeKeys,
   lobbyTypePlayerCount,
   lobbyTypes,
   tryoutReactionEmoji,
 } from "./constants";
-import { updateLobby, getLobbies, insertLobby, removeLobby } from "./database";
 import { generateEmbedding } from "./answerEmbedding";
 import {
   getRoleMentions,
   getRoleMention,
   getRegionalRoleString,
-  getBeginnerRolesFromNumbers,
-  getRegionalRoleFromString,
 } from "./roleManagement";
 import { createTeams, getUser } from "./userHelper";
 import { createLobbyPostReactions } from "./messageHelper";
-import { getNumbersFromString } from "./generics";
 import { saveCoachParticipation, savePlayerParticipation } from "./tracker";
 import { getLobbyChannelFromGuildManager } from "./channelManagement";
+import { Lobby } from "../types/serializables/lobby";
+import { LobbySerializer } from "../types/serializers/lobbySerializer";
+import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
 
 /**
  * Returns required number of coaches for a given lobby type
@@ -483,11 +479,14 @@ function createLobbyStartPost(
 async function updateLobbyPostAndDBEntry(
   lobby: Lobby,
   channel: TextChannel | NewsChannel | DMChannel,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
   module.exports
     .updateLobbyPost(lobby, channel) // update lobby post
-    .then(() => updateLobby(dbHandle, lobby)) // update lobby in backend
+    .then(() => {
+      const serializer = new LobbySerializer(dbClient);
+      serializer.update(lobby);
+    }) // update lobby in backend
     .catch((err: string) =>
       console.log(
         "Could not update lobby in post or data base. Reason: \n" + err
@@ -603,11 +602,12 @@ var footerStringMeeting =
  *  @param messageId message ID
  */
 export async function findLobbyByMessage(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   channelId: string,
   messageId: string
 ) {
-  var lobbies = await getLobbies(dbHandle, channelId, messageId);
+  const serializer = new LobbySerializer(dbClient, channelId, messageId);
+  var lobbies = await serializer.get();
   if (lobbies.length !== 1) return undefined;
 
   return lobbies[0];
@@ -623,7 +623,7 @@ export interface PostLobbyOptions {
 }
 
 export async function postLobby(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   channel: TextChannel | NewsChannel | DMChannel,
   options: PostLobbyOptions
 ) {
@@ -654,8 +654,8 @@ export async function postLobby(
   createLobbyPostReactions(options.type, lobbyPostMessage);
 
   // create lobby data in database
-  insertLobby(
-    dbHandle,
+  const serializer = new LobbySerializer(dbClient);
+  serializer.insert(
     new Lobby(
       options.type,
       options.time.epoch,
@@ -796,14 +796,15 @@ function updateDescriptionTime(
 async function cancelDeprecatedLobby(
   lobby: Lobby,
   channel: TextChannel | NewsChannel,
-  dbHandle: Pool
+  dbClient: DFZDataBaseClient
 ) {
   await cancelLobbyPost(
     lobby,
     channel,
     "Lobby is deprecated. Did the coach not show up? Pitchforks out! 😾"
   );
-  await removeLobby(dbHandle, lobby);
+  const serializer = new LobbySerializer(dbClient);
+  await serializer.delete([lobby]);
 }
 
 /**
@@ -811,8 +812,12 @@ async function cancelDeprecatedLobby(
  *  @param dbHandle handle to data base
  *  @param channels the bot's message channels on the server
  */
-export async function updateLobbyPosts(guild: Guild, dbHandle: Pool) {
-  var lobbies: Lobby[] = await getLobbies(dbHandle);
+export async function updateLobbyPosts(
+  guild: Guild,
+  dbClient: DFZDataBaseClient
+) {
+  const serializer = new LobbySerializer(dbClient);
+  var lobbies: Lobby[] = await serializer.get();
 
   var channels = guild.channels;
 
@@ -823,13 +828,13 @@ export async function updateLobbyPosts(guild: Guild, dbHandle: Pool) {
     const lobbyFetchResult = await fetchLobbyFromDiscord(lobby, channel);
     if (!lobbyFetchResult) {
       // remove if e.g. an admin deleted the message
-      await removeLobby(dbHandle, lobby);
+      await serializer.delete([lobby]);
       continue;
     }
 
     const remainingTime = calculateRemainingTime(lobby);
     if (remainingTime.totalMs < 0 && remainingTime.hours >= 3) {
-      cancelDeprecatedLobby(lobby, channel, dbHandle);
+      cancelDeprecatedLobby(lobby, channel, dbClient);
       continue;
     }
 
@@ -895,7 +900,9 @@ export async function deleteLobbyAfterStart(
     lobby.type,
     getPlayersPerLobbyByLobbyType(lobby.type)
   );
-  await removeLobby(client.dbHandle, lobby);
+
+  const serializer = new LobbySerializer(client.dbClient);
+  await serializer.delete([lobby]);
 }
 
 export function writeLobbyStartPost(
@@ -952,10 +959,11 @@ export async function startLobby(
     "[⛔ Lobby started already! 😎]"
   );
 
-  saveCoachParticipation(client.dbHandle, lobby.coaches, lobby.type);
+  saveCoachParticipation(client.dbClient, lobby.coaches, lobby.type);
 
   lobby.started = true;
-  await updateLobby(client.dbHandle, lobby);
+  const serializer = new LobbySerializer(client.dbClient);
+  await serializer.update(lobby);
 
   return true;
 }
@@ -968,7 +976,7 @@ export async function startLobby(
  * @param {User} user user who removed the reaction
  */
 export async function updatePlayerInLobby(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   reaction: MessageReaction,
   lobby: Lobby,
   user: User
@@ -1011,7 +1019,7 @@ export async function updatePlayerInLobby(
     lobby.users.splice(idx, 1);
   }
 
-  await updateLobbyPostAndDBEntry(lobby, reaction.message.channel, dbHandle);
+  await updateLobbyPostAndDBEntry(lobby, reaction.message.channel, dbClient);
 }
 
 /**
@@ -1023,7 +1031,7 @@ export async function updatePlayerInLobby(
  * @returns true if successful, false if not
  */
 export async function addCoach(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   channel: TextChannel | NewsChannel,
   lobby: Lobby,
   userId: string
@@ -1047,7 +1055,7 @@ export async function addCoach(
 
     lobby.coaches.push(userId);
 
-    updateLobbyPostAndDBEntry(lobby, channel, dbHandle).then(() =>
+    updateLobbyPostAndDBEntry(lobby, channel, dbClient).then(() =>
       resolve(true)
     );
   });
@@ -1062,7 +1070,7 @@ export async function addCoach(
  * @returns true if successful, false if not
  */
 export async function removeCoach(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   channel: TextChannel | NewsChannel,
   lobby: Lobby,
   userId: string
@@ -1075,7 +1083,7 @@ export async function removeCoach(
     }
     lobby.coaches.splice(coachIndex, 1);
 
-    updateLobbyPostAndDBEntry(lobby, channel, dbHandle).then(() =>
+    updateLobbyPostAndDBEntry(lobby, channel, dbClient).then(() =>
       resolve(true)
     );
   });

@@ -17,8 +17,7 @@ import {
   isKnownSimpleLobbyEmoji,
   isKnownLobbyManagementEmoji,
 } from "../misc/constants";
-import { removeLobby, updateLobby } from "../misc/database";
-import { DFZDiscordClient } from "../misc/types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import {
   updateLobbyPost,
   startLobby,
@@ -39,8 +38,9 @@ import {
   beginnerRoles,
   adminRoles,
 } from "../misc/roleManagement";
-import { Lobby } from "../misc/types/lobby";
+import { Lobby } from "../types/serializables/lobby";
 import { addUser, getUserIndex } from "../misc/userHelper";
+import { LobbySerializer } from "../types/serializers/lobbySerializer";
 
 /**
  * Adds user to lobby or adds position to user in lobby
@@ -219,7 +219,8 @@ async function removeLobbyPermantently(
   user: User
 ) {
   await cancelLobbyPost(lobby, channel);
-  removeLobby(client.dbHandle, lobby);
+  const serializer = new LobbySerializer(client.dbClient);
+  serializer.delete([lobby]);
   user.send("❌ I cancelled the lobby.");
   return;
 }
@@ -230,7 +231,7 @@ function handleCoachAdd(
   channel: TextChannel | NewsChannel,
   user: User
 ) {
-  addCoach(client.dbHandle, channel, lobby, user.id)
+  addCoach(client.dbClient, channel, lobby, user.id)
     .then(() => user.send("✅ Added you as a coach!"))
     .catch((error: string) =>
       user.send("⛔ I did not add you as a coach. Reason: " + error)
@@ -318,9 +319,8 @@ async function handleLobbyRelatedEmoji(
   }
 
   if (changedLobby) {
-    updateLobby(client.dbHandle, lri.lobby).catch((err: string) => {
-      console.log("Failed updating lobby. Error: " + err);
-    });
+    const serializer = new LobbySerializer(client.dbClient);
+    serializer.update(lri.lobby);
   }
 }
 

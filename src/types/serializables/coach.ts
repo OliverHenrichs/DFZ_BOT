@@ -1,6 +1,3 @@
-/**
- * Just some pod that make up a coach
- */
 export class Coach {
   userId: string;
   lobbyCount: number;
@@ -9,7 +6,7 @@ export class Coach {
   lobbyCountReplayAnalysis: number;
 
   constructor(
-    userId: string = "",
+    userId: string,
     lobbyCount: number = 0,
     lobbyCountTryout: number = 0,
     lobbyCountNormal: number = 0,

@@ -1,32 +1,30 @@
 import { Pool } from "mysql2/promise";
 import { lobbyTypes } from "./constants";
-import { getCoach, insertCoach, updateCoach, getSortedPlayers, getPlayerByID, insertPlayer, updatePlayer } from "./database";
 import { LobbyPlayer } from "./interfaces/LobbyInterfaces";
-import { Coach } from "./types/coach";
-import { DFZDiscordClient } from "./types/DFZDiscordClient";
-import { Player } from "./types/player";
+import { Coach } from "../types/serializables/coach";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { Player } from "../types/serializables/player";
+import { CoachSerializer } from "../types/serializers/coachSerializer";
+import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
+import { PlayerSerializer } from "../types/serializers/playerSerializer";
 
-/**
- *
- * @param {Pool} dbHandle bot database handle
- * @param {Array<string>} coaches coach ids
- * @param {number} lobbyType lobby type
- */
 export async function saveCoachParticipation(
-  dbHandle: Pool,
+  dbClient: DFZDataBaseClient,
   coaches: Array<string>,
   lobbyType: number
 ) {
   var isTryout = lobbyType === lobbyTypes.tryout;
   var isReplayAnalysis = lobbyType === lobbyTypes.replayAnalysis;
   var isNormal = !isTryout && !isReplayAnalysis;
-  
+
   for (let i = 0; i < coaches.length; i++) {
     var coachId = coaches[i];
-    var dBCoach = await getCoach(dbHandle, coachId);
-    if (dBCoach === undefined || dBCoach.userId !== coachId) {
-      await insertCoach(
-        dbHandle,
+
+    const serializer = new CoachSerializer(dbClient, coachId);
+    const dBCoachList = await serializer.get();
+
+    if (dBCoachList.length === 0 || dBCoachList[0].userId !== coachId) {
+      await serializer.insert(
         new Coach(
           coachId,
           1,
@@ -36,13 +34,14 @@ export async function saveCoachParticipation(
         )
       );
     } else {
+      var dBCoach = dBCoachList[0];
       dBCoach.lobbyCount += 1;
 
       if (isTryout) dBCoach.lobbyCountTryout += 1;
       else if (isReplayAnalysis) dBCoach.lobbyCountReplayAnalysis += 1;
       else dBCoach.lobbyCountNormal += 1;
 
-      await updateCoach(dbHandle, dBCoach);
+      await serializer.update(dBCoach);
     }
   }
 }
@@ -63,12 +62,12 @@ export async function savePlayerParticipation(
     lobbyCount = 1;
 
   for (let i = 0; i < Math.min(users.length, playersPerLobby); i++) {
-    var player = await getPlayerByID(client.dbHandle, users[i].id);
+    const serializer = new PlayerSerializer(client.dbClient, users[i].id);
+    const players = await serializer.get();
 
-    if (player === undefined) {
+    if (players.length === 0) {
       var user = await client.users.fetch(users[i].id);
-      await insertPlayer(
-        client.dbHandle,
+      await serializer.insert(
         new Player(
           users[i].id,
           user.tag,
@@ -83,6 +82,7 @@ export async function savePlayerParticipation(
         )
       );
     } else {
+      const player = players[0];
       player.lobbyCount += 1;
 
       if (isReplayAnalysis) player.lobbyCountReplayAnalysis += 1;
@@ -90,7 +90,7 @@ export async function savePlayerParticipation(
       else if (is5v5) player.lobbyCount5v5 += 1;
       else if (isBotbash) player.lobbyCountBotBash += 1;
 
-      await updatePlayer(client.dbHandle, player);
+      await serializer.update(player);
     }
   }
 }

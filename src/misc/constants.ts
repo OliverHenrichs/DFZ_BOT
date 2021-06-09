@@ -76,15 +76,15 @@ export function isRoleBasedLobbyType(lobbyType: number) {
 export function getLobbyNameByType(lobbyType: number) {
   switch (lobbyType) {
     case lobbyTypes.inhouse:
-      return "Inhouse";
+      return "inhouse";
     case lobbyTypes.unranked:
-      return "Unranked";
+      return "unranked";
     case lobbyTypes.botbash:
-      return "Botbash";
+      return "botbash";
     case lobbyTypes.tryout:
-      return "Tryout";
+      return "tryout";
     case lobbyTypes.replayAnalysis:
-      return "Replay analysis";
+      return "replay analysis";
     default:
       return "Unknown";
   }

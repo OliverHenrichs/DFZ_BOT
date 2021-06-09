@@ -1,5 +1,4 @@
-import { getSortedReferrers } from "./database";
-import { DFZDiscordClient } from "./types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import { Message } from "discord.js";
 import { generateEmbedding } from "./answerEmbedding";
 import {
@@ -7,17 +6,8 @@ import {
   addDBReferrerRowToTable,
 } from "./highScoreTables";
 import { getChannel } from "./channelManagement";
-import { Referrer } from "./types/referrer";
-
-function getReferrerTable(referrers: Referrer[]) {
-  var tableBase = JSON.parse(JSON.stringify(tableBaseReferrersTemplate));
-  const maxNum = 50;
-  for (let i = 0; i < Math.min(maxNum, referrers.length); i++) {
-    addDBReferrerRowToTable(tableBase, referrers[i]);
-  }
-
-  return tableBase;
-}
+import { Referrer } from "../types/serializables/referrer";
+import { ReferrerSerializer } from "../types/serializers/referrerSerializer";
 
 export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
   try {
@@ -29,7 +19,8 @@ export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
       message = await channel.messages.fetch(_messageId);
     }
 
-    var referrers = await getSortedReferrers(client.dbHandle);
+    const serializer = new ReferrerSerializer(client.dbClient);
+    var referrers = await serializer.getSorted();
     if (referrers.length === 0) return;
 
     const table = getReferrerTable(referrers);
@@ -52,6 +43,16 @@ export const postReferralLeaderboard = async (client: DFZDiscordClient) => {
     console.log(e);
   }
 };
+
+function getReferrerTable(referrers: Referrer[]) {
+  var tableBase = JSON.parse(JSON.stringify(tableBaseReferrersTemplate));
+  const maxNum = 50;
+  for (let i = 0; i < Math.min(maxNum, referrers.length); i++) {
+    addDBReferrerRowToTable(tableBase, referrers[i]);
+  }
+
+  return tableBase;
+}
 
 export const findLeaderBoardMessage = async (client: DFZDiscordClient) => {
   try {

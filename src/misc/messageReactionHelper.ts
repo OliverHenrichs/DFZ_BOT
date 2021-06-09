@@ -7,8 +7,8 @@ import {
   adminRoles,
   tryoutRole,
 } from "./roleManagement";
-import { DFZDiscordClient } from "./types/DFZDiscordClient";
-import { Lobby } from "./types/lobby";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { Lobby } from "../types/serializables/lobby";
 
 export class LobbyReactionInfo {
   lobby: Lobby;
@@ -36,7 +36,7 @@ export async function getInfoFromLobbyReaction(
 ): Promise<LobbyReactionInfo | undefined> {
   // find lobby
   const lobby = await findLobbyByMessage(
-    client.dbHandle,
+    client.dbClient,
     reaction.message.channel.id,
     reaction.message.id
   );

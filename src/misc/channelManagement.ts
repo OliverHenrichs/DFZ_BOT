@@ -5,8 +5,8 @@ import {
   TextChannel,
 } from "discord.js";
 import { guildId } from "./constants";
-import { DFZDiscordClient } from "./types/DFZDiscordClient";
-import { Lobby } from "./types/lobby";
+import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { Lobby } from "../types/serializables/lobby";
 
 export const lobbyChannels = [
   process.env.BOT_LOBBY_CHANNEL_EU ? process.env.BOT_LOBBY_CHANNEL_EU : "",

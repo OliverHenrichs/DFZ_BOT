@@ -4,7 +4,6 @@ import {
   isSimpleLobbyType,
   lobbyManagementReactionEmojis,
   lobbyTypeKeysString,
-  lobbyTypes,
   positionReactionEmojis,
   tryoutReactionEmoji,
 } from "./constants";

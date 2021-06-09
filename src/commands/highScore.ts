@@ -1,18 +1,18 @@
 import { Message } from "discord.js";
-import { Pool } from "mysql2/promise";
 import { getArguments, reactNegative } from "../misc/messageHelper";
 import { HighscoreUserTypes } from "../types/HighscoreProvider";
 import providerFactory from "../types/factories/HighscoreProviderFactory";
+import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
 
 /**
  * Returns list of coaches and their lobby count as a private message to the messaging user
  * @param {Message} message triggering message
  * @param {Pool} dbHandle bot database handle
  */
-export default async (message: Message, dbHandle: Pool) => {
+export default async (message: Message, dbClient: DFZDataBaseClient) => {
   try {
     const options = getOptionsFromMessage(message);
-    const highScoreProvider = providerFactory(options.userType, dbHandle);
+    const highScoreProvider = providerFactory(options.userType, dbClient);
     await highScoreProvider.generateHighscores(message);
   } catch (error) {
     reactNegative(message, "Could not post highscore: " + error);
