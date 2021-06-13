@@ -1,10 +1,8 @@
-import {
-  DFZDataBaseClient,
-  getTypedArrayFromDBResponse,
-  SQLReturnValue,
-} from "../database/DFZDataBaseClient";
+import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
+import { RowDataPacket } from "mysql2/promise";
 import { Referrer } from "../serializables/referrer";
 import { Serializer } from "./serializer";
+import { SQLResultConverter } from "../database/SQLResultConverter";
 
 export class ReferrerSerializer extends Serializer<Referrer> {
   tag: string;
@@ -23,12 +21,16 @@ export class ReferrerSerializer extends Serializer<Referrer> {
     return [referrer.userId, referrer.tag, referrer.referralCount.toString()];
   }
 
-  getTypeArrayFromSQLResponse(response: SQLReturnValue): Referrer[] {
-    return getTypedArrayFromDBResponse<Referrer>(response, Referrer);
+  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Referrer[] {
+    return SQLResultConverter.mapToDataArray<Referrer>(response, Referrer);
   }
 
-  getSerializableCondition(): string[] {
+  getCondition(): string[] {
     return [`${idColumnName} = '${this.tag}'`];
+  }
+
+  getSerializableCondition(serializable: Referrer): string[] {
+    return [`${idColumnName} = '${serializable.tag}'`];
   }
 
   getDeletionIdentifierColumns(): string[] {

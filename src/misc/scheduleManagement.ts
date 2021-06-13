@@ -59,7 +59,7 @@ import {
   getDay,
   insertDay,
   updateDay,
-} from "../types/database/OptionsSerializer";
+} from "../types/serializers/optionsSerializer";
 
 const lobbyPostTime = 60000 * 60 * 5; // at the moment 5 hours
 

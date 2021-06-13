@@ -1,8 +1,6 @@
-import {
-  DFZDataBaseClient,
-  getTypedArrayFromDBResponse,
-  SQLReturnValue,
-} from "../database/DFZDataBaseClient";
+import { RowDataPacket } from "mysql2/promise";
+import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
+import { SQLResultConverter } from "../database/SQLResultConverter";
 import { Player } from "../serializables/player";
 import { Serializer } from "./serializer";
 
@@ -34,12 +32,16 @@ export class PlayerSerializer extends Serializer<Player> {
     ];
   }
 
-  getTypeArrayFromSQLResponse(response: SQLReturnValue): Player[] {
-    return getTypedArrayFromDBResponse<Player>(response, Player);
+  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Player[] {
+    return SQLResultConverter.mapToDataArray<Player>(response, Player);
   }
 
-  getSerializableCondition(): string[] {
+  getCondition(): string[] {
     return [`${idColumnName} = '${this.userId}'`];
+  }
+
+  getSerializableCondition(serializable: Player): string[] {
+    return [`${idColumnName} = '${serializable.userId}'`];
   }
 
   getDeletionIdentifierColumns(): string[] {

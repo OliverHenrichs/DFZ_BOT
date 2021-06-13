@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p ./",
+    "build": "tsc -p ./ && copyfiles -u 1 \"./website/**/*\" \"build/website\" -e **/*.ts",
     "prestart": "npm run build",
     "start": "node ./build/index.js",
     "dev": "nodemon ./build/index.js"
@@ -14,6 +14,7 @@
     "@types/express-handlebars": "^3.1.0",
     "@types/node": "^14.14.35",
     "body-parser": "^1.19.0",
+    "copyfiles": "^2.4.1",
     "discord.js": "^12.5.1",
     "dot-prop": "^5.3.0",
     "dotenv": "^8.2.0",

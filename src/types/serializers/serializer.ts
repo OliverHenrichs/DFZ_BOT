@@ -1,8 +1,8 @@
 import {
   ColumnsAndValues,
   DFZDataBaseClient,
-  SQLReturnValue,
 } from "../database/DFZDataBaseClient";
+import { RowDataPacket } from "mysql2/promise";
 
 export interface SerializationSettings {
   dbClient: DFZDataBaseClient;
@@ -45,7 +45,7 @@ export abstract class Serializer<T> {
     this.settings.dbClient.updateRows(
       this.settings.table,
       dbData,
-      this.getSerializableCondition()
+      this.getSerializableCondition(serializable)
     );
   }
 
@@ -59,33 +59,27 @@ export abstract class Serializer<T> {
 
   getExecutor(
     resolve: (value: T[] | PromiseLike<T[]>) => void,
-    reject: (reason?: any) => void
+    _reject: (reason?: any) => void
   ): void {
     this.settings.dbClient.selectRows(
       this.settings.table,
       this.settings.columns,
-      this.getSerializableCondition(),
-      (res: SQLReturnValue) => {
-        const array = this.getTypeArrayFromSQLResponse(res);
-        if (array.length === 0)
-          reject("could not retrieve coach from data base");
-        resolve(array);
+      this.getCondition(),
+      (res: RowDataPacket[]) => {
+        resolve(this.getTypeArrayFromSQLResponse(res));
       }
     );
   }
 
   getSortedExecutor(
     resolve: (value: T[] | PromiseLike<T[]>) => void,
-    reject: (reason?: any) => void
+    _reject: (reason?: any) => void
   ): void {
     this.settings.dbClient.getSortedTable(
       this.settings.table,
       this.settings.sortColumn,
-      (res: SQLReturnValue) => {
-        const array = this.getTypeArrayFromSQLResponse(res);
-        if (array.length === 0)
-          reject("could not retrieve coach from data base");
-        resolve(array);
+      (res: RowDataPacket[]) => {
+        resolve(this.getTypeArrayFromSQLResponse(res));
       }
     );
   }
@@ -99,8 +93,9 @@ export abstract class Serializer<T> {
     });
   }
 
-  abstract getTypeArrayFromSQLResponse(response: SQLReturnValue): T[];
-  abstract getSerializableCondition(): string[];
+  abstract getTypeArrayFromSQLResponse(response: RowDataPacket[]): T[];
+  abstract getSerializableCondition(serializable: T): string[];
+  abstract getCondition(): string[];
   abstract getSerializeValues(serializable: T): string[];
   abstract getDeletionIdentifierColumns(): string[];
   abstract getSerializableDeletionValues(serializables: T[]): string[];

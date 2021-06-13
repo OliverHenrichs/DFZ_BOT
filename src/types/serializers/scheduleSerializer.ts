@@ -1,10 +1,8 @@
-import {
-  DFZDataBaseClient,
-  getTypedArrayFromDBResponseWithJSONData,
-  SQLReturnValue,
-} from "../database/DFZDataBaseClient";
+import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
+import { RowDataPacket } from "mysql2/promise";
 import { Schedule } from "../serializables/schedule";
 import { Serializer } from "./serializer";
+import { SQLResultConverter } from "../database/SQLResultConverter";
 
 export class ScheduleSerializer extends Serializer<Schedule> {
   emoji: string;
@@ -29,19 +27,23 @@ export class ScheduleSerializer extends Serializer<Schedule> {
     return [schedule.messageId, schedule.emoji, JSON.stringify(schedule)];
   }
 
-  getTypeArrayFromSQLResponse(response: SQLReturnValue): Schedule[] {
-    return getTypedArrayFromDBResponseWithJSONData<Schedule>(
-      response,
-      Schedule
-    );
+  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Schedule[] {
+    return SQLResultConverter.mapJSONToDataArray<Schedule>(response, Schedule);
   }
 
-  getSerializableCondition(): string[] {
+  getCondition(): string[] {
     var conditions = [];
     if (this.messageId !== "")
       conditions.push(`${messageColumn} = '${this.messageId}'`);
     if (this.emoji !== "") conditions.push(`${emojiColumn} = '${this.emoji}'`);
     return conditions;
+  }
+
+  getSerializableCondition(serializable: Schedule): string[] {
+    return [
+      `${messageColumn} = '${serializable.messageId}'`,
+      `${emojiColumn} = '${serializable.emoji}'`,
+    ];
   }
 
   getDeletionIdentifierColumns(): string[] {

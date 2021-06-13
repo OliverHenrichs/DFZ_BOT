@@ -1,12 +1,27 @@
-import { OkPacket, Pool, ResultSetHeader, RowDataPacket } from "mysql2/promise";
+import { createPool, Pool, RowDataPacket } from "mysql2/promise";
 import { SQLTableCreator } from "./SQLTableCreator";
-import { createDBHandle } from "../../misc/database";
 
 export class DFZDataBaseClient {
   pool: Pool;
 
   constructor() {
-    this.pool = createDBHandle();
+    this.pool = this.createDBHandle();
+  }
+
+  createDBHandle() {
+    console.log(
+      `trying to connect to MYSQL-DB on \nhost ${process.env.MYSQL_HOST}\nuser ${process.env.MYSQL_USER}\npw ${process.env.MYSQL_PASSWORD}\ndb ${process.env.MYSQL_DATABASE}\n`
+    );
+
+    return createPool({
+      host: process.env.MYSQL_HOST,
+      user: process.env.MYSQL_USER,
+      password: process.env.MYSQL_PASSWORD,
+      database: process.env.MYSQL_DATABASE,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0,
+    });
   }
 
   async tryCreateDataBaseTables() {
@@ -28,13 +43,11 @@ export class DFZDataBaseClient {
 
   executeSQLCommand(
     command: string,
-    callback: (res: SQLReturnValue) => void = () => {}
+    callback: (res: RowDataPacket[]) => void = () => {}
   ) {
     const fixedCommand = fixSqlCommand(command);
-    this.pool.execute(fixedCommand).then((result) => {
-      callback({
-        data: result[0],
-      });
+    this.pool.execute<RowDataPacket[]>(fixedCommand).then((result) => {
+      callback(result[0]);
     });
   }
 
@@ -48,11 +61,10 @@ export class DFZDataBaseClient {
     table: string,
     columns: string[],
     conditions: string[],
-    callback: (res: SQLReturnValue) => void
+    callback: (res: RowDataPacket[]) => void
   ) {
     const command = composeSelectRowsCommand(table, columns, conditions);
     console.log(`selectRows: ${command}`);
-
     this.executeSQLCommand(command, callback);
   }
 
@@ -71,21 +83,12 @@ export class DFZDataBaseClient {
   getSortedTable(
     table: string,
     column: string,
-    callback: (res: SQLReturnValue) => void
+    callback: (res: RowDataPacket[]) => void
   ) {
     const command = composeSortedTableCommand(table, column);
     console.log(`getSortedTable: ${command}`);
     this.executeSQLCommand(command, callback);
   }
-}
-
-export interface SQLReturnValue {
-  data:
-    | RowDataPacket[]
-    | RowDataPacket[][]
-    | OkPacket
-    | OkPacket[]
-    | ResultSetHeader;
 }
 
 export interface ColumnsAndValues {
@@ -127,16 +130,21 @@ function composeUpdateTableCommand(
   conditions: string[]
 ) {
   var command = `Update ${table} SET `;
-
-  const commandUpdates: string[] = [];
-  for (const updateEntry of update) {
-    commandUpdates.push(`${updateEntry.columnName}=${updateEntry.value}`);
-  }
-  command += commandUpdates.join(", ");
-
-  if (conditions.length > 0) command += ` WHERE ${conditions.join(" AND ")}`;
-
+  command += getUpdateValues(update);
+  command += getConditionValues(conditions);
   return command;
+}
+
+function getUpdateValues(update: ColumnsAndValues[]) {
+  const updateValues: string[] = [];
+  for (const updateEntry of update) {
+    updateValues.push(`${updateEntry.columnName}='${updateEntry.value}'`);
+  }
+  return updateValues.join(", ");
+}
+
+function getConditionValues(conditions: string[]) {
+  return conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
 }
 
 function composeSortedTableCommand(tableName: string, columnName: string) {
@@ -154,43 +162,4 @@ function fixSqlCommand(command: string) {
     .replace(/[\n]/g, "\\n")
     .replace(/[\r]/g, "\\r")
     .replace(/[\t]/g, "\\t");
-}
-
-type Constructor<T> = new (...args: any[]) => T;
-
-const input2Instance = <T>(
-  source: any,
-  destinationConstructor: Constructor<T>
-): T => Object.assign(new destinationConstructor(), source);
-
-export function getTypedArrayFromDBResponse<T>(
-  res: SQLReturnValue,
-  type: Constructor<T>
-): Array<T> {
-  var rawData = res.data;
-  var typedArray: Array<T> = [];
-
-  if (Array.isArray(rawData) && rawData.length > 0) {
-    rawData.forEach((data: any) => {
-      const typedDatum = input2Instance<T>(data, type);
-      if (typedDatum !== undefined) typedArray.push(typedDatum);
-    });
-  }
-  return typedArray;
-}
-
-export function getTypedArrayFromDBResponseWithJSONData<T>(
-  res: SQLReturnValue,
-  type: Constructor<T>
-): Array<T> {
-  var rawData = res.data;
-  var typedArray: Array<T> = [];
-
-  if (Array.isArray(rawData) && rawData.length > 0) {
-    rawData.forEach((data: any) => {
-      const typedDatum = input2Instance<T>(data.data, type);
-      if (typedDatum !== undefined) typedArray.push(typedDatum);
-    });
-  }
-  return typedArray;
 }

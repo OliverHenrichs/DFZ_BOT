@@ -32,28 +32,18 @@ export class DFZDiscordClient extends Client {
     console.log("in setupDiscordEventHandlers");
 
     const files = readdirSync("./build/src/events/");
-    console.log("Files: " + files.toString());
-
     for (const file of files) {
-      //if (file.endsWith("ts")) return;
-      console.log("1 ");
       const eventHandler = require(`../events/${file}`);
-      console.log("2 ");
       const eventName = file.split(".")[0];
       this.on(eventName, (...args: any) => eventHandler(this, ...args));
-      console.log("caught event " + eventName);
     }
   }
 
   async onReady() {
     try {
-      console.log("start onReady");
-
       await this.setupBot();
-      console.log("finish onReady");
     } catch (error) {
-      console.log(`Error while setting up bot:\
-      ${error}`);
+      console.log(`Error while setting up bot: ${error}`);
     }
   }
 

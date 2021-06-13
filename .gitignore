@@ -1,14 +1,19 @@
+#folders
+
 .env
 .vscode
 node_modules/
-save.json
-save_test.json
 out/
 private/
+build/
+
+#files
+
+save.json
+save_test.json
 credentials.json
 service_key.json
 token.json
 visits.sqlite
-built/
 **/*.js
 

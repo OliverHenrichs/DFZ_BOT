@@ -1,8 +1,6 @@
-import {
-  DFZDataBaseClient,
-  getTypedArrayFromDBResponseWithJSONData,
-  SQLReturnValue,
-} from "../database/DFZDataBaseClient";
+import { RowDataPacket } from "mysql2/promise";
+import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
+import { SQLResultConverter } from "../database/SQLResultConverter";
 import { Lobby } from "../serializables/lobby";
 import { Serializer } from "./serializer";
 
@@ -29,17 +27,24 @@ export class LobbySerializer extends Serializer<Lobby> {
     return [lobby.channelId, lobby.messageId, JSON.stringify(lobby)];
   }
 
-  getTypeArrayFromSQLResponse(response: SQLReturnValue): Lobby[] {
-    return getTypedArrayFromDBResponseWithJSONData<Lobby>(response, Lobby);
+  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Lobby[] {
+    return SQLResultConverter.mapJSONToDataArray<Lobby>(response, Lobby);
   }
 
-  getSerializableCondition(): string[] {
+  getCondition(): string[] {
     var conditions = [];
     if (this.channelId !== "")
       conditions.push(`${channelIdColumn} = '${this.channelId}'`);
     if (this.messageId !== "")
       conditions.push(`${messageIdColumn} = '${this.messageId}'`);
     return conditions;
+  }
+
+  getSerializableCondition(serializable: Lobby): string[] {
+    return [
+      `${channelIdColumn} = '${serializable.channelId}'`,
+      `${messageIdColumn} = '${serializable.messageId}'`,
+    ];
   }
 
   getDeletionIdentifierColumns(): string[] {

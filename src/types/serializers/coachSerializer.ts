@@ -1,8 +1,6 @@
-import {
-  DFZDataBaseClient,
-  getTypedArrayFromDBResponse,
-  SQLReturnValue,
-} from "../database/DFZDataBaseClient";
+import { RowDataPacket } from "mysql2/promise";
+import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
+import { SQLResultConverter } from "../database/SQLResultConverter";
 import { Coach } from "../serializables/coach";
 import { Serializer } from "./serializer";
 
@@ -29,12 +27,18 @@ export class CoachSerializer extends Serializer<Coach> {
     ];
   }
 
-  getTypeArrayFromSQLResponse(response: SQLReturnValue): Coach[] {
-    return getTypedArrayFromDBResponse<Coach>(response, Coach);
+  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Coach[] {
+    return SQLResultConverter.mapToDataArray<Coach>(response, Coach);
   }
 
-  getSerializableCondition(): string[] {
+  getCondition(): string[] {
     return [`${idColumnName} = '${this.userId}'`];
+  }
+
+  getSerializableCondition(serializable: Coach): string[] {
+    return [
+      `${idColumnName} = '${serializable ? serializable.userId : this.userId}'`,
+    ];
   }
 
   getDeletionIdentifierColumns(): string[] {
