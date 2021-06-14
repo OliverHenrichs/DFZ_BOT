@@ -8,9 +8,8 @@ import {
   TextChannel,
   User,
 } from "discord.js";
-import { Pool } from "mysql2/promise";
 import { DFZDiscordClient } from "../types/DFZDiscordClient";
-import { FieldElement } from "./interfaces/EmbedInterface";
+import { FieldElement } from "./interfaces/FieldElement";
 import { LobbyPlayer } from "./interfaces/LobbyInterfaces";
 import { getTimeString, Time } from "./timeZone";
 import {
@@ -605,10 +604,13 @@ export async function findLobbyByMessage(
   dbClient: DFZDataBaseClient,
   channelId: string,
   messageId: string
-) {
+): Promise<Lobby> {
   const serializer = new LobbySerializer(dbClient, channelId, messageId);
   var lobbies = await serializer.get();
-  if (lobbies.length !== 1) return undefined;
+  if (lobbies.length !== 1)
+    throw new Error(
+      `Could not find lobby by channelId=${channelId}, messageId=${messageId}`
+    );
 
   return lobbies[0];
 }

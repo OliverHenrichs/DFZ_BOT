@@ -1,4 +1,4 @@
-import { FieldElement } from "./interfaces/EmbedInterface";
+import { FieldElement } from "./interfaces/FieldElement";
 import { MessageEmbed } from "discord.js";
 
 export function generateEmbedding(

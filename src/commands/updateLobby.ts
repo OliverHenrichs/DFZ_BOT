@@ -1,5 +1,4 @@
 import { DMChannel, Message, NewsChannel, TextChannel } from "discord.js";
-import { Pool } from "mysql2/promise";
 import { getLobbyTypeByString, isRoleBasedLobbyType } from "../misc/constants";
 import { getNumbersFromString } from "../misc/generics";
 import { findLobbyByMessage, updateLobbyPost } from "../misc/lobbyManagement";
@@ -21,14 +20,14 @@ import { LobbySerializer } from "../types/serializers/lobbySerializer";
  */
 export default async (message: Message, dbClient: DFZDataBaseClient) => {
   try {
-    await tryUpdateLobby(message, dbClient);
+    await updateLobby(message, dbClient);
     reactPositive(message, "Updated lobby parameters.");
   } catch (error) {
     reactNegative(message, error);
   }
 };
 
-async function tryUpdateLobby(message: Message, dbClient: DFZDataBaseClient) {
+async function updateLobby(message: Message, dbClient: DFZDataBaseClient) {
   const lobby = await updateLobbyByMessage(message, dbClient);
   await performLobbyUpdate(lobby, message.channel, dbClient);
 }
@@ -39,8 +38,12 @@ async function updateLobbyByMessage(
 ) {
   const args = getUpdateArguments(message);
 
-  const lobbyId = args[0];
-  const lobby = await getLobbyById(lobbyId, message.channel.id, dbClient);
+  const messageId = args[0];
+  const lobby = await findLobbyByMessage(
+    dbClient,
+    message.channel.id,
+    messageId
+  );
 
   args.shift();
   updateLobbyParameters(args, lobby);
@@ -54,17 +57,6 @@ function getUpdateArguments(message: Message) {
 
   return args;
 }
-
-async function getLobbyById(
-  lobbyId: string,
-  channelId: string,
-  dbClient: DFZDataBaseClient
-) {
-  var lobby = await findLobbyByMessage(dbClient, channelId, lobbyId);
-  if (lobby === undefined) throw `Did not find lobby given the Id ${lobbyId}`;
-  return lobby;
-}
-
 export function updateLobbyParameters(args: string[], lobby: Lobby) {
   var updateTiers = false,
     updateType = false,

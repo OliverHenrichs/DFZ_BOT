@@ -28,7 +28,7 @@ import {
   weekDays,
 } from "./timeZone";
 import { generateEmbedding } from "./answerEmbedding";
-import { FieldElement } from "./interfaces/EmbedInterface";
+import { FieldElement } from "./interfaces/FieldElement";
 import { lobbyTypes } from "./constants";
 import {
   scheduleChannel5v5,
@@ -36,7 +36,6 @@ import {
   scheduleChannelBotbash,
   scheduleChannelTryout,
 } from "./channelManagement";
-import { Pool } from "mysql2/promise";
 import {
   createCalendarEvent,
   editCalendarEvent,

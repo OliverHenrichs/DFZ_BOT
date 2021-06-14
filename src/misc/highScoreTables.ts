@@ -1,4 +1,4 @@
-import { FieldElement } from "./interfaces/EmbedInterface";
+import { FieldElement } from "./interfaces/FieldElement";
 import { Coach } from "../types/serializables/coach";
 import { Player } from "../types/serializables/player";
 import { Referrer } from "../types/serializables/referrer";

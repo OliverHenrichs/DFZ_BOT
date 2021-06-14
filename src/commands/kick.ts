@@ -1,5 +1,4 @@
 import { Message } from "discord.js";
-import { Pool } from "mysql2/promise";
 import { findLobbyByMessage, updateLobbyPost } from "../misc/lobbyManagement";
 import {
   getArguments,
@@ -76,9 +75,6 @@ async function getKickLobby(
       message.channel.id,
       messageId
     );
-    if (lobby === undefined) {
-      return reject("Did not find lobby given the Id.");
-    }
     return resolve(lobby);
   });
 }

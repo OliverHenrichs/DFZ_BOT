@@ -66,7 +66,6 @@ async function handleLobbyRelatedEmoji(
     reaction,
     user
   );
-  if (!lri) return;
 
   if (adminRoles.includes(lri.role.id))
     handleCoachReaction(client, reaction, lri.lobby, user);
@@ -85,9 +84,21 @@ module.exports = async (
   reaction: MessageReaction,
   user: User
 ) => {
+  try {
+    await handleMessageReactionRemove(client, reaction, user);
+  } catch (error) {
+    console.log(`Error while handling message reaction add: ${error}`);
+  }
+};
+
+async function handleMessageReactionRemove(
+  client: DFZDiscordClient,
+  reaction: MessageReaction,
+  user: User
+) {
   if (!isValidLobbyReaction(reaction, user)) return;
 
   if (scheduleChannels.includes(reaction.message.channel.id))
     removeCoachFromSchedule(client, reaction, user);
   else await handleLobbyRelatedEmoji(client, reaction, user);
-};
+}

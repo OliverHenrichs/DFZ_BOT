@@ -10,16 +10,10 @@ import {
 import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import { Lobby } from "../types/serializables/lobby";
 
-export class LobbyReactionInfo {
+export interface LobbyReactionInfo {
   lobby: Lobby;
   member: GuildMember;
   role: Role;
-
-  constructor(lobby: Lobby, member: GuildMember, role: Role) {
-    this.lobby = lobby;
-    this.member = member;
-    this.role = role;
-  }
 }
 
 /**
@@ -33,21 +27,31 @@ export async function getInfoFromLobbyReaction(
   client: DFZDiscordClient,
   reaction: MessageReaction,
   user: User
-): Promise<LobbyReactionInfo | undefined> {
-  // find lobby
+): Promise<LobbyReactionInfo> {
   const lobby = await findLobbyByMessage(
     client.dbClient,
     reaction.message.channel.id,
     reaction.message.id
   );
-  if (lobby === undefined) return undefined;
+  const guildMember = await fetchGuildMember(reaction, user.id);
+  const role = findAndVerifyRole(guildMember, user);
 
-  // get guild member (has role)
-  const guildMember = await reaction.message.guild?.members.fetch(user.id);
-  if (guildMember === undefined) return undefined;
+  return {
+    lobby: lobby,
+    member: guildMember,
+    role: role,
+  };
+}
 
-  // get role
-  var role = findRole(
+async function fetchGuildMember(reaction: MessageReaction, userId: string) {
+  const guildMember = await reaction.message.guild?.members.fetch(userId);
+  if (guildMember === undefined)
+    throw new Error("Could not fetch guild member in getInfoFromLobbyReaction");
+  return guildMember;
+}
+
+function findAndVerifyRole(guildMember: GuildMember, user: User) {
+  const role = findRole(
     guildMember,
     beginnerRoles.concat(adminRoles, [tryoutRole])
   );
@@ -56,10 +60,12 @@ export async function getInfoFromLobbyReaction(
     user.send(
       "⛔ You cannot interact because you do not have the appropriate role."
     );
-    return undefined;
+    throw new Error(
+      "Did not interact because user did not have the appropriate role"
+    );
   }
 
-  return new LobbyReactionInfo(lobby, guildMember, role);
+  return role;
 }
 
 export function isValidLobbyReaction(

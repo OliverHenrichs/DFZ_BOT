@@ -1,7 +1,7 @@
 import { Message, MessageEmbed } from "discord.js";
 import { generateEmbedding } from "../misc/answerEmbedding";
 import { lobbyTypeKeys, lobbyTypeKeysString } from "../misc/constants";
-import { FieldElement } from "../misc/interfaces/EmbedInterface";
+import { FieldElement } from "../misc/interfaces/FieldElement";
 import { reactPositive } from "../misc/messageHelper";
 import {
   findRole,

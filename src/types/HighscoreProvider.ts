@@ -8,7 +8,7 @@ import {
   tableBaseReferrersTemplate,
   addDBReferrerRowToTable,
 } from "../misc/highScoreTables";
-import { FieldElement } from "../misc/interfaces/EmbedInterface";
+import { FieldElement } from "../misc/interfaces/FieldElement";
 import { reactPositive } from "../misc/messageHelper";
 import { DFZDataBaseClient } from "./database/DFZDataBaseClient";
 import { Coach } from "./serializables/coach";

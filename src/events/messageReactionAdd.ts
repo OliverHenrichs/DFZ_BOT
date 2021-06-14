@@ -7,7 +7,6 @@ import {
   NewsChannel,
   TextChannel,
 } from "discord.js";
-import { Pool } from "mysql2/promise";
 import { scheduleChannels } from "../misc/channelManagement";
 import {
   lobbyTypes,
@@ -41,6 +40,78 @@ import {
 import { Lobby } from "../types/serializables/lobby";
 import { addUser, getUserIndex } from "../misc/userHelper";
 import { LobbySerializer } from "../types/serializers/lobbySerializer";
+
+module.exports = async (
+  client: DFZDiscordClient,
+  reaction: MessageReaction,
+  user: User
+) => {
+  try {
+    await handleMessageReactionAdd(client, reaction, user);
+  } catch (error) {
+    console.log(`Error while handling message reaction add: ${error}`);
+  }
+};
+
+async function handleMessageReactionAdd(
+  client: DFZDiscordClient,
+  reaction: MessageReaction,
+  user: User
+) {
+  if (!isValidLobbyReaction(reaction, user)) return;
+
+  if (scheduleChannels.includes(reaction.message.channel.id))
+    return await addCoachToSchedule(client, reaction, user);
+
+  return await handleLobbyRelatedEmoji(client, reaction, user);
+}
+
+/**
+ * Handles reactions that will change existing posted lobbies
+ * @param {DFZDiscordClient} client
+ * @param {MessageReaction} reaction
+ * @param {User} user
+ */
+async function handleLobbyRelatedEmoji(
+  client: DFZDiscordClient,
+  reaction: MessageReaction,
+  user: User
+) {
+  const lri: LobbyReactionInfo = await getInfoFromLobbyReaction(
+    client,
+    reaction,
+    user
+  );
+
+  var changedLobby: boolean = false;
+
+  // handle adding users
+  if (isKnownPositionEmoji(reaction.emoji))
+    changedLobby = handlePositionEmoji(
+      lri.lobby,
+      user,
+      reaction,
+      lri.role,
+      lri.member
+    );
+  else if (isKnownSimpleLobbyEmoji(reaction.emoji))
+    changedLobby = handleSimpleLobbyEmoji(lri.lobby, user, reaction, lri.role);
+  else if (isKnownLobbyManagementEmoji(reaction.emoji)) {
+    // handle lobby management => will delete lobby if x-ed or started => no need to update => just return
+    return handleLobbyManagementEmoji(
+      client,
+      lri.lobby,
+      user,
+      reaction,
+      lri.role
+    );
+  }
+
+  if (changedLobby) {
+    const serializer = new LobbySerializer(client.dbClient);
+    serializer.update(lri.lobby);
+  }
+}
 
 /**
  * Adds user to lobby or adds position to user in lobby
@@ -275,71 +346,3 @@ async function handleLobbyManagementEmoji(
       break;
   }
 }
-
-/**
- * Handles reactions that will change existing posted lobbies
- * @param {DFZDiscordClient} client
- * @param {MessageReaction} reaction
- * @param {User} user
- */
-async function handleLobbyRelatedEmoji(
-  client: DFZDiscordClient,
-  reaction: MessageReaction,
-  user: User
-) {
-  const lri: LobbyReactionInfo | undefined = await getInfoFromLobbyReaction(
-    client,
-    reaction,
-    user
-  );
-  if (!lri) return;
-
-  var changedLobby: boolean = false;
-
-  // handle adding users
-  if (isKnownPositionEmoji(reaction.emoji))
-    changedLobby = handlePositionEmoji(
-      lri.lobby,
-      user,
-      reaction,
-      lri.role,
-      lri.member
-    );
-  else if (isKnownSimpleLobbyEmoji(reaction.emoji))
-    changedLobby = handleSimpleLobbyEmoji(lri.lobby, user, reaction, lri.role);
-  else if (isKnownLobbyManagementEmoji(reaction.emoji)) {
-    // handle lobby management => will delete lobby if x-ed or started => no need to update => just return
-    return handleLobbyManagementEmoji(
-      client,
-      lri.lobby,
-      user,
-      reaction,
-      lri.role
-    );
-  }
-
-  if (changedLobby) {
-    const serializer = new LobbySerializer(client.dbClient);
-    serializer.update(lri.lobby);
-  }
-}
-
-/**
- * add reactions handling
- *
- * @param {DFZDiscordClient} client discord client
- * @param {MessageReaction} reaction reaction to handle
- * @param {User} user user who reacted
- */
-module.exports = async (
-  client: DFZDiscordClient,
-  reaction: MessageReaction,
-  user: User
-) => {
-  if (!isValidLobbyReaction(reaction, user)) return;
-
-  if (scheduleChannels.includes(reaction.message.channel.id))
-    return await addCoachToSchedule(client, reaction, user);
-
-  return await handleLobbyRelatedEmoji(client, reaction, user);
-};

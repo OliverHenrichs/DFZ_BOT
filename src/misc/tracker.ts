@@ -1,4 +1,3 @@
-import { Pool } from "mysql2/promise";
 import { lobbyTypes } from "./constants";
 import { LobbyPlayer } from "./interfaces/LobbyInterfaces";
 import { Coach } from "../types/serializables/coach";

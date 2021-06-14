@@ -5,10 +5,10 @@ export class DFZDataBaseClient {
   pool: Pool;
 
   constructor() {
-    this.pool = this.createDBHandle();
+    this.pool = this.createDataBaseHandle();
   }
 
-  createDBHandle() {
+  createDataBaseHandle() {
     console.log(
       `trying to connect to MYSQL-DB on \nhost ${process.env.MYSQL_HOST}\nuser ${process.env.MYSQL_USER}\npw ${process.env.MYSQL_PASSWORD}\ndb ${process.env.MYSQL_DATABASE}\n`
     );
@@ -53,7 +53,6 @@ export class DFZDataBaseClient {
 
   async insertRow(table: string, values: ColumnsAndValues[]) {
     const command = composeInsertRowCommand(table, values);
-    console.log(`insertRow: ${command}`);
     return this.executeSQLCommand(command);
   }
 
@@ -64,19 +63,16 @@ export class DFZDataBaseClient {
     callback: (res: RowDataPacket[]) => void
   ) {
     const command = composeSelectRowsCommand(table, columns, conditions);
-    console.log(`selectRows: ${command}`);
     this.executeSQLCommand(command, callback);
   }
 
   updateRows(table: string, update: ColumnsAndValues[], conditions: string[]) {
     const command = composeUpdateTableCommand(table, update, conditions);
-    console.log(`updateRows: ${command}`);
     this.executeSQLCommand(command);
   }
 
   deleteRows(table: string, where: string[], which: string[]) {
     const command = composeDeleteRowsCommand(table, where, which);
-    console.log(`deleteRows: ${command}`);
     this.executeSQLCommand(command);
   }
 
@@ -86,7 +82,6 @@ export class DFZDataBaseClient {
     callback: (res: RowDataPacket[]) => void
   ) {
     const command = composeSortedTableCommand(table, column);
-    console.log(`getSortedTable: ${command}`);
     this.executeSQLCommand(command, callback);
   }
 }
