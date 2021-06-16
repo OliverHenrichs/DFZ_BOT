@@ -600,6 +600,7 @@ async function doWeNeedToUpdateSchedules(
         resolve(false);
         return;
       }
+
       if (isNaN(currentDayDatabase)) await insertDay(dbClient, currentDay);
       else await updateDay(dbClient, currentDay);
       resolve(true);
@@ -618,7 +619,7 @@ async function removeDeprecatedSchedules(
 
   var schedulesToRemove: Array<Schedule> = [];
   for (let i = 0; i < schedules.length; i++) {
-    var scheduleDate = new Date(schedules[i].date);
+    var scheduleDate = new Date(parseInt(schedules[i].date));
     if (scheduleDate < deprecationDate) schedulesToRemove.push(schedules[i]);
   }
 
@@ -733,9 +734,6 @@ function addWeeklySchedules(
   addBotbashWeeklySchedule(mondayAndSunday, channels, dbClient);
 }
 
-/**
- * update schedule: add additional schedules once on sunday and remove deprecated ones
- */
 export async function updateSchedules(
   dbClient: DFZDataBaseClient,
   channels: GuildChannelManager
