@@ -11,6 +11,7 @@ import { updateLobbyPosts } from "../misc/lobbyManagement";
 import {
   updateSchedules,
   insertScheduledLobbies,
+  tryRemoveDeprecatedSchedules,
 } from "../misc/scheduleManagement";
 import { DFZDataBaseClient } from "./database/DFZDataBaseClient";
 import { Schedule } from "./serializables/schedule";
@@ -134,10 +135,20 @@ export class DFZDiscordClient extends Client {
       }
     };
     await timeUpdater();
-    setInterval(timeUpdater, 60000); // once per minute
+    setInterval(timeUpdater, oncePerMinute); // once per minute
   }
 
   private async setSchedulePostUpdateTimer() {
+    const scheduleRemover = async () => {
+      try {
+        tryRemoveDeprecatedSchedules(this.dbClient);
+      } catch {
+        (err: string) => console.log(err);
+      }
+    };
+    await scheduleRemover();
+    setInterval(scheduleRemover, oncePerHour); // once per hour
+
     const scheduleWriter = async () => {
       try {
         var guild = await this.guilds.fetch(guildId);
@@ -148,25 +159,36 @@ export class DFZDiscordClient extends Client {
       }
     };
     await scheduleWriter();
-    setInterval(scheduleWriter, 60 * 60000); // once per hour
+    setInterval(scheduleWriter, oncePerHour); // once per hour
   }
 
   private async setPostLobbyFromScheduleTimer() {
     const lobbyPoster = async () => {
-      var guild = await this.guilds.fetch(guildId);
-      if (guild === undefined || guild === null) return;
-      await insertScheduledLobbies(guild.channels, this.dbClient);
+      try {
+        var guild = await this.guilds.fetch(guildId);
+        if (guild === undefined || guild === null) return;
+        await insertScheduledLobbies(guild.channels, this.dbClient);
+      } catch {
+        (err: string) => console.log(err);
+      }
     };
     await lobbyPoster();
-    setInterval(lobbyPoster, 60 * 60000); // once per hour
+    setInterval(lobbyPoster, oncePerHour); // once per hour
   }
 
   private async setLeaderBoardPostTimer() {
     const leaderBordPoster = async () => {
-      await postReferralLeaderboard(this);
+      try {
+        await postReferralLeaderboard(this);
+      } catch {
+        (err: string) => console.log(err);
+      }
     };
     await findLeaderBoardMessage(this);
     await postReferralLeaderboard(this);
-    setInterval(leaderBordPoster, 60 * 60000); // once per hour
+    setInterval(leaderBordPoster, oncePerHour); // once per hour
   }
 }
+
+const oncePerMinute = 60000;
+const oncePerHour = oncePerMinute * 60;

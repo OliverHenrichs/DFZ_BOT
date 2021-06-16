@@ -555,25 +555,21 @@ export function createSchedulesInDatabase(
 async function createSchedules(
   dbClient: DFZDataBaseClient,
   channels: GuildChannelManager,
-  channelId: string,
-  coachCount: number,
-  type: string,
-  days: Array<Array<number>>,
-  times: Array<Array<string>>,
+  scheduleData: WeeklyScheduleData,
   monAndSun: NextMondayAndSunday
 ) {
   var channel = channels.cache.find((chan) => {
-    return chan.id == channelId;
+    return chan.id == scheduleData.channelId;
   });
   if (channel === undefined || !channel.isText()) return;
 
   var scheduleSetup = createScheduleSetup(
     monAndSun.monday,
     monAndSun.sunday,
-    days,
-    type,
-    coachCount,
-    times
+    scheduleData.daysByRegion,
+    scheduleData.type,
+    scheduleData.coachCount,
+    scheduleData.timesByRegion
   );
   if (!scheduleSetup) return;
 
@@ -581,51 +577,6 @@ async function createSchedules(
   if (message === undefined) return;
 
   createSchedulesInDatabase(dbClient, message.id, channel.id, scheduleSetup);
-}
-
-async function doWeNeedToUpdateSchedules(
-  date: Date,
-  dbClient: DFZDataBaseClient
-): Promise<boolean> {
-  return new Promise<boolean>(async function (resolve, reject) {
-    try {
-      var currentDay = date.getDay();
-      if (currentDay !== weekDayNumbers.Sunday) {
-        resolve(false);
-        return;
-      }
-
-      var currentDayDatabase = await getDay(dbClient);
-      if (currentDayDatabase === currentDay) {
-        resolve(false);
-        return;
-      }
-
-      if (isNaN(currentDayDatabase)) await insertDay(dbClient, currentDay);
-      else await updateDay(dbClient, currentDay);
-      resolve(true);
-    } catch (e) {
-      reject(e);
-    }
-  });
-}
-
-async function removeDeprecatedSchedules(
-  deprecationDate: Date,
-  dbClient: DFZDataBaseClient
-) {
-  const serializer = new ScheduleSerializer(dbClient);
-  var schedules = await serializer.get();
-
-  var schedulesToRemove: Array<Schedule> = [];
-  for (let i = 0; i < schedules.length; i++) {
-    var scheduleDate = new Date(parseInt(schedules[i].date));
-    if (scheduleDate < deprecationDate) schedulesToRemove.push(schedules[i]);
-  }
-
-  if (schedulesToRemove.length === 0) return;
-
-  serializer.delete(schedulesToRemove);
 }
 
 interface WeeklyScheduleData {
@@ -642,16 +593,15 @@ function addWeeklySchedule(
   dbClient: DFZDataBaseClient,
   scheduleData: WeeklyScheduleData
 ) {
-  createSchedules(
-    dbClient,
-    channels,
-    scheduleData.channelId,
-    scheduleData.coachCount,
-    scheduleData.type,
-    scheduleData.daysByRegion,
-    scheduleData.timesByRegion,
-    mondayAndSunday
-  );
+  createSchedules(dbClient, channels, scheduleData, mondayAndSunday);
+}
+
+function addTier_1_2_WeeklySchedule(
+  mondayAndSunday: NextMondayAndSunday,
+  channels: GuildChannelManager,
+  dbClient: DFZDataBaseClient
+) {
+  addWeeklySchedule(mondayAndSunday, channels, dbClient, t1_t2_Data);
 }
 
 const t1_t2_Data: WeeklyScheduleData = {
@@ -665,12 +615,13 @@ const t1_t2_Data: WeeklyScheduleData = {
   channelId: scheduleChannel5v5,
   type: scheduleTypes.lobbyt1,
 };
-function addTier_1_2_WeeklySchedule(
+
+function addTier_3_4_WeeklySchedule(
   mondayAndSunday: NextMondayAndSunday,
   channels: GuildChannelManager,
   dbClient: DFZDataBaseClient
 ) {
-  addWeeklySchedule(mondayAndSunday, channels, dbClient, t1_t2_Data);
+  addWeeklySchedule(mondayAndSunday, channels, dbClient, t3_t4_Data);
 }
 
 const t3_t4_Data: WeeklyScheduleData = {
@@ -684,21 +635,7 @@ const t3_t4_Data: WeeklyScheduleData = {
   channelId: scheduleChannel5v5_t3,
   type: scheduleTypes.lobbyt3,
 };
-function addTier_3_4_WeeklySchedule(
-  mondayAndSunday: NextMondayAndSunday,
-  channels: GuildChannelManager,
-  dbClient: DFZDataBaseClient
-) {
-  addWeeklySchedule(mondayAndSunday, channels, dbClient, t3_t4_Data);
-}
 
-const tryoutData: WeeklyScheduleData = {
-  coachCount: 1,
-  daysByRegion: [[2, 4, 6]],
-  timesByRegion: [["8:00pm", "8:00pm", "8:00pm"]],
-  channelId: scheduleChannelTryout,
-  type: scheduleTypes.tryout,
-};
 function addTryoutWeeklySchedule(
   mondayAndSunday: NextMondayAndSunday,
   channels: GuildChannelManager,
@@ -706,7 +643,21 @@ function addTryoutWeeklySchedule(
 ) {
   addWeeklySchedule(mondayAndSunday, channels, dbClient, tryoutData);
 }
+const tryoutData: WeeklyScheduleData = {
+  coachCount: 1,
+  daysByRegion: [[2, 4, 6]],
+  timesByRegion: [["8:00pm", "8:00pm", "8:00pm"]],
+  channelId: scheduleChannelTryout,
+  type: scheduleTypes.tryout,
+};
 
+function addBotbashWeeklySchedule(
+  mondayAndSunday: NextMondayAndSunday,
+  channels: GuildChannelManager,
+  dbClient: DFZDataBaseClient
+) {
+  addWeeklySchedule(mondayAndSunday, channels, dbClient, botbashData);
+}
 const botbashData: WeeklyScheduleData = {
   coachCount: 1,
   daysByRegion: [[2, 4, 6]],
@@ -714,12 +665,40 @@ const botbashData: WeeklyScheduleData = {
   channelId: scheduleChannelBotbash,
   type: scheduleTypes.botbash,
 };
-function addBotbashWeeklySchedule(
-  mondayAndSunday: NextMondayAndSunday,
-  channels: GuildChannelManager,
-  dbClient: DFZDataBaseClient
+
+export async function updateSchedules(
+  dbClient: DFZDataBaseClient,
+  channels: GuildChannelManager
 ) {
-  addWeeklySchedule(mondayAndSunday, channels, dbClient, botbashData);
+  try {
+    var now = new Date();
+    if (!(await doWeNeedToUpdateSchedules(now, dbClient))) return;
+    addWeeklySchedules(channels, dbClient);
+    updateDBDay(now, dbClient);
+  } catch (e) {
+    console.log(`Error in updateSchedules\nReason:\n${e}`);
+  }
+}
+
+async function doWeNeedToUpdateSchedules(
+  date: Date,
+  dbClient: DFZDataBaseClient
+): Promise<boolean> {
+  return new Promise<boolean>(async function (resolve, reject) {
+    try {
+      resolve(await isTimeToUpdate(date, dbClient));
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+async function isTimeToUpdate(date: Date, dbClient: DFZDataBaseClient) {
+  var currentDay = date.getDay();
+  return (
+    currentDay === weekDayNumbers.Sunday &&
+    (await getDay(dbClient)) !== currentDay
+  );
 }
 
 function addWeeklySchedules(
@@ -734,19 +713,41 @@ function addWeeklySchedules(
   addBotbashWeeklySchedule(mondayAndSunday, channels, dbClient);
 }
 
-export async function updateSchedules(
-  dbClient: DFZDataBaseClient,
-  channels: GuildChannelManager
+async function updateDBDay(date: Date, dbClient: DFZDataBaseClient) {
+  if (isNaN(await getDay(dbClient))) {
+    return await insertDay(dbClient, date.getDay());
+  } else await updateDay(dbClient, date.getDay());
+}
+
+export async function tryRemoveDeprecatedSchedules(
+  dbClient: DFZDataBaseClient
 ) {
   try {
     var now = new Date();
-    if (!(await doWeNeedToUpdateSchedules(now, dbClient))) return;
-
     await removeDeprecatedSchedules(now, dbClient);
-    addWeeklySchedules(channels, dbClient);
   } catch (e) {
-    console.log(`Error in updateSchedules\nReason:\n${e}`);
+    console.log(`Error in tryRemoveDeprecatedSchedules\nReason:\n${e}`);
   }
+}
+
+async function removeDeprecatedSchedules(
+  deprecationDate: Date,
+  dbClient: DFZDataBaseClient
+) {
+  const serializer = new ScheduleSerializer(dbClient);
+  var schedules = await serializer.get();
+
+  var schedulesToRemove: Array<Schedule> = [];
+  for (let i = 0; i < schedules.length; i++) {
+    var scheduleDate = new Date(parseInt(schedules[i].date));
+    if (scheduleDate < deprecationDate) schedulesToRemove.push(schedules[i]);
+  }
+
+  console.log("removing " + schedulesToRemove.length + " schedules");
+
+  if (schedulesToRemove.length === 0) return;
+
+  serializer.delete(schedulesToRemove);
 }
 
 /**
