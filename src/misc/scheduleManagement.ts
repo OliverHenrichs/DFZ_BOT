@@ -703,8 +703,6 @@ async function removeDeprecatedSchedules(
     if (scheduleDate < deprecationDate) schedulesToRemove.push(schedules[i]);
   }
 
-  console.log("removing " + schedulesToRemove.length + " schedules");
-
   if (schedulesToRemove.length === 0) return;
 
   serializer.delete(schedulesToRemove);

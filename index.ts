@@ -10,7 +10,6 @@ var website = {};
 client
   .login(process.env.BOT_TOKEN)
   .then((res: string) => {
-    console.log("Login response: " + res);
     website = new Website(
       process.env.WEBSITE_PASSWD ? process.env.WEBSITE_PASSWD : "",
       client
