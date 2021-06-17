@@ -26,12 +26,9 @@ export class DFZDiscordClient extends Client {
 
     this.setupDiscordEventHandlers();
     this.dbClient = new DFZDataBaseClient();
-    console.log("end constructor");
   }
 
   private setupDiscordEventHandlers() {
-    console.log("in setupDiscordEventHandlers");
-
     const files = readdirSync("./build/src/events/");
     for (const file of files) {
       const eventHandler = require(`../events/${file}`);
