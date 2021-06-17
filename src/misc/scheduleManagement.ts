@@ -587,23 +587,6 @@ interface WeeklyScheduleData {
   type: string;
 }
 
-function addWeeklySchedule(
-  mondayAndSunday: NextMondayAndSunday,
-  channels: GuildChannelManager,
-  dbClient: DFZDataBaseClient,
-  scheduleData: WeeklyScheduleData
-) {
-  createSchedules(dbClient, channels, scheduleData, mondayAndSunday);
-}
-
-function addTier_1_2_WeeklySchedule(
-  mondayAndSunday: NextMondayAndSunday,
-  channels: GuildChannelManager,
-  dbClient: DFZDataBaseClient
-) {
-  addWeeklySchedule(mondayAndSunday, channels, dbClient, t1_t2_Data);
-}
-
 const t1_t2_Data: WeeklyScheduleData = {
   coachCount: 2,
   daysByRegion: [[3, 5, 0]],
@@ -615,14 +598,6 @@ const t1_t2_Data: WeeklyScheduleData = {
   channelId: scheduleChannel5v5,
   type: scheduleTypes.lobbyt1,
 };
-
-function addTier_3_4_WeeklySchedule(
-  mondayAndSunday: NextMondayAndSunday,
-  channels: GuildChannelManager,
-  dbClient: DFZDataBaseClient
-) {
-  addWeeklySchedule(mondayAndSunday, channels, dbClient, t3_t4_Data);
-}
 
 const t3_t4_Data: WeeklyScheduleData = {
   coachCount: 2,
@@ -636,13 +611,6 @@ const t3_t4_Data: WeeklyScheduleData = {
   type: scheduleTypes.lobbyt3,
 };
 
-function addTryoutWeeklySchedule(
-  mondayAndSunday: NextMondayAndSunday,
-  channels: GuildChannelManager,
-  dbClient: DFZDataBaseClient
-) {
-  addWeeklySchedule(mondayAndSunday, channels, dbClient, tryoutData);
-}
 const tryoutData: WeeklyScheduleData = {
   coachCount: 1,
   daysByRegion: [[2, 4, 6]],
@@ -651,13 +619,6 @@ const tryoutData: WeeklyScheduleData = {
   type: scheduleTypes.tryout,
 };
 
-function addBotbashWeeklySchedule(
-  mondayAndSunday: NextMondayAndSunday,
-  channels: GuildChannelManager,
-  dbClient: DFZDataBaseClient
-) {
-  addWeeklySchedule(mondayAndSunday, channels, dbClient, botbashData);
-}
 const botbashData: WeeklyScheduleData = {
   coachCount: 1,
   daysByRegion: [[2, 4, 6]],
@@ -665,6 +626,8 @@ const botbashData: WeeklyScheduleData = {
   channelId: scheduleChannelBotbash,
   type: scheduleTypes.botbash,
 };
+
+const weeklyScheduleDatas = [botbashData, tryoutData, t3_t4_Data, t1_t2_Data];
 
 export async function updateSchedules(
   dbClient: DFZDataBaseClient,
@@ -706,11 +669,8 @@ function addWeeklySchedules(
   dbClient: DFZDataBaseClient
 ) {
   var mondayAndSunday: NextMondayAndSunday = getNextMondayAndSundayDate();
-
-  addTier_1_2_WeeklySchedule(mondayAndSunday, channels, dbClient);
-  addTier_3_4_WeeklySchedule(mondayAndSunday, channels, dbClient);
-  addTryoutWeeklySchedule(mondayAndSunday, channels, dbClient);
-  addBotbashWeeklySchedule(mondayAndSunday, channels, dbClient);
+  for (const data of weeklyScheduleDatas)
+    createSchedules(dbClient, channels, data, mondayAndSunday);
 }
 
 async function updateDBDay(date: Date, dbClient: DFZDataBaseClient) {
