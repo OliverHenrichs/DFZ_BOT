@@ -1,7 +1,7 @@
 import { RowDataPacket } from "mysql2/promise";
 
-export class SQLResultConverter {
-  static mapToDataArray<T>(
+export namespace SQLResultConverter {
+  export function mapToDataArray<T>(
     rawData: RowDataPacket[],
     typeConstructor: Constructor<T>
   ): T[] {
@@ -12,7 +12,7 @@ export class SQLResultConverter {
     );
   }
 
-  static mapJSONToDataArray<T>(
+  export function mapJSONToDataArray<T>(
     rawData: RowDataPacket[],
     typeConstructor: Constructor<T>
   ): T[] {
