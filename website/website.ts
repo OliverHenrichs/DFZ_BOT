@@ -119,6 +119,8 @@ export default class WebSocket {
 
   async updateCoachList() {
     try {
+      console.log("In updateCoachList()");
+
       if (this.client.dbClient.pool === undefined) return;
 
       var guild = await this.client.guilds.fetch(guildId);
