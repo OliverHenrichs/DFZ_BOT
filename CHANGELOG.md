@@ -1,9 +1,16 @@
 _@Coach The bot received some new features today!_
 
+**DFZ-Bot v0.13 - Changelog**
+
+1. Enforced Schedules
+   > If the bot fails to write schedules because ValarM was a tiny bit too experimental with the commits
+   > now you have a new tool: _!schedules_ orders the bot to check if it posted schedules for the current week, and if it hasnt, to post them
+
+---
+
 **DFZ-Bot v0.12 - Changelog**
 
 1. Delayed Lobby cancel when pressing ❌ on a lobby
-
    > When a coach cancels a lobby there now is a 2 min grace period
    > in which they can undo the harm by pressing ❌ again.
 
