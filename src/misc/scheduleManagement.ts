@@ -12,6 +12,7 @@ import {
 import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import { scheduleTypes, scheduleReactionEmojis } from "./types/scheduleTypes";
 import {
+  getCurrentMondayAndSundayDate,
   getNextMondayAndSundayDate,
   getScheduledDate,
   getTimeString,
@@ -669,6 +670,15 @@ function addWeeklySchedules(
   dbClient: DFZDataBaseClient
 ) {
   var mondayAndSunday: NextMondayAndSunday = getNextMondayAndSundayDate();
+  for (const data of weeklyScheduleDatas)
+    createSchedules(dbClient, channels, data, mondayAndSunday);
+}
+
+export function addCurrentWeekSchedule(
+  channels: GuildChannelManager,
+  dbClient: DFZDataBaseClient
+) {
+  var mondayAndSunday: NextMondayAndSunday = getCurrentMondayAndSundayDate();
   for (const data of weeklyScheduleDatas)
     createSchedules(dbClient, channels, data, mondayAndSunday);
 }

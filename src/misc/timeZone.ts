@@ -74,8 +74,6 @@ interface ValidatedTime {
 
 /**
  * Validates that time string has form xxam, xam, xpm xxpm (x in 0,..,9)
- * @param {string} timeString input string
- * @return true if validator succeeds
  */
 function validateTime(timeString: string) {
   var res: ValidatedTime = { hour: undefined, minute: undefined };
@@ -208,7 +206,6 @@ export function getTimeZoneStringFromRegion(_region: string) {
 
 /**
  * Thx @ https://stackoverflow.com/questions/6117814/get-week-of-year-in-javascript-like-in-php
- * @param {Date} date
  */
 export function getWeekNumber(date: Date) {
   var d = new Date(
@@ -220,19 +217,31 @@ export function getWeekNumber(date: Date) {
   return Math.ceil(((Number(d) - Number(yearStart)) / dayInMs + 1) / 7);
 }
 
+export function getNextMondayAndSundayDate() {
+  return getMondayAndSundayDate("next");
+}
+
+export function getCurrentMondayAndSundayDate() {
+  return getMondayAndSundayDate("this");
+}
+
 /**
  * Thx @ https://stackoverflow.com/questions/4156434/javascript-get-the-first-day-of-the-week-from-current-date
- * Returns the dates for given date's next week's monday and sunday
+ * Returns the dates for given date's current or next week's monday and sunday
  */
-export function getNextMondayAndSundayDate() {
+function getMondayAndSundayDate(thisOrNext: "this" | "next") {
+  const sundayAdder = thisOrNext === "this" ? -6 : 1;
+  const otherAdder = thisOrNext === "this" ? 1 : 8;
   var now = new Date();
   var day = now.getDay(),
-    diffToMondayNextWeek = day == 0 ? 1 : 8 - day,
-    diffToSundayOfNextWeek = diffToMondayNextWeek + 6;
+    diffToMonday =
+      day === weekDayNumbers.Sunday ? sundayAdder : otherAdder - day,
+    diffToSunday = diffToMonday + 6; // sunday is six days after monday...
 
+  const time = now.getTime();
   return {
-    monday: new Date(Date.now() + diffToMondayNextWeek * dayInMs),
-    sunday: new Date(Date.now() + diffToSundayOfNextWeek * dayInMs),
+    monday: new Date(time + diffToMonday * dayInMs),
+    sunday: new Date(time + diffToSunday * dayInMs),
   };
 }
 

@@ -6,6 +6,8 @@ import helpUser from "../commands/helpUser";
 import postLobby from "../commands/postLobby";
 import highScore from "../commands/highScore";
 import updateLobby from "../commands/updateLobby";
+import kick from "../commands/kick";
+import postSchedules from "../commands/postSchedules";
 import {
   signupChannel,
   isWatchingChannel,
@@ -13,7 +15,6 @@ import {
 } from "../misc/channelManagement";
 import { reactNegative } from "../misc/messageHelper";
 import { findRole, adminRoles } from "../misc/roleManagement";
-import kick from "../commands/kick";
 
 const PREFIX = "!";
 
@@ -62,6 +63,9 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
   if (findRole(message.member, adminRoles) != undefined) {
     if (content.startsWith("!help") || content.startsWith("!helpme")) {
       return helpUser(message);
+    }
+    if (content.startsWith("!schedules")) {
+      return postSchedules(message, client);
     }
     if (content.startsWith("!post")) {
       return postLobby(message, client.dbClient);
