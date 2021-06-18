@@ -79,8 +79,6 @@ export abstract class Serializer<T> {
       this.settings.table,
       this.settings.sortColumn,
       (res: RowDataPacket[]) => {
-        console.log("Sorted executor: " + res.length + "rows.");
-
         resolve(this.getTypeArrayFromSQLResponse(res));
       }
     );

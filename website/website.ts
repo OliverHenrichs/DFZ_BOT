@@ -80,8 +80,6 @@ export default class WebSocket {
 
     this.app.use(limiter);
 
-    console.log("test1");
-
     this.app.engine(
       "hbs",
       hbs({
@@ -92,14 +90,11 @@ export default class WebSocket {
     );
     this.app.set("views", path.join(__dirname, "views"));
     this.app.set("view engine", "hbs");
-    console.log("test2");
     this.app.use(express.static(path.join(__dirname, "public")));
     this.app.use(visitCounter.initialize());
-    console.log("test3");
     this.registerRoots();
 
     this.setupHallOfFame();
-    console.log("test4");
     this.httpServer = http.createServer(this.app);
     this.httpServer.listen(80, () => {
       console.log("HTTP Server running on port 80");
@@ -117,16 +112,11 @@ export default class WebSocket {
 
   async updateCoachList() {
     try {
-      console.log("In updateCoachList");
-
       if (this.client.dbClient.pool === undefined) return;
-
-      console.log("In updateCoachList");
       var guild = await this.client.guilds.fetch(guildId);
 
       const serializer = new CoachSerializer(this.client.dbClient);
       var nativeCoachList = await serializer.getSorted();
-      console.log("In updateCoachList()");
       for (let i = 0; i < nativeCoachList.length; i++) {
         const coach: any = nativeCoachList[i]; // in order to add nick, change type to any
         try {
