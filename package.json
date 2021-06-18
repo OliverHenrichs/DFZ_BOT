@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build": "tsc -p ./ && copyfiles -u 1 \"./website/**/*\" \"build/website\" -e **/*.ts",
+    "build": "tsc -p ./ && copyfiles -u 1 \"./website/**/*\" \"build/website\" -e \"./website/*.ts\"",
     "prestart": "npm run build",
     "start": "node ./build/index.js",
     "dev": "nodemon ./build/index.js"
