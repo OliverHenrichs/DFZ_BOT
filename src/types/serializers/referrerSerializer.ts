@@ -12,7 +12,7 @@ export class ReferrerSerializer extends Serializer<Referrer> {
       dbClient: dbClient,
       table: referrerTable,
       columns: referrerColumns,
-      sortColumn: idColumnName,
+      sortColumn: sortColumnName,
     });
     this.tag = tag;
   }
@@ -47,3 +47,5 @@ const referrerTable = "referrers";
 const referrerColumns = ["userId", "tag", "referralCount"];
 
 const idColumnName = referrerColumns[1];
+
+const sortColumnName = referrerColumns[2];
