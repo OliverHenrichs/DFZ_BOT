@@ -9,8 +9,8 @@ import {
 } from "../misc/leaderBoardPoster";
 import { updateLobbyPosts } from "../misc/lobbyManagement";
 import {
-  updateSchedules,
   insertScheduledLobbies,
+  postSchedules,
   tryRemoveDeprecatedSchedules,
 } from "../misc/scheduleManagement";
 import { DFZDataBaseClient } from "./database/DFZDataBaseClient";
@@ -148,9 +148,7 @@ export class DFZDiscordClient extends Client {
 
     const scheduleWriter = async () => {
       try {
-        var guild = await this.guilds.fetch(guildId);
-        if (guild === undefined || guild === null) return;
-        updateSchedules(this.dbClient, guild.channels);
+        postSchedules(this);
       } catch {
         (err: string) => console.log(err);
       }

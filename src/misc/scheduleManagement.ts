@@ -13,7 +13,6 @@ import { DFZDiscordClient } from "../types/DFZDiscordClient";
 import { scheduleTypes, scheduleReactionEmojis } from "./types/scheduleTypes";
 import {
   getCurrentMondayAndSundayDate,
-  getNextMondayAndSundayDate,
   getScheduledDate,
   getTimeString,
   getWeekNumber,
@@ -25,12 +24,11 @@ import {
   scheduleTimezoneNames,
   scheduleTimezoneNames_short,
   Time,
-  weekDayNumbers,
   weekDays,
 } from "./timeZone";
 import { generateEmbedding } from "./answerEmbedding";
 import { FieldElement } from "./interfaces/FieldElement";
-import { lobbyTypes } from "./constants";
+import { guildId, lobbyTypes } from "./constants";
 import {
   scheduleChannel5v5,
   scheduleChannel5v5_t3,
@@ -55,11 +53,6 @@ import {
 import { Schedule } from "../types/serializables/schedule";
 import { ScheduleSerializer } from "../types/serializers/scheduleSerializer";
 import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
-import {
-  getDay,
-  insertDay,
-  updateDay,
-} from "../types/serializers/optionsSerializer";
 
 const lobbyPostTime = 60000 * 60 * 5; // at the moment 5 hours
 
@@ -630,48 +623,33 @@ const botbashData: WeeklyScheduleData = {
 
 const weeklyScheduleDatas = [botbashData, tryoutData, t3_t4_Data, t1_t2_Data];
 
-export async function updateSchedules(
-  dbClient: DFZDataBaseClient,
-  channels: GuildChannelManager
-) {
-  try {
-    var now = new Date();
-    if (!(await doWeNeedToUpdateSchedules(now, dbClient))) return;
-    addWeeklySchedules(channels, dbClient);
-    updateDBDay(now, dbClient);
-  } catch (e) {
-    console.log(`Error in updateSchedules\nReason:\n${e}`);
-  }
+export async function postSchedules(client: DFZDiscordClient) {
+  if (!(await weeklyScheduleShouldBePosted(client)))
+    return "I already posted this week's schedules";
+
+  console.log("Posting schedules");
+
+  const guild = await client.guilds.fetch(guildId);
+  addCurrentWeekSchedule(guild.channels, client.dbClient);
 }
 
-async function doWeNeedToUpdateSchedules(
-  date: Date,
-  dbClient: DFZDataBaseClient
-): Promise<boolean> {
-  return new Promise<boolean>(async function (resolve, reject) {
-    try {
-      resolve(await isTimeToUpdate(date, dbClient));
-    } catch (e) {
-      reject(e);
-    }
-  });
+async function weeklyScheduleShouldBePosted(client: DFZDiscordClient) {
+  const schedules = await getAllSchedules(client.dbClient);
+  const { monday } = getCurrentMondayAndSundayDate();
+  return !existsScheduleAfterMonday(schedules, monday);
 }
 
-async function isTimeToUpdate(date: Date, dbClient: DFZDataBaseClient) {
-  var currentDay = date.getDay();
-  return (
-    currentDay === weekDayNumbers.Sunday &&
-    (await getDay(dbClient)) !== currentDay
+async function getAllSchedules(dbClient: DFZDataBaseClient) {
+  const serializer = new ScheduleSerializer(dbClient);
+  return await serializer.get();
+}
+
+function existsScheduleAfterMonday(schedules: Schedule[], monday: Date) {
+  const scheduleAfterMonday = schedules.find(
+    (schedule) => monday < new Date(Number(schedule.date))
   );
-}
 
-function addWeeklySchedules(
-  channels: GuildChannelManager,
-  dbClient: DFZDataBaseClient
-) {
-  var mondayAndSunday: NextMondayAndSunday = getNextMondayAndSundayDate();
-  for (const data of weeklyScheduleDatas)
-    createSchedules(dbClient, channels, data, mondayAndSunday);
+  return scheduleAfterMonday !== undefined;
 }
 
 export function addCurrentWeekSchedule(
@@ -681,12 +659,6 @@ export function addCurrentWeekSchedule(
   var mondayAndSunday: NextMondayAndSunday = getCurrentMondayAndSundayDate();
   for (const data of weeklyScheduleDatas)
     createSchedules(dbClient, channels, data, mondayAndSunday);
-}
-
-async function updateDBDay(date: Date, dbClient: DFZDataBaseClient) {
-  if (isNaN(await getDay(dbClient))) {
-    return await insertDay(dbClient, date.getDay());
-  } else await updateDay(dbClient, date.getDay());
 }
 
 export async function tryRemoveDeprecatedSchedules(
