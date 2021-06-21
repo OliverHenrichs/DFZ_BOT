@@ -1,206 +1,130 @@
-import express, { Request, Response } from "express";
+import express from "express";
+import { Express } from "express-serve-static-core";
 import { DFZDiscordClient } from "../src/types/DFZDiscordClient";
 
-import hbs from "express-handlebars";
 import http from "http";
 import https from "https";
-import path from "path";
-import { readFileSync } from "fs";
 import { CoachSerializer } from "../src/types/serializers/coachSerializer";
 import { ReferrerSerializer } from "../src/types/serializers/referrerSerializer";
+import { Coach } from "../src/types/serializables/coach";
+import { Referrer } from "../src/types/serializables/referrer";
+import { guildId } from "../src/misc/constants";
+import { tryGetSSLCredentials } from "./ssl";
+import { setupMiddleWares } from "./middlewares";
+import { registerEndpoints } from "./endPoints";
+import { Guild } from "discord.js";
 
-var visitCounter = require("express-visit-counter"); // no types in npm
+export default class Website {
+  app: Express;
+  private client: DFZDiscordClient;
 
-const guildId: string =
-  process.env.GUILD !== undefined ? process.env.GUILD : "";
+  private httpServer: http.Server | undefined;
+  private httpsServer: https.Server | undefined;
 
-// SSL credentials
-interface credentials {
-  key: undefined | string;
-  cert: undefined | string;
-  ca: undefined | string;
-}
-var credentials: credentials = {
-  key: undefined,
-  cert: undefined,
-  ca: undefined,
-};
+  coachList: Coach[] = [];
+  referrerList: Referrer[] = [];
 
-var justHttp = false;
-try {
-  credentials.key = readFileSync(
-    "/etc/letsencrypt/live/dotafromzero.com/privkey.pem",
-    "utf8"
-  );
-  credentials.cert = readFileSync(
-    "/etc/letsencrypt/live/dotafromzero.com/cert.pem",
-    "utf8"
-  );
-  credentials.ca = readFileSync(
-    "/etc/letsencrypt/live/dotafromzero.com/chain.pem",
-    "utf8"
-  );
-} catch (e) {
-  justHttp = true;
-  console.log("Could not find https-cert, only loading http-server");
-}
-
-// rate limit
-var RateLimit = require("express-rate-limit");
-var limiter = new RateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  delayMs: 0, // disable delaying - full speed until the max limit is reached
-});
-
-const _title = "No Bullshit. No Ads. Just DOTA.";
-
-export default class WebSocket {
-  token: string;
-  coachList: {};
-  referrerList: {};
-  client: DFZDiscordClient;
-  app: any;
-  httpServer: any;
-  useHttps: boolean;
-  credentials: {
-    key: undefined | string;
-    cert: undefined | string;
-    ca: undefined | string;
+  useHttps: boolean = false;
+  private httpsCredentials: {
+    key: string;
+    cert: string;
+    ca: string;
+  } = {
+    key: "",
+    cert: "",
+    ca: "",
   };
-  httpsServer: any;
 
-  constructor(token: string, client: DFZDiscordClient) {
-    this.token = token;
-    this.coachList = {};
-    this.referrerList = {};
+  constructor(client: DFZDiscordClient) {
     this.client = client;
+    this.setupHallOfFame();
 
     this.app = express();
+    setupMiddleWares(this.app);
+    registerEndpoints(this);
 
-    this.app.use(limiter);
+    this.trySetupHttps();
+    this.setupHttp();
+  }
 
-    this.app.engine(
-      "hbs",
-      hbs({
-        extname: "hbs",
-        defaultLayout: "layout",
-        layoutsDir: __dirname + "/layouts",
-      })
-    );
-    this.app.set("views", path.join(__dirname, "views"));
-    this.app.set("view engine", "hbs");
-    this.app.use(express.static(path.join(__dirname, "public")));
-    this.app.use(visitCounter.initialize());
-    this.registerRoots();
+  private trySetupHttps() {
+    try {
+      this.setupHttps();
+    } catch (error) {
+      console.log(`Did not set https: ${error}`);
+    }
+  }
 
-    this.setupHallOfFame();
+  private setupHttps() {
+    this.httpsCredentials = tryGetSSLCredentials();
+    this.useHttps = true;
+
+    this.httpsServer = https.createServer(this.httpsCredentials, this.app);
+    this.httpsServer.listen(443, () => {
+      console.log("HTTPS Server running on port 443");
+    });
+  }
+
+  private setupHttp() {
     this.httpServer = http.createServer(this.app);
     this.httpServer.listen(80, () => {
       console.log("HTTP Server running on port 80");
     });
-
-    this.credentials = credentials;
-    this.useHttps = !justHttp;
-    if (this.useHttps) {
-      this.httpsServer = https.createServer(this.credentials, this.app);
-      this.httpsServer.listen(443, () => {
-        console.log("HTTPS Server running on port 443");
-      });
-    }
   }
 
-  async updateCoachList() {
-    try {
-      if (this.client.dbClient.pool === undefined) return;
-      var guild = await this.client.guilds.fetch(guildId);
+  private async setupHallOfFame() {
+    await this.setupReferrerHallOfFame();
+    await this.setupCoachHallOfFame();
+  }
 
-      const serializer = new CoachSerializer(this.client.dbClient);
-      var nativeCoachList = await serializer.getSorted();
-      for (let i = 0; i < nativeCoachList.length; i++) {
-        const coach: any = nativeCoachList[i]; // in order to add nick, change type to any
-        try {
-          var member = await guild.members.fetch(coach.userId);
-          coach.nick = member.displayName;
-        } catch {
-          coach.nick = "Unknown";
-        }
-      }
-      this.coachList = nativeCoachList;
+  private async setupReferrerHallOfFame() {
+    await this.updateReferrerList();
+    setInterval(this.updateReferrerList.bind(this), twoHours);
+  }
+
+  private async updateReferrerList() {
+    const serializer = new ReferrerSerializer(this.client.dbClient);
+    this.referrerList = await serializer.getSorted();
+  }
+
+  private async setupCoachHallOfFame() {
+    await this.tryGetCoachList();
+    setInterval(this.tryGetCoachList.bind(this), twoHours);
+  }
+
+  private async tryGetCoachList() {
+    try {
+      this.getCoachList();
     } catch (e) {
       console.log(`Failed updating coaches\nReason:\n${e}`);
     }
   }
 
-  async updateReferrerList() {
-    if (this.client.dbClient.pool === undefined) return;
+  private async getCoachList() {
+    const serializer = new CoachSerializer(this.client.dbClient);
+    const nativeCoachList = await serializer.getSorted();
 
-    const serializer = new ReferrerSerializer(this.client.dbClient);
-    this.referrerList = await serializer.getSorted();
+    this.coachList = await this.addCoachDisplayNames(nativeCoachList);
   }
 
-  async setupHallOfFame() {
-    await this.updateCoachList();
-    setInterval(this.updateCoachList.bind(this), 2 * 60 * 60000); //2 * 60 * 60000);
-    await this.updateReferrerList();
-    setInterval(this.updateReferrerList.bind(this), 2 * 60 * 60000);
-  }
+  private async addCoachDisplayNames(coaches: Coach[]) {
+    var guild = await this.client.guilds.fetch(guildId);
 
-  redirectHttps(req: Request, res: Response) {
-    if (!req.secure && this.useHttps) {
-      res.redirect("https://" + req.headers.host + req.url);
-      return true;
+    for (const coach of coaches) {
+      await this.setGuildDisplayName(coach, guild);
     }
-    return false;
+
+    return coaches;
   }
 
-  async registerRoots() {
-    this.app.get("/", async (req: Request, res: Response) => {
-      if (this.redirectHttps(req, res)) {
-        return;
-      }
-      var vc = await visitCounter.Loader.getCount();
-      res.render("index", {
-        title: _title,
-        referrers: this.referrerList,
-        visitorCount: vc,
-      });
-    });
-    this.app.get("/join", async (req: Request, res: Response) => {
-      if (this.redirectHttps(req, res)) {
-        return;
-      }
-      var vc = await visitCounter.Loader.getCount();
-      res.render("joinLink", {
-        title: _title,
-        visitorCount: vc,
-      });
-    });
-
-    this.app.get("/halloffame", async (req: Request, res: Response) => {
-      if (this.redirectHttps(req, res)) {
-        return;
-      }
-      var vc = await visitCounter.Loader.getCount();
-      res.render("hallOfFame", {
-        title: _title,
-        coaches: this.coachList,
-        visitorCount: vc,
-      });
-    });
-
-    // this.app.post('/sendMessage', (req: Request, res: Response) => {
-    //     var _token = req.body.token;
-    //     var text = req.body.text;
-    //     var channelId = req.body.channelid;
-
-    //     if(!this.checkToken(_token))
-    //         return;
-
-    //     var channel = this.client.guilds.fetch(process.env.GUILD).channels.get(channelId)
-
-    //     if(channel)
-    //         channel.send(text);
-    // })
+  private async setGuildDisplayName(someObject: any, guild: Guild) {
+    try {
+      var member = await guild.members.fetch(someObject.userId);
+      someObject.displayName = member.displayName;
+    } catch {
+      someObject.displayName = "Unknown";
+    }
   }
 }
+
+const twoHours = 2 * 60 * 60 * 1000;
