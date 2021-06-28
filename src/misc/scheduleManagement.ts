@@ -55,6 +55,7 @@ import { ScheduleSerializer } from "../types/serializers/scheduleSerializer";
 import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
 
 const lobbyPostTime = 60000 * 60 * 5; // at the moment 5 hours
+const aDay = 1000 * 60 * 60 * 24;
 
 interface ScheduleSetup {
   mondayDate: Date;
@@ -663,8 +664,8 @@ export async function tryRemoveDeprecatedSchedules(
   dbClient: DFZDataBaseClient
 ) {
   try {
-    var now = new Date();
-    await removeDeprecatedSchedules(now, dbClient);
+    var yesterday = new Date(Date.now() - aDay);
+    await removeDeprecatedSchedules(yesterday, dbClient);
   } catch (e) {
     console.log(`Error in tryRemoveDeprecatedSchedules\nReason:\n${e}`);
   }
