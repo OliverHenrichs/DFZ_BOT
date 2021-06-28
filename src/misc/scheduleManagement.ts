@@ -627,8 +627,6 @@ export async function postSchedules(client: DFZDiscordClient) {
   if (!(await weeklyScheduleShouldBePosted(client)))
     return "I already posted this week's schedules";
 
-  console.log("Posting schedules");
-
   const guild = await client.guilds.fetch(guildId);
   addCurrentWeekSchedule(guild.channels, client.dbClient);
 }

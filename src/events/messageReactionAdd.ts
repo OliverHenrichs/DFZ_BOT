@@ -58,6 +58,7 @@ async function handleMessageReactionAdd(
   reaction: MessageReaction,
   user: User
 ) {
+  console.log("jo");
   if (!isValidLobbyReaction(reaction, user)) return;
 
   if (scheduleChannels.includes(reaction.message.channel.id))
@@ -243,8 +244,9 @@ function handleSimpleLobbyEmoji(
   );
 }
 
+const oneHourInMS = 60 * 60 * 1000;
 async function removeLobbyDelayed(lobby: Lobby, client: DFZDiscordClient) {
-  setTimeout(deleteLobbyAfterStart, 15 * 60 * 1000, lobby, client);
+  setTimeout(deleteLobbyAfterStart, oneHourInMS, lobby, client);
 }
 
 function handleLobbyStart(
@@ -271,7 +273,7 @@ function handleLobbyCancel(
 ) {
   const to = setTimeout(
     removeLobbyPermantently,
-    2 * 60 * 1000,
+    oneHourInMS,
     client,
     lobby,
     channel,
