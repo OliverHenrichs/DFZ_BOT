@@ -1,7 +1,7 @@
 import { MessageReaction, User } from "discord.js";
-import { scheduleChannels } from "../misc/channelManagement";
+import { ChannelManager } from "../types/discord/ChannelManager";
 import { lobbyManagementReactionEmojis } from "../misc/constants";
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
 import { removeCoach, updatePlayerInLobby } from "../misc/lobbyManagement";
 import {
   getInfoFromLobbyReaction,
@@ -98,7 +98,7 @@ async function handleMessageReactionRemove(
 ) {
   if (!isValidLobbyReaction(reaction, user)) return;
 
-  if (scheduleChannels.includes(reaction.message.channel.id))
+  if (ChannelManager.scheduleChannels.includes(reaction.message.channel.id))
     removeCoachFromSchedule(client, reaction, user);
   else await handleLobbyRelatedEmoji(client, reaction, user);
 }

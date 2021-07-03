@@ -1,5 +1,5 @@
 import { Message } from "discord.js";
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
 import { Player } from "../types/serializables/player";
 import { Referrer } from "../types/serializables/referrer";
 import { PlayerSerializer } from "../types/serializers/playerSerializer";

@@ -17,27 +17,27 @@ export class ReferrerSerializer extends Serializer<Referrer> {
     this.tag = tag;
   }
 
-  getSerializeValues(referrer: Referrer): string[] {
+  protected getSerializeValues(referrer: Referrer): string[] {
     return [referrer.userId, referrer.tag, referrer.referralCount.toString()];
   }
 
-  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Referrer[] {
+  protected getTypeArrayFromSQLResponse(response: RowDataPacket[]): Referrer[] {
     return SQLResultConverter.mapToDataArray<Referrer>(response, Referrer);
   }
 
-  getCondition(): string[] {
+  protected getCondition(): string[] {
     return [`${idColumnName} = '${this.tag}'`];
   }
 
-  getSerializableCondition(serializable: Referrer): string[] {
+  protected getSerializableCondition(serializable: Referrer): string[] {
     return [`${idColumnName} = '${serializable.tag}'`];
   }
 
-  getDeletionIdentifierColumns(): string[] {
+  protected getDeletionIdentifierColumns(): string[] {
     return [idColumnName];
   }
 
-  getSerializableDeletionValues(referreres: Referrer[]): string[] {
+  protected getSerializableDeletionValues(referreres: Referrer[]): string[] {
     return referreres.map((referrer) => `'${referrer.tag}'`);
   }
 }

@@ -9,7 +9,7 @@ import {
   User,
 } from "discord.js";
 
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
 import { scheduleTypes, scheduleReactionEmojis } from "./types/scheduleTypes";
 import {
   getCurrentMondayAndSundayDate,
@@ -26,15 +26,9 @@ import {
   Time,
   weekDays,
 } from "./timeZone";
-import { generateEmbedding } from "./answerEmbedding";
-import { FieldElement } from "./interfaces/FieldElement";
+import { IFieldElement } from "../types/discord/interfaces/FieldElement";
 import { guildId, lobbyTypes } from "./constants";
-import {
-  scheduleChannel5v5,
-  scheduleChannel5v5_t3,
-  scheduleChannelBotbash,
-  scheduleChannelTryout,
-} from "./channelManagement";
+import { ChannelManager } from "../types/discord/ChannelManager";
 import {
   createCalendarEvent,
   editCalendarEvent,
@@ -53,6 +47,7 @@ import {
 import { Schedule } from "../types/serializables/schedule";
 import { ScheduleSerializer } from "../types/serializers/scheduleSerializer";
 import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
+import { EmbeddingCreator } from "../types/discord/EmbeddingCreator";
 
 const lobbyPostTime = 60000 * 60 * 5; // at the moment 5 hours
 const aDay = 1000 * 60 * 60 * 24;
@@ -101,7 +96,7 @@ function getScheduleText(
   timezoneName: string,
   coachCount: number
 ) {
-  var schedule: FieldElement = {
+  var schedule: IFieldElement = {
     name: title,
     value: "",
     inline: true,
@@ -157,7 +152,7 @@ async function writeSchedule(
     dayShortNames.push(regionDaysShortNames);
   });
 
-  var schedules: Array<FieldElement> = [];
+  var schedules: Array<IFieldElement> = [];
   var emojiStartIndex = 0;
   for (let i = 0; i < scheduleSetup.regions.length; i++) {
     var regionString = scheduleSetup.regionStrings[i];
@@ -183,7 +178,7 @@ async function writeSchedule(
 
   var footer = `If coaches are signed up, the corresponding lobby is automatically created roughly 8h prior to the event.\nIf coaches only sign up shortly before the lobby (4h or less), then they must manually create the lobby.`;
 
-  var _embed = generateEmbedding(
+  var _embed = EmbeddingCreator.create(
     getWeekScheduleString(scheduleSetup),
     "Sign up as a coach by reacting to the respective number.",
     footer,
@@ -590,7 +585,7 @@ const t1_t2_Data: WeeklyScheduleData = {
     ["8:00pm", "8:00pm", "4:00pm"],
     ["9:00pm", "9:00pm", "4:00pm"],
   ],
-  channelId: scheduleChannel5v5,
+  channelId: ChannelManager.scheduleChannel5v5,
   type: scheduleTypes.lobbyt1,
 };
 
@@ -602,7 +597,7 @@ const t3_t4_Data: WeeklyScheduleData = {
     ["8:00pm", "8:00pm", "4:00pm"],
     ["9:00pm", "9:00pm", "4:00pm"],
   ],
-  channelId: scheduleChannel5v5_t3,
+  channelId: ChannelManager.scheduleChannel5v5_t3,
   type: scheduleTypes.lobbyt3,
 };
 
@@ -610,7 +605,7 @@ const tryoutData: WeeklyScheduleData = {
   coachCount: 1,
   daysByRegion: [[2, 4, 6]],
   timesByRegion: [["8:00pm", "8:00pm", "8:00pm"]],
-  channelId: scheduleChannelTryout,
+  channelId: ChannelManager.scheduleChannelTryout,
   type: scheduleTypes.tryout,
 };
 
@@ -618,7 +613,7 @@ const botbashData: WeeklyScheduleData = {
   coachCount: 1,
   daysByRegion: [[2, 4, 6]],
   timesByRegion: [["8:45pm", "8:45pm", "8:45pm"]],
-  channelId: scheduleChannelBotbash,
+  channelId: ChannelManager.scheduleChannelBotbash,
   type: scheduleTypes.botbash,
 };
 

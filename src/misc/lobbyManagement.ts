@@ -8,8 +8,8 @@ import {
   TextChannel,
   User,
 } from "discord.js";
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
-import { FieldElement } from "./interfaces/FieldElement";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
+import { IFieldElement } from "../types/discord/interfaces/FieldElement";
 import { LobbyPlayer } from "./interfaces/LobbyInterfaces";
 import { getTimeString, Time } from "./timeZone";
 import {
@@ -22,7 +22,6 @@ import {
   lobbyTypes,
   tryoutReactionEmoji,
 } from "./constants";
-import { generateEmbedding } from "./answerEmbedding";
 import {
   getRoleMentions,
   getRoleMention,
@@ -31,10 +30,11 @@ import {
 import { createTeams, getUser } from "./userHelper";
 import { createLobbyPostReactions } from "./messageHelper";
 import { saveCoachParticipation, savePlayerParticipation } from "./tracker";
-import { getLobbyChannelFromGuildManager } from "./channelManagement";
+import { ChannelManager } from "../types/discord/ChannelManager";
 import { Lobby } from "../types/serializables/lobby";
 import { LobbySerializer } from "../types/serializers/lobbySerializer";
 import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
+import { EmbeddingCreator } from "../types/discord/EmbeddingCreator";
 
 /**
  * Returns required number of coaches for a given lobby type
@@ -60,7 +60,7 @@ function getCoachCountByLobbyType(lobbyType: number) {
 }
 
 function addUserNameToUserTable(
-  tableBase: Array<FieldElement>,
+  tableBase: Array<IFieldElement>,
   user: LobbyPlayer,
   startIndex = 0,
   mention = false
@@ -71,7 +71,7 @@ function addUserNameToUserTable(
 }
 
 function addUserPositionsToUserTable(
-  tableBase: Array<FieldElement>,
+  tableBase: Array<IFieldElement>,
   positions: Array<number>,
   startIndex = 0
 ) {
@@ -80,7 +80,7 @@ ${positions.length === 1 && positions[0] === -1 ? "-" : positions.join(", ")}`;
 }
 
 function addTierToUserTable(
-  tableBase: Array<FieldElement>,
+  tableBase: Array<IFieldElement>,
   user: LobbyPlayer,
   startIndex = 0
 ) {
@@ -89,7 +89,7 @@ ${user.tier.name}`;
 }
 
 function addUserWithPositionsToUserTable(
-  tableBase: Array<FieldElement>,
+  tableBase: Array<IFieldElement>,
   user: LobbyPlayer,
   positions: Array<number>,
   startIndex = 0,
@@ -109,7 +109,7 @@ function addUserWithPositionsToUserTable(
  *  @param mention if true mentions the user in the table
  */
 function addToUserTable(
-  tableBase: Array<FieldElement>,
+  tableBase: Array<IFieldElement>,
   user: LobbyPlayer,
   startIndex = 0,
   mention = false
@@ -123,7 +123,7 @@ function addToUserTable(
   );
 }
 
-function createUserTableBase(): Array<FieldElement> {
+function createUserTableBase(): Array<IFieldElement> {
   return [
     {
       name: "Name",
@@ -143,7 +143,7 @@ function createUserTableBase(): Array<FieldElement> {
   ];
 }
 
-function createUserTableBench(): Array<FieldElement> {
+function createUserTableBench(): Array<IFieldElement> {
   return [
     {
       name: "Bench",
@@ -214,7 +214,7 @@ function getCurrentUsersAsTable(lobby: Lobby, mention = false) {
  *  @param mention if true mentions the user in the table
  */
 function addUserToTeam(
-  tableBase: Array<FieldElement>,
+  tableBase: Array<IFieldElement>,
   index: number,
   player: LobbyPlayer,
   position: number,
@@ -407,7 +407,7 @@ function postIncompleteTeam(
   userSet: LobbyPlayer[]
 ) {
   var title = getIncompleteTeamPostTitle(lobby.type);
-  const _embed = generateEmbedding(
+  const _embed = EmbeddingCreator.create(
     title,
     "",
     "",
@@ -426,7 +426,7 @@ function postCompleteTeams(
     var teams = createTeams(us, lobby.type);
     var teamTable = getTeamTable(teams, lobby.type, true);
 
-    const _embed = generateEmbedding(
+    const _embed = EmbeddingCreator.create(
       getCompleteTeamPostTitle(lobby.type, ++counter),
       "",
       "",
@@ -438,7 +438,7 @@ function postCompleteTeams(
 
 function postBench(channel: TextChannel | NewsChannel, userSet: LobbyPlayer[]) {
   // bench
-  const _embed = generateEmbedding(
+  const _embed = EmbeddingCreator.create(
     "Today's bench",
     "",
     "",
@@ -643,7 +643,7 @@ export async function postLobby(
   var footer = getLobbyPostFooter(options.type, options.regionRole);
 
   // send embedding post to lobby signup-channel
-  const _embed = generateEmbedding(title, text, footer);
+  const _embed = EmbeddingCreator.create(title, text, footer);
   const lobbyPostMessage = await channel.send(
     getRoleMentions(options.userRoles),
     { embed: _embed }
@@ -811,51 +811,49 @@ async function cancelDeprecatedLobby(
 
 /**
  *  Update each lobby post and prune deleted and deprecated lobbies
- *  @param dbHandle handle to data base
- *  @param channels the bot's message channels on the server
  */
-export async function updateLobbyPosts(
-  guild: Guild,
-  dbClient: DFZDataBaseClient
-) {
-  const serializer = new LobbySerializer(dbClient);
+export async function updateLobbyPosts(client: DFZDiscordClient) {
+  const serializer = new LobbySerializer(client.dbClient);
   var lobbies: Lobby[] = await serializer.get();
 
-  var channels = guild.channels;
-
   for (const lobby of lobbies) {
-    const channel = getLobbyChannelFromGuildManager(lobby, channels);
-    if (!channel) continue;
-
-    const lobbyFetchResult = await fetchLobbyFromDiscord(lobby, channel);
-    if (!lobbyFetchResult) {
-      // remove if e.g. an admin deleted the message
-      await serializer.delete([lobby]);
-      continue;
+    try {
+      await tryUpdateLobbyPost(lobby, client, serializer);
+    } catch (error) {
+      console.log(
+        `Could not update lobby post of lobby ${JSON.stringify(lobby)}`
+      );
     }
-
-    const remainingTime = calculateRemainingTime(lobby);
-    if (remainingTime.totalMs < 0 && remainingTime.hours >= 3) {
-      cancelDeprecatedLobby(lobby, channel, dbClient);
-      continue;
-    }
-
-    if (lobby.started) continue;
-
-    var description = pruneEmbedDescription(lobbyFetchResult.embed);
-    updateDescriptionTime(
-      description,
-      remainingTime,
-      remainingTime.totalMs > 0
-    );
-
-    // generate new embed
-    var new_embed = new MessageEmbed(lobbyFetchResult.embed);
-    new_embed.description = description.join("\n");
-
-    // update embed
-    await lobbyFetchResult.message.edit(new_embed);
   }
+}
+
+async function tryUpdateLobbyPost(
+  lobby: Lobby,
+  client: DFZDiscordClient,
+  serializer: LobbySerializer
+) {
+  const channel = await ChannelManager.getChannel(client, lobby.channelId);
+
+  const lobbyFetchResult = await fetchLobbyFromDiscord(lobby, channel);
+  if (!lobbyFetchResult) {
+    // remove if e.g. an admin deleted the message
+    return await serializer.delete([lobby]);
+  }
+
+  const remainingTime = calculateRemainingTime(lobby);
+  if (remainingTime.totalMs < 0 && remainingTime.hours >= 3) {
+    return await cancelDeprecatedLobby(lobby, channel, client.dbClient);
+  }
+
+  if (lobby.started) return;
+
+  var description = pruneEmbedDescription(lobbyFetchResult.embed);
+  updateDescriptionTime(description, remainingTime, remainingTime.totalMs > 0);
+
+  var new_embed = new MessageEmbed(lobbyFetchResult.embed);
+  new_embed.description = description.join("\n");
+
+  await lobbyFetchResult.message.edit(new_embed);
 }
 
 /**

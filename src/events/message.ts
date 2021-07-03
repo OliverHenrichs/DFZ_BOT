@@ -1,5 +1,5 @@
 import { Message } from "discord.js";
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
 
 import apply from "../commands/apply";
 import helpUser from "../commands/helpUser";
@@ -8,11 +8,7 @@ import highScore from "../commands/highScore";
 import updateLobby from "../commands/updateLobby";
 import kick from "../commands/kick";
 import postSchedules from "../commands/postSchedules";
-import {
-  signupChannel,
-  isWatchingChannel,
-  channelStrings,
-} from "../misc/channelManagement";
+import { ChannelManager } from "../types/discord/ChannelManager";
 import { reactNegative } from "../misc/messageHelper";
 import { findRole, adminRoles } from "../misc/roleManagement";
 
@@ -47,15 +43,19 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
   }
 
   // handle applications
-  if (signupChannel === message.channel.id && content.startsWith("!apply")) {
+  if (
+    ChannelManager.signupChannel === message.channel.id &&
+    content.startsWith("!apply")
+  ) {
     return apply(client, message);
   }
 
   // Ignore messages outside of bot channels
-  if (!isWatchingChannel(message.channel.id)) {
+  if (!ChannelManager.isWatchingChannel(message.channel.id)) {
     return reactNegative(
       message,
-      "I only listen to messages in the channels " + channelStrings
+      "I only listen to messages in the channels " +
+        ChannelManager.channelStrings
     );
   }
 

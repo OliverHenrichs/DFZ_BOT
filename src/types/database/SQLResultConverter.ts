@@ -30,7 +30,7 @@ function mapSQLResponseToDataArray<T>(
   datumCreator: <T>(datum: any, type: Constructor<T>) => T
 ): T[] {
   return rawData
-    .map((datum: any) => {
+    .map((datum: unknown) => {
       return datumCreator(datum, typeConstructor);
     })
     .filter((datum) => datum !== undefined);

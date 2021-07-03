@@ -1,6 +1,3 @@
-/**
- * Just some pod that make up a schedule
- */
 export class Schedule {
   channelId: string;
   messageId: string;

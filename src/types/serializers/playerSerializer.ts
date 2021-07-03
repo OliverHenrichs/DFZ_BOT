@@ -17,7 +17,7 @@ export class PlayerSerializer extends Serializer<Player> {
     this.userId = userId;
   }
 
-  getSerializeValues(player: Player): string[] {
+  protected getSerializeValues(player: Player): string[] {
     return [
       player.userId,
       player.tag,
@@ -32,23 +32,23 @@ export class PlayerSerializer extends Serializer<Player> {
     ];
   }
 
-  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Player[] {
+  protected getTypeArrayFromSQLResponse(response: RowDataPacket[]): Player[] {
     return SQLResultConverter.mapToDataArray<Player>(response, Player);
   }
 
-  getCondition(): string[] {
+  protected getCondition(): string[] {
     return [`${idColumnName} = '${this.userId}'`];
   }
 
-  getSerializableCondition(serializable: Player): string[] {
+  protected getSerializableCondition(serializable: Player): string[] {
     return [`${idColumnName} = '${serializable.userId}'`];
   }
 
-  getDeletionIdentifierColumns(): string[] {
+  protected getDeletionIdentifierColumns(): string[] {
     return [idColumnName];
   }
 
-  getSerializableDeletionValues(playeres: Player[]): string[] {
+  protected getSerializableDeletionValues(playeres: Player[]): string[] {
     return playeres.map((player) => `'${player.userId}'`);
   }
 }

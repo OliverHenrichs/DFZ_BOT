@@ -7,7 +7,7 @@ import {
   NewsChannel,
   TextChannel,
 } from "discord.js";
-import { scheduleChannels } from "../misc/channelManagement";
+import { ChannelManager } from "../types/discord/ChannelManager";
 import {
   lobbyTypes,
   getReactionEmojiPosition,
@@ -16,7 +16,7 @@ import {
   isKnownSimpleLobbyEmoji,
   isKnownLobbyManagementEmoji,
 } from "../misc/constants";
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
 import {
   updateLobbyPost,
   startLobby,
@@ -58,10 +58,9 @@ async function handleMessageReactionAdd(
   reaction: MessageReaction,
   user: User
 ) {
-  console.log("jo");
   if (!isValidLobbyReaction(reaction, user)) return;
 
-  if (scheduleChannels.includes(reaction.message.channel.id))
+  if (ChannelManager.scheduleChannels.includes(reaction.message.channel.id))
     return await addCoachToSchedule(client, reaction, user);
 
   return await handleLobbyRelatedEmoji(client, reaction, user);

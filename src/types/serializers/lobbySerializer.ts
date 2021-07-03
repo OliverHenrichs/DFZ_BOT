@@ -23,15 +23,15 @@ export class LobbySerializer extends Serializer<Lobby> {
     this.messageId = messageId;
   }
 
-  getSerializeValues(lobby: Lobby): string[] {
+  protected getSerializeValues(lobby: Lobby): string[] {
     return [lobby.channelId, lobby.messageId, JSON.stringify(lobby)];
   }
 
-  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Lobby[] {
+  protected getTypeArrayFromSQLResponse(response: RowDataPacket[]): Lobby[] {
     return SQLResultConverter.mapJSONToDataArray<Lobby>(response, Lobby);
   }
 
-  getCondition(): string[] {
+  protected getCondition(): string[] {
     var conditions = [];
     if (this.channelId !== "")
       conditions.push(`${channelIdColumn} = '${this.channelId}'`);
@@ -40,18 +40,18 @@ export class LobbySerializer extends Serializer<Lobby> {
     return conditions;
   }
 
-  getSerializableCondition(serializable: Lobby): string[] {
+  protected getSerializableCondition(serializable: Lobby): string[] {
     return [
       `${channelIdColumn} = '${serializable.channelId}'`,
       `${messageIdColumn} = '${serializable.messageId}'`,
     ];
   }
 
-  getDeletionIdentifierColumns(): string[] {
+  protected getDeletionIdentifierColumns(): string[] {
     return [channelIdColumn, messageIdColumn];
   }
 
-  getSerializableDeletionValues(lobbies: Lobby[]): string[] {
+  protected getSerializableDeletionValues(lobbies: Lobby[]): string[] {
     return lobbies.map((lobby) => `'${lobby.channelId}','${lobby.messageId}'`);
   }
 }

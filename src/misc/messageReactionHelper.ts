@@ -1,5 +1,5 @@
 import { GuildMember, MessageReaction, Role, User } from "discord.js";
-import { isWatchingChannel } from "./channelManagement";
+import { ChannelManager } from "../types/discord/ChannelManager";
 import { findLobbyByMessage } from "./lobbyManagement";
 import {
   findRole,
@@ -7,7 +7,7 @@ import {
   adminRoles,
   tryoutRole,
 } from "./roleManagement";
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
 import { Lobby } from "../types/serializables/lobby";
 
 export interface LobbyReactionInfo {
@@ -82,7 +82,8 @@ export function isValidLobbyReaction(
   if (reaction.message.channel === undefined) return false;
 
   // Ignore messages outside of bot channels
-  if (!isWatchingChannel(reaction.message.channel.id)) return false;
+  if (!ChannelManager.isWatchingChannel(reaction.message.channel.id))
+    return false;
 
   return true;
 }

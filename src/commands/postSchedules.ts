@@ -1,7 +1,7 @@
 import { Message } from "discord.js";
 import { reactNegative, reactPositive } from "../misc/messageHelper";
 import { postSchedules } from "../misc/scheduleManagement";
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
 
 export default async (message: Message, client: DFZDiscordClient) => {
   postSchedules(client)

@@ -1,4 +1,5 @@
 import { createPool, Pool, RowDataPacket } from "mysql2/promise";
+import { IColumnsAndValues } from "./interfaces/ColumnsAndValues";
 import { SQLTableCreator } from "./SQLTableCreator";
 
 export class DFZDataBaseClient {
@@ -8,7 +9,7 @@ export class DFZDataBaseClient {
     this.pool = this.createDataBaseHandle();
   }
 
-  createDataBaseHandle() {
+  private createDataBaseHandle() {
     console.log(
       `trying to connect to MYSQL-DB on \nhost ${process.env.MYSQL_HOST}\nuser ${process.env.MYSQL_USER}\npw ${process.env.MYSQL_PASSWORD}\ndb ${process.env.MYSQL_DATABASE}\n`
     );
@@ -24,7 +25,7 @@ export class DFZDataBaseClient {
     });
   }
 
-  async tryCreateDataBaseTables() {
+  public async tryCreateDataBaseTables() {
     try {
       this.createDataBaseTables();
     } catch (error) {
@@ -32,7 +33,7 @@ export class DFZDataBaseClient {
     }
   }
 
-  async createDataBaseTables() {
+  private async createDataBaseTables() {
     await SQLTableCreator.createScheduleTable(this.pool);
     await SQLTableCreator.createLobbyTable(this.pool);
     await SQLTableCreator.createOptionsTable(this.pool);
@@ -41,120 +42,119 @@ export class DFZDataBaseClient {
     await SQLTableCreator.createReferrerTable(this.pool);
   }
 
-  executeSQLCommand(
+  private executeSQLCommand(
     command: string,
     callback: (res: RowDataPacket[]) => void = () => {}
   ) {
-    const fixedCommand = fixSqlCommand(command);
+    const fixedCommand = this.fixSqlCommand(command);
     this.pool.execute<RowDataPacket[]>(fixedCommand).then((result) => {
       callback(result[0]);
     });
   }
 
-  async insertRow(table: string, values: ColumnsAndValues[]) {
-    const command = composeInsertRowCommand(table, values);
+  private fixSqlCommand(command: string) {
+    return command
+      .replace(/[\\]/g, "\\\\")
+      .replace(/[\/]/g, "\\/")
+      .replace(/[\b]/g, "\\b")
+      .replace(/[\f]/g, "\\f")
+      .replace(/[\n]/g, "\\n")
+      .replace(/[\r]/g, "\\r")
+      .replace(/[\t]/g, "\\t");
+  }
+
+  public async insertRow(table: string, values: IColumnsAndValues[]) {
+    const command = this.composeInsertRowCommand(table, values);
     return this.executeSQLCommand(command);
   }
 
-  selectRows(
+  private composeInsertRowCommand(table: string, values: IColumnsAndValues[]) {
+    const valueNames = values.map((v) => v.columnName).join(", ");
+    const valueValues = values.map((v) => v.value).join("', '");
+    return `INSERT INTO ${table}(${valueNames}) VALUES('${valueValues}');`;
+  }
+
+  public selectRows(
     table: string,
     columns: string[],
     conditions: string[],
     callback: (res: RowDataPacket[]) => void
   ) {
-    const command = composeSelectRowsCommand(table, columns, conditions);
+    const command = this.composeSelectRowsCommand(table, columns, conditions);
     this.executeSQLCommand(command, callback);
   }
 
-  updateRows(table: string, update: ColumnsAndValues[], conditions: string[]) {
-    const command = composeUpdateTableCommand(table, update, conditions);
+  private composeSelectRowsCommand(
+    table: string,
+    columns: string[],
+    conditions: string[]
+  ) {
+    var conditionsString = "";
+    if (conditions.length > 0)
+      conditionsString = `WHERE ${conditions.join(" AND ")}`;
+
+    return `SELECT ${columns.join(", ")} FROM ${table} ${conditionsString}`;
+  }
+
+  public updateRows(
+    table: string,
+    update: IColumnsAndValues[],
+    conditions: string[]
+  ) {
+    const command = this.composeUpdateTableCommand(table, update, conditions);
     this.executeSQLCommand(command);
   }
 
-  deleteRows(table: string, where: string[], which: string[]) {
-    const command = composeDeleteRowsCommand(table, where, which);
+  private composeUpdateTableCommand(
+    table: string,
+    update: IColumnsAndValues[],
+    conditions: string[]
+  ) {
+    var command = `Update ${table} SET `;
+    command += this.getUpdateValues(update);
+    command += this.getConditionValues(conditions);
+    return command;
+  }
+
+  public deleteRows(table: string, where: string[], which: string[]) {
+    const command = this.composeDeleteRowsCommand(table, where, which);
     this.executeSQLCommand(command);
   }
 
-  getSortedTable(
+  private composeDeleteRowsCommand(
+    table: string,
+    where: string[],
+    which: string[]
+  ) {
+    const whereString = where.length !== 0 ? `WHERE (${where.join(",")})` : "";
+    const whichString = which.length !== 0 ? `IN ((${which.join("),(")}))` : "";
+    return `DELETE FROM ${table} ${whereString} ${whichString}`;
+  }
+
+  public getSortedTable(
     table: string,
     column: string,
     callback: (res: RowDataPacket[]) => void
   ) {
-    const command = composeSortedTableCommand(table, column);
+    const command = this.composeSortedTableCommand(table, column);
     this.executeSQLCommand(command, callback);
   }
-}
 
-export interface ColumnsAndValues {
-  columnName: string;
-  value: string | number;
-}
-
-function composeInsertRowCommand(table: string, values: ColumnsAndValues[]) {
-  const valueNames = values.map((v) => v.columnName).join(", ");
-  const valueValues = values.map((v) => v.value).join("', '");
-  return `INSERT INTO ${table}(${valueNames}) VALUES('${valueValues}');`;
-}
-
-function composeSelectRowsCommand(
-  table: string,
-  columns: string[],
-  conditions: string[]
-) {
-  var conditionsString = "";
-  if (conditions.length > 0)
-    conditionsString = `WHERE ${conditions.join(" AND ")}`;
-
-  return `SELECT ${columns.join(", ")} FROM ${table} ${conditionsString}`;
-}
-
-function composeDeleteRowsCommand(
-  table: string,
-  where: string[],
-  which: string[]
-) {
-  const whereString = where.length !== 0 ? `WHERE (${where.join(",")})` : "";
-  const whichString = which.length !== 0 ? `IN ((${which.join("),(")}))` : "";
-  return `DELETE FROM ${table} ${whereString} ${whichString}`;
-}
-
-function composeUpdateTableCommand(
-  table: string,
-  update: ColumnsAndValues[],
-  conditions: string[]
-) {
-  var command = `Update ${table} SET `;
-  command += getUpdateValues(update);
-  command += getConditionValues(conditions);
-  return command;
-}
-
-function getUpdateValues(update: ColumnsAndValues[]) {
-  const updateValues: string[] = [];
-  for (const updateEntry of update) {
-    updateValues.push(`${updateEntry.columnName}='${updateEntry.value}'`);
+  private composeSortedTableCommand(tableName: string, columnName: string) {
+    return `SELECT * FROM ${tableName} ${
+      columnName !== "" ? `ORDER BY ${columnName} DESC` : ""
+    }`;
   }
-  return updateValues.join(", ");
-}
 
-function getConditionValues(conditions: string[]) {
-  return conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
-}
+  private getUpdateValues(update: IColumnsAndValues[]) {
+    const updateValues: string[] = [];
+    for (const updateEntry of update) {
+      updateValues.push(`${updateEntry.columnName}='${updateEntry.value}'`);
+    }
+    return updateValues.join(", ");
+  }
 
-function composeSortedTableCommand(tableName: string, columnName: string) {
-  return `SELECT * FROM ${tableName} ${
-    columnName !== "" ? `ORDER BY ${columnName} DESC` : ""
-  }`;
-}
-
-function fixSqlCommand(command: string) {
-  return command
-    .replace(/[\\]/g, "\\\\")
-    .replace(/[\/]/g, "\\/")
-    .replace(/[\b]/g, "\\b")
-    .replace(/[\f]/g, "\\f")
-    .replace(/[\n]/g, "\\n")
-    .replace(/[\r]/g, "\\r")
-    .replace(/[\t]/g, "\\t");
+  private getConditionValues(conditions: string[]) {
+    return conditions.length > 0 ? ` WHERE ${conditions.join(" AND ")}` : "";
+  }
 }

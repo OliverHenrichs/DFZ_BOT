@@ -17,7 +17,7 @@ export class CoachSerializer extends Serializer<Coach> {
     this.userId = userId;
   }
 
-  getSerializeValues(coach: Coach): string[] {
+  protected getSerializeValues(coach: Coach): string[] {
     return [
       coach.userId,
       coach.lobbyCount.toString(),
@@ -27,25 +27,25 @@ export class CoachSerializer extends Serializer<Coach> {
     ];
   }
 
-  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Coach[] {
+  protected getTypeArrayFromSQLResponse(response: RowDataPacket[]): Coach[] {
     return SQLResultConverter.mapToDataArray<Coach>(response, Coach);
   }
 
-  getCondition(): string[] {
+  protected getCondition(): string[] {
     return [`${idColumnName} = '${this.userId}'`];
   }
 
-  getSerializableCondition(serializable: Coach): string[] {
+  protected getSerializableCondition(serializable: Coach): string[] {
     return [
       `${idColumnName} = '${serializable ? serializable.userId : this.userId}'`,
     ];
   }
 
-  getDeletionIdentifierColumns(): string[] {
+  protected getDeletionIdentifierColumns(): string[] {
     return [idColumnName];
   }
 
-  getSerializableDeletionValues(coaches: Coach[]): string[] {
+  protected getSerializableDeletionValues(coaches: Coach[]): string[] {
     return coaches.map((coach) => `'${coach.userId}'`);
   }
 }

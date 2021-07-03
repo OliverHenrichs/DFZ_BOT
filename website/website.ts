@@ -1,6 +1,5 @@
 import express from "express";
 import { Express } from "express-serve-static-core";
-import { DFZDiscordClient } from "../src/types/DFZDiscordClient";
 
 import http from "http";
 import https from "https";
@@ -13,6 +12,7 @@ import { tryGetSSLCredentials } from "./ssl";
 import { setupMiddleWares } from "./middlewares";
 import { registerEndpoints } from "./endPoints";
 import { Guild } from "discord.js";
+import { DFZDiscordClient } from "../src/types/discord/DFZDiscordClient";
 
 export default class Website {
   app: Express;

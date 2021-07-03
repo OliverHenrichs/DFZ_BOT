@@ -1,6 +1,3 @@
-/**
- * Just some pod that make up a player
- */
 export class Player {
   userId: string;
   tag: string;

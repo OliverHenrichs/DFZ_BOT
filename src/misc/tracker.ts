@@ -1,7 +1,7 @@
 import { lobbyTypes } from "./constants";
 import { LobbyPlayer } from "./interfaces/LobbyInterfaces";
 import { Coach } from "../types/serializables/coach";
-import { DFZDiscordClient } from "../types/DFZDiscordClient";
+import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
 import { Player } from "../types/serializables/player";
 import { CoachSerializer } from "../types/serializers/coachSerializer";
 import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";

@@ -54,7 +54,6 @@ async function setEndPoint(
     if (redirectHttps(req, res, ws)) {
       return;
     }
-    console.log(JSON.stringify(dataFun()));
 
     const renderData = await getRenderData(dataFun);
     res.render(names.view, renderData);

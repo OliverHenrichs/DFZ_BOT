@@ -1,8 +1,6 @@
-import {
-  ColumnsAndValues,
-  DFZDataBaseClient,
-} from "../database/DFZDataBaseClient";
+import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { RowDataPacket } from "mysql2/promise";
+import { IColumnsAndValues } from "../database/interfaces/ColumnsAndValues";
 
 export interface SerializationSettings {
   dbClient: DFZDataBaseClient;
@@ -24,22 +22,22 @@ export abstract class Serializer<T> {
     this.getSortedExecutor = this.getSortedExecutor.bind(this);
   }
 
-  insert(serializable: T): void {
+  public insert(serializable: T): void {
     const dbValues = this.getSerializeValues(serializable);
     const dbData = this.generateDBData(dbValues);
     this.settings.dbClient.insertRow(this.settings.table, dbData);
   }
 
-  get(): Promise<T[]> {
+  public get(): Promise<T[]> {
     return new Promise<T[]>(this.getExecutor);
   }
 
-  getSorted(sortColumn: string = ""): Promise<T[]> {
+  public getSorted(sortColumn: string = ""): Promise<T[]> {
     if (sortColumn.length > 0) this.settings.sortColumn = sortColumn;
     return new Promise<T[]>(this.getSortedExecutor);
   }
 
-  update(serializable: T): void {
+  public update(serializable: T): void {
     const dbValues = this.getSerializeValues(serializable);
     const dbData = this.generateDBData(dbValues);
     this.settings.dbClient.updateRows(
@@ -49,7 +47,7 @@ export abstract class Serializer<T> {
     );
   }
 
-  delete(serializables: T[]): void {
+  public delete(serializables: T[]): void {
     this.settings.dbClient.deleteRows(
       this.settings.table,
       this.getDeletionIdentifierColumns(),
@@ -57,7 +55,7 @@ export abstract class Serializer<T> {
     );
   }
 
-  getExecutor(
+  private getExecutor(
     resolve: (value: T[] | PromiseLike<T[]>) => void,
     _reject: (reason?: any) => void
   ): void {
@@ -71,7 +69,7 @@ export abstract class Serializer<T> {
     );
   }
 
-  getSortedExecutor(
+  private getSortedExecutor(
     resolve: (value: T[] | PromiseLike<T[]>) => void,
     _reject: (reason?: any) => void
   ): void {
@@ -84,7 +82,7 @@ export abstract class Serializer<T> {
     );
   }
 
-  generateDBData(values: string[]): ColumnsAndValues[] {
+  private generateDBData(values: string[]): IColumnsAndValues[] {
     return this.settings.columns.map((col, idx) => {
       return {
         columnName: col,
@@ -93,10 +91,14 @@ export abstract class Serializer<T> {
     });
   }
 
-  abstract getTypeArrayFromSQLResponse(response: RowDataPacket[]): T[];
-  abstract getSerializableCondition(serializable: T): string[];
-  abstract getCondition(): string[];
-  abstract getSerializeValues(serializable: T): string[];
-  abstract getDeletionIdentifierColumns(): string[];
-  abstract getSerializableDeletionValues(serializables: T[]): string[];
+  protected abstract getTypeArrayFromSQLResponse(
+    response: RowDataPacket[]
+  ): T[];
+  protected abstract getSerializableCondition(serializable: T): string[];
+  protected abstract getCondition(): string[];
+  protected abstract getSerializeValues(serializable: T): string[];
+  protected abstract getDeletionIdentifierColumns(): string[];
+  protected abstract getSerializableDeletionValues(
+    serializables: T[]
+  ): string[];
 }

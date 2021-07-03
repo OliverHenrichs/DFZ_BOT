@@ -1,10 +1,8 @@
-import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import {
-  CoachHighscoreProvider,
-  HighscoreUserTypes,
-  PlayerHighscoreProvider,
-  ReferrerHighscoreProvider,
-} from "../HighscoreProvider";
+import { DFZDataBaseClient } from "../../database/DFZDataBaseClient";
+import { CoachHighscoreProvider } from "../CoachHighscoreProvider";
+import { HighscoreUserTypes } from "../enums/HighscoreUserTypes";
+import { PlayerHighscoreProvider } from "../PlayerHighscoreProvider";
+import { ReferrerHighscoreProvider } from "../ReferrerHighscoreProvider";
 
 export default function (
   userType: HighscoreUserTypes,

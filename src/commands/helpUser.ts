@@ -1,13 +1,13 @@
 import { Message, MessageEmbed } from "discord.js";
-import { generateEmbedding } from "../misc/answerEmbedding";
 import { lobbyTypeKeys, lobbyTypeKeysString } from "../misc/constants";
-import { FieldElement } from "../misc/interfaces/FieldElement";
+import { IFieldElement } from "../types/discord/interfaces/FieldElement";
 import { reactPositive } from "../misc/messageHelper";
 import {
   findRole,
   adminRoles,
   getAllRegionStrings,
 } from "../misc/roleManagement";
+import { EmbeddingCreator } from "../types/discord/EmbeddingCreator";
 
 // handles !helpme command
 export default async (message: Message) => {
@@ -27,7 +27,7 @@ function isPostedByAdmin(message: Message) {
 }
 
 function generateHelpMessageEmbedding(): MessageEmbed {
-  var embed = generateEmbedding("Bot commands", "", "");
+  var embed = EmbeddingCreator.create("Bot commands", "", "");
   addHelpTopicsToEmbed(embed);
   return embed;
 }
@@ -121,7 +121,7 @@ function addKickPlayerHint(embed: MessageEmbed) {
   );
 }
 
-function addFieldsToEmbed(embed: MessageEmbed, fields: FieldElement[]) {
+function addFieldsToEmbed(embed: MessageEmbed, fields: IFieldElement[]) {
   if (embed.fields.length == 0) embed.fields = fields;
   else embed.fields = embed.fields.concat(fields);
 }
@@ -131,7 +131,7 @@ function generateHelpEmbedFields(
   command: string,
   functionality: string,
   example: string
-): FieldElement[] {
+): IFieldElement[] {
   var field = getInitialHelpFields(name);
 
   field[0].value += command + "\n";
@@ -140,7 +140,7 @@ function generateHelpEmbedFields(
   return field;
 }
 
-function getInitialHelpFields(name: string): FieldElement[] {
+function getInitialHelpFields(name: string): IFieldElement[] {
   return [
     {
       name: name,

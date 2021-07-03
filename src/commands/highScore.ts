@@ -1,8 +1,8 @@
 import { Message } from "discord.js";
 import { getArguments, reactNegative } from "../misc/messageHelper";
-import { HighscoreUserTypes } from "../types/HighscoreProvider";
-import providerFactory from "../types/factories/HighscoreProviderFactory";
+import providerFactory from "../types/highscore/factories/HighscoreProviderFactory";
 import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
+import { HighscoreUserTypes } from "../types/highscore/enums/HighscoreUserTypes";
 
 /**
  * Returns list of coaches and their lobby count as a private message to the messaging user
@@ -13,7 +13,7 @@ export default async (message: Message, dbClient: DFZDataBaseClient) => {
   try {
     const options = getOptionsFromMessage(message);
     const highScoreProvider = providerFactory(options.userType, dbClient);
-    await highScoreProvider.generateHighscores(message);
+    await highScoreProvider.postHighscore(message);
   } catch (error) {
     reactNegative(message, "Could not post highscore: " + error);
   }

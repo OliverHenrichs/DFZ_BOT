@@ -23,15 +23,15 @@ export class ScheduleSerializer extends Serializer<Schedule> {
     this.emoji = emoji;
   }
 
-  getSerializeValues(schedule: Schedule): string[] {
+  protected getSerializeValues(schedule: Schedule): string[] {
     return [schedule.messageId, schedule.emoji, JSON.stringify(schedule)];
   }
 
-  getTypeArrayFromSQLResponse(response: RowDataPacket[]): Schedule[] {
+  protected getTypeArrayFromSQLResponse(response: RowDataPacket[]): Schedule[] {
     return SQLResultConverter.mapJSONToDataArray<Schedule>(response, Schedule);
   }
 
-  getCondition(): string[] {
+  protected getCondition(): string[] {
     var conditions = [];
     if (this.messageId !== "")
       conditions.push(`${messageColumn} = '${this.messageId}'`);
@@ -39,18 +39,18 @@ export class ScheduleSerializer extends Serializer<Schedule> {
     return conditions;
   }
 
-  getSerializableCondition(serializable: Schedule): string[] {
+  protected getSerializableCondition(serializable: Schedule): string[] {
     return [
       `${messageColumn} = '${serializable.messageId}'`,
       `${emojiColumn} = '${serializable.emoji}'`,
     ];
   }
 
-  getDeletionIdentifierColumns(): string[] {
+  protected getDeletionIdentifierColumns(): string[] {
     return [messageColumn, emojiColumn];
   }
 
-  getSerializableDeletionValues(schedulees: Schedule[]): string[] {
+  protected getSerializableDeletionValues(schedulees: Schedule[]): string[] {
     return schedulees.map(
       (schedule) => `'${schedule.messageId}','${schedule.emoji}'`
     );
@@ -58,7 +58,6 @@ export class ScheduleSerializer extends Serializer<Schedule> {
 }
 
 const scheduleTable = "schedules";
-
 const scheduleColumns = ["message_id", "emoji", "data"];
 const messageColumn = scheduleColumns[0];
 const emojiColumn = scheduleColumns[1];
