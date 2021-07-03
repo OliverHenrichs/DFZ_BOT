@@ -99,6 +99,7 @@ export class DFZDiscordClient extends Client {
     var guild = await this.getGuild();
     for (const post of fetchedSchedulePosts) {
       const channel = this.findChannel(guild, post.channelId);
+
       channel.messages.fetch(post.messageId);
     }
   }
@@ -121,8 +122,10 @@ export class DFZDiscordClient extends Client {
     schedule: Schedule,
     fetchedSchedulePosts: IScheduleInfo[]
   ) {
-    const containsPost: boolean =
-      this.isScheduleFetched(schedule, fetchedSchedulePosts) !== undefined;
+    const containsPost: boolean = this.isScheduleFetched(
+      schedule,
+      fetchedSchedulePosts
+    );
     if (!containsPost)
       fetchedSchedulePosts.push({
         messageId: schedule.messageId,
@@ -130,15 +133,16 @@ export class DFZDiscordClient extends Client {
       });
   }
 
-  private async isScheduleFetched(
+  private isScheduleFetched(
     schedule: Schedule,
     fetchedSchedulePosts: IScheduleInfo[]
-  ) {
-    return fetchedSchedulePosts.find(
+  ): boolean {
+    const index = fetchedSchedulePosts.findIndex(
       (fetched) =>
-        fetched.messageId == schedule.messageId &&
+        fetched.messageId === schedule.messageId &&
         fetched.channelId === schedule.channelId
     );
+    return index !== -1;
   }
 
   private findChannel(

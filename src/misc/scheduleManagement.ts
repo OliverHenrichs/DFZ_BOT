@@ -29,11 +29,7 @@ import {
 import { IFieldElement } from "../types/discord/interfaces/FieldElement";
 import { guildId, lobbyTypes } from "./constants";
 import { ChannelManager } from "../types/discord/ChannelManager";
-import {
-  createCalendarEvent,
-  editCalendarEvent,
-  noCalendarRejection,
-} from "./googleCalendarManagement";
+import { GoogleCalendarManager } from "../types/gcalendar/GoogleCalendarManager";
 import { postLobby, PostLobbyOptions } from "./lobbyManagement";
 import {
   getRegionalRoleFromString,
@@ -761,21 +757,12 @@ export async function removeCoachFromSchedule(
 
   // update google event
   try {
-    await editCalendarEvent(schedule, client);
-    // update schedule
-    await handleScheduleCoachWithdrawal(client, reaction, user, schedule);
+    await GoogleCalendarManager.editCalendarEvent(schedule, client);
   } catch (err) {
-    // no type definition by google...
-    // if we have no calendar or google api fails with 'Resource has been deleted' or 'not found' aka the event is already gone, then still remove coach from schedule
-    if (err === noCalendarRejection || err.code === 410 || err.code === 404) {
-      handleScheduleCoachWithdrawal(client, reaction, user, schedule);
-    } else {
-      console.log(err);
-      user.send(
-        "⛔ Could not remove you from the schedule. Maybe hit a rate-limit in GoogleCalendar. Try again in 5s."
-      );
-    }
+    console.log(err);
   }
+
+  await handleScheduleCoachWithdrawal(client, reaction, user, schedule);
 }
 
 /**
@@ -816,20 +803,33 @@ export async function addCoachToSchedule(
 
   schedule.coaches.push(user.id);
 
+  await updateOrCreateGoogleEvent(client, schedule);
+  await handleScheduleCoachAdd(client, reaction, user, schedule);
+}
+
+async function updateOrCreateGoogleEvent(
+  client: DFZDiscordClient,
+  schedule: Schedule
+) {
   try {
-    if (schedule.eventId === undefined || schedule.eventId === "No Calendar")
-      schedule.eventId = await createCalendarEvent(schedule, client);
-    else schedule.eventId = await editCalendarEvent(schedule, client);
-
-    return handleScheduleCoachAdd(client, reaction, user, schedule);
+    await tryUpdateOrCreateGoogleEvent(client, schedule);
   } catch (err) {
-    if (err === noCalendarRejection && schedule !== undefined) {
-      return handleScheduleCoachAdd(client, reaction, user, schedule);
-    }
-
     console.log(err);
-    user.send(
-      "⛔ Could not create an event in gcalendar for you. Maybe hit a rate-limit. Try again in 5s."
-    );
   }
+}
+
+async function tryUpdateOrCreateGoogleEvent(
+  client: DFZDiscordClient,
+  schedule: Schedule
+) {
+  if (schedule.eventId === undefined || schedule.eventId === "No Calendar")
+    schedule.eventId = await GoogleCalendarManager.createCalendarEvent(
+      schedule,
+      client
+    );
+  else
+    schedule.eventId = await GoogleCalendarManager.editCalendarEvent(
+      schedule,
+      client
+    );
 }
