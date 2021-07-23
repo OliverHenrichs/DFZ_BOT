@@ -60,15 +60,17 @@ export default class Website {
     this.useHttps = true;
 
     this.httpsServer = https.createServer(this.httpsCredentials, this.app);
-    this.httpsServer.listen(443, () => {
-      console.log("HTTPS Server running on port 443");
+    const port = 444;
+    this.httpsServer.listen(port, () => {
+      console.log(`HTTPS Server running on port ${port}`);
     });
   }
 
   private setupHttp() {
     this.httpServer = http.createServer(this.app);
-    this.httpServer.listen(80, () => {
-      console.log("HTTP Server running on port 80");
+    const port = 81;
+    this.httpServer.listen(port, () => {
+      console.log(`HTTP Server running on port ${port}`);
     });
   }
 
