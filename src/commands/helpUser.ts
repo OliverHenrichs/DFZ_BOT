@@ -6,6 +6,7 @@ import {
   findRole,
   adminRoles,
   getAllRegionStrings,
+  companionRole,
 } from "../misc/roleManagement";
 import { EmbeddingCreator } from "../types/discord/EmbeddingCreator";
 
@@ -22,7 +23,7 @@ export default async (message: Message) => {
 function isPostedByAdmin(message: Message) {
   return (
     message.member !== null &&
-    findRole(message.member, adminRoles) !== undefined
+    findRole(message.member, adminRoles.concat(companionRole)) !== undefined
   );
 }
 
