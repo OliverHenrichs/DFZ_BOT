@@ -12,7 +12,7 @@ import {
   getRegionalRoleFromString,
   getAllRegionStrings,
 } from "./roleManagement";
-import { createLobbyTime, LobbyTimeResult, Time } from "./timeZone";
+import { createLobbyTime, LobbyTimeResult } from "./timeZone";
 
 /**
  * Reacts to message using reply and emoji, then deletes the authors command

@@ -27,6 +27,10 @@ module.exports = async (
   tryUpdateGuildMember(client.dbClient, oldMember, newMember);
 };
 
+function haveRolesChange(oldMember: GuildMember, newMember: GuildMember) {
+  return oldMember.roles.cache.size !== newMember.roles.cache.size;
+}
+
 async function tryUpdateGuildMember(
   dbClient: DFZDataBaseClient,
   oldMember: GuildMember,
@@ -38,10 +42,6 @@ async function tryUpdateGuildMember(
   } catch (error) {
     console.log(`Failed guildMemberUpdate: ${error}`);
   }
-}
-
-function haveRolesChange(oldMember: GuildMember, newMember: GuildMember) {
-  return oldMember.roles.cache.size !== newMember.roles.cache.size;
 }
 
 async function updateNickname(member: GuildMember) {

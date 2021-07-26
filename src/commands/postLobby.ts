@@ -1,4 +1,4 @@
-import { Message } from "discord.js";
+import { GuildMember, Message } from "discord.js";
 import {
   isRoleBasedLobbyType,
   lobbyTypes,
@@ -18,6 +18,8 @@ import {
   getBeginnerRolesFromNumbers,
   adminRoles,
   beginnerRoles,
+  companionRole,
+  findRole,
 } from "../misc/roleManagement";
 import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
 
@@ -27,44 +29,34 @@ import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
  * @param {mysql.Pool} dbHandle bot database handle
  */
 export default async (message: Message, dbClient: DFZDataBaseClient) => {
-  var options = getPostLobbyOptions(message);
-  if (options === undefined) return;
-
-  postLobby(dbClient, message.channel, options).then(() => {
-    reactPositive(message);
-  });
+  await tryPostLobby(message, dbClient);
 };
 
-function getPostLobbyOptions(message: Message): PostLobbyOptions | undefined {
+async function tryPostLobby(message: Message, dbClient: DFZDataBaseClient) {
   try {
-    return tryGetLobbyOptionsFromMessage(message);
+    const options = tryGetLobbyOptionsFromMessage(message);
+    await postLobby(dbClient, message.channel, options);
+    reactPositive(message);
   } catch (e) {
     reactNegative(message, e);
-    return undefined;
   }
 }
 
 function tryGetLobbyOptionsFromMessage(message: Message): PostLobbyOptions {
   const type = getLobbyTypeFromMessage(message);
-  const time = getLobbyTime(message, type);
 
-  var options: PostLobbyOptions = {
-    type: type,
-    regionRole: "",
-    userRoles: [],
-    time: time,
-    coaches: [message.author.id],
-    optionalText: "",
-  };
-  setLobbyTypeBasedOptions(message, options);
+  if (!message.member || !isTypeAllowedForMember(type, message.member))
+    throw new Error("You are not allowed to post this kind of lobby");
 
-  return options;
+  return getLobbyOptions(message, type);
 }
 
-function getLobbyTime(message: Message, type: number) {
-  const lobbyIndex = getLobbyTypeBasedTimeIndex(type);
-  const timeResult = getTimeFromMessage(message, lobbyIndex);
-  return timeResult.time;
+function isTypeAllowedForMember(type: number, member: GuildMember): boolean {
+  // only allow companions to host meeting lobbies
+  if (findRole(member, [companionRole]) && type !== lobbyTypes.meeting)
+    return false;
+
+  return true;
 }
 
 function getLobbyTypeBasedTimeIndex(lobbyType: number) {
@@ -73,17 +65,26 @@ function getLobbyTypeBasedTimeIndex(lobbyType: number) {
   return isSimpleLobbyType(lobbyType) ? simpleLobbyIndex : roleBasedLobbyIndex;
 }
 
-function setLobbyTypeBasedOptions(message: Message, options: PostLobbyOptions) {
-  if (isRoleBasedLobbyType(options.type)) {
-    setRoleBasedLobbyOptions(message, options);
+function getLobbyOptions(message: Message, type: number) {
+  if (isRoleBasedLobbyType(type)) {
+    return getRoleBasedLobbyOptions(message, type);
   } else {
-    setNonRoleBasedLobbyOptions(message, options);
+    return getNonRoleBasedLobbyOptions(message, type);
   }
 }
 
-function setRoleBasedLobbyOptions(message: Message, options: PostLobbyOptions) {
-  options.regionRole = getLobbyRegionRole(message);
-  options.userRoles = getAllowedTiers(message);
+function getRoleBasedLobbyOptions(
+  message: Message,
+  type: number
+): PostLobbyOptions {
+  return {
+    type: type,
+    regionRole: getLobbyRegionRole(message),
+    userRoles: getAllowedTiers(message),
+    time: getLobbyTime(message, type),
+    coaches: [message.author.id],
+    optionalText: "",
+  };
 }
 
 function getLobbyRegionRole(message: Message) {
@@ -104,10 +105,25 @@ function getAllowedTiers(message: Message) {
   return getBeginnerRolesFromNumbers(numbers);
 }
 
-function setNonRoleBasedLobbyOptions(
+function getLobbyTime(message: Message, type: number) {
+  const lobbyIndex = getLobbyTypeBasedTimeIndex(type);
+  const timeResult = getTimeFromMessage(message, lobbyIndex);
+  return timeResult.time;
+}
+
+function getNonRoleBasedLobbyOptions(
   message: Message,
-  options: PostLobbyOptions
-) {
+  type: number
+): PostLobbyOptions {
+  var options: PostLobbyOptions = {
+    type: type,
+    regionRole: "",
+    userRoles: [],
+    time: getLobbyTime(message, type),
+    coaches: [message.author.id],
+    optionalText: "",
+  };
+
   switch (options.type) {
     case lobbyTypes.replayAnalysis:
       setReplayAnalysisOptions(options);
@@ -121,6 +137,8 @@ function setNonRoleBasedLobbyOptions(
     default:
       options.userRoles = beginnerRoles.concat(adminRoles);
   }
+
+  return options;
 }
 
 function setReplayAnalysisOptions(options: PostLobbyOptions) {
@@ -155,5 +173,9 @@ function trySetMeetingForPlayersOrCoaches(
 }
 
 function trySetOptionalText(args: string[], options: PostLobbyOptions) {
-  if (args.length > 4) options.optionalText = args.slice(4).join(" ");
+  let optionalTextFrom = 4;
+  if (options.userRoles.length === beginnerRoles.length + adminRoles.length)
+    optionalTextFrom = 3;
+  if (args.length > optionalTextFrom)
+    options.optionalText = args.slice(optionalTextFrom).join(" ");
 }

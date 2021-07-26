@@ -10,7 +10,7 @@ import kick from "../commands/kick";
 import postSchedules from "../commands/postSchedules";
 import { ChannelManager } from "../types/discord/ChannelManager";
 import { reactNegative } from "../misc/messageHelper";
-import { findRole, adminRoles } from "../misc/roleManagement";
+import { findRole, adminRoles, companionRole } from "../misc/roleManagement";
 
 const PREFIX = "!";
 
@@ -78,6 +78,13 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
     }
     if (content.startsWith("!kick")) {
       return kick(message, client.dbClient);
+    }
+  }
+
+  // handle companion commands
+  if (findRole(message.member, [companionRole]) != undefined) {
+    if (content.startsWith("!post")) {
+      return postLobby(message, client.dbClient);
     }
   }
 };

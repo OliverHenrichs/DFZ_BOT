@@ -21,7 +21,6 @@ function tryCancelLobbyCancel(
     (timeout) => timeout.lobby.messageId === lobby.messageId
   );
   if (timeout) {
-    console.log("Clearing timeout");
     clearTimeout(timeout.timeout);
     user.send("✅ I will no longer cancel the lobby.");
   }

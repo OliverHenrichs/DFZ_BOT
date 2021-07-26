@@ -18,10 +18,9 @@ export const adminRoles = [
   process.env.COACH_TRYOUT ? process.env.COACH_TRYOUT : "",
   process.env.COMPANION ? process.env.COMPANION : "",
 ];
-
-export function isAdminRole(role: string) {
-  return adminRoles.find((r: string | undefined) => r === role);
-}
+export const companionRole = process.env.COMPANION_M
+  ? process.env.COMPANION_M
+  : "";
 
 /**
 		Check if message sender has at least one of the roles given by rolesToCheck
