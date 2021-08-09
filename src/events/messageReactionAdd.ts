@@ -7,7 +7,7 @@ import {
   NewsChannel,
   TextChannel,
 } from "discord.js";
-import { ChannelManager } from "../types/discord/ChannelManager";
+import { ChannelManager } from "../logic/discord/ChannelManager";
 import {
   lobbyTypes,
   getReactionEmojiPosition,
@@ -15,16 +15,9 @@ import {
   isKnownPositionEmoji,
   isKnownSimpleLobbyEmoji,
   isKnownLobbyManagementEmoji,
+  getPlayersPerLobbyByLobbyType,
 } from "../misc/constants";
-import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
-import {
-  updateLobbyPost,
-  startLobby,
-  cancelLobbyPost,
-  addCoach,
-  deleteLobbyAfterStart,
-  writeLobbyStartPost,
-} from "../misc/lobbyManagement";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { addCoachToSchedule } from "../misc/scheduleManagement";
 import {
   getInfoFromLobbyReaction,
@@ -37,9 +30,13 @@ import {
   beginnerRoles,
   adminRoles,
 } from "../misc/roleManagement";
-import { Lobby } from "../types/serializables/lobby";
+import { Lobby } from "../logic/serializables/lobby";
 import { addUser, getUserIndex } from "../misc/userHelper";
-import { LobbySerializer } from "../types/serializers/lobbySerializer";
+import { LobbySerializer } from "../logic/serializers/lobbySerializer";
+import { LobbyStarter } from "../logic/lobby/LobbyStarter";
+import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { hInMs, minInMs } from "../misc/timeZone";
+import { savePlayerParticipation } from "../misc/tracker";
 
 module.exports = async (
   client: DFZDiscordClient,
@@ -145,7 +142,7 @@ function addUserOrPosition(
     );
 
     // update lobby post
-    updateLobbyPost(lobby, channel);
+    LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
     return true;
   } else {
     // add position
@@ -156,7 +153,7 @@ function addUserOrPosition(
       lobbyUser.positions.sort();
 
       // update lobby post
-      updateLobbyPost(lobby, channel);
+      LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
       return true;
     }
   }
@@ -243,9 +240,20 @@ function handleSimpleLobbyEmoji(
   );
 }
 
-const oneHourInMS = 60 * 60 * 1000;
 async function removeLobbyDelayed(lobby: Lobby, client: DFZDiscordClient) {
-  setTimeout(deleteLobbyAfterStart, oneHourInMS, lobby, client);
+  setTimeout(handleLobbyStarted, hInMs, lobby, client);
+}
+
+async function handleLobbyStarted(lobby: Lobby, client: DFZDiscordClient) {
+  await savePlayerParticipation(
+    client,
+    lobby.users,
+    lobby.type,
+    getPlayersPerLobbyByLobbyType(lobby.type)
+  );
+
+  const serializer = new LobbySerializer(client.dbClient);
+  await serializer.delete([lobby]);
 }
 
 function handleLobbyStart(
@@ -255,11 +263,12 @@ function handleLobbyStart(
   user: User
 ) {
   if (lobby.started) {
-    writeLobbyStartPost(lobby, channel);
+    LobbyPostManipulator.writeLobbyStartPost(lobby, channel);
     return;
   }
 
-  startLobby(client, lobby, user, channel).then((hasStarted) => {
+  const lobbyInteractor = new LobbyStarter(client, lobby);
+  lobbyInteractor.tryStartLobby(user, channel).then((hasStarted) => {
     if (hasStarted) removeLobbyDelayed(lobby, client);
   });
 }
@@ -272,7 +281,7 @@ function handleLobbyCancel(
 ) {
   const to = setTimeout(
     removeLobbyPermantently,
-    oneHourInMS,
+    2 * minInMs,
     client,
     lobby,
     channel,
@@ -290,7 +299,7 @@ async function removeLobbyPermantently(
   channel: TextChannel | NewsChannel,
   user: User
 ) {
-  await cancelLobbyPost(lobby, channel);
+  await LobbyPostManipulator.cancelLobbyPost(lobby, channel);
   const serializer = new LobbySerializer(client.dbClient);
   serializer.delete([lobby]);
   user.send("❌ I cancelled the lobby.");
@@ -303,7 +312,8 @@ function handleCoachAdd(
   channel: TextChannel | NewsChannel,
   user: User
 ) {
-  addCoach(client.dbClient, channel, lobby, user.id)
+  lobby
+    .addCoach(client.dbClient, channel, user.id)
     .then(() => user.send("✅ Added you as a coach!"))
     .catch((error: string) =>
       user.send("⛔ I did not add you as a coach. Reason: " + error)

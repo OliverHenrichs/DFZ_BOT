@@ -4,7 +4,6 @@ import {
   lobbyTypes,
   isSimpleLobbyType,
 } from "../misc/constants";
-import { postLobby, PostLobbyOptions } from "../misc/lobbyManagement";
 import {
   getLobbyRegionRoleFromMessage,
   reactNegative,
@@ -21,7 +20,9 @@ import {
   companionRole,
   findRole,
 } from "../misc/roleManagement";
-import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
+import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
@@ -35,7 +36,7 @@ export default async (message: Message, dbClient: DFZDataBaseClient) => {
 async function tryPostLobby(message: Message, dbClient: DFZDataBaseClient) {
   try {
     const options = tryGetLobbyOptionsFromMessage(message);
-    await postLobby(dbClient, message.channel, options);
+    await LobbyPostManipulator.postLobby(dbClient, message.channel, options);
     reactPositive(message);
   } catch (e) {
     reactNegative(message, e);

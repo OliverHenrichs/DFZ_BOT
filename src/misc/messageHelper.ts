@@ -1,4 +1,7 @@
 import { Message } from "discord.js";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { Lobby } from "../logic/serializables/lobby";
+import { LobbySerializer } from "../logic/serializers/lobbySerializer";
 import {
   getLobbyTypeByString,
   isSimpleLobbyType,
@@ -41,7 +44,7 @@ async function reactToMessageAndDeleteIt(
 }
 
 /**
- * Creates a negative reaction
+ * Creates a negative reaction and deletes the message that has been reacted to
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
@@ -50,7 +53,7 @@ export function reactNegative(message: Message, reply = "") {
 }
 
 /**
- * Creates a neutral reaction
+ * Creates a neutral reaction and deletes the message that has been reacted to
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
@@ -59,7 +62,7 @@ export function reactNeutral(message: Message, reply = "") {
 }
 
 /**
- * Creates a positive reaction
+ * Creates a positive reaction and deletes the message that has been reacted to
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
@@ -148,6 +151,28 @@ export function getLobbyTypeFromMessage(message: Message): number {
     throw `No lobby type given. Lobby types are (${lobbyTypeKeysString})`;
   }
   return getLobbyTypeByString(args[0]);
+}
+
+/**
+ *  Finds lobby by its channel and message
+ *  @return undefined if not found, else returns the lobby
+ *  @param dbHandle bot database handle
+ *  @param channelId message channel id
+ *  @param messageId message ID
+ */
+export async function findLobbyByMessage(
+  dbClient: DFZDataBaseClient,
+  channelId: string,
+  messageId: string
+): Promise<Lobby> {
+  const serializer = new LobbySerializer(dbClient, channelId, messageId);
+  var lobbies = await serializer.get();
+  if (lobbies.length !== 1)
+    throw new Error(
+      `Could not find lobby by channelId=${channelId}, messageId=${messageId}`
+    );
+
+  return lobbies[0];
 }
 
 /**

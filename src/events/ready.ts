@@ -1,4 +1,4 @@
-import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 
 module.exports = async (client: DFZDiscordClient) => {
   await client.onReady();

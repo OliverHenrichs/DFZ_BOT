@@ -8,8 +8,6 @@ import {
 import { readdirSync } from "fs";
 import { ChannelManager } from "./ChannelManager";
 import { guildId } from "../../misc/constants";
-import { LobbyTimeout } from "../../misc/interfaces/LobbyTimeout";
-import { updateLobbyPosts } from "../../misc/lobbyManagement";
 import {
   insertScheduledLobbies,
   postSchedules,
@@ -21,6 +19,8 @@ import { Schedule } from "../serializables/schedule";
 import { LobbySerializer } from "../serializers/lobbySerializer";
 import { ScheduleSerializer } from "../serializers/scheduleSerializer";
 import { IScheduleInfo } from "./interfaces/ScheduleInfo";
+import { LobbyTimeController } from "../lobby/LobbyTimeController";
+import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
 
 export class DFZDiscordClient extends Client {
   dbClient: DFZDataBaseClient;
@@ -171,7 +171,7 @@ export class DFZDiscordClient extends Client {
 
   private async setLobbyPostUpdateTimer() {
     const updateFun = async (client: DFZDiscordClient) => {
-      await updateLobbyPosts(client);
+      await LobbyTimeController.checkAndUpdateLobbies(client);
     };
 
     const intervalFun = this.createIntervalTask(updateFun);

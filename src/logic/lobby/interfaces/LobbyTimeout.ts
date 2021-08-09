@@ -1,4 +1,4 @@
-import { Lobby } from "../../types/serializables/lobby";
+import { Lobby } from "../../serializables/lobby";
 
 export interface LobbyTimeout {
   lobby: Lobby;

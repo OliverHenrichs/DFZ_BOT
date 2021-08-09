@@ -3,16 +3,16 @@ import { Express } from "express-serve-static-core";
 
 import http from "http";
 import https from "https";
-import { CoachSerializer } from "../src/types/serializers/coachSerializer";
-import { ReferrerSerializer } from "../src/types/serializers/referrerSerializer";
-import { Coach } from "../src/types/serializables/coach";
-import { Referrer } from "../src/types/serializables/referrer";
+import { CoachSerializer } from "../src/logic/serializers/coachSerializer";
+import { ReferrerSerializer } from "../src/logic/serializers/referrerSerializer";
+import { Coach } from "../src/logic/serializables/coach";
+import { Referrer } from "../src/logic/serializables/referrer";
 import { guildId } from "../src/misc/constants";
 import { tryGetSSLCredentials } from "./ssl";
 import { setupMiddleWares } from "./middlewares";
 import { registerEndpoints } from "./endPoints";
 import { Guild } from "discord.js";
-import { DFZDiscordClient } from "../src/types/discord/DFZDiscordClient";
+import { DFZDiscordClient } from "../src/logic/discord/DFZDiscordClient";
 
 export default class Website {
   app: Express;

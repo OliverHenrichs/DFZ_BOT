@@ -1,5 +1,5 @@
 import { Collection, GuildMember, Role } from "discord.js";
-import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import {
   findRole,
   regionRoleIDs,
@@ -7,10 +7,10 @@ import {
   beginnerRoles,
   findRoles,
 } from "../misc/roleManagement";
-import { Player } from "../types/serializables/player";
-import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
-import { PlayerSerializer } from "../types/serializers/playerSerializer";
-import { ReferrerSerializer } from "../types/serializers/referrerSerializer";
+import { Player } from "../logic/serializables/player";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { PlayerSerializer } from "../logic/serializers/playerSerializer";
+import { ReferrerSerializer } from "../logic/serializers/referrerSerializer";
 
 /**
  * Handles role and nickname changes

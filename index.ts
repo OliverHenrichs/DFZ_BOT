@@ -1,8 +1,8 @@
 import * as dotenv from "dotenv";
 dotenv.config();
 
-import { DFZDiscordClient } from "./src/types/discord/DFZDiscordClient";
-import { GoogleCalendarManager } from "./src/types/gcalendar/GoogleCalendarManager";
+import { DFZDiscordClient } from "./src/logic/discord/DFZDiscordClient";
+import { GoogleCalendarManager } from "./src/logic/gcalendar/GoogleCalendarManager";
 import Website from "./website/website";
 
 const client = new DFZDiscordClient();

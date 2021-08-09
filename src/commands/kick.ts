@@ -1,13 +1,14 @@
 import { Message } from "discord.js";
-import { findLobbyByMessage, updateLobbyPost } from "../misc/lobbyManagement";
 import {
+  findLobbyByMessage,
   getArguments,
   reactNegative,
   reactPositive,
 } from "../misc/messageHelper";
-import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
-import { Lobby } from "../types/serializables/lobby";
-import { LobbySerializer } from "../types/serializers/lobbySerializer";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { Lobby } from "../logic/serializables/lobby";
+import { LobbySerializer } from "../logic/serializers/lobbySerializer";
 
 /**
  * Kicks a player
@@ -95,6 +96,9 @@ async function kickPlayerFromLobby(
   const serializer = new LobbySerializer(dbClient);
   await serializer.update(kickSpecifics.lobby);
 
-  await updateLobbyPost(kickSpecifics.lobby, message.channel);
+  await LobbyPostManipulator.tryUpdateLobbyPost(
+    kickSpecifics.lobby,
+    message.channel
+  );
   reactPositive(message, "Kicked player.");
 }

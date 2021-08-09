@@ -1,14 +1,14 @@
 import { GuildMember, MessageReaction, Role, User } from "discord.js";
-import { ChannelManager } from "../types/discord/ChannelManager";
-import { findLobbyByMessage } from "./lobbyManagement";
+import { ChannelManager } from "../logic/discord/ChannelManager";
 import {
   findRole,
   beginnerRoles,
   adminRoles,
   tryoutRole,
 } from "./roleManagement";
-import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
-import { Lobby } from "../types/serializables/lobby";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
+import { Lobby } from "../logic/serializables/lobby";
+import { findLobbyByMessage } from "./messageHelper";
 
 export interface LobbyReactionInfo {
   lobby: Lobby;

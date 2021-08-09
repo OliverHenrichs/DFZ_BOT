@@ -1,8 +1,8 @@
 import { Message } from "discord.js";
 import { getArguments, reactNegative } from "../misc/messageHelper";
-import providerFactory from "../types/highscore/factories/HighscoreProviderFactory";
-import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
-import { HighscoreUserTypes } from "../types/highscore/enums/HighscoreUserTypes";
+import providerFactory from "../logic/highscore/factories/HighscoreProviderFactory";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { HighscoreUserTypes } from "../logic/highscore/enums/HighscoreUserTypes";
 
 /**
  * Returns list of coaches and their lobby count as a private message to the messaging user

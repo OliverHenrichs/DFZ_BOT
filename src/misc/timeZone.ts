@@ -1,5 +1,8 @@
 import tZ = require("timezone-support");
 
+export const msToMinutes = 1 / (1000 * 60);
+export const msToHours = msToMinutes / 60;
+
 export const weekDays = [
   "Sunday",
   "Monday",
@@ -79,7 +82,7 @@ function validateTime(timeString: string) {
   var res: ValidatedTime = { hour: undefined, minute: undefined };
 
   // check length
-  var l = timeString.length;
+  const l = timeString.length;
   if (l != 6 && l != 7) return res;
 
   // check sanity
@@ -186,9 +189,9 @@ export function getTimeString(zonedTime: Time) {
   } ${day} at ${hours}:${minutes < 10 ? "0" + minutes : minutes}`;
 }
 
-const minInMs = 1000 * 60;
-const hInMs = minInMs * 60;
-const dayInMs = hInMs * 24;
+export const minInMs = 1000 * 60;
+export const hInMs = minInMs * 60;
+export const dayInMs = hInMs * 24;
 
 export interface NextMondayAndSunday {
   monday: Date;
@@ -329,10 +332,7 @@ export interface LobbyTimeResult {
  * @param {Date} date
  * @param {tZ.timezone} timezone
  */
-export function getZonedTime(
-  date: Date | number,
-  timezone: TimeZoneInfo
-): Time {
+function getZonedTime(date: Date | number, timezone: TimeZoneInfo): Time {
   const zonedTime = tZ.getZonedTime(date, timezone);
   if (zonedTime.epoch === undefined)
     throw `Could not get zoned time because epoch is undefined`;

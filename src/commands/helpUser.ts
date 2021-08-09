@@ -1,6 +1,6 @@
 import { Message, MessageEmbed } from "discord.js";
 import { lobbyTypeKeys, lobbyTypeKeysString } from "../misc/constants";
-import { IFieldElement } from "../types/discord/interfaces/FieldElement";
+import { IFieldElement } from "../logic/discord/interfaces/FieldElement";
 import { reactPositive } from "../misc/messageHelper";
 import {
   findRole,
@@ -8,7 +8,7 @@ import {
   getAllRegionStrings,
   companionRole,
 } from "../misc/roleManagement";
-import { EmbeddingCreator } from "../types/discord/EmbeddingCreator";
+import { EmbeddingCreator } from "../logic/discord/EmbeddingCreator";
 
 // handles !helpme command
 export default async (message: Message) => {

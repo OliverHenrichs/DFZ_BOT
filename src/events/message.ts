@@ -1,5 +1,5 @@
 import { Message } from "discord.js";
-import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 
 import apply from "../commands/apply";
 import helpUser from "../commands/helpUser";
@@ -8,7 +8,7 @@ import highScore from "../commands/highScore";
 import updateLobby from "../commands/updateLobby";
 import kick from "../commands/kick";
 import postSchedules from "../commands/postSchedules";
-import { ChannelManager } from "../types/discord/ChannelManager";
+import { ChannelManager } from "../logic/discord/ChannelManager";
 import { reactNegative } from "../misc/messageHelper";
 import { findRole, adminRoles, companionRole } from "../misc/roleManagement";
 

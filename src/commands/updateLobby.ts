@@ -1,8 +1,8 @@
 import { DMChannel, Message, NewsChannel, TextChannel } from "discord.js";
 import { getLobbyTypeByString, isRoleBasedLobbyType } from "../misc/constants";
 import { getNumbersFromString } from "../misc/generics";
-import { findLobbyByMessage, updateLobbyPost } from "../misc/lobbyManagement";
 import {
+  findLobbyByMessage,
   getArguments,
   reactNegative,
   reactPositive,
@@ -11,9 +11,10 @@ import {
   getBeginnerRolesFromNumbers,
   getRegionalRoleFromString,
 } from "../misc/roleManagement";
-import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
-import { Lobby } from "../types/serializables/lobby";
-import { LobbySerializer } from "../types/serializers/lobbySerializer";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { Lobby } from "../logic/serializables/lobby";
+import { LobbySerializer } from "../logic/serializers/lobbySerializer";
 
 /**
  * Checks if lobby exists and updates lobby post depending on message
@@ -145,7 +146,7 @@ async function performLobbyUpdate(
   try {
     const serializer = new LobbySerializer(dbClient);
     await serializer.update(lobby);
-    await updateLobbyPost(lobby, channel);
+    await LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
   } catch (e) {
     console.log("Failed updating lobby. Error: " + e);
   }

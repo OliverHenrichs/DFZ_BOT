@@ -1,9 +1,9 @@
 import { Message } from "discord.js";
-import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
-import { Player } from "../types/serializables/player";
-import { Referrer } from "../types/serializables/referrer";
-import { PlayerSerializer } from "../types/serializers/playerSerializer";
-import { ReferrerSerializer } from "../types/serializers/referrerSerializer";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
+import { Player } from "../logic/serializables/player";
+import { Referrer } from "../logic/serializables/referrer";
+import { PlayerSerializer } from "../logic/serializers/playerSerializer";
+import { ReferrerSerializer } from "../logic/serializers/referrerSerializer";
 
 export default async (client: DFZDiscordClient, message: Message) => {
   const serializer = new PlayerSerializer(client.dbClient, message.author.id);

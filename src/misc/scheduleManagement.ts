@@ -9,7 +9,7 @@ import {
   User,
 } from "discord.js";
 
-import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { scheduleTypes, scheduleReactionEmojis } from "./types/scheduleTypes";
 import {
   getCurrentMondayAndSundayDate,
@@ -26,11 +26,10 @@ import {
   Time,
   weekDays,
 } from "./timeZone";
-import { IFieldElement } from "../types/discord/interfaces/FieldElement";
+import { IFieldElement } from "../logic/discord/interfaces/FieldElement";
 import { guildId, lobbyTypes } from "./constants";
-import { ChannelManager } from "../types/discord/ChannelManager";
-import { GoogleCalendarManager } from "../types/gcalendar/GoogleCalendarManager";
-import { postLobby, PostLobbyOptions } from "./lobbyManagement";
+import { ChannelManager } from "../logic/discord/ChannelManager";
+import { GoogleCalendarManager } from "../logic/gcalendar/GoogleCalendarManager";
 import {
   getRegionalRoleFromString,
   tryoutRole,
@@ -40,10 +39,12 @@ import {
   findRole,
   adminRoles,
 } from "./roleManagement";
-import { Schedule } from "../types/serializables/schedule";
-import { ScheduleSerializer } from "../types/serializers/scheduleSerializer";
-import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
-import { EmbeddingCreator } from "../types/discord/EmbeddingCreator";
+import { Schedule } from "../logic/serializables/schedule";
+import { ScheduleSerializer } from "../logic/serializers/scheduleSerializer";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { EmbeddingCreator } from "../logic/discord/EmbeddingCreator";
+import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
 
 const lobbyPostTime = 60000 * 60 * 5; // at the moment 5 hours
 const aDay = 1000 * 60 * 60 * 24;
@@ -320,7 +321,7 @@ async function createScheduledLobby(
     optionalText: "",
   };
 
-  await postLobby(dbClient, channel, options);
+  await LobbyPostManipulator.postLobby(dbClient, channel, options);
 
   informCoachesOfSchedulePost(schedule, channel, zonedTime);
 }

@@ -1,11 +1,11 @@
 import { lobbyTypes } from "./constants";
-import { LobbyPlayer } from "./interfaces/LobbyInterfaces";
-import { Coach } from "../types/serializables/coach";
-import { DFZDiscordClient } from "../types/discord/DFZDiscordClient";
-import { Player } from "../types/serializables/player";
-import { CoachSerializer } from "../types/serializers/coachSerializer";
-import { DFZDataBaseClient } from "../types/database/DFZDataBaseClient";
-import { PlayerSerializer } from "../types/serializers/playerSerializer";
+import { LobbyPlayer } from "../logic/lobby/interfaces/LobbyPlayer";
+import { Coach } from "../logic/serializables/coach";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
+import { Player } from "../logic/serializables/player";
+import { CoachSerializer } from "../logic/serializers/coachSerializer";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { PlayerSerializer } from "../logic/serializers/playerSerializer";
 
 export async function saveCoachParticipation(
   dbClient: DFZDataBaseClient,

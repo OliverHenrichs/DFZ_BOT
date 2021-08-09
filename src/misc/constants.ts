@@ -30,6 +30,17 @@ export const lobbyTypePlayerCount = {
   replayAnalysis: 1000,
   meeting: 1000,
 };
+export const anyNumberOfPlayers = -1;
+
+export function getPlayersPerLobbyByLobbyType(type: number) {
+  var lobbyTypeKey = (
+    Object.keys(lobbyTypes) as Array<keyof typeof lobbyTypes>
+  ).find((typeKey) => lobbyTypes[typeKey] === type);
+  if (lobbyTypeKey) return lobbyTypePlayerCount[lobbyTypeKey];
+
+  return anyNumberOfPlayers;
+}
+
 export const positionReactionEmojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
 export const tryoutReactionEmoji = "✅";
 export const lobbyManagementReactionEmojis = ["🔒", "❌", "🧑‍🏫"];
@@ -85,6 +96,8 @@ export function getLobbyNameByType(lobbyType: number) {
       return "tryout";
     case lobbyTypes.replayAnalysis:
       return "replay analysis";
+    case lobbyTypes.meeting:
+      return "meeting";
     default:
       return "Unknown";
   }
@@ -137,4 +150,27 @@ export function isKnownLobbyManagementEmoji(
   reactionEmoji: GuildEmoji | ReactionEmoji
 ) {
   return lobbyManagementReactionEmojis.includes(reactionEmoji.name);
+}
+
+/**
+ * Returns required number of coaches for a given lobby type
+ * @param {number} lobbyType given lobby type
+ * @return {number}
+ */
+export function getCoachCountByLobbyType(lobbyType: number) {
+  switch (lobbyType) {
+    case lobbyTypes.inhouse:
+      return 2;
+    case lobbyTypes.unranked:
+      return 1;
+    case lobbyTypes.botbash:
+      return 1;
+    case lobbyTypes.tryout:
+      return 1;
+    case lobbyTypes.replayAnalysis:
+      return 1;
+    case lobbyTypes.meeting:
+      return 1;
+  }
+  return 0;
 }
