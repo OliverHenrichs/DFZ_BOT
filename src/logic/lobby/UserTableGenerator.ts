@@ -37,6 +37,7 @@ export class UserTableGenerator extends TableGenerator {
     var userIndex = 0;
     this.users.forEach((user) => {
       this.handleUserAddition(user, mainTable, benchTable, userIndex);
+      userIndex++;
     });
 
     if (this.hasBenchedPlayers(userIndex)) return mainTable.concat(benchTable);
@@ -77,7 +78,7 @@ export class UserTableGenerator extends TableGenerator {
 
   private userIsInLobby(userIndex: number) {
     return (
-      userIndex++ < this.playersPerLobby ||
+      userIndex < this.playersPerLobby ||
       this.playersPerLobby === anyNumberOfPlayers
     );
   }
