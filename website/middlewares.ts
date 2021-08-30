@@ -6,7 +6,6 @@ import path from "path";
 export function setupMiddleWares(app: Express) {
   app.use(getStaticExpressMW()); // sequence matters here: visitCounter will fire for each static resource...
   app.use(getRateLimitMW());
-  app.use(getVisitCounterMW());
   setEngine(app);
 }
 
@@ -24,11 +23,6 @@ function getRateLimitMW() {
     delayMs: 0,
   });
 }
-
-function getVisitCounterMW() {
-  return visitCounter.initialize();
-}
-export const visitCounter = require("express-visit-counter");
 
 function setEngine(app: Express) {
   app.engine("hbs", getHBSEngine());

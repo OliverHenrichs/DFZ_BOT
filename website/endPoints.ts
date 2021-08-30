@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { visitCounter } from "./middlewares";
 import Website from "./website";
 
 interface EndPointNames {
@@ -71,10 +70,8 @@ function redirectHttps(req: Request, res: Response, ws: Website): boolean {
 }
 
 async function getRenderData(dataFun: () => any) {
-  const vc = await visitCounter.Loader.getCount();
   const standardData = {
     title: title,
-    visitorCount: vc,
   };
   return { ...standardData, ...dataFun() };
 }
