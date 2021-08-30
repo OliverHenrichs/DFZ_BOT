@@ -1,0 +1,10 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+      "experimentalDecorators": true
+    },
+    "exclude": [
+      "../node_modules"
+    ],
+    "include": ["./../src/**/*", "../website/**/*", "../index.ts", "./**/*.ts"]
+  }
