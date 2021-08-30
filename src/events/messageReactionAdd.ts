@@ -35,8 +35,8 @@ import { addUser, getUserIndex } from "../misc/userHelper";
 import { LobbySerializer } from "../logic/serializers/lobbySerializer";
 import { LobbyStarter } from "../logic/lobby/LobbyStarter";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
-import { hInMs, minInMs } from "../misc/timeZone";
 import { savePlayerParticipation } from "../misc/tracker";
+import { TimeConverter } from "../logic/time/TimeConverter";
 
 module.exports = async (
   client: DFZDiscordClient,
@@ -241,7 +241,7 @@ function handleSimpleLobbyEmoji(
 }
 
 async function removeLobbyDelayed(lobby: Lobby, client: DFZDiscordClient) {
-  setTimeout(handleLobbyStarted, hInMs, lobby, client);
+  setTimeout(handleLobbyStarted, TimeConverter.hToMs, lobby, client);
 }
 
 async function handleLobbyStarted(lobby: Lobby, client: DFZDiscordClient) {
@@ -281,7 +281,7 @@ function handleLobbyCancel(
 ) {
   const to = setTimeout(
     removeLobbyPermantently,
-    2 * minInMs,
+    2 * TimeConverter.minToMs,
     client,
     lobby,
     channel,

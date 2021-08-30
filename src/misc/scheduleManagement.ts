@@ -12,20 +12,12 @@ import {
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { scheduleTypes, scheduleReactionEmojis } from "./types/scheduleTypes";
 import {
-  getCurrentMondayAndSundayDate,
   getScheduledDate,
   getTimeString,
-  getWeekNumber,
   getZonedTimeFromTimeZoneName,
-  months,
   NextMondayAndSunday,
-  regions,
-  regionStrings,
-  scheduleTimezoneNames,
   scheduleTimezoneNames_short,
-  Time,
-  weekDays,
-} from "./timeZone";
+} from "../logic/time/timeZone";
 import { IFieldElement } from "../logic/discord/interfaces/FieldElement";
 import { guildId, lobbyTypes } from "./constants";
 import { ChannelManager } from "../logic/discord/ChannelManager";
@@ -45,9 +37,13 @@ import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { EmbeddingCreator } from "../logic/discord/EmbeddingCreator";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
+import { ITime } from "../logic/time/interfaces/Time";
+import { TimeConverter } from "../logic/time/TimeConverter";
+import { RegionDefinitions } from "../logic/time/RegionDefinitions";
+import { CalendarDefinitions } from "../logic/time/CalendarDefinitions";
+import { ArbitraryTimeAlgos } from "../logic/time/ArbitraryTimeAlgos";
 
-const lobbyPostTime = 60000 * 60 * 5; // at the moment 5 hours
-const aDay = 1000 * 60 * 60 * 24;
+const lobbyPostTime = TimeConverter.hToMs * 5; // at the moment 5 hours
 
 interface ScheduleSetup {
   mondayDate: Date;
@@ -67,12 +63,12 @@ interface ScheduleSetup {
  * @param {ScheduleSetup} scheduleSetup
  */
 function getWeekScheduleString(scheduleSetup: ScheduleSetup) {
-  return `Schedule for Week #${getWeekNumber(
+  return `Schedule for Week #${ArbitraryTimeAlgos.getWeekNumber(
     scheduleSetup.mondayDate
   )} in ${scheduleSetup.mondayDate.getFullYear()} (${
-    months[scheduleSetup.mondayDate.getMonth()]
+    CalendarDefinitions.months[scheduleSetup.mondayDate.getMonth()]
   } ${scheduleSetup.mondayDate.getDate()} - ${
-    months[scheduleSetup.sundayDate.getMonth()]
+    CalendarDefinitions.months[scheduleSetup.sundayDate.getMonth()]
   } ${scheduleSetup.sundayDate.getDate()})`;
 }
 
@@ -144,7 +140,7 @@ async function writeSchedule(
   scheduleSetup.days.forEach((regionDays) => {
     var regionDaysShortNames: Array<string> = [];
     regionDays.forEach((day) => {
-      regionDaysShortNames.push(weekDays[day].slice(0, 3));
+      regionDaysShortNames.push(CalendarDefinitions.weekDays[day].slice(0, 3));
     });
     dayShortNames.push(regionDaysShortNames);
   });
@@ -261,7 +257,7 @@ function getScheduleLobbyBeginnerRoles(
 function informCoachesOfSchedulePost(
   schedule: Schedule,
   channel: GuildChannel,
-  zonedTime: Time
+  zonedTime: ITime
 ) {
   schedule.coaches.forEach((coach) => {
     channel.guild.members
@@ -443,7 +439,7 @@ function createScheduleSetup(
   coachCount: number,
   times: Array<Array<string>>
 ): ScheduleSetup | undefined {
-  var numRegions = regions.length;
+  var numRegions = RegionDefinitions.regions.length;
 
   // verify days
   if (days.length === 1) {
@@ -478,11 +474,11 @@ function createScheduleSetup(
     days: days,
     type: type,
     coachCount: coachCount,
-    regionStrings: regionStrings,
-    regions: regions,
+    regionStrings: RegionDefinitions.regionStrings,
+    regions: RegionDefinitions.regions,
     times: times,
     timezoneShortNames: scheduleTimezoneNames_short,
-    timezones: scheduleTimezoneNames,
+    timezones: RegionDefinitions.scheduleTimezoneNames,
   };
 }
 
@@ -501,15 +497,15 @@ export function createSchedulesInDatabase(
 ) {
   var dayBaseIndex = 0;
   for (let i = 0; i < scheduleSetup.regions.length; i++) {
-    var region = scheduleSetup.regions[i];
-    var timeZone = scheduleSetup.timezones[i];
-    var days = scheduleSetup.days[i];
-    var times = scheduleSetup.times[i];
+    const region = scheduleSetup.regions[i];
+    const timeZone = scheduleSetup.timezones[i];
+    const days = scheduleSetup.days[i];
+    const times = scheduleSetup.times[i];
 
     for (let j = 0; j < days.length; j++) {
-      var day = days[j];
-      var time = times[j];
-      var date = getScheduledDate(
+      const day = days[j];
+      const time = times[j];
+      const date = getScheduledDate(
         scheduleSetup.mondayDate,
         day,
         time,
@@ -519,7 +515,7 @@ export function createSchedulesInDatabase(
         console.log("Could not determine scheduled date for " + scheduleSetup);
         return;
       }
-      var reactionEmoji = scheduleReactionEmojis[dayBaseIndex + j];
+      const reactionEmoji = scheduleReactionEmojis[dayBaseIndex + j];
 
       const serializer = new ScheduleSerializer(dbClient);
       serializer.insert(
@@ -626,7 +622,7 @@ export async function postSchedules(client: DFZDiscordClient) {
 
 async function weeklyScheduleShouldBePosted(client: DFZDiscordClient) {
   const schedules = await getAllSchedules(client.dbClient);
-  const { monday } = getCurrentMondayAndSundayDate();
+  const { monday } = ArbitraryTimeAlgos.getCurrentMondayAndSundayDate();
   return !existsScheduleAfterMonday(schedules, monday);
 }
 
@@ -647,7 +643,8 @@ export function addCurrentWeekSchedule(
   channels: GuildChannelManager,
   dbClient: DFZDataBaseClient
 ) {
-  var mondayAndSunday: NextMondayAndSunday = getCurrentMondayAndSundayDate();
+  var mondayAndSunday: NextMondayAndSunday =
+    ArbitraryTimeAlgos.getCurrentMondayAndSundayDate();
   for (const data of weeklyScheduleDatas)
     createSchedules(dbClient, channels, data, mondayAndSunday);
 }
@@ -656,7 +653,7 @@ export async function tryRemoveDeprecatedSchedules(
   dbClient: DFZDataBaseClient
 ) {
   try {
-    var yesterday = new Date(Date.now() - aDay);
+    var yesterday = new Date(Date.now() - TimeConverter.dayToMs);
     await removeDeprecatedSchedules(yesterday, dbClient);
   } catch (e) {
     console.log(`Error in tryRemoveDeprecatedSchedules\nReason:\n${e}`);

@@ -13,7 +13,6 @@ import {
   getCoachCountByLobbyType,
 } from "../../misc/constants";
 import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
-import { msToMinutes, msToHours } from "../../misc/timeZone";
 import { getUser } from "../../misc/userHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { IFieldElement } from "../discord/interfaces/FieldElement";
@@ -21,6 +20,7 @@ import { IRemainingTime } from "../lobby/interfaces/RemainingTime";
 import { LobbyPostManipulator } from "../lobby/LobbyPostManipulator";
 import { UserTableGenerator } from "../lobby/UserTableGenerator";
 import { LobbySerializer } from "../serializers/lobbySerializer";
+import { TimeConverter } from "../time/TimeConverter";
 
 export class Lobby {
   type: number;
@@ -59,11 +59,11 @@ export class Lobby {
       hours: -1,
     };
     if (res.totalMs > 0) {
-      res.minutes = Math.floor((res.totalMs * msToMinutes) % 60);
-      res.hours = Math.floor(res.totalMs * msToHours);
+      res.minutes = Math.floor((res.totalMs * TimeConverter.msToMin) % 60);
+      res.hours = Math.floor(res.totalMs * TimeConverter.msToHours);
     } else {
-      res.minutes = Math.floor((-res.totalMs * msToMinutes) % 60);
-      res.hours = Math.floor(-res.totalMs * msToHours);
+      res.minutes = Math.floor((-res.totalMs * TimeConverter.msToMin) % 60);
+      res.hours = Math.floor(-res.totalMs * TimeConverter.msToHours);
     }
 
     return res;

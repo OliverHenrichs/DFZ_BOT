@@ -2,8 +2,9 @@ import { Client } from "discord.js";
 import { Auth, calendar_v3, google } from "googleapis";
 import { Schedule } from "../serializables/schedule";
 import { getLobbyNameByType, lobbyTypes } from "../../misc/constants";
-import { regions, getTimeZoneStringFromRegion } from "../../misc/timeZone";
 import { scheduleTypes } from "../../misc/types/scheduleTypes";
+import { getTimeZoneStringFromRegion } from "../time/timeZone";
+import { RegionDefinitions } from "../time/RegionDefinitions";
 
 export class GoogleCalendarManager {
   public static calendarURI = ["https://www.googleapis.com/auth/calendar"];
@@ -260,9 +261,12 @@ export class GoogleCalendarManager {
   }
 
   private static getCalendarIDByRegion(region: string) {
-    if (region === regions[0]) return process.env.CALENDAR_REGION_EU;
-    else if (region === regions[1]) return process.env.CALENDAR_REGION_NA;
-    else if (region === regions[2]) return process.env.CALENDAR_REGION_SEA;
+    if (region === RegionDefinitions.regions[0])
+      return process.env.CALENDAR_REGION_EU;
+    else if (region === RegionDefinitions.regions[1])
+      return process.env.CALENDAR_REGION_NA;
+    else if (region === RegionDefinitions.regions[2])
+      return process.env.CALENDAR_REGION_SEA;
 
     return undefined;
   }

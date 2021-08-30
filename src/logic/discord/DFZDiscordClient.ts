@@ -21,10 +21,12 @@ import { ScheduleSerializer } from "../serializers/scheduleSerializer";
 import { IScheduleInfo } from "./interfaces/ScheduleInfo";
 import { LobbyTimeController } from "../lobby/LobbyTimeController";
 import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
+import { TimeConverter } from "../time/TimeConverter";
 
 export class DFZDiscordClient extends Client {
   dbClient: DFZDataBaseClient;
   timeouts: LobbyTimeout[] = [];
+  private internalTimeouts: NodeJS.Timeout[] = [];
   constructor(options?: ClientOptions | undefined) {
     super(options);
 
@@ -32,10 +34,18 @@ export class DFZDiscordClient extends Client {
     this.dbClient = new DFZDataBaseClient();
   }
 
+  public shutdown() {
+    this.internalTimeouts.forEach((to) => {
+      clearInterval(to);
+    });
+    this.destroy();
+  }
+
   private setupDiscordEventHandlers() {
-    const files = readdirSync("./build/src/events/");
+    const files = readdirSync(`${__dirname}/../../events/`);
+
     for (const file of files) {
-      const eventHandler = require(`../../events/${file}`);
+      const eventHandler = require(`${__dirname}/../../events/${file}`);
       const eventName = file.split(".")[0];
       this.on(eventName, (...args: any) => eventHandler(this, ...args));
     }
@@ -176,7 +186,7 @@ export class DFZDiscordClient extends Client {
 
     const intervalFun = this.createIntervalTask(updateFun);
     await intervalFun();
-    setInterval(intervalFun, oncePerMinute);
+    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.minToMs));
   }
 
   private async setDeleteDeprecatedSchedulesTimer() {
@@ -185,7 +195,7 @@ export class DFZDiscordClient extends Client {
     };
     const intervalFun = this.createIntervalTask(updateFun);
     await intervalFun();
-    setInterval(intervalFun, oncePerHour);
+    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.hToMs));
   }
 
   private async setSchedulePostUpdateTimer() {
@@ -194,7 +204,7 @@ export class DFZDiscordClient extends Client {
     };
     const intervalFun = this.createIntervalTask(scheduleWriter);
     await intervalFun();
-    setInterval(intervalFun, oncePerHour);
+    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.hToMs));
   }
 
   private async setPostLobbyFromScheduleTimer() {
@@ -204,7 +214,7 @@ export class DFZDiscordClient extends Client {
     };
     const intervalFun = this.createIntervalTask(lobbyPoster);
     await intervalFun();
-    setInterval(intervalFun, oncePerHour);
+    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.hToMs));
   }
 
   private async setLeaderBoardPostTimer() {
@@ -213,9 +223,6 @@ export class DFZDiscordClient extends Client {
     );
     await ReferrerLeaderBoardHandler.findLeaderBoardMessage(this);
     await intervalFun();
-    setInterval(intervalFun, oncePerHour);
+    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.hToMs));
   }
 }
-
-const oncePerMinute = 60000;
-const oncePerHour = oncePerMinute * 60;

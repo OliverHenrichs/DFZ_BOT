@@ -20,7 +20,7 @@ import {
   getRoleMention,
   getRegionalRoleString,
 } from "../../misc/roleManagement";
-import { getTimeString } from "../../misc/timeZone";
+import { getTimeString } from "../time/timeZone";
 import { createTeams } from "../../misc/userHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { EmbeddingCreator } from "../discord/EmbeddingCreator";
@@ -41,11 +41,7 @@ export class LobbyPostManipulator {
     channel: TextChannel | NewsChannel | DMChannel,
     options: PostLobbyOptions
   ) {
-    var title = `We host ${getLobbyPostNameByType(
-      options.type
-    )} on ${getTimeString(options.time)} ${
-      options.time.zone ? options.time.zone.abbreviation : ""
-    }${options.optionalText !== "" ? "\nTopic: " + options.optionalText : ""}`;
+    var title = this.createLobbyPostTitle(options);
     var text = LobbyPostManipulator.getLobbyPostText(
       options.userRoles,
       options.type,
@@ -80,6 +76,14 @@ export class LobbyPostManipulator {
         lobbyPostMessage.id
       )
     );
+  }
+
+  private static createLobbyPostTitle(options: PostLobbyOptions) {
+    return `We host ${getLobbyPostNameByType(options.type)} on ${getTimeString(
+      options.time
+    )} ${options.time.zone ? options.time.zone.abbreviation : ""}${
+      options.optionalText !== "" ? "\nTopic: " + options.optionalText : ""
+    }`;
   }
 
   private static getLobbyPostFooter(type: number, regionRole: string) {
@@ -305,7 +309,7 @@ export class LobbyPostManipulator {
       message.embeds.length > 0 ? message.embeds[0] : undefined
     );
 
-    embed.title = this.getLobbyPostTitle(lobby, embed);
+    embed.title = this.updateLobbyTypeInPostTitle(lobby, embed);
 
     embed.description = this.getLobbyPostText(
       lobby.beginnerRoleIds,
@@ -324,7 +328,7 @@ export class LobbyPostManipulator {
     await message.edit(embed);
   }
 
-  private static getLobbyPostTitle(lobby: Lobby, embed: MessageEmbed) {
+  private static updateLobbyTypeInPostTitle(lobby: Lobby, embed: MessageEmbed) {
     return (
       `We host ${getLobbyPostNameByType(lobby.type)} on ` +
       embed.title?.split(" on ")[1]

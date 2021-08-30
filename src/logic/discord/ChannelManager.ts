@@ -16,6 +16,8 @@ export class ChannelManager {
     );
 
     if (channel === undefined || !channel.isText()) {
+      console.log("ehm, channel undefined...");
+
       throw new Error(
         `Did not find text channel ${channelId} for guild ${guildId}`
       );

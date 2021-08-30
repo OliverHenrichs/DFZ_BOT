@@ -23,6 +23,7 @@ import {
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { ITime } from "../logic/time/interfaces/Time";
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
@@ -33,7 +34,10 @@ export default async (message: Message, dbClient: DFZDataBaseClient) => {
   await tryPostLobby(message, dbClient);
 };
 
-async function tryPostLobby(message: Message, dbClient: DFZDataBaseClient) {
+async function tryPostLobby(
+  message: Message,
+  dbClient: DFZDataBaseClient
+): Promise<void> {
   try {
     const options = tryGetLobbyOptionsFromMessage(message);
     await LobbyPostManipulator.postLobby(dbClient, message.channel, options);
@@ -43,7 +47,9 @@ async function tryPostLobby(message: Message, dbClient: DFZDataBaseClient) {
   }
 }
 
-function tryGetLobbyOptionsFromMessage(message: Message): PostLobbyOptions {
+export function tryGetLobbyOptionsFromMessage(
+  message: Message
+): PostLobbyOptions {
   const type = getLobbyTypeFromMessage(message);
 
   if (!message.member || !isTypeAllowedForMember(type, message.member))
@@ -60,13 +66,13 @@ function isTypeAllowedForMember(type: number, member: GuildMember): boolean {
   return true;
 }
 
-function getLobbyTypeBasedTimeIndex(lobbyType: number) {
+function getLobbyTypeBasedTimeIndex(lobbyType: number): number {
   const simpleLobbyIndex = 1;
   const roleBasedLobbyIndex = 3;
   return isSimpleLobbyType(lobbyType) ? simpleLobbyIndex : roleBasedLobbyIndex;
 }
 
-function getLobbyOptions(message: Message, type: number) {
+function getLobbyOptions(message: Message, type: number): PostLobbyOptions {
   if (isRoleBasedLobbyType(type)) {
     return getRoleBasedLobbyOptions(message, type);
   } else {
@@ -88,12 +94,12 @@ function getRoleBasedLobbyOptions(
   };
 }
 
-function getLobbyRegionRole(message: Message) {
+function getLobbyRegionRole(message: Message): string {
   const argIndex = 1;
   return getLobbyRegionRoleFromMessage(message, argIndex);
 }
 
-function getAllowedTiers(message: Message) {
+function getAllowedTiers(message: Message): string[] {
   const rolesIdxInMessage = 2;
   const minRole = 0;
   const maxRole = 4;
@@ -106,7 +112,7 @@ function getAllowedTiers(message: Message) {
   return getBeginnerRolesFromNumbers(numbers);
 }
 
-function getLobbyTime(message: Message, type: number) {
+function getLobbyTime(message: Message, type: number): ITime {
   const lobbyIndex = getLobbyTypeBasedTimeIndex(type);
   const timeResult = getTimeFromMessage(message, lobbyIndex);
   return timeResult.time;
@@ -142,22 +148,22 @@ function getNonRoleBasedLobbyOptions(
   return options;
 }
 
-function setReplayAnalysisOptions(options: PostLobbyOptions) {
+function setReplayAnalysisOptions(options: PostLobbyOptions): void {
   options.userRoles = beginnerRoles;
 }
 
-function setTryoutOptions(options: PostLobbyOptions) {
+function setTryoutOptions(options: PostLobbyOptions): void {
   const tryoutRoleNumber = 5;
   options.userRoles = getBeginnerRolesFromNumbers(new Set([tryoutRoleNumber]));
 }
 
-function setMeetingOptions(message: Message, options: PostLobbyOptions) {
+function setMeetingOptions(message: Message, options: PostLobbyOptions): void {
   const args = getArguments(message);
   setAllowedUserRoles(args, options);
   trySetOptionalText(args, options);
 }
 
-function setAllowedUserRoles(args: string[], options: PostLobbyOptions) {
+function setAllowedUserRoles(args: string[], options: PostLobbyOptions): void {
   options.userRoles = beginnerRoles.concat(adminRoles);
 
   const inviteeIndex = 3;
@@ -168,7 +174,7 @@ function setAllowedUserRoles(args: string[], options: PostLobbyOptions) {
 function trySetMeetingForPlayersOrCoaches(
   inviteeString: string,
   options: PostLobbyOptions
-) {
+): void {
   if (inviteeString === "coaches") options.userRoles = adminRoles;
   else if (inviteeString === "players") options.userRoles = beginnerRoles;
 }

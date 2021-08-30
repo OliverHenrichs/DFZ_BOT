@@ -15,7 +15,8 @@ import {
   getRegionalRoleFromString,
   getAllRegionStrings,
 } from "./roleManagement";
-import { createLobbyTime, LobbyTimeResult } from "./timeZone";
+import { ILobbyTimeResult } from "../logic/time/interfaces/LobbyTimeResult";
+import { calculateLobbyTime } from "../logic/time/timeZone";
 
 /**
  * Reacts to message using reply and emoji, then deletes the authors command
@@ -131,13 +132,13 @@ export function getLobbyRegionRoleFromMessage(
 export function getTimeFromMessage(
   message: Message,
   argumentIndex: number
-): LobbyTimeResult {
+): ILobbyTimeResult {
   var args = getArguments(message);
 
   if (args.length <= argumentIndex + 1)
     throw "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post";
 
-  return createLobbyTime(args[argumentIndex], args[argumentIndex + 1]);
+  return calculateLobbyTime(args[argumentIndex], args[argumentIndex + 1]);
 }
 
 /**
