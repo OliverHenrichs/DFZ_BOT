@@ -28,14 +28,17 @@ export const companionRole = process.env.COMPANION_M
 		@param {Discord.Member} member the guild member who is being checked for having certain roles
 		@return the found role or undefined if it didn't find one
 	*/
-export function findRole(member: GuildMember, rolesToCheck: Array<string>) {
+export function findRole(
+  member: GuildMember,
+  rolesToCheck: Array<string>
+): Role | undefined {
   if (rolesToCheck.length === 0) {
     return undefined;
   }
 
-  return member.roles.cache.find((role: Role) =>
-    rolesToCheck.includes(role.id)
-  );
+  return member.roles.cache.find((role: Role) => {
+    return rolesToCheck.includes(role.id);
+  });
 }
 
 /**
@@ -48,10 +51,8 @@ export function findRoles(
   if (rolesToCheck.length === 0) {
     return new Collection<string, Role>();
   }
-
-  return member.roles.cache.filter((role: Role) =>
-    rolesToCheck.includes(role.id)
-  );
+  const cache = member.roles.cache;
+  return cache.filter((role: Role) => rolesToCheck.includes(role.id));
 }
 
 /**

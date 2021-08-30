@@ -49,7 +49,7 @@ export abstract class AbstractHighscoreProvider<T> {
       "",
       this.resultTable
     );
-    message.author.send({ embed: _embed });
+    message.author.send({ embeds: [_embed] });
   }
 
   protected abstract rowAdder(user: T): void;

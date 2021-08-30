@@ -1,4 +1,4 @@
-import { User, TextChannel, NewsChannel } from "discord.js";
+import { User, TextBasedChannels } from "discord.js";
 import {
   getPlayersPerLobbyByLobbyType,
   getLobbyNameByType,
@@ -20,7 +20,7 @@ export class LobbyStarter {
 
   public async tryStartLobby(
     coach: User,
-    channel: TextChannel | NewsChannel
+    channel: TextBasedChannels
   ): Promise<boolean> {
     try {
       return await this.startLobby(coach, channel);
@@ -32,7 +32,7 @@ export class LobbyStarter {
 
   private async startLobby(
     coach: User,
-    channel: TextChannel | NewsChannel
+    channel: TextBasedChannels
   ): Promise<boolean> {
     if (!this.testLobbyStartTime(this.lobby, coach)) {
       return false;
@@ -95,7 +95,7 @@ export class LobbyStarter {
     );
   }
 
-  private handleNoPlayers(coach: User, channel: TextChannel | NewsChannel) {
+  private handleNoPlayers(coach: User, channel: TextBasedChannels) {
     LobbyPostManipulator.cancelLobbyPost(
       this.lobby,
       channel,

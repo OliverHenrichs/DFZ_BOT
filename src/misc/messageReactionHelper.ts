@@ -73,7 +73,11 @@ export function isValidLobbyReaction(
   user: User
 ): boolean {
   // only care for messages from self
-  if (reaction.message.author.id !== process.env.BOT_ID) return false;
+  if (
+    !reaction.message.author ||
+    reaction.message.author.id !== process.env.BOT_ID
+  )
+    return false;
 
   // ignore reactions from self
   if (user.id === process.env.BOT_ID) return false;

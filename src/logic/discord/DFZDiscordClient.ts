@@ -1,10 +1,4 @@
-import {
-  Client,
-  ClientOptions,
-  Guild,
-  NewsChannel,
-  TextChannel,
-} from "discord.js";
+import { Client, Guild, Intents, NewsChannel, TextChannel } from "discord.js";
 import { readdirSync } from "fs";
 import { ChannelManager } from "./ChannelManager";
 import { guildId } from "../../misc/constants";
@@ -27,8 +21,13 @@ export class DFZDiscordClient extends Client {
   dbClient: DFZDataBaseClient;
   timeouts: LobbyTimeout[] = [];
   private internalTimeouts: NodeJS.Timeout[] = [];
-  constructor(options?: ClientOptions | undefined) {
-    super(options);
+  constructor() {
+    super({
+      intents: [
+        Intents.FLAGS.GUILD_MESSAGES,
+        Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+      ],
+    });
 
     this.setupDiscordEventHandlers();
     this.dbClient = new DFZDataBaseClient();
@@ -66,6 +65,7 @@ export class DFZDiscordClient extends Client {
   }
 
   private async fetchDiscordData() {
+    await this.fetchRoles();
     await this.fetchLobbyMessages();
     await this.fetchScheduleMessages();
   }
@@ -76,6 +76,11 @@ export class DFZDiscordClient extends Client {
     await this.setSchedulePostUpdateTimer();
     await this.setPostLobbyFromScheduleTimer();
     await this.setLeaderBoardPostTimer();
+  }
+
+  private async fetchRoles() {
+    const guild = await this.getGuild();
+    await guild.roles.fetch();
   }
 
   private async fetchLobbyMessages() {
@@ -90,7 +95,7 @@ export class DFZDiscordClient extends Client {
   }
 
   private async fetchLobbyMessagesInChannel(guild: Guild, channelId: string) {
-    const gc = this.findChannel(guild, channelId);
+    const gc = await this.findChannel(guild, channelId);
     const lobbies = await this.getChannelLobbies(channelId);
     for (const lobby of lobbies) {
       await gc.messages.fetch(lobby.messageId);
@@ -108,7 +113,7 @@ export class DFZDiscordClient extends Client {
 
     var guild = await this.getGuild();
     for (const post of fetchedSchedulePosts) {
-      const channel = this.findChannel(guild, post.channelId);
+      const channel = await this.findChannel(guild, post.channelId);
 
       channel.messages.fetch(post.messageId);
     }
@@ -155,12 +160,12 @@ export class DFZDiscordClient extends Client {
     return index !== -1;
   }
 
-  private findChannel(
+  public async findChannel(
     guild: Guild,
     channelId: string
-  ): TextChannel | NewsChannel {
-    const channel = guild.channels.cache.find((chan) => chan.id === channelId);
-    if (channel === undefined || !channel.isText()) {
+  ): Promise<TextChannel | NewsChannel> {
+    const channel = await guild.channels.fetch(channelId);
+    if (!channel || !channel.isText()) {
       throw new Error("Did not find channel when fetching messages");
     }
 

@@ -69,11 +69,12 @@ export class ReferrerLeaderBoardHandler {
     embed: MessageEmbed
   ) {
     const message = await channel.messages.fetch(messageId);
+    const messageOptions = { embeds: [embed] };
     if (!message) {
-      const msg = await channel.send({ embed: embed });
+      const msg = await channel.send(messageOptions);
       messageId = msg.id;
     } else {
-      await message.edit(embed);
+      await message.edit(messageOptions);
     }
   }
 

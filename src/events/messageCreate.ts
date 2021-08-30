@@ -38,7 +38,7 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
   if (message.member === null) return;
 
   // Ignore DMs
-  if (message.channel.type === "dm") {
+  if (message.channel.type === "DM") {
     return reactNegative(message, "Bot doesn't support DMs!");
   }
 

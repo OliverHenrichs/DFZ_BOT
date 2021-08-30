@@ -1,10 +1,4 @@
-import {
-  TextChannel,
-  NewsChannel,
-  DMChannel,
-  MessageReaction,
-  User,
-} from "discord.js";
+import { MessageReaction, User, TextBasedChannels } from "discord.js";
 import {
   isSimpleLobbyType,
   tryoutReactionEmoji,
@@ -75,7 +69,7 @@ export class Lobby {
   }
 
   public async updateLobbyPostAndDBEntry(
-    channel: TextChannel | NewsChannel | DMChannel,
+    channel: TextBasedChannels,
     dbClient: DFZDataBaseClient
   ) {
     LobbyPostManipulator.tryUpdateLobbyPost(this, channel)
@@ -151,7 +145,7 @@ export class Lobby {
    */
   public async addCoach(
     dbClient: DFZDataBaseClient,
-    channel: TextChannel | NewsChannel,
+    channel: TextBasedChannels,
     userId: string
   ) {
     if (this.coaches === undefined) throw "Lobby does not support coaches.";
@@ -168,17 +162,9 @@ export class Lobby {
     await this.updateLobbyPostAndDBEntry(channel, dbClient);
   }
 
-  /**
-   * Removes coach from existing lobby
-   * @param {Pool} dbHandle
-   * @param {TextChannel} channel
-   * @param {Lobby} lobby
-   * @param {string} userId
-   * @returns true if successful, false if not
-   */
   public async removeCoach(
     dbClient: DFZDataBaseClient,
-    channel: TextChannel | NewsChannel,
+    channel: TextBasedChannels,
     userId: string
   ) {
     const coachIndex = this.coaches.findIndex((coach) => coach === userId);

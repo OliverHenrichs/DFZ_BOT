@@ -1,10 +1,4 @@
-import {
-  TextChannel,
-  NewsChannel,
-  MessageEmbed,
-  Message,
-  DMChannel,
-} from "discord.js";
+import { MessageEmbed, Message, TextBasedChannels } from "discord.js";
 import {
   getCoachCountByLobbyType,
   getLobbyNameByType,
@@ -38,7 +32,7 @@ import { UserTableGenerator } from "./UserTableGenerator";
 export class LobbyPostManipulator {
   public static async postLobby(
     dbClient: DFZDataBaseClient,
-    channel: TextChannel | NewsChannel | DMChannel,
+    channel: TextBasedChannels,
     options: PostLobbyOptions
   ) {
     var title = this.createLobbyPostTitle(options);
@@ -52,10 +46,10 @@ export class LobbyPostManipulator {
 
     // send embedding post to lobby signup-channel
     const _embed = EmbeddingCreator.create(title, text, footer);
-    const lobbyPostMessage = await channel.send(
-      getRoleMentions(options.userRoles),
-      { embed: _embed }
-    ); // mentioning roles in message again to ping beginners
+    const lobbyPostMessage = await channel.send({
+      content: getRoleMentions(options.userRoles),
+      embeds: [_embed],
+    }); // mentioning roles in message again to ping beginners
 
     // pin message to channel
     lobbyPostMessage.pin();
@@ -108,7 +102,7 @@ export class LobbyPostManipulator {
 
   public static async cancelLobbyPost(
     lobby: Lobby,
-    channel: TextChannel | NewsChannel,
+    channel: TextBasedChannels,
     reason: string = ""
   ) {
     this.tryUpdateLobbyPostTitle(
@@ -121,7 +115,7 @@ export class LobbyPostManipulator {
 
   public static async tryUpdateLobbyPostTitle(
     messageId: string,
-    channel: TextChannel | NewsChannel,
+    channel: TextBasedChannels,
     titleUpdate: string,
     unpin = true
   ) {
@@ -134,14 +128,14 @@ export class LobbyPostManipulator {
 
   private static async updateLobbyPostTitle(
     messageId: string,
-    channel: TextChannel | NewsChannel,
+    channel: TextBasedChannels,
     titleUpdate: string,
     unpin = true
   ) {
     const message = await channel.messages.fetch(messageId);
     if (unpin === true) message.unpin();
     const newEmbed = this.createEmbedWithNewTitle(message, titleUpdate);
-    message.edit(newEmbed);
+    message.edit({ embeds: [newEmbed] });
   }
 
   private static createEmbedWithNewTitle(
@@ -155,17 +149,14 @@ export class LobbyPostManipulator {
     return new MessageEmbed(old_embed).setTitle(newEmbedTitle);
   }
 
-  public static writeLobbyStartPost(
-    lobby: Lobby,
-    channel: TextChannel | NewsChannel
-  ) {
+  public static writeLobbyStartPost(lobby: Lobby, channel: TextBasedChannels) {
     const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
     this.createLobbyStartPost(lobby, channel, playersPerLobby);
   }
 
   private static createLobbyStartPost(
     lobby: Lobby,
-    channel: TextChannel | NewsChannel,
+    channel: TextBasedChannels,
     playersPerLobby: number
   ) {
     var userSets: LobbyPlayer[][] = [];
@@ -203,7 +194,7 @@ export class LobbyPostManipulator {
   }
 
   private static postIncompleteTeam(
-    channel: TextChannel | NewsChannel,
+    channel: TextBasedChannels,
     lobby: Lobby,
     userSet: LobbyPlayer[]
   ) {
@@ -215,15 +206,16 @@ export class LobbyPostManipulator {
       "",
       tableGenerator.generate()
     );
-    channel.send({ embed: _embed });
+    channel.send({ embeds: [_embed] });
   }
 
   private static createAndPostCompleteTeams(
-    channel: TextChannel | NewsChannel,
+    channel: TextBasedChannels,
     lobby: Lobby,
     userSets: LobbyPlayer[][]
   ) {
     var counter = 0;
+    const embeds: MessageEmbed[] = [];
     userSets.forEach((us) => {
       var teams = createTeams(us, lobby.type);
       const tableGenerator = new TeamsTableGenerator(teams, lobby.type, true);
@@ -235,21 +227,20 @@ export class LobbyPostManipulator {
         "",
         teamTable
       );
-      channel.send({ embed: _embed });
+      embeds.push(_embed);
     });
+
+    channel.send({ embeds: embeds });
   }
 
-  private static postBench(
-    channel: TextChannel | NewsChannel,
-    userSet: LobbyPlayer[]
-  ) {
+  private static postBench(channel: TextBasedChannels, userSet: LobbyPlayer[]) {
     const _embed = EmbeddingCreator.create(
       "Today's bench",
       "",
       "",
       this.generateBenchTable(userSet)
     );
-    channel.send({ embed: _embed });
+    channel.send({ embeds: [_embed] });
   }
 
   private static getIncompleteTeamPostTitle(type: number) {
@@ -290,7 +281,7 @@ export class LobbyPostManipulator {
    */
   public static async tryUpdateLobbyPost(
     lobby: Lobby,
-    channel: TextChannel | DMChannel | NewsChannel
+    channel: TextBasedChannels
   ) {
     try {
       await this.updateLobbyPost(lobby, channel);
@@ -301,7 +292,7 @@ export class LobbyPostManipulator {
 
   private static async updateLobbyPost(
     lobby: Lobby,
-    channel: TextChannel | DMChannel | NewsChannel
+    channel: TextBasedChannels
   ) {
     const message = await channel.messages.fetch(lobby.messageId);
 
@@ -325,7 +316,7 @@ export class LobbyPostManipulator {
     const fields = lobby.getCurrentUsersAsTable(true);
     embed.fields = fields !== undefined ? fields : [];
 
-    await message.edit(embed);
+    await message.edit({ embeds: [embed] });
   }
 
   private static updateLobbyTypeInPostTitle(lobby: Lobby, embed: MessageEmbed) {
@@ -415,7 +406,7 @@ export class LobbyPostManipulator {
     var new_embed = new MessageEmbed(fetchResult.embed);
     new_embed.description = description.join("\n");
 
-    await fetchResult.message.edit(new_embed);
+    await fetchResult.message.edit({ embeds: [new_embed] });
   }
 }
 

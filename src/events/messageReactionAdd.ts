@@ -3,9 +3,9 @@ import {
   MessageReaction,
   User,
   Role,
-  DMChannel,
   NewsChannel,
   TextChannel,
+  TextBasedChannels,
 } from "discord.js";
 import { ChannelManager } from "../logic/discord/ChannelManager";
 import {
@@ -126,7 +126,7 @@ function addUserOrPosition(
   beginnerRole: Role,
   regionRole: Role | undefined,
   lobby: Lobby,
-  channel: TextChannel | DMChannel | NewsChannel
+  channel: TextBasedChannels
 ) {
   var userIdx = getUserIndex(lobby, user.id);
   // check if it contains user
@@ -259,7 +259,7 @@ async function handleLobbyStarted(lobby: Lobby, client: DFZDiscordClient) {
 function handleLobbyStart(
   client: DFZDiscordClient,
   lobby: Lobby,
-  channel: TextChannel | NewsChannel,
+  channel: TextBasedChannels,
   user: User
 ) {
   if (lobby.started) {
@@ -276,7 +276,7 @@ function handleLobbyStart(
 function handleLobbyCancel(
   client: DFZDiscordClient,
   lobby: Lobby,
-  channel: TextChannel | NewsChannel,
+  channel: TextBasedChannels,
   user: User
 ) {
   const to = setTimeout(
@@ -309,7 +309,7 @@ async function removeLobbyPermantently(
 function handleCoachAdd(
   client: DFZDiscordClient,
   lobby: Lobby,
-  channel: TextChannel | NewsChannel,
+  channel: TextBasedChannels,
   user: User
 ) {
   lobby
@@ -342,7 +342,7 @@ async function handleLobbyManagementEmoji(
 
   // Ignore DMs to pacify typescript...
   const channel = reaction.message.channel;
-  if (channel.type === "dm") {
+  if (channel.type === "DM") {
     return;
   }
 

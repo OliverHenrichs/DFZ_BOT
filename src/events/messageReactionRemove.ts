@@ -31,7 +31,7 @@ function handleCoachReaction(
   lobby: Lobby,
   user: User
 ) {
-  if (reaction.message.channel.type === "dm") return;
+  if (reaction.message.channel.type === "DM") return;
 
   switch (reaction.emoji.name) {
     case lobbyManagementReactionEmojis[2]:

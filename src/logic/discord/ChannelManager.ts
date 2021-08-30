@@ -1,4 +1,4 @@
-import { GuildChannel, NewsChannel, TextChannel } from "discord.js";
+import { NewsChannel, TextChannel } from "discord.js";
 import { guildId } from "../../misc/constants";
 import { DFZDiscordClient } from "./DFZDiscordClient";
 import { EnvironmentVariableManager as EVM } from "../misc/EnvironmentVariableManager";
@@ -9,15 +9,9 @@ export class ChannelManager {
     channelId: string
   ): Promise<TextChannel | NewsChannel> {
     const guild = await client.guilds.fetch(guildId);
-    const channel: GuildChannel | undefined = guild.channels.cache.find(
-      (chan: GuildChannel) => {
-        return chan.id == channelId;
-      }
-    );
+    const channel = await client.findChannel(guild, channelId);
 
-    if (channel === undefined || !channel.isText()) {
-      console.log("ehm, channel undefined...");
-
+    if (!channel || !channel.isText()) {
       throw new Error(
         `Did not find text channel ${channelId} for guild ${guildId}`
       );

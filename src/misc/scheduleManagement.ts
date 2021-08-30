@@ -1,10 +1,10 @@
 import {
-  GuildChannel,
   GuildChannelManager,
   Message,
   MessageEmbed,
   MessageReaction,
   NewsChannel,
+  TextBasedChannels,
   TextChannel,
   User,
 } from "discord.js";
@@ -127,7 +127,7 @@ function reactWithScheduleEmojis(message: Message, lastEmojiIndex = -1) {
  * @param {ScheduleSetup} scheduleSetup json containing all information regarding schedule
  */
 async function writeSchedule(
-  channel: TextChannel | NewsChannel,
+  channel: TextBasedChannels,
   scheduleSetup: ScheduleSetup
 ) {
   if (
@@ -145,13 +145,13 @@ async function writeSchedule(
     dayShortNames.push(regionDaysShortNames);
   });
 
-  var schedules: Array<IFieldElement> = [];
-  var emojiStartIndex = 0;
+  const schedules: Array<IFieldElement> = [];
+  let emojiStartIndex = 0;
   for (let i = 0; i < scheduleSetup.regions.length; i++) {
-    var regionString = scheduleSetup.regionStrings[i];
-    var tz = scheduleSetup.timezoneShortNames[i];
+    const regionString = scheduleSetup.regionStrings[i];
+    const tz = scheduleSetup.timezoneShortNames[i];
 
-    var emojis = scheduleReactionEmojis.slice(
+    const emojis = scheduleReactionEmojis.slice(
       emojiStartIndex,
       emojiStartIndex + dayShortNames[i].length
     );
@@ -169,15 +169,15 @@ async function writeSchedule(
     emojiStartIndex += dayShortNames[i].length;
   }
 
-  var footer = `If coaches are signed up, the corresponding lobby is automatically created roughly 8h prior to the event.\nIf coaches only sign up shortly before the lobby (4h or less), then they must manually create the lobby.`;
+  const footer = `If coaches are signed up, the corresponding lobby is automatically created roughly 8h prior to the event.\nIf coaches only sign up shortly before the lobby (4h or less), then they must manually create the lobby.`;
 
-  var _embed = EmbeddingCreator.create(
+  const _embed = EmbeddingCreator.create(
     getWeekScheduleString(scheduleSetup),
     "Sign up as a coach by reacting to the respective number.",
     footer,
     schedules
   );
-  var message = await channel.send({ embed: _embed });
+  const message = await channel.send({ embeds: [_embed] });
   reactWithScheduleEmojis(message, emojiStartIndex);
 
   return message;
@@ -192,9 +192,13 @@ async function writeSchedule(
 export async function findSchedule(
   dbClient: DFZDataBaseClient,
   messageId: string,
-  emojiName: string
+  emojiName: string | null
 ) {
-  const serializer = new ScheduleSerializer(dbClient, messageId, emojiName);
+  const serializer = new ScheduleSerializer(
+    dbClient,
+    messageId,
+    emojiName ? emojiName : ""
+  );
   const schedules = await serializer.get();
   if (schedules.length === 0) return undefined;
   if (schedules.length > 1) {
@@ -256,7 +260,7 @@ function getScheduleLobbyBeginnerRoles(
 
 function informCoachesOfSchedulePost(
   schedule: Schedule,
-  channel: GuildChannel,
+  channel: TextChannel | NewsChannel,
   zonedTime: ITime
 ) {
   schedule.coaches.forEach((coach) => {
@@ -290,13 +294,9 @@ async function createScheduledLobby(
   const type = getLobbyType(schedule);
   const beginnerRoles = getScheduleLobbyBeginnerRoles(type, schedule.type);
   const channelId = getScheduledLobbyChannelId(type, schedule.type, regionRole);
-  const channel = channelManager.cache.find((chan) => chan.id === channelId);
+  const channel = await channelManager.fetch(channelId ? channelId : "");
 
-  if (
-    channel === undefined ||
-    !channel.isText() ||
-    beginnerRoles === undefined
-  ) {
+  if (!channel || !channel.isText() || beginnerRoles === undefined) {
     return;
   }
 
@@ -541,10 +541,8 @@ async function createSchedules(
   scheduleData: WeeklyScheduleData,
   monAndSun: NextMondayAndSunday
 ) {
-  var channel = channels.cache.find((chan) => {
-    return chan.id == scheduleData.channelId;
-  });
-  if (channel === undefined || !channel.isText()) return;
+  const channel = await channels.fetch(scheduleData.channelId);
+  if (channel === null || !channel?.isText()) return;
 
   var scheduleSetup = createScheduleSetup(
     monAndSun.monday,
@@ -719,7 +717,7 @@ export async function updateSchedulePost(
         new_embed.fields[i].value = lines.join("\n");
 
         // update embed
-        await message.edit(new_embed);
+        await message.edit({ embeds: [new_embed] });
         return;
       }
     }
@@ -781,7 +779,7 @@ export async function addCoachToSchedule(
     return;
   }
 
-  var role = findRole(guildMember, adminRoles);
+  const role = findRole(guildMember, adminRoles);
   if (role === undefined || role === null) {
     user.send("⛔ You cannot interact because you are not a coach.");
     return;

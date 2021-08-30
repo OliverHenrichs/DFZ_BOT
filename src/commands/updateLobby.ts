@@ -1,4 +1,4 @@
-import { DMChannel, Message, NewsChannel, TextChannel } from "discord.js";
+import { Message, TextBasedChannels } from "discord.js";
 import { getLobbyTypeByString, isRoleBasedLobbyType } from "../misc/constants";
 import { getNumbersFromString } from "../misc/generics";
 import {
@@ -140,7 +140,7 @@ function updateLobbyType(lobby: Lobby, maybeType: string) {
 
 async function performLobbyUpdate(
   lobby: Lobby,
-  channel: TextChannel | DMChannel | NewsChannel,
+  channel: TextBasedChannels,
   dbClient: DFZDataBaseClient
 ) {
   try {

@@ -15,8 +15,7 @@ export default async (message: Message) => {
   if (!isPostedByAdmin(message)) return;
 
   const embed = generateHelpMessageEmbedding();
-
-  message.author.send({ embed: embed });
+  message.author.send({ embeds: [embed] });
   reactPositive(message, "");
 };
 

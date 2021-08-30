@@ -30,7 +30,7 @@ async function reactToMessageAndDeleteIt(
   emoji: string
 ) {
   message.react(emoji).then(() => {
-    if (message.channel.type !== "dm") message.delete({ timeout: 5000 });
+    if (message.channel.type !== "DM") setTimeout(() => message.delete(), 5000);
   });
 
   if (reply == "") return;

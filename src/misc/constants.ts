@@ -137,7 +137,9 @@ export function getReactionEmojiPosition(
 export function isKnownPositionEmoji(
   reactionEmoji: GuildEmoji | ReactionEmoji
 ) {
-  return positionReactionEmojis.includes(reactionEmoji.name);
+  return (
+    reactionEmoji.name && positionReactionEmojis.includes(reactionEmoji.name)
+  );
 }
 
 export function isKnownSimpleLobbyEmoji(
@@ -149,7 +151,10 @@ export function isKnownSimpleLobbyEmoji(
 export function isKnownLobbyManagementEmoji(
   reactionEmoji: GuildEmoji | ReactionEmoji
 ) {
-  return lobbyManagementReactionEmojis.includes(reactionEmoji.name);
+  return (
+    reactionEmoji.name &&
+    lobbyManagementReactionEmojis.includes(reactionEmoji.name)
+  );
 }
 
 /**
