@@ -103,8 +103,11 @@ export class DFZDiscordClient extends Client {
   }
 
   private async fetchRoles() {
-    const guild = await this.getGuild();
-    await guild.roles.fetch();
+    const fetcher = async () => {
+      const guild = await this.getGuild();
+      await guild.roles.fetch();
+    };
+    this.tryActionWithErrorLog(fetcher, "Error fetching roles");
   }
 
   // private async fetchSlashCommands() {
@@ -116,10 +119,13 @@ export class DFZDiscordClient extends Client {
   // }
 
   private async fetchLobbyMessages() {
-    const guild = await this.getGuild();
-    for (const channelId of ChannelManager.lobbyChannels) {
-      await this.fetchLobbyMessagesInChannel(guild, channelId);
-    }
+    const fetcher = async () => {
+      const guild = await this.getGuild();
+      for (const channelId of ChannelManager.lobbyChannels) {
+        await this.fetchLobbyMessagesInChannel(guild, channelId);
+      }
+    };
+    this.tryActionWithErrorLog(fetcher, "Error fetching lobby messages");
   }
 
   private async getGuild() {
@@ -140,15 +146,18 @@ export class DFZDiscordClient extends Client {
   }
 
   private async fetchScheduleMessages() {
-    const schedules = await this.fetchSchedules();
-    var fetchedSchedulePosts = this.getUniqueSchedulePosts(schedules);
+    const fetcher = async () => {
+      const schedules = await this.fetchSchedules();
+      var fetchedSchedulePosts = this.getUniqueSchedulePosts(schedules);
 
-    var guild = await this.getGuild();
-    for (const post of fetchedSchedulePosts) {
-      const channel = await this.findChannel(guild, post.channelId);
+      var guild = await this.getGuild();
+      for (const post of fetchedSchedulePosts) {
+        const channel = await this.findChannel(guild, post.channelId);
 
-      channel.messages.fetch(post.messageId);
-    }
+        channel.messages.fetch(post.messageId);
+      }
+    };
+    this.tryActionWithErrorLog(fetcher, "Error fetching schedule messages");
   }
 
   private async fetchSchedules() {
@@ -214,6 +223,17 @@ export class DFZDiscordClient extends Client {
         (err: string) => console.log(err);
       }
     };
+  }
+
+  private async tryActionWithErrorLog(
+    action: () => Promise<void>,
+    msg: string
+  ) {
+    try {
+      await action();
+    } catch (error) {
+      console.warn(`${error}: ${msg}`);
+    }
   }
 
   private async setLobbyPostUpdateTimer() {
