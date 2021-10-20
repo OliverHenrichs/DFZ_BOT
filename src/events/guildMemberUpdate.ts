@@ -6,7 +6,7 @@ import {
   getRegionalRolePrefix,
   beginnerRoles,
   findRoles,
-} from "../misc/roleManagement";
+} from "../logic/discord/roleManagement";
 import { Player } from "../logic/serializables/player";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { PlayerSerializer } from "../logic/serializers/playerSerializer";

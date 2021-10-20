@@ -3,7 +3,7 @@ import { Lobby } from "../logic/serializables/lobby";
 import { lobbyTypes } from "./constants";
 import { coinFlip, shuffle } from "./generics";
 import { LobbyPlayer } from "../logic/lobby/interfaces/LobbyPlayer";
-import { getNumberFromBeginnerRole } from "./roleManagement";
+import { getNumberFromBeginnerRole } from "../logic/discord/roleManagement";
 import { PositionPlayers } from "../logic/lobby/interfaces/PositionPlayers";
 
 /**

@@ -1,4 +1,5 @@
 import { Collection, GuildMember, Role } from "discord.js";
+import { INamedRole } from "./interfaces/NamedRole";
 
 export const beginnerRoles = [
   process.env.TIER_0 ? process.env.TIER_0 : "",
@@ -7,12 +8,25 @@ export const beginnerRoles = [
   process.env.TIER_3 ? process.env.TIER_3 : "",
   process.env.TIER_4 ? process.env.TIER_4 : "",
 ];
+export const namedBeginnerRoles: INamedRole[] =
+  getIDsAsNamedRoles(beginnerRoles);
+
 export const tryoutRole = process.env.TRYOUT ? process.env.TRYOUT : "";
+
 export const regionRoleIDs = [
   process.env.REGION_EU_ROLE ? process.env.REGION_EU_ROLE : "",
   process.env.REGION_NA_ROLE ? process.env.REGION_NA_ROLE : "",
   process.env.REGION_SEA_ROLE ? process.env.REGION_SEA_ROLE : "",
 ];
+
+export const namedRegionRoles: INamedRole[] = getIDsAsNamedRoles(regionRoleIDs);
+
+function getIDsAsNamedRoles(roles: string[]): INamedRole[] {
+  return roles.map((role) => {
+    return { id: role, name: getRoleMention(role) };
+  });
+}
+
 export const adminRoles = [
   process.env.COACH ? process.env.COACH : "",
   process.env.COACH_TRYOUT ? process.env.COACH_TRYOUT : "",

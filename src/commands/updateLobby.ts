@@ -10,7 +10,7 @@ import {
 import {
   getBeginnerRolesFromNumbers,
   getRegionalRoleFromString,
-} from "../misc/roleManagement";
+} from "../logic/discord/roleManagement";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { Lobby } from "../logic/serializables/lobby";

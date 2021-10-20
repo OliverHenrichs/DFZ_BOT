@@ -5,10 +5,11 @@ import {
   beginnerRoles,
   adminRoles,
   tryoutRole,
-} from "./roleManagement";
+} from "../logic/discord/roleManagement";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { Lobby } from "../logic/serializables/lobby";
 import { findLobbyByMessage } from "./messageHelper";
+import { botId } from "./constants";
 
 export interface LobbyReactionInfo {
   lobby: Lobby;
@@ -73,14 +74,11 @@ export function isValidLobbyReaction(
   user: User
 ): boolean {
   // only care for messages from self
-  if (
-    !reaction.message.author ||
-    reaction.message.author.id !== process.env.BOT_ID
-  )
+  if (!reaction.message.author || reaction.message.author.id !== botId)
     return false;
 
   // ignore reactions from self
-  if (user.id === process.env.BOT_ID) return false;
+  if (user.id === botId) return false;
 
   // ignore bot's DMs
   if (reaction.message.channel === undefined) return false;

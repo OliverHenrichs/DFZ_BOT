@@ -13,7 +13,7 @@ import {
   getRoleMentions,
   getRoleMention,
   getRegionalRoleString,
-} from "../../misc/roleManagement";
+} from "../discord/roleManagement";
 import { getTimeString } from "../time/timeZone";
 import { createTeams } from "../../misc/userHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";

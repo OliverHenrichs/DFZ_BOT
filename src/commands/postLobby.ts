@@ -19,7 +19,7 @@ import {
   beginnerRoles,
   companionRole,
   findRole,
-} from "../misc/roleManagement";
+} from "../logic/discord/roleManagement";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";

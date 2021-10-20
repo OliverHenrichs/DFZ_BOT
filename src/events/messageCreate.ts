@@ -10,7 +10,12 @@ import kick from "../commands/kick";
 import postSchedules from "../commands/postSchedules";
 import { ChannelManager } from "../logic/discord/ChannelManager";
 import { reactNegative } from "../misc/messageHelper";
-import { findRole, adminRoles, companionRole } from "../misc/roleManagement";
+import {
+  findRole,
+  adminRoles,
+  companionRole,
+} from "../logic/discord/roleManagement";
+import { botId } from "../misc/constants";
 
 const PREFIX = "!";
 
@@ -30,7 +35,7 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
   }
 
   // Ignore messages from self
-  if (message.author.id === process.env.BOT_ID) {
+  if (message.author.id === botId) {
     return;
   }
 

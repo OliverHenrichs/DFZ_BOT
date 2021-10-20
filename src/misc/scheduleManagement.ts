@@ -30,7 +30,7 @@ import {
   getRegionalRoleTimeZoneString,
   findRole,
   adminRoles,
-} from "./roleManagement";
+} from "../logic/discord/roleManagement";
 import { Schedule } from "../logic/serializables/schedule";
 import { ScheduleSerializer } from "../logic/serializers/scheduleSerializer";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";

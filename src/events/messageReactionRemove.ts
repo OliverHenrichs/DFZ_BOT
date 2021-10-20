@@ -7,7 +7,7 @@ import {
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import { adminRoles } from "../misc/roleManagement";
+import { adminRoles } from "../logic/discord/roleManagement";
 import { removeCoachFromSchedule } from "../misc/scheduleManagement";
 import { Lobby } from "../logic/serializables/lobby";
 

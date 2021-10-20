@@ -29,7 +29,7 @@ import {
   regionRoleIDs,
   beginnerRoles,
   adminRoles,
-} from "../misc/roleManagement";
+} from "../logic/discord/roleManagement";
 import { Lobby } from "../logic/serializables/lobby";
 import { addUser, getUserIndex } from "../misc/userHelper";
 import { LobbySerializer } from "../logic/serializers/lobbySerializer";
@@ -296,7 +296,7 @@ function handleLobbyCancel(
 async function removeLobbyPermantently(
   client: DFZDiscordClient,
   lobby: Lobby,
-  channel: TextChannel | NewsChannel,
+  channel: TextBasedChannels,
   user: User
 ) {
   await LobbyPostManipulator.cancelLobbyPost(lobby, channel);

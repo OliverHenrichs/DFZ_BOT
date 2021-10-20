@@ -14,7 +14,7 @@ import { getNumbersFromString } from "./generics";
 import {
   getRegionalRoleFromString,
   getAllRegionStrings,
-} from "./roleManagement";
+} from "../logic/discord/roleManagement";
 import { ILobbyTimeResult } from "../logic/time/interfaces/LobbyTimeResult";
 import { calculateLobbyTime } from "../logic/time/timeZone";
 

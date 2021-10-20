@@ -6,6 +6,7 @@ import { GoogleCalendarManager } from "./src/logic/gcalendar/GoogleCalendarManag
 import Website from "./website/website";
 
 const client = new DFZDiscordClient();
+
 var website = {};
 
 client

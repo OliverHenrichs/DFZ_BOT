@@ -1,5 +1,11 @@
 import { GuildEmoji, ReactionEmoji } from "discord.js";
 
+export const botToken: string = process.env.BOT_TOKEN
+  ? process.env.BOT_TOKEN
+  : "";
+
+export const botId: string = process.env.BOT_ID ? process.env.BOT_ID : "";
+
 export const guildId: string =
   process.env.GUILD !== undefined ? process.env.GUILD : "";
 

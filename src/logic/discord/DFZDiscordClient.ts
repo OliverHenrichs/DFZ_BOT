@@ -1,4 +1,12 @@
-import { Client, Guild, Intents, NewsChannel, TextChannel } from "discord.js";
+import {
+  ApplicationCommand,
+  Client,
+  Collection,
+  Guild,
+  Intents,
+  NewsChannel,
+  TextChannel,
+} from "discord.js";
 import { readdirSync } from "fs";
 import { ChannelManager } from "./ChannelManager";
 import { guildId } from "../../misc/constants";
@@ -16,20 +24,25 @@ import { IScheduleInfo } from "./interfaces/ScheduleInfo";
 import { LobbyTimeController } from "../lobby/LobbyTimeController";
 import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
 import { TimeConverter } from "../time/TimeConverter";
+// import { SlashCommandRegistrator } from "./SlashCommandRegistrator";
 
 export class DFZDiscordClient extends Client {
-  dbClient: DFZDataBaseClient;
-  timeouts: LobbyTimeout[] = [];
+  public dbClient: DFZDataBaseClient;
+  public timeouts: LobbyTimeout[] = [];
+  public commands = new Collection<string, any>();
+
   private internalTimeouts: NodeJS.Timeout[] = [];
   constructor() {
     super({
       intents: [
+        Intents.FLAGS.GUILDS,
         Intents.FLAGS.GUILD_MESSAGES,
         Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
       ],
     });
 
     this.setupDiscordEventHandlers();
+    //this.setupDiscordSlashCommands();
     this.dbClient = new DFZDataBaseClient();
   }
 
@@ -50,6 +63,16 @@ export class DFZDiscordClient extends Client {
     }
   }
 
+  // private setupDiscordSlashCommands() {
+  //   const files = readdirSync(`${__dirname}/../../slashCommands/`);
+
+  //   for (const file of files) {
+  //     const command = require(`${__dirname}/../../slashCommands/${file}`);
+  //     console.log(JSON.stringify(command));
+  //     this.commands.set(command.data.name, command);
+  //   }
+  // }
+
   public async onReady() {
     try {
       await this.setupBot();
@@ -66,6 +89,7 @@ export class DFZDiscordClient extends Client {
 
   private async fetchDiscordData() {
     await this.fetchRoles();
+    // await this.fetchSlashCommands();
     await this.fetchLobbyMessages();
     await this.fetchScheduleMessages();
   }
@@ -82,6 +106,14 @@ export class DFZDiscordClient extends Client {
     const guild = await this.getGuild();
     await guild.roles.fetch();
   }
+
+  // private async fetchSlashCommands() {
+  //   const slashCreator = new SlashCommandRegistrator(this);
+  //   await slashCreator.registerSlashCommands();
+
+  //   const guild = await this.getGuild();
+  //   await slashCreator.setCommandPermissions(guild);
+  // }
 
   private async fetchLobbyMessages() {
     const guild = await this.getGuild();

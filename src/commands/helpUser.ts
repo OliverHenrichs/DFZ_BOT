@@ -7,7 +7,7 @@ import {
   adminRoles,
   getAllRegionStrings,
   companionRole,
-} from "../misc/roleManagement";
+} from "../logic/discord/roleManagement";
 import { EmbeddingCreator } from "../logic/discord/EmbeddingCreator";
 
 // handles !helpme command
@@ -26,7 +26,7 @@ function isPostedByAdmin(message: Message) {
   );
 }
 
-function generateHelpMessageEmbedding(): MessageEmbed {
+export function generateHelpMessageEmbedding(): MessageEmbed {
   var embed = EmbeddingCreator.create("Bot commands", "", "");
   addHelpTopicsToEmbed(embed);
   return embed;
