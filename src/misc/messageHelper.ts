@@ -27,10 +27,12 @@ import { calculateLobbyTime } from "../logic/time/timeZone";
 async function reactToMessageAndDeleteIt(
   message: Message,
   reply: string,
-  emoji: string
+  emoji: string,
+  deleteMessage: boolean = true
 ) {
   message.react(emoji).then(() => {
-    if (message.channel.type !== "DM") setTimeout(() => message.delete(), 5000);
+    if (deleteMessage && message.channel.type !== "DM")
+      setTimeout(() => message.delete(), 5000);
   });
 
   if (reply == "") return;
@@ -49,8 +51,12 @@ async function reactToMessageAndDeleteIt(
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
-export function reactNegative(message: Message, reply = "") {
-  reactToMessageAndDeleteIt(message, reply, "⛔");
+export function reactNegative(
+  message: Message,
+  reply = "",
+  deleteMessage: boolean = true
+) {
+  reactToMessageAndDeleteIt(message, reply, "⛔", deleteMessage);
 }
 
 /**
@@ -58,8 +64,12 @@ export function reactNegative(message: Message, reply = "") {
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
-export function reactNeutral(message: Message, reply = "") {
-  reactToMessageAndDeleteIt(message, reply, "😐");
+export function reactNeutral(
+  message: Message,
+  reply = "",
+  deleteMessage: boolean = true
+) {
+  reactToMessageAndDeleteIt(message, reply, "😐", deleteMessage);
 }
 
 /**
@@ -67,8 +77,12 @@ export function reactNeutral(message: Message, reply = "") {
  * @param {Message} message message to react to
  * @param {string} reply string reply
  */
-export function reactPositive(message: Message, reply = "") {
-  reactToMessageAndDeleteIt(message, reply, "✅");
+export function reactPositive(
+  message: Message,
+  reply = "",
+  deleteMessage: boolean = true
+) {
+  reactToMessageAndDeleteIt(message, reply, "✅", deleteMessage);
 }
 
 /**

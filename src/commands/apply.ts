@@ -1,21 +1,30 @@
 import { Message } from "discord.js";
+import { SQLUtils } from "../logic/database/SQLUtils";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { Player } from "../logic/serializables/player";
 import { Referrer } from "../logic/serializables/referrer";
 import { PlayerSerializer } from "../logic/serializers/playerSerializer";
 import { ReferrerSerializer } from "../logic/serializers/referrerSerializer";
+import { reactNegative, reactPositive } from "../misc/messageHelper";
 
 export default async (client: DFZDiscordClient, message: Message) => {
   const serializer = new PlayerSerializer(client.dbClient, message.author.id);
   var player = await serializer.get();
-  if (player.length > 0) return;
-
-  const refTag = getReferralTag(message.content);
+  if (player.length > 0) {
+    reactNegative(message, "You have already signed up", false);
+    return;
+  }
+  const refTag = SQLUtils.escape(getReferralTag(message.content));
   if (refTag) handleReferrerTag(client, refTag);
 
   serializer.insert(
-    new Player(message.author.id, message.author.tag, refTag ? refTag : "")
+    new Player(
+      message.author.id,
+      SQLUtils.escape(message.author.tag),
+      refTag ? refTag : ""
+    )
   );
+  reactPositive(message, "You just signed up :) Thanks!", false);
 };
 
 function getReferralTag(message: string): string | undefined {

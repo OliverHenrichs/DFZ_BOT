@@ -11,6 +11,7 @@ import { Player } from "../logic/serializables/player";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { PlayerSerializer } from "../logic/serializers/playerSerializer";
 import { ReferrerSerializer } from "../logic/serializers/referrerSerializer";
+import { SQLUtils } from "../logic/database/SQLUtils";
 
 /**
  * Handles role and nickname changes
@@ -103,7 +104,9 @@ async function getExistingPlayer(
 
 function insertPlayer(dbClient: DFZDataBaseClient, newMember: GuildMember) {
   const serializer = new PlayerSerializer(dbClient, newMember.user.id);
-  serializer.insert(new Player(newMember.user.id, newMember.user.tag));
+  serializer.insert(
+    new Player(newMember.user.id, SQLUtils.escape(newMember.user.tag))
+  );
 }
 
 function hasReferrer(player: Player) {
@@ -112,7 +115,10 @@ function hasReferrer(player: Player) {
 
 async function updatePlayer(player: Player, dbClient: DFZDataBaseClient) {
   player.referralLock = 1;
-  const playerSerializer = new PlayerSerializer(dbClient, player.referredBy);
+  const playerSerializer = new PlayerSerializer(
+    dbClient,
+    SQLUtils.escape(player.referredBy)
+  );
   playerSerializer.update(player);
 }
 
@@ -120,7 +126,10 @@ async function awardPointToReferrer(
   player: Player,
   dbClient: DFZDataBaseClient
 ) {
-  const serializer = new ReferrerSerializer(dbClient, player.referredBy);
+  const serializer = new ReferrerSerializer(
+    dbClient,
+    SQLUtils.escape(player.referredBy)
+  );
   const referrer = await getReferrer(serializer);
 
   referrer.referralCount += 1;

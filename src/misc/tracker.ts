@@ -6,6 +6,7 @@ import { Player } from "../logic/serializables/player";
 import { CoachSerializer } from "../logic/serializers/coachSerializer";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { PlayerSerializer } from "../logic/serializers/playerSerializer";
+import { SQLUtils } from "../logic/database/SQLUtils";
 
 export async function saveCoachParticipation(
   dbClient: DFZDataBaseClient,
@@ -68,8 +69,8 @@ export async function savePlayerParticipation(
       var user = await client.users.fetch(users[i].id);
       await serializer.insert(
         new Player(
-          users[i].id,
-          user.tag,
+          user.id,
+          SQLUtils.escape(user.tag),
           referredBy,
           referralLock,
           lobbyCount,
