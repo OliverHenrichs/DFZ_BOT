@@ -1,15 +1,15 @@
 import { MessageReaction, User } from "discord.js";
-import { ChannelManager } from "../logic/discord/ChannelManager";
-import { lobbyManagementReactionEmojis } from "../misc/constants";
+import { ChannelManager } from "../logic/discord/DFZChannelManager";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
+import { adminRoles } from "../logic/discord/roleManagement";
+import { Lobby } from "../logic/serializables/lobby";
+import { lobbyManagementReactionEmojis } from "../misc/constants";
 import {
   getInfoFromLobbyReaction,
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import { adminRoles } from "../logic/discord/roleManagement";
 import { removeCoachFromSchedule } from "../misc/scheduleManagement";
-import { Lobby } from "../logic/serializables/lobby";
 
 function tryCancelLobbyCancel(
   client: DFZDiscordClient,

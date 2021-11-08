@@ -1,14 +1,14 @@
 import { Message, MessageEmbed } from "discord.js";
-import { lobbyTypeKeys, lobbyTypeKeysString } from "../misc/constants";
-import { IFieldElement } from "../logic/discord/interfaces/FieldElement";
-import { reactPositive } from "../misc/messageHelper";
-import {
-  findRole,
-  adminRoles,
-  getAllRegionStrings,
-  companionRole,
-} from "../logic/discord/roleManagement";
 import { EmbeddingCreator } from "../logic/discord/EmbeddingCreator";
+import { IFieldElement } from "../logic/discord/interfaces/IFieldElement";
+import {
+  adminRoles,
+  companionRole,
+  findRole,
+  getAllRegionNames,
+} from "../logic/discord/roleManagement";
+import { lobbyTypeKeys, lobbyTypeKeysString } from "../misc/constants";
+import { reactPositive } from "../misc/messageHelper";
 
 // handles !helpme command
 export default async (message: Message) => {
@@ -61,7 +61,7 @@ function addPostLobbyHint(embed: MessageEmbed) {
       "Creates a lobby in the channel in which you write the command.\nLobby types: " +
         lobbyTypeKeysString +
         "\nRegions: " +
-        getAllRegionStrings().join(", ") +
+        getAllRegionNames().join(", ") +
         "\n Allowed tiers: 0,1,2,3,4; Give no tiers nor regions for lobby types 'tryout' and 'replayAnalysis'." +
         "\n time format: 1-12:00-59am/pm " +
         "\n timezone: CET, ... check https://kevinnovak.github.io/Time-Zone-Picker/ to find your timezone name.",

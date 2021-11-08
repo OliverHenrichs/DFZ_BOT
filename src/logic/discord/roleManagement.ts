@@ -1,40 +1,39 @@
+import { roleMention } from "@discordjs/builders";
 import { Collection, GuildMember, Role } from "discord.js";
-import { INamedRole } from "./interfaces/NamedRole";
+import { dfzGuildId } from "../../misc/constants";
+import { EnvironmentVariableManager as EVM } from "../misc/EnvironmentVariableManager";
+import { RegionDefinitions } from "../time/RegionDefinitions";
+import { DFZDiscordClient } from "./DFZDiscordClient";
+import { INamedRole } from "./interfaces/INamedRole";
 
 export const beginnerRoles = [
-  process.env.TIER_0 ? process.env.TIER_0 : "",
-  process.env.TIER_1 ? process.env.TIER_1 : "",
-  process.env.TIER_2 ? process.env.TIER_2 : "",
-  process.env.TIER_3 ? process.env.TIER_3 : "",
-  process.env.TIER_4 ? process.env.TIER_4 : "",
+  EVM.ensureString(process.env.TIER_0),
+  EVM.ensureString(process.env.TIER_1),
+  EVM.ensureString(process.env.TIER_2),
+  EVM.ensureString(process.env.TIER_3),
+  EVM.ensureString(process.env.TIER_4),
 ];
 export const namedBeginnerRoles: INamedRole[] =
   getIDsAsNamedRoles(beginnerRoles);
 
-export const tryoutRole = process.env.TRYOUT ? process.env.TRYOUT : "";
-
-export const regionRoleIDs = [
-  process.env.REGION_EU_ROLE ? process.env.REGION_EU_ROLE : "",
-  process.env.REGION_NA_ROLE ? process.env.REGION_NA_ROLE : "",
-  process.env.REGION_SEA_ROLE ? process.env.REGION_SEA_ROLE : "",
-];
-
-export const namedRegionRoles: INamedRole[] = getIDsAsNamedRoles(regionRoleIDs);
-
-function getIDsAsNamedRoles(roles: string[]): INamedRole[] {
-  return roles.map((role) => {
-    return { id: role, name: getRoleMention(role) };
-  });
-}
+export const tryoutRole = EVM.ensureString(process.env.TRYOUT);
 
 export const adminRoles = [
-  process.env.COACH ? process.env.COACH : "",
-  process.env.COACH_TRYOUT ? process.env.COACH_TRYOUT : "",
-  process.env.COMPANION ? process.env.COMPANION : "",
+  EVM.ensureString(process.env.COACH),
+  EVM.ensureString(process.env.COACH_TRYOUT),
+  EVM.ensureString(process.env.COMPANION),
 ];
-export const companionRole = process.env.COMPANION_M
-  ? process.env.COMPANION_M
-  : "";
+export const companionRole = EVM.ensureString(process.env.COMPANION_M);
+
+export const namedRegionRoles: INamedRole[] = getIDsAsNamedRoles(
+  RegionDefinitions.regionRoles
+);
+
+export function getIDsAsNamedRoles(roles: string[]): INamedRole[] {
+  return roles.map((role) => {
+    return { id: role, name: roleMention(role) };
+  });
+}
 
 /**
 		Check if message sender has at least one of the roles given by rolesToCheck
@@ -119,16 +118,11 @@ export function getNumberFromBeginnerRole(roleId: string | undefined) {
  * @return corresponding regional prefix
  */
 export function getRegionalRolePrefix(roleId: string | undefined) {
-  switch (roleId) {
-    case regionRoleIDs[0]:
-      return "[EU] ";
-    case regionRoleIDs[1]:
-      return "[NA] ";
-    case regionRoleIDs[2]:
-      return "[SEA] ";
-    default:
-      return "";
-  }
+  const region = RegionDefinitions.regions.find(
+    (region) => region.role === roleId
+  );
+  if (region) return region.userNamePrefix;
+  return "";
 }
 
 /**
@@ -137,16 +131,11 @@ export function getRegionalRolePrefix(roleId: string | undefined) {
  * @return {string} corresponding timezone name
  */
 export function getRegionalRoleTimeZoneString(roleId: string | undefined) {
-  switch (roleId) {
-    case regionRoleIDs[0]:
-      return "Europe/Berlin";
-    case regionRoleIDs[1]:
-      return "America/New_York";
-    case regionRoleIDs[2]:
-      return "Asia/Singapore";
-    default:
-      return "";
-  }
+  const region = RegionDefinitions.regions.find(
+    (region) => region.role === roleId
+  );
+  if (region) return region.timeZoneName;
+  return "";
 }
 
 /**
@@ -155,16 +144,11 @@ export function getRegionalRoleTimeZoneString(roleId: string | undefined) {
  * @return corresponding regional prefix
  */
 export function getRegionalRoleString(roleId: string | undefined) {
-  switch (roleId) {
-    case regionRoleIDs[0]:
-      return "EU";
-    case regionRoleIDs[1]:
-      return "NA";
-    case regionRoleIDs[2]:
-      return "SEA";
-    default:
-      return "";
-  }
+  const region = RegionDefinitions.regions.find(
+    (region) => region.role === roleId
+  );
+  if (region) return region.name;
+  return "";
 }
 
 /**
@@ -173,20 +157,15 @@ export function getRegionalRoleString(roleId: string | undefined) {
  * @return corresponding regional prefix
  */
 export function getRegionalRoleLobbyChannel(roleId: string | undefined) {
-  switch (roleId) {
-    case regionRoleIDs[0]:
-      return process.env.BOT_LOBBY_CHANNEL_EU;
-    case regionRoleIDs[1]:
-      return process.env.BOT_LOBBY_CHANNEL_NA;
-    case regionRoleIDs[2]:
-      return process.env.BOT_LOBBY_CHANNEL_SEA;
-    default:
-      return "";
-  }
+  const region = RegionDefinitions.regions.find(
+    (region) => region.role === roleId
+  );
+  if (region) return region.lobbyChannelId;
+  return "";
 }
 
-export function getAllRegionStrings() {
-  return regionRoleIDs.map((rid) => getRegionalRoleString(rid));
+export function getAllRegionNames() {
+  return RegionDefinitions.regionRoles.map((rid) => getRegionalRoleString(rid));
 }
 
 /**
@@ -196,16 +175,12 @@ export function getAllRegionStrings() {
 export function getRegionalRoleFromString(
   roleString: string | undefined
 ): string {
-  switch (roleString) {
-    case "EU":
-      return regionRoleIDs[0];
-    case "NA":
-      return regionRoleIDs[1];
-    case "SEA":
-      return regionRoleIDs[2];
-    default:
-      throw `Unknown regional role string ${roleString}`;
-  }
+  const regionRole = RegionDefinitions.regions.find(
+    (region) => region.name === roleString
+  );
+  if (!regionRole)
+    throw new Error(`Unknown regional role string ${roleString}`);
+  return regionRole.lobbyChannelId;
 }
 
 /**
@@ -216,16 +191,42 @@ export function getRegionalRoleFromString(
 export function getRoleMentions(roles: Array<string>) {
   return roles
     .map((tier) => {
-      return `<@&${tier}>`;
+      return roleMention(tier);
     })
     .join(" ");
 }
 
-/**
-		returns a mention string of a role id
-		@param role the role id
-		@return string with mention of corresponding role
-	*/
-export function getRoleMention(role: string) {
-  return `<@&${role}>`;
+export function getAdminRoles(
+  client: DFZDiscordClient,
+  guildId: string = dfzGuildId
+): Collection<string, Role> {
+  return getRoles(client, adminRoles, guildId);
+}
+
+export function getBeginnerRoles(
+  client: DFZDiscordClient,
+  guildId: string = dfzGuildId
+): Collection<string, Role> {
+  return getRoles(client, beginnerRoles, guildId);
+}
+
+export function getRegionRoles(
+  client: DFZDiscordClient,
+  guildId: string = dfzGuildId
+): Collection<string, Role> {
+  return getRoles(client, RegionDefinitions.regionRoles, guildId);
+}
+
+function getRoles(
+  client: DFZDiscordClient,
+  rolesToChooseFrom: string[],
+  guildId: string
+): Collection<string, Role> {
+  const guild = client.guilds.cache.get(guildId);
+
+  let roles = guild?.roles.cache.filter(
+    (r) => rolesToChooseFrom.find((role) => role === r.id) !== undefined
+  );
+  if (!roles) throw new Error("Did not find any roles for role select.");
+  return roles;
 }

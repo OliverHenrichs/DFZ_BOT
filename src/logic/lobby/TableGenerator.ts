@@ -1,5 +1,5 @@
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { LobbyPlayer } from "./interfaces/LobbyPlayer";
-import { IFieldElement } from "../discord/interfaces/FieldElement";
 
 export abstract class TableGenerator {
   mentionPlayers: boolean = false;

@@ -1,4 +1,4 @@
-import { IFieldElement } from "./interfaces/FieldElement";
+import { IFieldElement } from "./interfaces/IFieldElement";
 import { MessageEmbed } from "discord.js";
 
 export class EmbeddingCreator {

@@ -8,9 +8,30 @@ import {
   TextChannel,
   User,
 } from "discord.js";
-
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { ChannelManager } from "../logic/discord/DFZChannelManager";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-import { scheduleTypes, scheduleReactionEmojis } from "./types/scheduleTypes";
+import { EmbeddingCreator } from "../logic/discord/EmbeddingCreator";
+import { IFieldElement } from "../logic/discord/interfaces/IFieldElement";
+import {
+  adminRoles,
+  beginnerRoles,
+  findRole,
+  getRegionalRoleFromString,
+  getRegionalRoleLobbyChannel,
+  getRegionalRoleTimeZoneString,
+  tryoutRole,
+} from "../logic/discord/roleManagement";
+import { GoogleCalendarManager } from "../logic/gcalendar/GoogleCalendarManager";
+import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
+import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { Schedule } from "../logic/serializables/schedule";
+import { ScheduleSerializer } from "../logic/serializers/scheduleSerializer";
+import { ArbitraryTimeAlgos } from "../logic/time/ArbitraryTimeAlgos";
+import { CalendarDefinitions } from "../logic/time/CalendarDefinitions";
+import { ITime } from "../logic/time/interfaces/Time";
+import { RegionDefinitions } from "../logic/time/RegionDefinitions";
+import { TimeConverter } from "../logic/time/TimeConverter";
 import {
   getScheduledDate,
   getTimeString,
@@ -18,30 +39,8 @@ import {
   NextMondayAndSunday,
   scheduleTimezoneNames_short,
 } from "../logic/time/timeZone";
-import { IFieldElement } from "../logic/discord/interfaces/FieldElement";
-import { guildId, lobbyTypes } from "./constants";
-import { ChannelManager } from "../logic/discord/ChannelManager";
-import { GoogleCalendarManager } from "../logic/gcalendar/GoogleCalendarManager";
-import {
-  getRegionalRoleFromString,
-  tryoutRole,
-  beginnerRoles,
-  getRegionalRoleLobbyChannel,
-  getRegionalRoleTimeZoneString,
-  findRole,
-  adminRoles,
-} from "../logic/discord/roleManagement";
-import { Schedule } from "../logic/serializables/schedule";
-import { ScheduleSerializer } from "../logic/serializers/scheduleSerializer";
-import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
-import { EmbeddingCreator } from "../logic/discord/EmbeddingCreator";
-import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
-import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
-import { ITime } from "../logic/time/interfaces/Time";
-import { TimeConverter } from "../logic/time/TimeConverter";
-import { RegionDefinitions } from "../logic/time/RegionDefinitions";
-import { CalendarDefinitions } from "../logic/time/CalendarDefinitions";
-import { ArbitraryTimeAlgos } from "../logic/time/ArbitraryTimeAlgos";
+import { dfzGuildId, lobbyTypes } from "./constants";
+import { scheduleReactionEmojis, scheduleTypes } from "./types/scheduleTypes";
 
 const lobbyPostTime = TimeConverter.hToMs * 5; // at the moment 5 hours
 
@@ -296,7 +295,7 @@ async function createScheduledLobby(
   const channelId = getScheduledLobbyChannelId(type, schedule.type, regionRole);
   const channel = await channelManager.fetch(channelId ? channelId : "");
 
-  if (!channel || !channel.isText() || beginnerRoles === undefined) {
+  if (!channel || !channel.isText()) {
     return;
   }
 
@@ -305,8 +304,6 @@ async function createScheduledLobby(
       Number(schedule.date),
       timezoneName
     );
-
-  if (zonedTime === undefined || regionRole === undefined) return;
 
   var options: PostLobbyOptions = {
     type: type,
@@ -317,7 +314,7 @@ async function createScheduledLobby(
     optionalText: "",
   };
 
-  await LobbyPostManipulator.postLobby(dbClient, channel, options);
+  await LobbyPostManipulator.postLobby_deprecated(dbClient, channel, options);
 
   informCoachesOfSchedulePost(schedule, channel, zonedTime);
 }
@@ -474,11 +471,13 @@ function createScheduleSetup(
     days: days,
     type: type,
     coachCount: coachCount,
-    regionStrings: RegionDefinitions.regionStrings,
-    regions: RegionDefinitions.regions,
+    regionStrings: RegionDefinitions.regions.map(
+      (region) => region.fancyVersion
+    ),
+    regions: RegionDefinitions.regions.map((region) => region.name),
     times: times,
     timezoneShortNames: scheduleTimezoneNames_short,
-    timezones: RegionDefinitions.scheduleTimezoneNames,
+    timezones: RegionDefinitions.regions.map((region) => region.timeZoneName),
   };
 }
 
@@ -614,7 +613,7 @@ export async function postSchedules(client: DFZDiscordClient) {
   if (!(await weeklyScheduleShouldBePosted(client)))
     return "I already posted this week's schedules";
 
-  const guild = await client.guilds.fetch(guildId);
+  const guild = await client.guilds.fetch(dfzGuildId);
   addCurrentWeekSchedule(guild.channels, client.dbClient);
 }
 

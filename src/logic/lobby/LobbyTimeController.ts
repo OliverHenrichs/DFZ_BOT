@@ -1,6 +1,6 @@
-import { TextChannel, NewsChannel, MessageEmbed, Message } from "discord.js";
+import { Message, MessageEmbed, NewsChannel, TextChannel } from "discord.js";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { ChannelManager } from "../discord/ChannelManager";
+import { ChannelManager } from "../discord/DFZChannelManager";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
 import { Lobby } from "../serializables/lobby";
 import { LobbySerializer } from "../serializers/lobbySerializer";

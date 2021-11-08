@@ -1,29 +1,29 @@
 import { GuildMember, Message } from "discord.js";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import {
-  isRoleBasedLobbyType,
-  lobbyTypes,
-  isSimpleLobbyType,
-} from "../misc/constants";
-import {
-  getLobbyRegionRoleFromMessage,
-  reactNegative,
-  getNumbersFromMessage,
-  getTimeFromMessage,
-  reactPositive,
-  getLobbyTypeFromMessage,
-  getArguments,
-} from "../misc/messageHelper";
-import {
-  getBeginnerRolesFromNumbers,
   adminRoles,
   beginnerRoles,
   companionRole,
   findRole,
+  getBeginnerRolesFromNumbers,
 } from "../logic/discord/roleManagement";
-import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { ITime } from "../logic/time/interfaces/Time";
+import {
+  isRoleBasedLobbyType,
+  isSimpleLobbyType,
+  lobbyTypes,
+} from "../misc/constants";
+import {
+  getArguments,
+  getLobbyRegionRoleFromMessage,
+  getLobbyTypeFromMessage,
+  getNumbersFromMessage,
+  getTimeFromMessage,
+  reactNegative,
+  reactPositive,
+} from "../misc/messageHelper";
 
 /**
  * Checks if lobby exists and posts lobby post depending on lobby type
@@ -40,10 +40,14 @@ async function tryPostLobby(
 ): Promise<void> {
   try {
     const options = tryGetLobbyOptionsFromMessage(message);
-    await LobbyPostManipulator.postLobby(dbClient, message.channel, options);
+    await LobbyPostManipulator.postLobby_deprecated(
+      dbClient,
+      message.channel,
+      options
+    );
     reactPositive(message);
   } catch (e) {
-    reactNegative(message, e);
+    reactNegative(message, e as string);
   }
 }
 

@@ -1,4 +1,5 @@
-import { MessageEmbed, Message, TextBasedChannels } from "discord.js";
+import { roleMention } from "@discordjs/builders";
+import { Message, MessageEmbed, TextBasedChannels } from "discord.js";
 import {
   getCoachCountByLobbyType,
   getLobbyNameByType,
@@ -7,21 +8,25 @@ import {
   isRoleBasedLobbyType,
   lobbyTypes,
 } from "../../misc/constants";
-import { LobbyPlayer } from "./interfaces/LobbyPlayer";
 import { createLobbyPostReactions } from "../../misc/messageHelper";
-import {
-  getRoleMentions,
-  getRoleMention,
-  getRegionalRoleString,
-} from "../discord/roleManagement";
-import { getTimeString } from "../time/timeZone";
 import { createTeams } from "../../misc/userHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
+import { ChannelManager } from "../discord/DFZChannelManager";
+import { DFZDiscordClient } from "../discord/DFZDiscordClient";
 import { EmbeddingCreator } from "../discord/EmbeddingCreator";
+import {
+  getRegionalRoleString,
+  getRoleMentions,
+} from "../discord/roleManagement";
 import { Lobby } from "../serializables/lobby";
 import { LobbySerializer } from "../serializers/lobbySerializer";
+import { getTimeString, getZonedTimeFromDateAndRegion } from "../time/timeZone";
 import { LobbyFetchResult } from "./interfaces/LobbyFetchResult";
-import { PostLobbyOptions } from "./interfaces/PostLobbyOptions";
+import { LobbyPlayer } from "./interfaces/LobbyPlayer";
+import {
+  LobbyTitleOptions,
+  PostLobbyOptions,
+} from "./interfaces/PostLobbyOptions";
 import { IRemainingTime } from "./interfaces/RemainingTime";
 import { TeamsTableGenerator } from "./TeamTableGenerator";
 import { UserTableGenerator } from "./UserTableGenerator";
@@ -30,54 +35,106 @@ import { UserTableGenerator } from "./UserTableGenerator";
  * Does all the work regarding updating / creating lobby posts in discord channels
  */
 export class LobbyPostManipulator {
-  public static async postLobby(
+  public static async postLobby_deprecated(
     dbClient: DFZDataBaseClient,
     channel: TextBasedChannels,
     options: PostLobbyOptions
   ) {
-    var title = this.createLobbyPostTitle(options);
-    var text = LobbyPostManipulator.getLobbyPostText(
-      options.userRoles,
+    const lobby = new Lobby(
       options.type,
+      options.time.epoch,
+      options.coaches,
+      options.userRoles,
       options.regionRole,
-      options.coaches
+      channel.id
     );
-    var footer = this.getLobbyPostFooter(options.type, options.regionRole);
+    const embed = LobbyPostManipulator.createLobbyEmbedding(lobby, options);
+    await LobbyPostManipulator.postLobbyInt(channel, lobby, embed, dbClient);
+  }
 
-    // send embedding post to lobby signup-channel
-    const _embed = EmbeddingCreator.create(title, text, footer);
-    const lobbyPostMessage = await channel.send({
-      content: getRoleMentions(options.userRoles),
-      embeds: [_embed],
-    }); // mentioning roles in message again to ping beginners
+  public static async postLobby(client: DFZDiscordClient, lobby: Lobby) {
+    const _embed = LobbyPostManipulator.createLobbyEmbedding(lobby);
 
-    // pin message to channel
-    lobbyPostMessage.pin();
-
-    // add emojis
-    createLobbyPostReactions(options.type, lobbyPostMessage);
-
-    // create lobby data in database
-    const serializer = new LobbySerializer(dbClient);
-    serializer.insert(
-      new Lobby(
-        options.type,
-        options.time.epoch,
-        options.coaches,
-        options.userRoles,
-        options.regionRole,
-        channel.id,
-        lobbyPostMessage.id
-      )
+    const channel = await ChannelManager.getChannel(client, lobby.channelId);
+    await LobbyPostManipulator.postLobbyInt(
+      channel,
+      lobby,
+      _embed,
+      client.dbClient
     );
   }
 
-  private static createLobbyPostTitle(options: PostLobbyOptions) {
-    return `We host ${getLobbyPostNameByType(options.type)} on ${getTimeString(
-      options.time
-    )} ${options.time.zone ? options.time.zone.abbreviation : ""}${
-      options.optionalText !== "" ? "\nTopic: " + options.optionalText : ""
-    }`;
+  private static async postLobbyInt(
+    channel: TextBasedChannels,
+    lobby: Lobby,
+    embed: MessageEmbed,
+    dbClient: DFZDataBaseClient
+  ) {
+    const lobbyPostMessage = await channel.send({
+      content: getRoleMentions(lobby.beginnerRoleIds),
+      embeds: [embed],
+    });
+    lobbyPostMessage.pin();
+    lobby.messageId = lobbyPostMessage.id;
+
+    // add emojis
+    createLobbyPostReactions(lobby.type, lobbyPostMessage);
+
+    // create lobby data in database
+    const serializer = new LobbySerializer(dbClient);
+    serializer.insert(lobby);
+  }
+
+  public static createLobbyEmbedding(lobby: Lobby, options?: PostLobbyOptions) {
+    var title = this.createLobbyPostTitle(lobby, options);
+    var text = LobbyPostManipulator.getLobbyPostText(
+      lobby.beginnerRoleIds,
+      lobby.type,
+      lobby.regionId,
+      lobby.coaches
+    );
+    var footer = this.getLobbyPostFooter(lobby.type, lobby.regionId);
+
+    // send embedding post to lobby signup-channel
+    const _embed = EmbeddingCreator.create(title, text, footer);
+    return _embed;
+  }
+
+  private static createLobbyPostTitle(
+    lobby: Lobby,
+    options?: LobbyTitleOptions
+  ) {
+    if (options) {
+      return this.createOptionsBasedLobbyPostTitle(options);
+    }
+
+    const titleStart = `We host ${getLobbyPostNameByType(lobby.type)} on `;
+
+    let time = getZonedTimeFromDateAndRegion(
+      new Date(lobby.date),
+      lobby.regionId
+    );
+    const timeString = time
+      ? getTimeString(time)
+      : new Date(lobby.date).toUTCString();
+
+    const titleEnd = LobbyPostManipulator.printOptionalText(lobby.text);
+    return titleStart + timeString + titleEnd;
+  }
+
+  private static createOptionsBasedLobbyPostTitle(
+    options: LobbyTitleOptions
+  ): string {
+    const titleStart = `We host ${getLobbyPostNameByType(options.type)} on `;
+    const timeString = getTimeString(options.time);
+    const titleEnd = LobbyPostManipulator.printOptionalText(
+      options.optionalText
+    );
+    return titleStart + timeString + titleEnd;
+  }
+
+  private static printOptionalText(text: string | undefined) {
+    return text ? "\nTopic: " + text : "";
   }
 
   private static getLobbyPostFooter(type: number, regionRole: string) {
@@ -295,13 +352,18 @@ export class LobbyPostManipulator {
     channel: TextBasedChannels
   ) {
     const message = await channel.messages.fetch(lobby.messageId);
+    var embed = LobbyPostManipulator.updateLobbyEmbed(message, lobby);
+    await message.edit({
+      content: getRoleMentions(lobby.beginnerRoleIds),
+      embeds: [embed],
+    });
+  }
 
+  private static updateLobbyEmbed(message: Message, lobby: Lobby) {
     var embed = new MessageEmbed(
       message.embeds.length > 0 ? message.embeds[0] : undefined
     );
-
     embed.title = this.updateLobbyTypeInPostTitle(lobby, embed);
-
     embed.description = this.getLobbyPostText(
       lobby.beginnerRoleIds,
       lobby.type,
@@ -315,8 +377,7 @@ export class LobbyPostManipulator {
 
     const fields = lobby.getCurrentUsersAsTable(true);
     embed.fields = fields !== undefined ? fields : [];
-
-    await message.edit({ embeds: [embed] });
+    return embed;
   }
 
   private static updateLobbyTypeInPostTitle(lobby: Lobby, embed: MessageEmbed) {
@@ -337,7 +398,7 @@ export class LobbyPostManipulator {
       getRoleMentions(lobbyUserRoles) +
       this.getCoachMentions(lobbyType, coaches) +
       (isRoleBasedLobbyType(lobbyType)
-        ? "\nRegion: " + getRoleMention(lobbyRegionRole)
+        ? "\nRegion: " + roleMention(lobbyRegionRole)
         : "")
     );
   }

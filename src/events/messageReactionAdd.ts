@@ -1,42 +1,40 @@
 import {
   GuildMember,
   MessageReaction,
-  User,
   Role,
-  NewsChannel,
-  TextChannel,
   TextBasedChannels,
+  User,
 } from "discord.js";
-import { ChannelManager } from "../logic/discord/ChannelManager";
+import { ChannelManager } from "../logic/discord/DFZChannelManager";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import {
-  lobbyTypes,
+  adminRoles,
+  beginnerRoles,
+  findRole,
+} from "../logic/discord/roleManagement";
+import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { LobbyStarter } from "../logic/lobby/LobbyStarter";
+import { Lobby } from "../logic/serializables/lobby";
+import { LobbySerializer } from "../logic/serializers/lobbySerializer";
+import { RegionDefinitions } from "../logic/time/RegionDefinitions";
+import { TimeConverter } from "../logic/time/TimeConverter";
+import {
+  getPlayersPerLobbyByLobbyType,
   getReactionEmojiPosition,
-  isSimpleLobbyType,
+  isKnownLobbyManagementEmoji,
   isKnownPositionEmoji,
   isKnownSimpleLobbyEmoji,
-  isKnownLobbyManagementEmoji,
-  getPlayersPerLobbyByLobbyType,
+  isSimpleLobbyType,
+  lobbyTypes,
 } from "../misc/constants";
-import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-import { addCoachToSchedule } from "../misc/scheduleManagement";
 import {
   getInfoFromLobbyReaction,
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import {
-  findRole,
-  regionRoleIDs,
-  beginnerRoles,
-  adminRoles,
-} from "../logic/discord/roleManagement";
-import { Lobby } from "../logic/serializables/lobby";
-import { addUser, getUserIndex } from "../misc/userHelper";
-import { LobbySerializer } from "../logic/serializers/lobbySerializer";
-import { LobbyStarter } from "../logic/lobby/LobbyStarter";
-import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { addCoachToSchedule } from "../misc/scheduleManagement";
 import { savePlayerParticipation } from "../misc/tracker";
-import { TimeConverter } from "../logic/time/TimeConverter";
+import { addUser, getUserIndex } from "../misc/userHelper";
 
 module.exports = async (
   client: DFZDiscordClient,
@@ -189,7 +187,7 @@ function handlePositionEmoji(
   if (position === 0) return false;
 
   // get region role
-  var regionRole = findRole(guildMember, regionRoleIDs);
+  var regionRole = findRole(guildMember, RegionDefinitions.regionRoles);
 
   return addUserOrPosition(
     user,

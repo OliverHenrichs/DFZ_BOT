@@ -1,4 +1,3 @@
-import { DFZDiscordClient } from "../discord/DFZDiscordClient";
 import {
   Collection,
   Message,
@@ -6,14 +5,15 @@ import {
   NewsChannel,
   TextChannel,
 } from "discord.js";
-import providerFactory from "./factories/HighscoreProviderFactory";
-import { ChannelManager } from "../discord/ChannelManager";
-import { ReferrerSerializer } from "../serializers/referrerSerializer";
-import { EmbeddingCreator } from "../discord/EmbeddingCreator";
-import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
-import { ReferrerHighscoreProvider } from "./ReferrerHighscoreProvider";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { EnvironmentVariableManager } from "../misc/EnvironmentVariableManager";
+import { ChannelManager } from "../discord/DFZChannelManager";
+import { DFZDiscordClient } from "../discord/DFZDiscordClient";
+import { EmbeddingCreator } from "../discord/EmbeddingCreator";
+import { EnvironmentVariableManager as EVM } from "../misc/EnvironmentVariableManager";
+import { ReferrerSerializer } from "../serializers/referrerSerializer";
+import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
+import providerFactory from "./factories/HighscoreProviderFactory";
+import { ReferrerHighscoreProvider } from "./ReferrerHighscoreProvider";
 
 export class ReferrerLeaderBoardHandler {
   public static async postReferralLeaderboard(client: DFZDiscordClient) {
@@ -31,9 +31,7 @@ export class ReferrerLeaderBoardHandler {
       );
     const channel = await ChannelManager.getChannel(
       client,
-      EnvironmentVariableManager.ensureString(
-        process.env.BOT_LEADERBOARD_CHANNEL
-      )
+      EVM.ensureString(process.env.BOT_LEADERBOARD_CHANNEL)
     );
     await ReferrerLeaderBoardHandler.postUpdatedEmbedding(channel, embed);
   }
@@ -89,9 +87,7 @@ export class ReferrerLeaderBoardHandler {
   private static async tryFindLeaderBoardMessage(client: DFZDiscordClient) {
     const channel = await ChannelManager.getChannel(
       client,
-      EnvironmentVariableManager.ensureString(
-        process.env.BOT_LEADERBOARD_CHANNEL
-      )
+      EVM.ensureString(process.env.BOT_LEADERBOARD_CHANNEL)
     );
     const messages = await channel.messages.fetch();
     ReferrerLeaderBoardHandler.findAndUpdateLeaderBoardMessage(

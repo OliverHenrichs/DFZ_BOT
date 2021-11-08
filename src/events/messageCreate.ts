@@ -1,21 +1,20 @@
 import { Message } from "discord.js";
-import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-
 import apply from "../commands/apply";
 import helpUser from "../commands/helpUser";
-import postLobby from "../commands/postLobby";
 import highScore from "../commands/highScore";
-import updateLobby from "../commands/updateLobby";
 import kick from "../commands/kick";
+import postLobby from "../commands/postLobby";
 import postSchedules from "../commands/postSchedules";
-import { ChannelManager } from "../logic/discord/ChannelManager";
-import { reactNegative } from "../misc/messageHelper";
+import updateLobby from "../commands/updateLobby";
+import { ChannelManager } from "../logic/discord/DFZChannelManager";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import {
-  findRole,
   adminRoles,
   companionRole,
+  findRole,
 } from "../logic/discord/roleManagement";
 import { botId } from "../misc/constants";
+import { reactNegative } from "../misc/messageHelper";
 
 const PREFIX = "!";
 
@@ -60,7 +59,7 @@ module.exports = async (client: DFZDiscordClient, message: Message) => {
     return reactNegative(
       message,
       "I only listen to messages in the channels " +
-        ChannelManager.channelStrings
+        ChannelManager.combinedChannelStrings
     );
   }
 

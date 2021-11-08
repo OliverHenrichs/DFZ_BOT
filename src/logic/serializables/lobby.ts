@@ -1,15 +1,15 @@
-import { MessageReaction, User, TextBasedChannels } from "discord.js";
+import { MessageReaction, TextBasedChannels, User } from "discord.js";
 import {
-  isSimpleLobbyType,
-  tryoutReactionEmoji,
+  getCoachCountByLobbyType,
   getReactionEmojiPosition,
   isRoleBasedLobbyType,
-  getCoachCountByLobbyType,
+  isSimpleLobbyType,
+  tryoutReactionEmoji,
 } from "../../misc/constants";
-import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
 import { getUser } from "../../misc/userHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { IFieldElement } from "../discord/interfaces/FieldElement";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
+import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
 import { IRemainingTime } from "../lobby/interfaces/RemainingTime";
 import { LobbyPostManipulator } from "../lobby/LobbyPostManipulator";
 import { UserTableGenerator } from "../lobby/UserTableGenerator";
@@ -26,6 +26,7 @@ export class Lobby {
   channelId: string;
   messageId: string;
   started: boolean = false;
+  text: string;
 
   constructor(
     type: number,
@@ -34,7 +35,8 @@ export class Lobby {
     beginnerRoleIds: Array<string> = [],
     regionId: string = "",
     channelId: string = "",
-    messageId: string = ""
+    messageId: string = "",
+    text: string = ""
   ) {
     this.type = type;
     this.date = date;
@@ -44,6 +46,7 @@ export class Lobby {
     this.regionId = regionId;
     this.channelId = channelId;
     this.messageId = messageId;
+    this.text = text;
   }
 
   public calculateRemainingTime(): IRemainingTime {
@@ -174,5 +177,13 @@ export class Lobby {
     this.coaches.splice(coachIndex, 1);
 
     await this.updateLobbyPostAndDBEntry(channel, dbClient);
+  }
+
+  public static async getChannelLobbies(
+    dbClient: DFZDataBaseClient,
+    channelId: string
+  ) {
+    const serializer = new LobbySerializer(dbClient, channelId);
+    return await serializer.get();
   }
 }

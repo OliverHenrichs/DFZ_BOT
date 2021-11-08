@@ -1,5 +1,5 @@
 import { Message } from "discord.js";
-import { IFieldElement } from "../discord/interfaces/FieldElement";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { reactPositive } from "../../misc/messageHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { EmbeddingCreator } from "../discord/EmbeddingCreator";

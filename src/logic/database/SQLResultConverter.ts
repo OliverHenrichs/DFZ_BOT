@@ -8,7 +8,7 @@ export namespace SQLResultConverter {
     return mapSQLResponseToDataArray<T>(
       rawData,
       typeConstructor,
-      addStandardDatumToArray
+      constructTypeFromStandardDatum
     );
   }
 
@@ -19,7 +19,7 @@ export namespace SQLResultConverter {
     return mapSQLResponseToDataArray<T>(
       rawData,
       typeConstructor,
-      addJSONDatumToArray
+      constructTypeFromJSONDatum
     );
   }
 }
@@ -36,11 +36,11 @@ function mapSQLResponseToDataArray<T>(
     .filter((datum) => datum !== undefined);
 }
 
-function addStandardDatumToArray<T>(datum: any, type: Constructor<T>) {
+function constructTypeFromStandardDatum<T>(datum: any, type: Constructor<T>) {
   return constructInstance<T>(datum, type);
 }
 
-function addJSONDatumToArray<T>(datum: any, type: Constructor<T>) {
+function constructTypeFromJSONDatum<T>(datum: any, type: Constructor<T>): T {
   return constructInstance<T>(datum.data, type);
 }
 

@@ -4,7 +4,7 @@ import { PlayerSerializer } from "../serializers/playerSerializer";
 import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
 import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
-import { IFieldElement } from "../discord/interfaces/FieldElement";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 
 export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
   constructor(dbClient: DFZDataBaseClient) {

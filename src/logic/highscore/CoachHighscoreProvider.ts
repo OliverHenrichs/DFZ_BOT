@@ -1,5 +1,5 @@
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { IFieldElement } from "../discord/interfaces/FieldElement";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { Coach } from "../serializables/coach";
 import { CoachSerializer } from "../serializers/coachSerializer";
 import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";

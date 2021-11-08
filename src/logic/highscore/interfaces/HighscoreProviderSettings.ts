@@ -1,4 +1,4 @@
-import { IFieldElement } from "../../discord/interfaces/FieldElement";
+import { IFieldElement } from "../../discord/interfaces/IFieldElement";
 import { DFZDataBaseClient } from "../../database/DFZDataBaseClient";
 import { HighscoreUserTypes } from "../enums/HighscoreUserTypes";
 

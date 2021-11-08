@@ -1,10 +1,10 @@
 import { Role } from "discord.js";
+import { getNumberFromBeginnerRole } from "../logic/discord/roleManagement";
+import { LobbyPlayer } from "../logic/lobby/interfaces/LobbyPlayer";
+import { PositionPlayers } from "../logic/lobby/interfaces/PositionPlayers";
 import { Lobby } from "../logic/serializables/lobby";
 import { lobbyTypes } from "./constants";
 import { coinFlip, shuffle } from "./generics";
-import { LobbyPlayer } from "../logic/lobby/interfaces/LobbyPlayer";
-import { getNumberFromBeginnerRole } from "../logic/discord/roleManagement";
-import { PositionPlayers } from "../logic/lobby/interfaces/PositionPlayers";
 
 /**
  * Swap two array elements in place
@@ -310,7 +310,7 @@ export function addUser(
   user.positions.sort();
 
   // user is from region => append before other regions
-  if (user.region.id === lobby.regionId) {
+  if (lobby.regionId && user.region.id === lobby.regionId) {
     for (let idx = 0; idx < lobby.users.length; idx++) {
       var curUser = lobby.users[idx];
       if (curUser.region.id !== lobby.regionId) {

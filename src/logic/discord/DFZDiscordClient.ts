@@ -1,15 +1,6 @@
-import {
-  ApplicationCommand,
-  Client,
-  Collection,
-  Guild,
-  Intents,
-  NewsChannel,
-  TextChannel,
-} from "discord.js";
+import { Client, Guild, Intents, NewsChannel, TextChannel } from "discord.js";
 import { readdirSync } from "fs";
-import { ChannelManager } from "./ChannelManager";
-import { guildId } from "../../misc/constants";
+import { dfzGuildId } from "../../misc/constants";
 import {
   insertScheduledLobbies,
   postSchedules,
@@ -17,21 +8,25 @@ import {
 } from "../../misc/scheduleManagement";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { ReferrerLeaderBoardHandler } from "../highscore/ReferrerLeaderBoardHandler";
-import { Schedule } from "../serializables/schedule";
-import { LobbySerializer } from "../serializers/lobbySerializer";
-import { ScheduleSerializer } from "../serializers/scheduleSerializer";
-import { IScheduleInfo } from "./interfaces/ScheduleInfo";
-import { LobbyTimeController } from "../lobby/LobbyTimeController";
 import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
+import { LobbyTimeController } from "../lobby/LobbyTimeController";
+import { Lobby } from "../serializables/lobby";
+import { Schedule } from "../serializables/schedule";
+import { ScheduleSerializer } from "../serializers/scheduleSerializer";
 import { TimeConverter } from "../time/TimeConverter";
-// import { SlashCommandRegistrator } from "./SlashCommandRegistrator";
+import { ChannelManager } from "./DFZChannelManager";
+import { ILobbyMenu } from "./interfaces/ILobbyMenu";
+import { IScheduleInfo } from "./interfaces/IScheduleInfo";
+import { SlashCommandRegistrator } from "./SlashCommandRegistrator";
 
 export class DFZDiscordClient extends Client {
   public dbClient: DFZDataBaseClient;
   public timeouts: LobbyTimeout[] = [];
-  public commands = new Collection<string, any>();
+  public lobbyMenus: ILobbyMenu[] = [];
+  public slashCommandRegistrar = new SlashCommandRegistrator(this);
 
   private internalTimeouts: NodeJS.Timeout[] = [];
+
   constructor() {
     super({
       intents: [
@@ -42,7 +37,6 @@ export class DFZDiscordClient extends Client {
     });
 
     this.setupDiscordEventHandlers();
-    //this.setupDiscordSlashCommands();
     this.dbClient = new DFZDataBaseClient();
   }
 
@@ -63,16 +57,6 @@ export class DFZDiscordClient extends Client {
     }
   }
 
-  // private setupDiscordSlashCommands() {
-  //   const files = readdirSync(`${__dirname}/../../slashCommands/`);
-
-  //   for (const file of files) {
-  //     const command = require(`${__dirname}/../../slashCommands/${file}`);
-  //     console.log(JSON.stringify(command));
-  //     this.commands.set(command.data.name, command);
-  //   }
-  // }
-
   public async onReady() {
     try {
       await this.setupBot();
@@ -89,7 +73,7 @@ export class DFZDiscordClient extends Client {
 
   private async fetchDiscordData() {
     await this.fetchRoles();
-    // await this.fetchSlashCommands();
+    await this.fetchSlashCommands();
     await this.fetchLobbyMessages();
     await this.fetchScheduleMessages();
   }
@@ -110,13 +94,12 @@ export class DFZDiscordClient extends Client {
     this.tryActionWithErrorLog(fetcher, "Error fetching roles");
   }
 
-  // private async fetchSlashCommands() {
-  //   const slashCreator = new SlashCommandRegistrator(this);
-  //   await slashCreator.registerSlashCommands();
-
-  //   const guild = await this.getGuild();
-  //   await slashCreator.setCommandPermissions(guild);
-  // }
+  private async fetchSlashCommands() {
+    await this.slashCommandRegistrar.registerCommandFiles(this);
+    await this.slashCommandRegistrar.tryRegisterSlashCommands();
+    const guild = await this.getGuild();
+    await this.slashCommandRegistrar.setCommandPermissions(guild);
+  }
 
   private async fetchLobbyMessages() {
     const fetcher = async () => {
@@ -129,20 +112,15 @@ export class DFZDiscordClient extends Client {
   }
 
   private async getGuild() {
-    return await this.guilds.fetch(guildId);
+    return await this.guilds.fetch(dfzGuildId);
   }
 
   private async fetchLobbyMessagesInChannel(guild: Guild, channelId: string) {
     const gc = await this.findChannel(guild, channelId);
-    const lobbies = await this.getChannelLobbies(channelId);
+    const lobbies = await Lobby.getChannelLobbies(this.dbClient, channelId);
     for (const lobby of lobbies) {
       await gc.messages.fetch(lobby.messageId);
     }
-  }
-
-  private async getChannelLobbies(channelId: string) {
-    const serializer = new LobbySerializer(this.dbClient, channelId);
-    return await serializer.get();
   }
 
   private async fetchScheduleMessages() {
