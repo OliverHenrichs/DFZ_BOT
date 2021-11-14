@@ -6,7 +6,7 @@ export class PostSlashCommandBuilder extends SlashCommandBuilder {
     super();
 
     this.setName("post")
-      .setDescription("Opens a menu to post lobbies.")
+      .setDescription("Post new lobby.")
       .setDefaultPermission(false);
 
     CommandBuilderOptionUtils.addTypeOption(this);

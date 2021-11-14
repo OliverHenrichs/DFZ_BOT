@@ -38,6 +38,8 @@ export class SlashCommandRegistrator {
       this.addCommandPermission(cmd, fullPermissions);
     });
 
+    console.log(JSON.stringify(fullPermissions));
+
     await guild.commands.permissions.set({
       fullPermissions: fullPermissions,
     });
