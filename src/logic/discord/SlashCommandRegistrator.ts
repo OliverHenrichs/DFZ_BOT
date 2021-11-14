@@ -69,12 +69,9 @@ export class SlashCommandRegistrator {
   }
 
   public async registerCommandFiles(client: DFZDiscordClient) {
-    console.log("command file dir = " + `${__dirname}/../../slashCommands/`);
     const commandFiles = fs.readdirSync(`${__dirname}/../../slashCommands/`);
     for (const file of commandFiles) {
-      console.log("Requiring " + `${__dirname}/../../slashCommands/${file}`);
       const commandCreator = require(`${__dirname}/../../slashCommands/${file}`);
-
       const commandData = await commandCreator.create(client);
 
       this.commands.set(commandCreator.name, commandData);
