@@ -3,7 +3,11 @@ import { ChannelManager } from "../logic/discord/DFZChannelManager";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { adminRoles } from "../logic/discord/roleManagement";
 import { Lobby } from "../logic/serializables/lobby";
-import { lobbyManagementReactionEmojis } from "../misc/constants";
+import {
+  isSimpleLobbyType,
+  lobbyManagementReactionEmojis,
+  tryoutReactionEmoji,
+} from "../misc/constants";
 import {
   getInfoFromLobbyReaction,
   isValidLobbyReaction,
@@ -45,6 +49,11 @@ function handleCoachReaction(
 
     case lobbyManagementReactionEmojis[1]:
       tryCancelLobbyCancel(client, lobby, user);
+      break;
+
+    case tryoutReactionEmoji:
+      if (isSimpleLobbyType(lobby.type))
+        lobby.updatePlayerInLobby(client.dbClient, reaction, user);
       break;
   }
 }
