@@ -1,7 +1,13 @@
 import { Message } from "discord.js";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import {
+  getAllRegionNames,
+  getRegionalRoleFromString,
+} from "../logic/discord/roleManagement";
 import { Lobby } from "../logic/serializables/lobby";
 import { LobbySerializer } from "../logic/serializers/lobbySerializer";
+import { ILobbyTimeResult } from "../logic/time/interfaces/LobbyTimeResult";
+import { getLobbyTimeFromMessageString } from "../logic/time/timeZone";
 import {
   getLobbyTypeByString,
   isSimpleLobbyType,
@@ -11,12 +17,6 @@ import {
   tryoutReactionEmoji,
 } from "./constants";
 import { getNumbersFromString } from "./generics";
-import {
-  getRegionalRoleFromString,
-  getAllRegionStrings,
-} from "../logic/discord/roleManagement";
-import { ILobbyTimeResult } from "../logic/time/interfaces/LobbyTimeResult";
-import { calculateLobbyTime } from "../logic/time/timeZone";
 
 /**
  * Reacts to message using reply and emoji, then deletes the authors command
@@ -133,7 +133,7 @@ export function getLobbyRegionRoleFromMessage(
   var args = getArguments(message);
 
   if (args.length <= index)
-    throw `Could not get lobby region role from message. Region roles are ${getAllRegionStrings()}`;
+    throw `Could not get lobby region role from message. Region roles are ${getAllRegionNames()}`;
 
   return getRegionalRoleFromString(args[index]);
 }
@@ -152,7 +152,10 @@ export function getTimeFromMessage(
   if (args.length <= argumentIndex + 1)
     throw "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post";
 
-  return calculateLobbyTime(args[argumentIndex], args[argumentIndex + 1]);
+  return getLobbyTimeFromMessageString(
+    args[argumentIndex],
+    args[argumentIndex + 1]
+  );
 }
 
 /**

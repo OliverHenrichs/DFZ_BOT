@@ -6,7 +6,7 @@ export const botToken: string = process.env.BOT_TOKEN
 
 export const botId: string = process.env.BOT_ID ? process.env.BOT_ID : "";
 
-export const guildId: string =
+export const dfzGuildId: string =
   process.env.GUILD !== undefined ? process.env.GUILD : "";
 
 export const lobbyTypes = {

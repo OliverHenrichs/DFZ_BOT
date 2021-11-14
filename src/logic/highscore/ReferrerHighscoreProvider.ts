@@ -1,6 +1,6 @@
 import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { IFieldElement } from "../discord/interfaces/FieldElement";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
 import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
 import { Referrer } from "../serializables/referrer";

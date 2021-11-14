@@ -2,8 +2,8 @@ import {
   anyNumberOfPlayers,
   getPlayersPerLobbyByLobbyType,
 } from "../../misc/constants";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { LobbyPlayer } from "./interfaces/LobbyPlayer";
-import { IFieldElement } from "../discord/interfaces/FieldElement";
 import { TableGenerator } from "./TableGenerator";
 
 export class UserTableGenerator extends TableGenerator {

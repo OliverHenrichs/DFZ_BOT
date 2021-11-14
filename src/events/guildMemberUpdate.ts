@@ -1,17 +1,17 @@
 import { Collection, GuildMember, Role } from "discord.js";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { SQLUtils } from "../logic/database/SQLUtils";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import {
-  findRole,
-  regionRoleIDs,
-  getRegionalRolePrefix,
   beginnerRoles,
+  findRole,
   findRoles,
+  getRegionalRolePrefix,
 } from "../logic/discord/roleManagement";
 import { Player } from "../logic/serializables/player";
-import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { PlayerSerializer } from "../logic/serializers/playerSerializer";
 import { ReferrerSerializer } from "../logic/serializers/referrerSerializer";
-import { SQLUtils } from "../logic/database/SQLUtils";
+import { RegionDefinitions } from "../logic/time/RegionDefinitions";
 
 /**
  * Handles role and nickname changes
@@ -24,11 +24,11 @@ module.exports = async (
   oldMember: GuildMember,
   newMember: GuildMember
 ) => {
-  if (!haveRolesChange(oldMember, newMember)) return;
+  if (!haveRolesChanged(oldMember, newMember)) return;
   tryUpdateGuildMember(client.dbClient, oldMember, newMember);
 };
 
-function haveRolesChange(oldMember: GuildMember, newMember: GuildMember) {
+function haveRolesChanged(oldMember: GuildMember, newMember: GuildMember) {
   return oldMember.roles.cache.size !== newMember.roles.cache.size;
 }
 
@@ -46,7 +46,7 @@ async function tryUpdateGuildMember(
 }
 
 async function updateNickname(member: GuildMember) {
-  const regionRoles = findRoles(member, regionRoleIDs);
+  const regionRoles = findRoles(member, RegionDefinitions.regionRoles);
   const prefixes = getRoleBasedPrefixes(regionRoles);
 
   await member.setNickname(

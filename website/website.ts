@@ -7,7 +7,7 @@ import { CoachSerializer } from "../src/logic/serializers/coachSerializer";
 import { ReferrerSerializer } from "../src/logic/serializers/referrerSerializer";
 import { Coach } from "../src/logic/serializables/coach";
 import { Referrer } from "../src/logic/serializables/referrer";
-import { guildId } from "../src/misc/constants";
+import { dfzGuildId } from "../src/misc/constants";
 import { tryGetSSLCredentials } from "./ssl";
 import { setupMiddleWares } from "./middlewares";
 import { registerEndpoints } from "./endPoints";
@@ -110,7 +110,7 @@ export default class Website {
   }
 
   private async addCoachDisplayNames(coaches: Coach[]) {
-    var guild = await this.client.guilds.fetch(guildId);
+    var guild = await this.client.guilds.fetch(dfzGuildId);
 
     for (const coach of coaches) {
       await this.setGuildDisplayName(coach, guild);

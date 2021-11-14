@@ -13,7 +13,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-	"allowUnreachableCode": false
+	  "allowUnreachableCode": false
   },
   "include": ["./src/**/*", "./website/**/*", "index.ts"]
 }

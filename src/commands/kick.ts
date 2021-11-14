@@ -39,7 +39,7 @@ async function getKickSpecificsFromMessage(
       const kickeeIndex = await getKickeeIndex(lobby, kickArguments.userId);
       resolve({ lobby: lobby, kickeeIndex: kickeeIndex });
     } catch (errorMessage) {
-      reactNegative(message, errorMessage);
+      reactNegative(message, errorMessage as string);
       reject("Could not get lobby or player.");
     }
   });

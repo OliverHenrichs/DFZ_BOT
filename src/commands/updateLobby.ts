@@ -24,7 +24,7 @@ export default async (message: Message, dbClient: DFZDataBaseClient) => {
     await updateLobby(message, dbClient);
     reactPositive(message, "Updated lobby parameters.");
   } catch (error) {
-    reactNegative(message, error);
+    reactNegative(message, error as string);
   }
 };
 

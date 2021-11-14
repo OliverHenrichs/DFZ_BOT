@@ -1,6 +1,6 @@
 import { lobbyTypes } from "../../misc/constants";
 import { LobbyPlayer } from "./interfaces/LobbyPlayer";
-import { IFieldElement } from "../discord/interfaces/FieldElement";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { TableGenerator } from "./TableGenerator";
 
 export class TeamsTableGenerator extends TableGenerator {

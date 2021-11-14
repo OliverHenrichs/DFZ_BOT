@@ -1,4 +1,5 @@
-import tZ = require("timezone-support");
+import { CommandInteraction } from "discord.js";
+import { CommandOptionNames } from "../discord/interfaces/CommandOptionNames";
 import { CalendarDefinitions } from "./CalendarDefinitions";
 import { ILobbyTimeResult } from "./interfaces/LobbyTimeResult";
 import { ITime } from "./interfaces/Time";
@@ -7,9 +8,10 @@ import { IValidatedTime } from "./interfaces/ValidatedTime";
 import { RegionDefinitions } from "./RegionDefinitions";
 import { StringTimeValidator } from "./StringTimeValidator";
 import { TimeConverter } from "./TimeConverter";
+import tZ = require("timezone-support");
 
 export const scheduleTimezoneNames_short = getTimeZoneShortNames(
-  RegionDefinitions.scheduleTimezoneNames
+  RegionDefinitions.regions.map((region) => region.timeZoneName)
 );
 
 export function getTimeZoneShortNames(timezoneNames: Array<string>) {
@@ -33,7 +35,9 @@ export function getTimeString(zonedTime: ITime) {
   const { dayOfWeek, month, day, hours, minutes } = zonedTime;
   return `${CalendarDefinitions.weekDays[dayOfWeek ? dayOfWeek : 0]}, ${
     CalendarDefinitions.months[month > 0 ? month - 1 : month]
-  } ${day} at ${hours}:${minutes < 10 ? "0" + minutes : minutes}`;
+  } ${day} at ${hours}:${minutes < 10 ? "0" + minutes : minutes} ${
+    zonedTime.zone ? zonedTime.zone.abbreviation : ""
+  }`;
 }
 
 export interface NextMondayAndSunday {
@@ -43,11 +47,30 @@ export interface NextMondayAndSunday {
 
 export function getTimeZoneStringFromRegion(_region: string) {
   var idx = RegionDefinitions.regions.findIndex((region) => {
-    return region === _region;
+    return region.name === _region;
   });
-  if (idx === -1) return RegionDefinitions.scheduleTimezoneNames[0];
+  if (idx === -1) idx = 0;
 
-  return RegionDefinitions.scheduleTimezoneNames[idx];
+  return RegionDefinitions.regions[idx].timeZoneName;
+}
+
+export function getZonedTimeFromDateAndRegion(
+  date: Date,
+  regionRole: string
+): ITime | undefined {
+  const regionInfo = RegionDefinitions.regions.find(
+    (region) => region.role === regionRole
+  );
+  if (!regionInfo) {
+    throw new Error(
+      "Cannot find region for lobby time calculation,\ndate: " +
+        date.toUTCString() +
+        ",\nRegion role: " +
+        regionRole
+    );
+  }
+
+  return getZonedTimeFromTimeZoneName(date, regionInfo.timeZoneName);
 }
 
 /**
@@ -94,7 +117,7 @@ export function getScheduledDate(
  * @param {string} time time string
  * @param {string} timezoneName timezone name
  */
-export function calculateLobbyTime(
+export function getLobbyTimeFromMessageString(
   time: string,
   timezoneName: string
 ): ILobbyTimeResult {
@@ -102,7 +125,19 @@ export function calculateLobbyTime(
     StringTimeValidator.validateTimeString(time);
 
   const zone = StringTimeValidator.validateTimeZoneString(timezoneName);
+  const date = calculateLobbyTime(zone, hourAndMinute);
+  const lobbyTime = getZonedTime(date, zone);
 
+  return {
+    time: lobbyTime,
+    timeZoneName: zone.name,
+  };
+}
+
+export function calculateLobbyTime(
+  zone: ITimeZoneInfo,
+  hourAndMinute: IValidatedTime
+): Date {
   var date = new Date();
   var zonedDate = tZ.getZonedTime(date, zone);
   if (zonedDate.epoch === undefined) throw `Could not get zoned time`;
@@ -113,25 +148,7 @@ export function calculateLobbyTime(
     (hourAndMinute.minute - zonedDate.minutes) * TimeConverter.minToMs;
   if (timeDif < 0) timeDif = TimeConverter.dayToMs + timeDif; // go for next day if it did
 
-  var lobbyDate = new Date(zonedDate.epoch + timeDif);
-  const lobbyTime = getZonedTime(lobbyDate, zone);
-
-  return {
-    time: lobbyTime,
-    timeZoneName: zone.name,
-  };
-}
-
-/**
- *
- * @param {Date} date
- * @param {tZ.timezone} timezone
- */
-function getZonedTime(date: Date | number, timezone: ITimeZoneInfo): ITime {
-  const zonedTime = tZ.getZonedTime(date, timezone);
-  if (zonedTime.epoch === undefined)
-    throw `Could not get zoned time because epoch is undefined`;
-  return zonedTime as ITime;
+  return new Date(zonedDate.epoch + timeDif);
 }
 
 /**
@@ -143,7 +160,37 @@ function getZonedTime(date: Date | number, timezone: ITimeZoneInfo): ITime {
 export function getZonedTimeFromTimeZoneName(
   date: Date | number,
   timezoneName: string
-): ITime | undefined {
+): ITime {
   const zone = StringTimeValidator.validateTimeZoneString(timezoneName);
   return getZonedTime(date, zone);
+}
+
+export function getDateFromInteraction(
+  interaction: CommandInteraction
+): Date | undefined {
+  const hour = interaction.options.getNumber(CommandOptionNames.hour);
+  const minute = interaction.options.getNumber(CommandOptionNames.minute);
+  const timezoneName = interaction.options.getString(
+    CommandOptionNames.timezone
+  );
+
+  if (hour === null || minute === null || timezoneName === null) {
+    return undefined;
+  }
+
+  const zone = StringTimeValidator.validateTimeZoneString(timezoneName);
+  const date = calculateLobbyTime(zone, { hour, minute });
+  return date;
+}
+
+/**
+ *
+ * @param {Date} date
+ * @param {tZ.timezone} timezone
+ */
+function getZonedTime(date: Date | number, timezone: ITimeZoneInfo): ITime {
+  const zonedTime = tZ.getZonedTime(date, timezone);
+  if (zonedTime.epoch === undefined)
+    throw new Error(`Could not get zoned time because epoch is undefined`);
+  return zonedTime as ITime;
 }

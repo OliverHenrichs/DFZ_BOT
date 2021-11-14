@@ -1,19 +1,20 @@
+import { channelMention } from "@discordjs/builders";
 import { NewsChannel, TextChannel } from "discord.js";
-import { guildId } from "../../misc/constants";
-import { DFZDiscordClient } from "./DFZDiscordClient";
+import { dfzGuildId } from "../../misc/constants";
 import { EnvironmentVariableManager as EVM } from "../misc/EnvironmentVariableManager";
+import { DFZDiscordClient } from "./DFZDiscordClient";
 
 export class ChannelManager {
   public static async getChannel(
     client: DFZDiscordClient,
     channelId: string
   ): Promise<TextChannel | NewsChannel> {
-    const guild = await client.guilds.fetch(guildId);
+    const guild = await client.guilds.fetch(dfzGuildId);
     const channel = await client.findChannel(guild, channelId);
 
     if (!channel || !channel.isText()) {
       throw new Error(
-        `Did not find text channel ${channelId} for guild ${guildId}`
+        `Did not find text channel ${channelId} for guild ${dfzGuildId}`
       );
     }
 
@@ -39,6 +40,13 @@ export class ChannelManager {
     EVM.ensureString(process.env.BOT_MEETING_CHANNEL),
   ];
 
+  public static tryoutChannel = EVM.ensureString(
+    process.env.BOT_LOBBY_CHANNEL_TRYOUT
+  );
+  public static replayAnalysisChannel = EVM.ensureString(
+    process.env.BOT_LOBBY_CHANNEL_REPLAYANALYSIS
+  );
+
   public static scheduleChannels = [
     EVM.ensureString(process.env.BOT_SCHEDULE_CHANNEL_BOTBASH),
     EVM.ensureString(process.env.BOT_SCHEDULE_CHANNEL_TRYOUT),
@@ -46,9 +54,12 @@ export class ChannelManager {
     EVM.ensureString(process.env.BOT_SCHEDULE_CHANNEL_5V5_T3),
   ];
 
-  public static channelStrings = `<#${ChannelManager.lobbyChannels.join(
-    ">, <#"
-  )}>`;
+  public static channelStringList = ChannelManager.lobbyChannels.map(
+    (channel) => channelMention(channel)
+  );
+
+  public static combinedChannelStrings =
+    ChannelManager.channelStringList.join(", ");
 
   public static scheduleChannelBotbash = EVM.ensureString(
     process.env.BOT_SCHEDULE_CHANNEL_BOTBASH
