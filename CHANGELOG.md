@@ -1,5 +1,12 @@
 _@Coach The bot received some new features today!_
 
+**DFZ-Bot v0.14 - Changelog**
+
+1. Slash commands
+   > The commands !post and !update are now available as slash-commands /post and /update with UI-menus.
+
+---
+
 **DFZ-Bot v0.13 - Changelog**
 
 1. Enforced Schedules
