@@ -3,6 +3,7 @@ import {
   CommandInteraction,
   Interaction,
   MessageActionRow,
+  MessageComponentInteraction,
   MessageSelectMenu,
 } from "discord.js";
 import { lobbyTypeKeys } from "../../../misc/constants";
@@ -20,6 +21,7 @@ import {
   getRegionRoles,
 } from "../roleManagement";
 import { SlashCommandHelper } from "../SlashCommandHelper";
+import { CommonMenuUtils } from "../Utils/CommonMenuUtils";
 
 export class SelectMenuUtils {
   public static readonly defaultRegion = RegionDefinitions.regionRoles[0];
@@ -43,6 +45,28 @@ export class SelectMenuUtils {
           );
           return option;
         })
+      ),
+    });
+  }
+
+  public static async createKickPlayerSelectMenu(
+    client: DFZDiscordClient,
+    interaction: Interaction
+  ) {
+    if (!(interaction instanceof MessageComponentInteraction)) {
+      throw new Error(
+        "Kick player interaction must be MessageComponentInteraction"
+      );
+    }
+
+    const lobby = await CommonMenuUtils.getMenuLobby(client, interaction);
+    return SlashCommandHelper.createSelectMenu({
+      customId: SelectorCustomIds.player,
+      placeHolder: "Players to kick",
+      minValues: 1,
+      maxValues: Math.max(1, lobby.users.length),
+      selectOptions: lobby.users.map((user) =>
+        SlashCommandHelper.getUserSelectOptions(user)
       ),
     });
   }
@@ -147,12 +171,14 @@ export class SelectMenuUtils {
       client: DFZDiscordClient,
       interaction: Interaction
     ) => Promise<MessageSelectMenu>
-  ): Promise<MessageActionRow[]> {
-    return this.addMenuRows({
+  ): Promise<MessageActionRow> {
+    const rows = await this.addMenuRows({
       client,
       interaction,
       menuFunctions: [menuFunction],
     });
+
+    return rows[0];
   }
 
   public static async addMenuRows(

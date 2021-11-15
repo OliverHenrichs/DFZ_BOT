@@ -11,10 +11,11 @@ import {
 import { AbstractExecutor } from "../logic/discord/CommandExecutors/AbstractExecutor";
 import { ChannelManager } from "../logic/discord/DFZChannelManager";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-import { InteractionUtils } from "../logic/discord/InteractionUtils";
 import { ButtonCustomIds } from "../logic/discord/interfaces/ButtonCustomIds";
 import { SelectorCustomIds } from "../logic/discord/interfaces/SelectorCustomIds";
-import { LobbyMenuUtils } from "../logic/discord/LobbyMenuUtils";
+import { CommonMenuUtils } from "../logic/discord/Utils/CommonMenuUtils";
+import { InteractionUtils } from "../logic/discord/Utils/InteractionUtils";
+import { LobbyMenuUtils } from "../logic/discord/Utils/LobbyMenuUtils";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { Lobby } from "../logic/serializables/lobby";
 import { RegionDefinitions } from "../logic/time/RegionDefinitions";
@@ -80,7 +81,7 @@ async function handleButton(
   interaction: ButtonInteraction
 ): Promise<void> {
   if (pressedCancelButton(interaction)) {
-    await LobbyMenuUtils.removeMenu(client, interaction);
+    await CommonMenuUtils.removeMenu(client, interaction);
     return await replyAndEndInteraction(interaction, "Cancelled lobby menu.");
   }
 
@@ -90,6 +91,10 @@ async function handleButton(
 
   if (pressedUpdateButton(interaction)) {
     return await tryUpdateLobby(client, interaction);
+  }
+
+  if (pressedKickButton(interaction)) {
+    return await tryUpdateLobbyAfterKick(client, interaction);
   }
 
   await replyAndEndInteraction(
@@ -137,8 +142,7 @@ async function tryPostLobby(
   client: DFZDiscordClient,
   interaction: MessageComponentInteraction
 ): Promise<void> {
-  const menu = LobbyMenuUtils.getLobbyMenu(client, interaction);
-  const lobby = menu.lobby;
+  let lobby = await CommonMenuUtils.getMenuLobby(client, interaction);
   lobby.channelId = getLobbyChannel(lobby);
   await LobbyPostManipulator.postLobby(client, lobby);
 
@@ -149,7 +153,7 @@ async function tryPostLobby(
       ". \nPosted lobby reads:",
     LobbyPostManipulator.createLobbyEmbedding(lobby)
   );
-  await LobbyMenuUtils.removeMenu(client, interaction);
+  await CommonMenuUtils.removeMenu(client, interaction);
 }
 
 async function tryUpdateLobby(
@@ -160,18 +164,34 @@ async function tryUpdateLobby(
   if (!channel) {
     throw new Error("Use update lobby in the channel of the updating lobby");
   }
-  const menu = LobbyMenuUtils.getLobbyMenu(client, interaction);
 
-  await menu.lobby.updateLobbyPostAndDBEntry(channel, client.dbClient);
+  const lobby = await CommonMenuUtils.getMenuLobby(client, interaction);
+  await lobby.updateLobbyPostAndDBEntry(channel, client.dbClient);
 
   await replyAndEndInteraction(
     interaction,
     "Updated lobby in channel " +
-      channelMention(menu.lobby.channelId) +
+      channelMention(lobby.channelId) +
       ". \nUpdated lobby reads:",
-    LobbyPostManipulator.createLobbyEmbedding(menu.lobby)
+    LobbyPostManipulator.createLobbyEmbedding(lobby)
   );
-  await LobbyMenuUtils.removeMenu(client, interaction);
+  await CommonMenuUtils.removeMenu(client, interaction);
+}
+
+async function tryUpdateLobbyAfterKick(
+  client: DFZDiscordClient,
+  interaction: MessageComponentInteraction
+): Promise<void> {
+  const channel = interaction.channel;
+  if (!channel) {
+    throw new Error("Use update lobby in the channel of the updating lobby");
+  }
+
+  const lobby = await CommonMenuUtils.getMenuLobby(client, interaction);
+  await lobby.updateLobbyPostAndDBEntry(channel, client.dbClient);
+
+  await replyAndEndInteraction(interaction, "I kicked the selected player(s)");
+  await CommonMenuUtils.removeMenu(client, interaction);
 }
 
 function pressedCancelButton(interaction: ButtonInteraction): boolean {
@@ -184,6 +204,10 @@ function pressedPostButton(interaction: ButtonInteraction): boolean {
 
 function pressedUpdateButton(interaction: ButtonInteraction): boolean {
   return interaction.customId === ButtonCustomIds.update;
+}
+
+function pressedKickButton(interaction: ButtonInteraction): boolean {
+  return interaction.customId === ButtonCustomIds.kick;
 }
 
 function getLobbyChannel(lobby: Lobby): string {

@@ -3,6 +3,6 @@ import { LobbyMenuType } from "./LobbyMenuType";
 
 export interface ILobbyMenu {
   type: LobbyMenuType;
-  lobby: Lobby;
+  lobby?: Lobby;
   id: string;
 }

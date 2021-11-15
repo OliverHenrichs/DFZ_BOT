@@ -1,12 +1,11 @@
 import { UpdateSlashCommandBuilder } from "../logic/discord/CommandBuilders/UpdateSlashCommandBuilder";
 import { UpdateExecutor } from "../logic/discord/CommandExecutors/UpdateExecutor";
-import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 
 module.exports = {
   name: "update",
-  create: (client: DFZDiscordClient) => {
+  create: () => {
     return {
-      data: new UpdateSlashCommandBuilder(client),
+      data: new UpdateSlashCommandBuilder(),
       executor: new UpdateExecutor(),
     };
   },

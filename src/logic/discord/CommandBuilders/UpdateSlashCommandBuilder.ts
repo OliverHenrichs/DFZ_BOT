@@ -1,8 +1,7 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { DFZDiscordClient } from "../DFZDiscordClient";
 
 export class UpdateSlashCommandBuilder extends SlashCommandBuilder {
-  constructor(_client: DFZDiscordClient) {
+  constructor() {
     super();
 
     this.setName("update")

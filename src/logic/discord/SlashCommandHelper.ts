@@ -6,6 +6,7 @@ import {
   Role,
 } from "discord.js";
 import { getLobbyNameByType, getLobbyTypeByString } from "../../misc/constants";
+import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
 import { Lobby } from "../serializables/lobby";
 import { ChannelManager as DFZChannelManager } from "./DFZChannelManager";
 import { DFZDiscordClient } from "./DFZDiscordClient";
@@ -15,13 +16,15 @@ import { ISelectMenuOptions } from "./interfaces/ISelectMenuOptions";
 export class SlashCommandHelper {
   public static addGoAndCancelButtons(
     goButtonId: string,
-    goButtonName: string
+    goButtonName: string,
+    enabled: boolean = true
   ): MessageActionRow {
     return new MessageActionRow().addComponents(
       new MessageButton()
         .setCustomId(goButtonId)
         .setLabel(goButtonName)
-        .setStyle("PRIMARY"),
+        .setStyle("PRIMARY")
+        .setDisabled(!enabled),
       new MessageButton()
         .setCustomId("cancel")
         .setLabel("Cancel")
@@ -65,6 +68,10 @@ export class SlashCommandHelper {
   ): Promise<MessageSelectOptionData> {
     const channel = await DFZChannelManager.getChannel(client, channelId);
     return this.getSelectOption(channel.name, channelId);
+  }
+
+  public static getUserSelectOptions(user: LobbyPlayer) {
+    return this.getSelectOption(user.name, user.id);
   }
 
   public static getLobbySelectOption(lobby: Lobby): MessageSelectOptionData {
