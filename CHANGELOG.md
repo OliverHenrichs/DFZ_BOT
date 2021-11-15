@@ -3,7 +3,7 @@ _@Coach The bot received some new features today!_
 **DFZ-Bot v0.14 - Changelog**
 
 1. Slash commands
-   > The commands !post and !update are now available as slash-commands /post and /update with UI-menus.
+   > The commands !post, !update and !kick are now available as slash-commands /post, /update and /kick with UI-menus.
 
 ---
 
@@ -18,6 +18,7 @@ _@Coach The bot received some new features today!_
 **DFZ-Bot v0.12 - Changelog**
 
 1. Delayed Lobby cancel when pressing ❌ on a lobby
+
    > When a coach cancels a lobby there now is a 2 min grace period
    > in which they can undo the harm by pressing ❌ again.
 
