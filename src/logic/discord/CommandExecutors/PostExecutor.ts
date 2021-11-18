@@ -4,9 +4,9 @@ import { LobbyPostManipulator } from "../../lobby/LobbyPostManipulator";
 import { Lobby } from "../../serializables/lobby";
 import { getDateFromInteraction } from "../../time/timeZone";
 import { DFZDiscordClient } from "../DFZDiscordClient";
-import { ButtonCustomIds } from "../interfaces/ButtonCustomIds";
 import { CommandOptionNames } from "../interfaces/CommandOptionNames";
 import { LobbyMenuType } from "../interfaces/LobbyMenuType";
+import { SlashCommandIds } from "../interfaces/SlashCommandsIds";
 import { tryoutRole } from "../roleManagement";
 import { SlashCommandHelper } from "../SlashCommandHelper";
 import { AbstractExecutor } from "./AbstractExecutor";
@@ -25,7 +25,7 @@ export class PostExecutor extends AbstractExecutor {
     const rows = await PostExecutor.addPostRows(client, interaction, lobbyType);
     rows.push(
       await SlashCommandHelper.addGoAndCancelButtons(
-        ButtonCustomIds.post,
+        SlashCommandIds.post,
         "Post"
       )
     );

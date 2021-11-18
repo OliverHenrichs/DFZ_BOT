@@ -1,6 +1,7 @@
 import { Message, MessageEmbed } from "discord.js";
 import { EmbeddingCreator } from "../logic/discord/EmbeddingCreator";
 import { IFieldElement } from "../logic/discord/interfaces/IFieldElement";
+import { SlashCommandIds } from "../logic/discord/interfaces/SlashCommandsIds";
 import {
   adminRoles,
   companionRole,
@@ -56,7 +57,7 @@ function addPostLobbyHint(embed: MessageEmbed) {
   addFieldsToEmbed(
     embed,
     generateHelpEmbedFields(
-      "post",
+      SlashCommandIds.post,
       "!post <lobbytype> <region> <tiers> <time> <timezone>",
       "Creates a lobby in the channel in which you write the command.\nLobby types: " +
         lobbyTypeKeysString +
@@ -84,7 +85,7 @@ function addUpdateLobbyHint(embed: MessageEmbed) {
   addFieldsToEmbed(
     embed,
     generateHelpEmbedFields(
-      "update",
+      SlashCommandIds.update,
       "!update <msgId> -tiers <tiers>",
       "Updates the lobby that is associated with the given message-ID " +
         "(get lobby's message-ID: activate developer mode in Discord options, " +
@@ -111,7 +112,7 @@ function addKickPlayerHint(embed: MessageEmbed) {
   addFieldsToEmbed(
     embed,
     generateHelpEmbedFields(
-      "kick",
+      SlashCommandIds.kick,
       "!kick <msgId> <playerId>",
       "Kicks a player from the lobby that is associated \
       with the given message-ID using their user-ID (rightclick them in the lobby-post). \

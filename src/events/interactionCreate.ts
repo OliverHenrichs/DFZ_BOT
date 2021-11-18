@@ -11,8 +11,8 @@ import {
 import { AbstractExecutor } from "../logic/discord/CommandExecutors/AbstractExecutor";
 import { ChannelManager } from "../logic/discord/DFZChannelManager";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-import { ButtonCustomIds } from "../logic/discord/interfaces/ButtonCustomIds";
 import { SelectorCustomIds } from "../logic/discord/interfaces/SelectorCustomIds";
+import { SlashCommandIds } from "../logic/discord/interfaces/SlashCommandsIds";
 import { CommonMenuUtils } from "../logic/discord/Utils/CommonMenuUtils";
 import { InteractionUtils } from "../logic/discord/Utils/InteractionUtils";
 import { LobbyMenuUtils } from "../logic/discord/Utils/LobbyMenuUtils";
@@ -195,19 +195,19 @@ async function tryUpdateLobbyAfterKick(
 }
 
 function pressedCancelButton(interaction: ButtonInteraction): boolean {
-  return interaction.customId === ButtonCustomIds.cancel;
+  return interaction.customId === SlashCommandIds.cancel;
 }
 
 function pressedPostButton(interaction: ButtonInteraction): boolean {
-  return interaction.customId === ButtonCustomIds.post;
+  return interaction.customId === SlashCommandIds.post;
 }
 
 function pressedUpdateButton(interaction: ButtonInteraction): boolean {
-  return interaction.customId === ButtonCustomIds.update;
+  return interaction.customId === SlashCommandIds.update;
 }
 
 function pressedKickButton(interaction: ButtonInteraction): boolean {
-  return interaction.customId === ButtonCustomIds.kick;
+  return interaction.customId === SlashCommandIds.kick;
 }
 
 function getLobbyChannel(lobby: Lobby): string {

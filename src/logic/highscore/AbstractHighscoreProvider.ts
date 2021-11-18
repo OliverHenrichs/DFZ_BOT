@@ -1,8 +1,8 @@
 import { Message } from "discord.js";
-import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { reactPositive } from "../../misc/messageHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { EmbeddingCreator } from "../discord/EmbeddingCreator";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
 import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
 
@@ -42,14 +42,13 @@ export abstract class AbstractHighscoreProvider<T> {
 
   private sendHighscoreTable(message: Message) {
     reactPositive(message);
-
-    var _embed = EmbeddingCreator.create(
+    var embed = EmbeddingCreator.create(
       "Lobby Highscores (" + this.userType + ") Top 10",
       "Hall of Fame of DFZ " + this.userType + "!",
       "",
       this.resultTable
     );
-    message.author.send({ embeds: [_embed] });
+    message.author.send({ embeds: [embed] });
   }
 
   protected abstract rowAdder(user: T): void;

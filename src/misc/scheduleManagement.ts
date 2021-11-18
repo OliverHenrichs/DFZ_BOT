@@ -170,13 +170,13 @@ async function writeSchedule(
 
   const footer = `If coaches are signed up, the corresponding lobby is automatically created roughly 8h prior to the event.\nIf coaches only sign up shortly before the lobby (4h or less), then they must manually create the lobby.`;
 
-  const _embed = EmbeddingCreator.create(
+  const embed = EmbeddingCreator.create(
     getWeekScheduleString(scheduleSetup),
     "Sign up as a coach by reacting to the respective number.",
     footer,
     schedules
   );
-  const message = await channel.send({ embeds: [_embed] });
+  const message = await channel.send({ embeds: [embed] });
   reactWithScheduleEmojis(message, emojiStartIndex);
 
   return message;
@@ -611,7 +611,7 @@ const weeklyScheduleDatas = [botbashData, tryoutData, t3_t4_Data, t1_t2_Data];
 
 export async function postSchedules(client: DFZDiscordClient) {
   if (!(await weeklyScheduleShouldBePosted(client)))
-    return "I already posted this week's schedules";
+    throw "I already posted this week's schedules";
 
   const guild = await client.guilds.fetch(dfzGuildId);
   addCurrentWeekSchedule(guild.channels, client.dbClient);

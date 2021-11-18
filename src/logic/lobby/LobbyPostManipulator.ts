@@ -94,10 +94,7 @@ export class LobbyPostManipulator {
       lobby.coaches
     );
     var footer = this.getLobbyPostFooter(lobby.type, lobby.regionId);
-
-    // send embedding post to lobby signup-channel
-    const _embed = EmbeddingCreator.create(title, text, footer);
-    return _embed;
+    return EmbeddingCreator.create(title, text, footer);
   }
 
   private static createLobbyPostTitle(
@@ -257,13 +254,13 @@ export class LobbyPostManipulator {
   ) {
     const title = this.getIncompleteTeamPostTitle(lobby.type);
     const tableGenerator = new UserTableGenerator(userSet, lobby.type, true);
-    const _embed = EmbeddingCreator.create(
+    const embed = EmbeddingCreator.create(
       title,
       "",
       "",
       tableGenerator.generate()
     );
-    channel.send({ embeds: [_embed] });
+    channel.send({ embeds: [embed] });
   }
 
   private static createAndPostCompleteTeams(
@@ -278,26 +275,26 @@ export class LobbyPostManipulator {
       const tableGenerator = new TeamsTableGenerator(teams, lobby.type, true);
       var teamTable = tableGenerator.generate();
 
-      const _embed = EmbeddingCreator.create(
+      const embed = EmbeddingCreator.create(
         this.getCompleteTeamPostTitle(lobby.type, ++counter),
         "",
         "",
         teamTable
       );
-      embeds.push(_embed);
+      embeds.push(embed);
     });
 
     channel.send({ embeds: embeds });
   }
 
   private static postBench(channel: TextBasedChannels, userSet: LobbyPlayer[]) {
-    const _embed = EmbeddingCreator.create(
+    const embed = EmbeddingCreator.create(
       "Today's bench",
       "",
       "",
       this.generateBenchTable(userSet)
     );
-    channel.send({ embeds: [_embed] });
+    channel.send({ embeds: [embed] });
   }
 
   private static getIncompleteTeamPostTitle(type: number) {

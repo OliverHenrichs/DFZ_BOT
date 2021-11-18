@@ -1,6 +1,6 @@
 import { CommandInteraction, Interaction, MessageActionRow } from "discord.js";
 import { DFZDiscordClient } from "../DFZDiscordClient";
-import { ButtonCustomIds } from "../interfaces/ButtonCustomIds";
+import { SlashCommandIds } from "../interfaces/SlashCommandsIds";
 import { LobbyMenuType } from "../interfaces/LobbyMenuType";
 import { SlashCommandHelper } from "../SlashCommandHelper";
 import { AbstractExecutor } from "./AbstractExecutor";
@@ -65,7 +65,7 @@ export class UpdateExecutor extends AbstractExecutor {
 
   private static getUpdateButtonRow(enabled: boolean) {
     return SlashCommandHelper.addGoAndCancelButtons(
-      ButtonCustomIds.update,
+      SlashCommandIds.update,
       "Update",
       enabled
     );

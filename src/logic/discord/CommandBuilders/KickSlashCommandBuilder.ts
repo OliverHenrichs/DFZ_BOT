@@ -1,11 +1,11 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { CommandBuilderOptionUtils } from "./CommandBuilderOptionUtils";
+import { SlashCommandIds } from "../interfaces/SlashCommandsIds";
 
 export class KickSlashCommandBuilder extends SlashCommandBuilder {
   constructor() {
     super();
 
-    this.setName("kick")
+    this.setName(SlashCommandIds.kick)
       .setDescription("Kick a player from a lobby.")
       .setDefaultPermission(false);
   }

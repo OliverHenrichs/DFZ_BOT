@@ -1,12 +1,12 @@
 import { Message } from "discord.js";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { reactNegative, reactPositive } from "../misc/messageHelper";
 import { postSchedules } from "../misc/scheduleManagement";
-import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 
 export default async (message: Message, client: DFZDiscordClient) => {
   postSchedules(client)
-    .then((text) => {
-      reactPositive(message, text);
+    .then(() => {
+      reactPositive(message, "I posted this week's schedules");
     })
     .catch((error) => {
       reactNegative(message, error);
