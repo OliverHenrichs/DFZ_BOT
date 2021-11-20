@@ -10,10 +10,6 @@ export class DFZDataBaseClient {
   }
 
   private createDataBaseHandle() {
-    console.log(
-      `trying to connect to MYSQL-DB on \nhost ${process.env.MYSQL_HOST}\nuser ${process.env.MYSQL_USER}\npw haha lol, nein.\ndb ${process.env.MYSQL_DATABASE}\n`
-    );
-
     return createPool({
       host: process.env.MYSQL_HOST,
       user: process.env.MYSQL_USER,

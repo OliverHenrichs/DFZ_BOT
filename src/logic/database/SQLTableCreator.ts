@@ -51,12 +51,13 @@ export class SQLTableCreator {
     tableName: string,
     tableColumns: Array<ISqlTableColumn>
   ) {
-    var command = "CREATE TABLE IF NOT EXISTS " + tableName + " (";
+    var command = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
     command += tableName + "_id INT AUTO_INCREMENT, ";
+
     tableColumns.forEach((col) => {
-      command += col.id + " " + col.type + ", ";
+      command += `${col.id} ${col.type}, `;
     });
-    command += "INDEX(" + tableName + "_id)) ENGINE=INNODB;";
+    command += `INDEX(${tableName}_id)) ENGINE=INNODB;`;
     return command;
   }
 
