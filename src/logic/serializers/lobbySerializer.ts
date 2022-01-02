@@ -1,30 +1,34 @@
 import { RowDataPacket } from "mysql2/promise";
-import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { SQLResultConverter } from "../database/SQLResultConverter";
 import { Lobby } from "../serializables/lobby";
-import { Serializer } from "./serializer";
+import { Serializer } from "./Serializer";
+import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
+import { LobbySerializerIds } from "./types/LobbySerializerIds";
+import { SerializerIds } from "./types/SerializerIds";
 
 export class LobbySerializer extends Serializer<Lobby> {
   channelId: string;
   messageId: string;
 
   constructor(
-    dbClient: DFZDataBaseClient,
+    gdbc: IGuildDataBaseClient,
     channelId: string = "",
     messageId: string = ""
   ) {
     super({
-      dbClient: dbClient,
+      dbClient: gdbc.dbClient,
+      guildId: gdbc.guildId,
       table: lobbyTable,
       columns: lobbyColumns,
-      sortColumn: channelIdColumn,
+      sortColumn: LobbySerializerIds.channelColumn,
     });
     this.channelId = channelId;
     this.messageId = messageId;
   }
 
   protected getSerializeValues(lobby: Lobby): string[] {
-    return [lobby.channelId, lobby.messageId, JSON.stringify(lobby)];
+    const serializedLobby = JSON.stringify(lobby);
+    return [lobby.channelId, lobby.messageId, serializedLobby];
   }
 
   protected getTypeArrayFromSQLResponse(response: RowDataPacket[]): Lobby[] {
@@ -34,21 +38,25 @@ export class LobbySerializer extends Serializer<Lobby> {
   protected getCondition(): string[] {
     var conditions = [];
     if (this.channelId !== "")
-      conditions.push(`${channelIdColumn} = '${this.channelId}'`);
+      conditions.push(
+        `${LobbySerializerIds.channelColumn} = '${this.channelId}'`
+      );
     if (this.messageId !== "")
-      conditions.push(`${messageIdColumn} = '${this.messageId}'`);
+      conditions.push(
+        `${LobbySerializerIds.messageColumn} = '${this.messageId}'`
+      );
     return conditions;
   }
 
   protected getSerializableCondition(serializable: Lobby): string[] {
     return [
-      `${channelIdColumn} = '${serializable.channelId}'`,
-      `${messageIdColumn} = '${serializable.messageId}'`,
+      `${LobbySerializerIds.channelColumn} = '${serializable.channelId}'`,
+      `${LobbySerializerIds.messageColumn} = '${serializable.messageId}'`,
     ];
   }
 
   protected getDeletionIdentifierColumns(): string[] {
-    return [channelIdColumn, messageIdColumn];
+    return [LobbySerializerIds.channelColumn, LobbySerializerIds.messageColumn];
   }
 
   protected getSerializableDeletionValues(lobbies: Lobby[]): string[] {
@@ -56,7 +64,9 @@ export class LobbySerializer extends Serializer<Lobby> {
   }
 }
 
-const lobbyTable = "lobbies";
-const lobbyColumns = ["channel_id", "message_id", "data"];
-const channelIdColumn = lobbyColumns[0];
-const messageIdColumn = lobbyColumns[1];
+const lobbyTable = LobbySerializerIds.table;
+const lobbyColumns = [
+  LobbySerializerIds.channelColumn,
+  LobbySerializerIds.messageColumn,
+  SerializerIds.dataColumn,
+];

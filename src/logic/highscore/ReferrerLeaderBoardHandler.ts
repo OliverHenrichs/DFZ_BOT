@@ -5,12 +5,15 @@ import {
   NewsChannel,
   TextChannel,
 } from "discord.js";
+import { dfzGuildId } from "../../misc/constants";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { ChannelManager } from "../discord/DFZChannelManager";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
 import { EmbeddingCreator } from "../discord/EmbeddingCreator";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { EnvironmentVariableManager as EVM } from "../misc/EnvironmentVariableManager";
-import { ReferrerSerializer } from "../serializers/referrerSerializer";
+import { ReferrerSerializer } from "../serializers/ReferrerSerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
 import providerFactory from "./factories/HighscoreProviderFactory";
 import { ReferrerHighscoreProvider } from "./ReferrerHighscoreProvider";
@@ -51,9 +54,13 @@ export class ReferrerLeaderBoardHandler {
     );
   }
 
-  private static async getHighscoreTable(dbClient: DFZDataBaseClient) {
-    const serializer = new ReferrerSerializer(dbClient);
+  private static async getHighscoreTable(
+    dbClient: DFZDataBaseClient
+  ): Promise<IFieldElement[]> {
+    const gdbc = SerializeUtils.getGuildDBClient(dfzGuildId, dbClient);
+    const serializer = new ReferrerSerializer(gdbc);
     const referrers = await serializer.getSorted();
+    if (referrers.length === 0) return [];
 
     const highscoreProvider = providerFactory(
       HighscoreUserTypes.referrers,

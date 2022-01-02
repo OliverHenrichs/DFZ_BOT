@@ -142,8 +142,13 @@ export class SelectMenuUtils {
     if (!interaction.channelId) {
       throw new Error("The interaction does not provide a channel id");
     }
+    if (!interaction.guildId) {
+      throw new Error("The interaction does not provide a guild id");
+    }
+
     const lobbies = await Lobby.getChannelLobbies(
       client.dbClient,
+      interaction.guildId,
       interaction.channelId
     );
 

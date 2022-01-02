@@ -1,16 +1,19 @@
-export class Schedule {
-  channelId: string;
-  messageId: string;
-  type: string;
-  coachCount: number;
-  emoji: string;
-  date: string;
-  region: string;
-  coaches: string[];
-  lobbyPosted: boolean;
-  eventId: undefined | null | string;
+import { Serializable } from "./Serializable";
+
+export class Schedule extends Serializable {
+  public channelId: string;
+  public messageId: string;
+  public type: string;
+  public coachCount: number;
+  public emoji: string;
+  public date: string;
+  public region: string;
+  public coaches: string[];
+  public lobbyPosted: boolean;
+  public eventId: undefined | null | string;
 
   constructor(
+    guildId: string,
     channelId: string = "",
     messageId: string = "",
     type: string = "",
@@ -20,6 +23,7 @@ export class Schedule {
     region: string = "",
     eventId = undefined
   ) {
+    super(guildId);
     this.channelId = channelId;
     this.messageId = messageId;
     this.type = type;

@@ -1,18 +1,20 @@
 import { RowDataPacket } from "mysql2/promise";
-import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { SQLResultConverter } from "../database/SQLResultConverter";
 import { Player } from "../serializables/player";
-import { Serializer } from "./serializer";
+import { Serializer } from "./Serializer";
+import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
+import { PlayerSerializerIds } from "./types/PlayerSerializerIds";
 
 export class PlayerSerializer extends Serializer<Player> {
   userId: string;
 
-  constructor(dbClient: DFZDataBaseClient, userId: string = "") {
+  constructor(gdbc: IGuildDataBaseClient, userId: string = "") {
     super({
-      dbClient: dbClient,
-      table: playerTable,
+      dbClient: gdbc.dbClient,
+      guildId: gdbc.guildId,
+      table: PlayerSerializerIds.table,
       columns: playerColumns,
-      sortColumn: standardSortColumn,
+      sortColumn: PlayerSerializerIds.lobbyCountColumn,
     });
     this.userId = userId;
   }
@@ -37,15 +39,15 @@ export class PlayerSerializer extends Serializer<Player> {
   }
 
   protected getCondition(): string[] {
-    return [`${idColumnName} = '${this.userId}'`];
+    return [`${PlayerSerializerIds.tagColumn} = '${this.userId}'`];
   }
 
   protected getSerializableCondition(serializable: Player): string[] {
-    return [`${idColumnName} = '${serializable.userId}'`];
+    return [`${PlayerSerializerIds.tagColumn} = '${serializable.userId}'`];
   }
 
   protected getDeletionIdentifierColumns(): string[] {
-    return [idColumnName];
+    return [PlayerSerializerIds.tagColumn];
   }
 
   protected getSerializableDeletionValues(playeres: Player[]): string[] {
@@ -53,19 +55,15 @@ export class PlayerSerializer extends Serializer<Player> {
   }
 }
 
-const playerTable = "players";
-
 const playerColumns = [
-  "userId",
-  "tag",
-  "referredBy",
-  "referralLock",
-  "lobbyCount",
-  "lobbyCountUnranked",
-  "lobbyCountBotBash",
-  "lobbyCount5v5",
-  "lobbyCountReplayAnalysis",
-  "offenses",
+  PlayerSerializerIds.userColumn,
+  PlayerSerializerIds.tagColumn,
+  PlayerSerializerIds.referredByColumn,
+  PlayerSerializerIds.referralLockColumn,
+  PlayerSerializerIds.lobbyCountColumn,
+  PlayerSerializerIds.lobbyCountUnrankedColumn,
+  PlayerSerializerIds.lobbyCountBotBashColumn,
+  PlayerSerializerIds.lobbyCount5v5Column,
+  PlayerSerializerIds.lobbyCountReplayAnalysisColumn,
+  PlayerSerializerIds.offensesColumn,
 ];
-const idColumnName = playerColumns[0];
-const standardSortColumn = playerColumns[4];

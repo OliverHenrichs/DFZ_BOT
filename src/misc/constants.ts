@@ -1,4 +1,6 @@
 import { GuildEmoji, ReactionEmoji } from "discord.js";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 export const botToken: string = process.env.BOT_TOKEN
   ? process.env.BOT_TOKEN

@@ -6,9 +6,9 @@ export interface ITime {
   day: number;
   hours: number;
   minutes: number;
+  epoch: number;
   seconds?: number;
   milliseconds?: number;
   dayOfWeek?: number;
-  epoch: number;
   zone?: ITimeZoneOffset;
 }

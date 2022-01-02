@@ -1,6 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
 import { getLobbyTypeByString, lobbyTypeKeys } from "../../../misc/constants";
-import { LobbySerializer } from "../../serializers/lobbySerializer";
 import { CalendarDefinitions } from "../../time/CalendarDefinitions";
 import { RegionDefinitions } from "../../time/RegionDefinitions";
 import { ChannelManager } from "../DFZChannelManager";
@@ -88,29 +87,6 @@ export class CommandBuilderOptionUtils {
           .setRequired(true)
           .addChoices(this.getTimeZoneChoices())
       );
-  }
-
-  public static async addMessageIdOption(
-    builder: SlashCommandBuilder,
-    client: DFZDiscordClient
-  ) {
-    const lobbyMessageIDs =
-      await CommandBuilderOptionUtils.getAllCurrentLobbyMessages(client);
-    builder.addStringOption((option) =>
-      option
-        .setName(CommandOptionNames.message)
-        .setDescription("Give message ID of lobby post")
-        .setRequired(true)
-        .addChoices(lobbyMessageIDs)
-    );
-  }
-
-  private static async getAllCurrentLobbyMessages(
-    client: DFZDiscordClient
-  ): Promise<[name: string, value: string][]> {
-    const serializer = new LobbySerializer(client.dbClient);
-    const lobbies = await serializer.get();
-    return lobbies.map((lobby) => [lobby.messageId, lobby.messageId]);
   }
 
   private static getOptionTypeChoices() {

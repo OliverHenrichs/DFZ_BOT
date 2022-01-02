@@ -1,5 +1,5 @@
 import { Message } from "discord.js";
-import { reactPositive } from "../../misc/messageHelper";
+import { getGuildIdFromMessage, reactPositive } from "../../misc/messageHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { EmbeddingCreator } from "../discord/EmbeddingCreator";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
@@ -18,7 +18,8 @@ export abstract class AbstractHighscoreProvider<T> {
   }
 
   public async postHighscore(message: Message) {
-    const users = await this.getUsersFromDatabase();
+    const gid = getGuildIdFromMessage(message);
+    const users = await this.getUsersFromDatabase(gid);
     this.fillTableAndSendHighscores(users, message);
   }
 
@@ -27,7 +28,7 @@ export abstract class AbstractHighscoreProvider<T> {
     return this.resultTable;
   }
 
-  protected abstract getUsersFromDatabase(): Promise<T[]>;
+  protected abstract getUsersFromDatabase(guildId: string): Promise<T[]>;
 
   private async fillTableAndSendHighscores(users: T[], message: Message) {
     this.fillHighscoreTable(users);

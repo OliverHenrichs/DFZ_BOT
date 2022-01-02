@@ -1,10 +1,10 @@
-import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
+import { Referrer } from "../serializables/referrer";
+import { ReferrerSerializer } from "../serializers/ReferrerSerializer";
+import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
 import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
-import { Referrer } from "../serializables/referrer";
-import { ReferrerSerializer } from "../serializers/referrerSerializer";
 
 export class ReferrerHighscoreProvider extends AbstractHighscoreProvider<Referrer> {
   constructor(dbClient: DFZDataBaseClient) {
@@ -17,8 +17,11 @@ export class ReferrerHighscoreProvider extends AbstractHighscoreProvider<Referre
     super(settings);
   }
 
-  protected async getUsersFromDatabase() {
-    const serializer = new ReferrerSerializer(this.dbClient);
+  protected async getUsersFromDatabase(guildId: string) {
+    const serializer = new ReferrerSerializer({
+      dbClient: this.dbClient,
+      guildId,
+    });
     const referrers = await serializer.getSorted();
     if (referrers.length === 0) throw "No highscore referrer entries.";
     return referrers;

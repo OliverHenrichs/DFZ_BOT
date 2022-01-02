@@ -1,14 +1,15 @@
-import { Message, TextBasedChannels } from "discord.js";
+import { Guild, Message, TextBasedChannels } from "discord.js";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { Lobby } from "../logic/serializables/lobby";
-import { LobbySerializer } from "../logic/serializers/lobbySerializer";
+import { LobbySerializer } from "../logic/serializers/LobbySerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
 import {
   findLobbyByMessage,
   getArguments,
-  reactNegative,
   reactPositive,
 } from "../misc/messageHelper";
+import { IMessageIdentifier } from "../misc/types/IMessageIdentifier";
 
 /**
  * Kicks a player
@@ -20,7 +21,7 @@ export default async (message: Message, dbClient: DFZDataBaseClient) => {
     const kickSpecifics = await getKickSpecificsFromMessage(message, dbClient);
     await kickPlayerAndReact(kickSpecifics, message, dbClient);
   } catch (err) {
-    console.log(`Error updating lobby after kicking: ${err}`);
+    reactPositive(message, "Failed kicking player:" + err);
   }
 };
 
@@ -28,21 +29,19 @@ async function getKickSpecificsFromMessage(
   message: Message,
   dbClient: DFZDataBaseClient
 ): Promise<KickSpecifics> {
-  return new Promise<KickSpecifics>(async (resolve, reject) => {
-    try {
-      const kickArguments = getKickArguments(message);
-      const lobby = await findLobbyByMessage(
-        dbClient,
-        message.channel.id,
-        kickArguments.messageId
-      );
-      const kickeeIndex = await getKickeeIndex(lobby, kickArguments.userId);
-      resolve({ lobby: lobby, kickeeIndex: kickeeIndex });
-    } catch (errorMessage) {
-      reactNegative(message, errorMessage as string);
-      reject("Could not get lobby or player.");
-    }
-  });
+  if (!message.guildId) {
+    throw new Error("Not a message from a guild.");
+  }
+
+  const kickArguments = getKickArguments(message);
+  const mId: IMessageIdentifier = {
+    messageId: kickArguments.messageId,
+    channelId: message.channel.id,
+    guildId: message.guildId,
+  };
+  const lobby = await findLobbyByMessage(dbClient, mId);
+  const kickeeIndex = await getKickeeIndex(lobby, kickArguments.userId);
+  return { lobby: lobby, kickeeIndex: kickeeIndex };
 }
 
 interface KickSpecifics {
@@ -76,21 +75,32 @@ async function kickPlayerAndReact(
   message: Message,
   dbClient: DFZDataBaseClient
 ) {
-  await kickPlayer(kickSpecifics, dbClient, message.channel);
+  if (!message.guild) {
+    throw new Error("Must be a guild message.");
+  }
+  await kickPlayer(kickSpecifics, dbClient, message.channel, message.guild);
   reactPositive(message, "Kicked player.");
 }
 
 export async function kickPlayer(
   kickSpecifics: KickSpecifics,
   dbClient: DFZDataBaseClient,
-  channel: TextBasedChannels
+  channel: TextBasedChannels,
+  guild: Guild
 ) {
   kickSpecifics.lobby.users.splice(kickSpecifics.kickeeIndex, 1);
-
-  const serializer = new LobbySerializer(dbClient);
-  await serializer.update(kickSpecifics.lobby);
-
+  await updateLobbyInBackend(guild, dbClient, kickSpecifics.lobby);
   await LobbyPostManipulator.tryUpdateLobbyPost(kickSpecifics.lobby, channel);
+}
+
+async function updateLobbyInBackend(
+  guild: Guild,
+  dbClient: DFZDataBaseClient,
+  lobby: Lobby
+) {
+  const gdbc = SerializeUtils.fromGuildtoGuildDBClient(guild, dbClient);
+  const serializer = new LobbySerializer(gdbc);
+  await serializer.update(lobby);
 }
 
 export async function kickMultiplePlayers(lobby: Lobby, userIDs: string[]) {

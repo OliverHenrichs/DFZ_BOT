@@ -1,12 +1,13 @@
-import { User, TextBasedChannels } from "discord.js";
+import { TextBasedChannels, User } from "discord.js";
 import {
-  getPlayersPerLobbyByLobbyType,
   getLobbyNameByType,
+  getPlayersPerLobbyByLobbyType,
 } from "../../misc/constants";
 import { saveCoachParticipation } from "../../misc/tracker";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
 import { Lobby } from "../serializables/lobby";
-import { LobbySerializer } from "../serializers/lobbySerializer";
+import { LobbySerializer } from "../serializers/LobbySerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
 import { LobbyPostManipulator } from "./LobbyPostManipulator";
 
 export class LobbyStarter {
@@ -56,6 +57,7 @@ export class LobbyStarter {
 
     await saveCoachParticipation(
       this.client.dbClient,
+      this.lobby.guildId,
       this.lobby.coaches,
       this.lobby.type
     );
@@ -67,13 +69,18 @@ export class LobbyStarter {
 
   private async updateDatabase() {
     this.lobby.started = true;
-    const serializer = new LobbySerializer(this.client.dbClient);
+
+    const gdbc = SerializeUtils.getGuildDBClient(
+      this.lobby.guildId,
+      this.client.dbClient
+    );
+    const serializer = new LobbySerializer(gdbc);
     await serializer.update(this.lobby);
   }
 
   private testLobbyStartTime(lobby: Lobby, coach: User): boolean {
     const fiveMinInMs = 300000;
-    var timeLeftInMS = lobby.date - +new Date();
+    var timeLeftInMS = lobby.date.epoch - +new Date();
     if (timeLeftInMS > fiveMinInMs) {
       this.handleEarlyStartAttempt(
         coach,

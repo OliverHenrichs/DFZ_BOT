@@ -13,31 +13,36 @@ import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
 import { IRemainingTime } from "../lobby/interfaces/RemainingTime";
 import { LobbyPostManipulator } from "../lobby/LobbyPostManipulator";
 import { UserTableGenerator } from "../lobby/UserTableGenerator";
-import { LobbySerializer } from "../serializers/lobbySerializer";
+import { LobbySerializer } from "../serializers/LobbySerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
+import { ITime } from "../time/interfaces/Time";
 import { TimeConverter } from "../time/TimeConverter";
+import { Serializable } from "./Serializable";
 
-export class Lobby {
-  type: number;
-  date: number;
-  users: Array<LobbyPlayer>;
-  coaches: Array<string>;
-  beginnerRoleIds: Array<string>;
-  regionId: string;
-  channelId: string;
-  messageId: string;
-  started: boolean = false;
-  text: string;
+export class Lobby extends Serializable {
+  public type: number;
+  public date: ITime;
+  public users: Array<LobbyPlayer>;
+  public coaches: Array<string>;
+  public beginnerRoleIds: Array<string>;
+  public regionId: string;
+  public channelId: string;
+  public messageId: string;
+  public started: boolean = false;
+  public text: string;
 
   constructor(
     type: number,
-    date: number,
+    date: ITime,
     coaches: Array<string> = [],
     beginnerRoleIds: Array<string> = [],
     regionId: string = "",
+    guildId: string,
     channelId: string = "",
     messageId: string = "",
     text: string = ""
   ) {
+    super(guildId);
     this.type = type;
     this.date = date;
     this.users = [];
@@ -51,7 +56,7 @@ export class Lobby {
 
   public calculateRemainingTime(): IRemainingTime {
     var res = {
-      totalMs: this.date - Date.now(),
+      totalMs: this.date.epoch - Date.now(),
       minutes: -1,
       hours: -1,
     };
@@ -77,7 +82,8 @@ export class Lobby {
   ) {
     LobbyPostManipulator.tryUpdateLobbyPost(this, channel)
       .then(() => {
-        const serializer = new LobbySerializer(dbClient);
+        const gdbc = SerializeUtils.getGuildDBClient(this.guildId, dbClient);
+        const serializer = new LobbySerializer(gdbc);
         serializer.update(this);
       })
       .catch((err: string) =>
@@ -135,6 +141,10 @@ export class Lobby {
       this.users.splice(idx, 1);
     }
 
+    if (!reaction.message.guild) {
+      return;
+    }
+
     await this.updateLobbyPostAndDBEntry(reaction.message.channel, dbClient);
   }
 
@@ -181,9 +191,11 @@ export class Lobby {
 
   public static async getChannelLobbies(
     dbClient: DFZDataBaseClient,
+    guildId: string,
     channelId: string
   ) {
-    const serializer = new LobbySerializer(dbClient, channelId);
+    const gdbc = SerializeUtils.getGuildDBClient(guildId, dbClient);
+    const serializer = new LobbySerializer(gdbc, channelId);
     return await serializer.get();
   }
 }

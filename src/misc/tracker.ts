@@ -1,32 +1,38 @@
-import { lobbyTypes } from "./constants";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { SQLUtils } from "../logic/database/SQLUtils";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { LobbyPlayer } from "../logic/lobby/interfaces/LobbyPlayer";
 import { Coach } from "../logic/serializables/coach";
-import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { Player } from "../logic/serializables/player";
-import { CoachSerializer } from "../logic/serializers/coachSerializer";
-import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
-import { PlayerSerializer } from "../logic/serializers/playerSerializer";
-import { SQLUtils } from "../logic/database/SQLUtils";
+import { CoachSerializer } from "../logic/serializers/CoachSerializer";
+import { PlayerSerializer } from "../logic/serializers/PlayerSerializer";
+import { IGuildDataBaseClient } from "../logic/serializers/types/IGuildDataBaseClient";
+import { lobbyTypes } from "./constants";
 
 export async function saveCoachParticipation(
   dbClient: DFZDataBaseClient,
+  guildId: string,
   coaches: Array<string>,
   lobbyType: number
 ) {
   var isTryout = lobbyType === lobbyTypes.tryout;
   var isReplayAnalysis = lobbyType === lobbyTypes.replayAnalysis;
   var isNormal = !isTryout && !isReplayAnalysis;
+  const gdbc: IGuildDataBaseClient = {
+    guildId,
+    dbClient,
+  };
 
   for (let i = 0; i < coaches.length; i++) {
     var coachId = coaches[i];
-
-    const serializer = new CoachSerializer(dbClient, coachId);
+    const serializer = new CoachSerializer(gdbc, coachId);
     const dBCoachList = await serializer.get();
 
     if (dBCoachList.length === 0 || dBCoachList[0].userId !== coachId) {
       await serializer.insert(
         new Coach(
           coachId,
+          guildId,
           1,
           isTryout ? 1 : 0,
           isNormal ? 1 : 0,
@@ -48,6 +54,7 @@ export async function saveCoachParticipation(
 
 export async function savePlayerParticipation(
   client: DFZDiscordClient,
+  guildId: string,
   users: Array<LobbyPlayer>,
   lobbyType: number,
   playersPerLobby: number
@@ -61,15 +68,22 @@ export async function savePlayerParticipation(
     referralLock = 0,
     lobbyCount = 1;
 
+  const gdbc: IGuildDataBaseClient = {
+    dbClient: client.dbClient,
+    guildId,
+  };
+
   for (let i = 0; i < Math.min(users.length, playersPerLobby); i++) {
-    const serializer = new PlayerSerializer(client.dbClient, users[i].id);
+    const uid = users[i].id;
+    const serializer = new PlayerSerializer(gdbc, uid);
     const players = await serializer.get();
 
     if (players.length === 0) {
-      var user = await client.users.fetch(users[i].id);
+      var user = await client.users.fetch(uid);
       await serializer.insert(
         new Player(
           user.id,
+          guildId,
           SQLUtils.escape(user.tag),
           referredBy,
           referralLock,

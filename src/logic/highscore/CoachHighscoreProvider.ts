@@ -1,7 +1,8 @@
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { Coach } from "../serializables/coach";
-import { CoachSerializer } from "../serializers/coachSerializer";
+import { CoachSerializer } from "../serializers/CoachSerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
 import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
 import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
@@ -16,8 +17,9 @@ export class CoachHighscoreProvider extends AbstractHighscoreProvider<Coach> {
     super(settings);
   }
 
-  protected async getUsersFromDatabase() {
-    const serializer = new CoachSerializer(this.dbClient);
+  protected async getUsersFromDatabase(guildId: string) {
+    const gdbc = SerializeUtils.getGuildDBClient(guildId, this.dbClient);
+    const serializer = new CoachSerializer(gdbc);
     const coaches = await serializer.getSorted();
     if (coaches.length === 0) throw "No highscore coach entries.";
     return coaches;

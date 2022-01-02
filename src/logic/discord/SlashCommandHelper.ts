@@ -78,7 +78,7 @@ export class SlashCommandHelper {
     return this.getSelectOption(
       getLobbyNameByType(lobby.type) +
         " lobby at " +
-        new Date(lobby.date).toTimeString(),
+        new Date(lobby.date.epoch).toTimeString(),
       lobby.messageId
     );
   }

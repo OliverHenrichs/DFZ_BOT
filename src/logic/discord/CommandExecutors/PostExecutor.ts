@@ -2,7 +2,7 @@ import { CommandInteraction, Interaction, MessageActionRow } from "discord.js";
 import { lobbyTypes } from "../../../misc/constants";
 import { LobbyPostManipulator } from "../../lobby/LobbyPostManipulator";
 import { Lobby } from "../../serializables/lobby";
-import { getDateFromInteraction } from "../../time/timeZone";
+import { getTimeFromInteraction } from "../../time/timeZone";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { CommandOptionNames } from "../interfaces/CommandOptionNames";
 import { LobbyMenuType } from "../interfaces/LobbyMenuType";
@@ -30,8 +30,8 @@ export class PostExecutor extends AbstractExecutor {
       )
     );
 
-    const date = getDateFromInteraction(interaction);
-    if (!date) {
+    const time = getTimeFromInteraction(interaction);
+    if (!time) {
       throw new Error("Received invalid time from command.");
     }
 
@@ -39,11 +39,11 @@ export class PostExecutor extends AbstractExecutor {
 
     const newLobby = new Lobby(
       lobbyType,
-      date.getTime(),
+      time,
       interaction.member ? [interaction.member.user.id] : [],
       [getDefaultBeginnerRoleByLobbyType(lobbyType)],
       getDefaultRegionRoleByLobbyType(lobbyType),
-      "",
+      interaction.guildId ? interaction.guildId : "",
       "",
       freeText ? freeText : ""
     );

@@ -4,11 +4,15 @@ import { reactNegative, reactPositive } from "../misc/messageHelper";
 import { postSchedules } from "../misc/scheduleManagement";
 
 export default async (message: Message, client: DFZDiscordClient) => {
-  postSchedules(client)
-    .then(() => {
-      reactPositive(message, "I posted this week's schedules");
-    })
-    .catch((error) => {
-      reactNegative(message, error);
-    });
+  try {
+    await tryPostSchedules(message, client);
+  } catch (error) {
+    reactNegative(message, error as string);
+  }
 };
+
+async function tryPostSchedules(message: Message, client: DFZDiscordClient) {
+  if (!message.guild) throw new Error("Only guild messages");
+  await postSchedules({ client: client, guild: message.guild });
+  reactPositive(message, "I posted this week's schedules");
+}

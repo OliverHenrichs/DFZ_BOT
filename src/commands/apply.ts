@@ -3,29 +3,47 @@ import { SQLUtils } from "../logic/database/SQLUtils";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { Player } from "../logic/serializables/player";
 import { Referrer } from "../logic/serializables/referrer";
-import { PlayerSerializer } from "../logic/serializers/playerSerializer";
-import { ReferrerSerializer } from "../logic/serializers/referrerSerializer";
-import { reactNegative, reactPositive } from "../misc/messageHelper";
+import { PlayerSerializer } from "../logic/serializers/PlayerSerializer";
+import { ReferrerSerializer } from "../logic/serializers/ReferrerSerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
+import { IGuildDataBaseClient } from "../logic/serializers/types/IGuildDataBaseClient";
+import {
+  getGuildFromMessage,
+  reactNegative,
+  reactPositive,
+} from "../misc/messageHelper";
+import { IGuildClient } from "../misc/types/IGuildClient";
 
 export default async (client: DFZDiscordClient, message: Message) => {
-  const serializer = new PlayerSerializer(client.dbClient, message.author.id);
-  var player = await serializer.get();
-  if (player.length > 0) {
-    reactNegative(message, "You have already signed up", false);
-    return;
+  try {
+    await tryApplyUser(message, client);
+    reactPositive(message, "You just signed up :) Thanks!", false);
+  } catch (error) {
+    reactNegative(message, error as string, false);
   }
+};
+
+async function tryApplyUser(message: Message, client: DFZDiscordClient) {
+  const guild = getGuildFromMessage(message);
+
+  const gdbc = SerializeUtils.fromGuildtoGuildDBClient(guild, client.dbClient);
+  const serializer = new PlayerSerializer(gdbc, message.author.id);
+  var player = await serializer.get();
+  if (player.length > 0) throw "You have already signed up";
+
+  const guildClient: IGuildClient = { guild, client };
   const refTag = SQLUtils.escape(getReferralTag(message.content));
-  if (refTag) handleReferrerTag(client, refTag);
+  if (refTag) handleReferrerTag(guildClient, refTag);
 
   serializer.insert(
     new Player(
       message.author.id,
+      guild.id,
       SQLUtils.escape(message.author.tag),
       refTag ? refTag : ""
     )
   );
-  reactPositive(message, "You just signed up :) Thanks!", false);
-};
+}
 
 function getReferralTag(message: string): string | undefined {
   var args = getTrimmedMessageArguments(message);
@@ -59,27 +77,36 @@ function validateReferralTag(refTag: string): string | undefined {
   return match[0];
 }
 
-async function handleReferrerTag(client: DFZDiscordClient, refTag: string) {
-  const serializer = new ReferrerSerializer(client.dbClient, refTag);
+async function handleReferrerTag(client: IGuildClient, refTag: string) {
+  const dbGuildClient: IGuildDataBaseClient = {
+    dbClient: client.client.dbClient,
+    guildId: client.guild.id,
+  };
+  const serializer = new ReferrerSerializer(dbGuildClient, refTag);
   if (!(await serializer.get())) addReferrer(client, serializer, refTag);
 }
 
 function addReferrer(
-  client: DFZDiscordClient,
+  client: IGuildClient,
   serializer: ReferrerSerializer,
   refTag: string
 ) {
   const referrerId = findReferrerId(refTag, client);
   serializer.insert(
-    new Referrer(referrerId === undefined ? "Unknown" : referrerId, refTag, 0)
+    new Referrer(
+      referrerId === undefined ? "Unknown" : referrerId,
+      client.guild.id,
+      refTag,
+      0
+    )
   );
 }
 
 function findReferrerId(
   refTag: string,
-  client: DFZDiscordClient
+  client: IGuildClient
 ): string | undefined {
-  const referrerUser = client.users.cache.find((u) => u.tag === refTag);
+  const referrerUser = client.client.users.cache.find((u) => u.tag === refTag);
   if (referrerUser !== undefined) {
     return referrerUser.id;
   }

@@ -1,10 +1,10 @@
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
+import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { Player } from "../serializables/player";
-import { PlayerSerializer } from "../serializers/playerSerializer";
+import { PlayerSerializer } from "../serializers/PlayerSerializer";
 import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
 import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
-import { IFieldElement } from "../discord/interfaces/IFieldElement";
 
 export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
   constructor(dbClient: DFZDataBaseClient) {
@@ -17,8 +17,11 @@ export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
     super(settings);
   }
 
-  protected async getUsersFromDatabase() {
-    const serializer = new PlayerSerializer(this.dbClient);
+  protected async getUsersFromDatabase(guildId: string) {
+    const serializer = new PlayerSerializer({
+      guildId,
+      dbClient: this.dbClient,
+    });
     const players = await serializer.getSorted();
     if (players.length === 0) throw "No highscore player entries.";
     return players;

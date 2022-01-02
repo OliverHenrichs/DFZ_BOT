@@ -8,6 +8,7 @@ import {
 import { kickMultiplePlayers } from "../../../commands/kick";
 import { lobbyTypes } from "../../../misc/constants";
 import { findLobbyByMessage } from "../../../misc/messageHelper";
+import { IMessageIdentifier } from "../../../misc/types/IMessageIdentifier";
 import { LobbyPostManipulator } from "../../lobby/LobbyPostManipulator";
 import { Lobby } from "../../serializables/lobby";
 import { KickExecutor } from "../CommandExecutors/KickExecutor";
@@ -207,16 +208,19 @@ export class LobbyMenuUtils {
     client: DFZDiscordClient,
     menu: ILobbyMenu
   ) {
+    if (!selector.guildId) {
+      throw new Error("No associated guild");
+    }
     const lobbyMessageId = selector.values[0];
-    const lobby = await findLobbyByMessage(
-      client.dbClient,
-      selector.channelId,
-      lobbyMessageId
-    );
+    const mId: IMessageIdentifier = {
+      messageId: lobbyMessageId,
+      channelId: selector.channelId,
+      guildId: selector.guildId,
+    };
 
-    menu.lobby = lobby;
+    menu.lobby = await findLobbyByMessage(client.dbClient, mId);
     this.addOrReplaceLobbyMenu(client, selector, menu);
-    return lobby;
+    return menu.lobby;
   }
 
   private static async getLobbyTypeSpecificOptions(

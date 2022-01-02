@@ -4,6 +4,7 @@ import { getLobbyNameByType, lobbyTypes } from "../../misc/constants";
 import { scheduleTypes } from "../../misc/types/scheduleTypes";
 import { Schedule } from "../serializables/schedule";
 import { RegionDefinitions } from "../time/RegionDefinitions";
+import { TimeInMs } from "../time/TimeConverter";
 import { getTimeZoneStringFromRegion } from "../time/timeZone";
 
 export class GoogleCalendarManager {
@@ -22,7 +23,7 @@ export class GoogleCalendarManager {
   }
 
   private static tryLogin() {
-    const privateKey = require("../../../../service_key.json");
+    const privateKey = require("../../../service_key.json");
 
     GoogleCalendarManager.jwtClient = new Auth.JWT(
       privateKey.client_email,
@@ -64,16 +65,13 @@ export class GoogleCalendarManager {
     return GoogleCalendarManager.insertEvent(event, schedule);
   }
 
-  private static twoHoursInMS = 1000 * 60 * 60 * 2;
   private static createTimedEvent(
     schedule: Schedule,
     summary: string,
     description: string
   ) {
     const start = new Date(Number(schedule.date));
-    const end = new Date(
-      Number(schedule.date) + GoogleCalendarManager.twoHoursInMS
-    );
+    const end = new Date(Number(schedule.date) + TimeInMs.twoHours);
     const timeZoneString = getTimeZoneStringFromRegion(schedule.region);
 
     return GoogleCalendarManager.createEvent(

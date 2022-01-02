@@ -23,7 +23,7 @@ export class DFZDataBaseClient {
 
   public async tryCreateDataBaseTables() {
     try {
-      this.createDataBaseTables();
+      await this.createDataBaseTables();
     } catch (error) {
       console.log(`Failed creating database tables with error: ${error}`);
     }

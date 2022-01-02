@@ -1,18 +1,19 @@
+import { Guild } from "discord.js";
 import express from "express";
 import { Express } from "express-serve-static-core";
-
 import http from "http";
 import https from "https";
-import { CoachSerializer } from "../src/logic/serializers/coachSerializer";
-import { ReferrerSerializer } from "../src/logic/serializers/referrerSerializer";
+import { DFZDiscordClient } from "../src/logic/discord/DFZDiscordClient";
 import { Coach } from "../src/logic/serializables/coach";
 import { Referrer } from "../src/logic/serializables/referrer";
+import { CoachSerializer } from "../src/logic/serializers/CoachSerializer";
+import { ReferrerSerializer } from "../src/logic/serializers/ReferrerSerializer";
+import { SerializeUtils } from "../src/logic/serializers/SerializeUtils";
+import { TimeInMs } from "../src/logic/time/TimeConverter";
 import { dfzGuildId } from "../src/misc/constants";
-import { tryGetSSLCredentials } from "./ssl";
-import { setupMiddleWares } from "./middlewares";
 import { registerEndpoints } from "./endPoints";
-import { Guild } from "discord.js";
-import { DFZDiscordClient } from "../src/logic/discord/DFZDiscordClient";
+import { setupMiddleWares } from "./middlewares";
+import { tryGetSSLCredentials } from "./ssl";
 
 export default class Website {
   app: Express;
@@ -81,17 +82,21 @@ export default class Website {
 
   private async setupReferrerHallOfFame() {
     await this.updateReferrerList();
-    setInterval(this.updateReferrerList.bind(this), twoHours);
+    setInterval(this.updateReferrerList.bind(this), TimeInMs.twoHours);
   }
 
   private async updateReferrerList() {
-    const serializer = new ReferrerSerializer(this.client.dbClient);
+    const gdbc = SerializeUtils.getGuildDBClient(
+      dfzGuildId,
+      this.client.dbClient
+    );
+    const serializer = new ReferrerSerializer(gdbc);
     this.referrerList = await serializer.getSorted();
   }
 
   private async setupCoachHallOfFame() {
     await this.tryGetCoachList();
-    setInterval(this.tryGetCoachList.bind(this), twoHours);
+    setInterval(this.tryGetCoachList.bind(this), TimeInMs.twoHours);
   }
 
   private async tryGetCoachList() {
@@ -103,7 +108,10 @@ export default class Website {
   }
 
   private async getCoachList() {
-    const serializer = new CoachSerializer(this.client.dbClient);
+    const serializer = new CoachSerializer({
+      guildId: dfzGuildId,
+      dbClient: this.client.dbClient,
+    });
     const nativeCoachList = await serializer.getSorted();
 
     this.coachList = await this.addCoachDisplayNames(nativeCoachList);
@@ -111,11 +119,9 @@ export default class Website {
 
   private async addCoachDisplayNames(coaches: Coach[]) {
     var guild = await this.client.guilds.fetch(dfzGuildId);
-
     for (const coach of coaches) {
       await this.setGuildDisplayName(coach, guild);
     }
-
     return coaches;
   }
 
@@ -128,5 +134,3 @@ export default class Website {
     }
   }
 }
-
-const twoHours = 2 * 60 * 60 * 1000;

@@ -55,22 +55,17 @@ export function getTimeZoneStringFromRegion(_region: string) {
 }
 
 export function getZonedTimeFromDateAndRegion(
-  date: Date,
+  time: ITime,
   regionRole: string
 ): ITime | undefined {
   const regionInfo = RegionDefinitions.regions.find(
     (region) => region.role === regionRole
   );
   if (!regionInfo) {
-    throw new Error(
-      "Cannot find region for lobby time calculation,\ndate: " +
-        date.toUTCString() +
-        ",\nRegion role: " +
-        regionRole
-    );
+    return time;
   }
 
-  return getZonedTimeFromTimeZoneName(date, regionInfo.timeZoneName);
+  return getZonedTimeFromTimeZoneName(time.epoch, regionInfo.timeZoneName);
 }
 
 /**
@@ -151,12 +146,6 @@ export function calculateLobbyTime(
   return new Date(zonedDate.epoch + timeDif);
 }
 
-/**
- * Returns time in given time zone if time zone name is being recognized
- * @param {Date} date
- * @param {string} timezoneName
- * @return {tZ.Time} zoned time
- */
 export function getZonedTimeFromTimeZoneName(
   date: Date | number,
   timezoneName: string
@@ -165,9 +154,9 @@ export function getZonedTimeFromTimeZoneName(
   return getZonedTime(date, zone);
 }
 
-export function getDateFromInteraction(
+export function getTimeFromInteraction(
   interaction: CommandInteraction
-): Date | undefined {
+): ITime | undefined {
   const hour = interaction.options.getNumber(CommandOptionNames.hour);
   const minute = interaction.options.getNumber(CommandOptionNames.minute);
   const timezoneName = interaction.options.getString(
@@ -180,17 +169,16 @@ export function getDateFromInteraction(
 
   const zone = StringTimeValidator.validateTimeZoneString(timezoneName);
   const date = calculateLobbyTime(zone, { hour, minute });
-  return date;
+  return getZonedTime(date, zone);
 }
 
-/**
- *
- * @param {Date} date
- * @param {tZ.timezone} timezone
- */
 function getZonedTime(date: Date | number, timezone: ITimeZoneInfo): ITime {
   const zonedTime = tZ.getZonedTime(date, timezone);
   if (zonedTime.epoch === undefined)
     throw new Error(`Could not get zoned time because epoch is undefined`);
-  return zonedTime as ITime;
+
+  // epoch is not serializable for some reason...
+  const returnTime: ITime = JSON.parse(JSON.stringify(zonedTime));
+  returnTime.epoch = zonedTime.epoch;
+  return returnTime;
 }

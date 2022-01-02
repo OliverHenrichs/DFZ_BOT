@@ -1,4 +1,10 @@
 import { Pool } from "mysql2/promise";
+import { CoachSerializerIds } from "../serializers/types/CoachSerializerIds";
+import { LobbySerializerIds } from "../serializers/types/LobbySerializerIds";
+import { PlayerSerializerIds } from "../serializers/types/PlayerSerializerIds";
+import { ReferrerSerializerIds } from "../serializers/types/ReferrerSerializerIds";
+import { ScheduleSerializerIds } from "../serializers/types/ScheduleSerializerIds";
+import { SerializerIds } from "../serializers/types/SerializerIds";
 import { ISqlTableColumn } from "./interfaces/SqlTableColumn";
 
 export class SQLTableCreator {
@@ -66,26 +72,30 @@ export class SQLTableCreator {
     tableColumns: ISqlTableColumn[];
   } {
     return {
-      tableName: "coaches",
+      tableName: CoachSerializerIds.table,
       tableColumns: [
         {
-          id: "userId",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "lobbyCount",
+          id: CoachSerializerIds.userColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: CoachSerializerIds.lobbyCountColumn,
           type: "int",
         },
         {
-          id: "lobbyCountTryout",
+          id: CoachSerializerIds.lobbyCountTryoutColumn,
           type: "int",
         },
         {
-          id: "lobbyCountNormal",
+          id: CoachSerializerIds.lobbyCountNormalColumn,
           type: "int",
         },
         {
-          id: "lobbyCountReplayAnalysis",
+          id: CoachSerializerIds.lobbyCountReplayAnalysisColumn,
           type: "int",
         },
       ],
@@ -97,46 +107,50 @@ export class SQLTableCreator {
     tableColumns: ISqlTableColumn[];
   } {
     return {
-      tableName: "players",
+      tableName: PlayerSerializerIds.table,
       tableColumns: [
         {
-          id: "userId",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "tag",
+          id: PlayerSerializerIds.userColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "referredBy",
+          id: PlayerSerializerIds.tagColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "referralLock",
+          id: PlayerSerializerIds.referredByColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: PlayerSerializerIds.referralLockColumn,
           type: "TINYINT(1)",
         },
         {
-          id: "lobbyCount",
+          id: PlayerSerializerIds.lobbyCountColumn,
           type: "int",
         },
         {
-          id: "lobbyCountUnranked",
+          id: PlayerSerializerIds.lobbyCountUnrankedColumn,
           type: "int",
         },
         {
-          id: "lobbyCountBotBash",
+          id: PlayerSerializerIds.lobbyCountBotBashColumn,
           type: "int",
         },
         {
-          id: "lobbyCount5v5",
+          id: PlayerSerializerIds.lobbyCount5v5Column,
           type: "int",
         },
         {
-          id: "lobbyCountReplayAnalysis",
+          id: PlayerSerializerIds.lobbyCountReplayAnalysisColumn,
           type: "int",
         },
         {
-          id: "offenses",
+          id: PlayerSerializerIds.offensesColumn,
           type: "int",
         },
       ],
@@ -148,18 +162,22 @@ export class SQLTableCreator {
     tableColumns: ISqlTableColumn[];
   } {
     return {
-      tableName: "referrers",
+      tableName: ReferrerSerializerIds.table,
       tableColumns: [
         {
-          id: "userId",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "tag",
+          id: ReferrerSerializerIds.userColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "referralCount",
+          id: ReferrerSerializerIds.tagColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: ReferrerSerializerIds.refCountColumn,
           type: "int",
         },
       ],
@@ -174,15 +192,19 @@ export class SQLTableCreator {
       tableName: "schedules",
       tableColumns: [
         {
-          id: "emoji",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "message_id",
+          id: ScheduleSerializerIds.emojiColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "data",
+          id: ScheduleSerializerIds.messageColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: SerializerIds.dataColumn,
           type: "JSON",
         },
       ],
@@ -194,18 +216,22 @@ export class SQLTableCreator {
     tableColumns: ISqlTableColumn[];
   } {
     return {
-      tableName: "lobbies",
+      tableName: LobbySerializerIds.table,
       tableColumns: [
         {
-          id: "channel_id",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "message_id",
+          id: LobbySerializerIds.channelColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "data",
+          id: LobbySerializerIds.messageColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: SerializerIds.dataColumn,
           type: "JSON",
         },
       ],

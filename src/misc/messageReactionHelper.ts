@@ -10,6 +10,7 @@ import {
 import { Lobby } from "../logic/serializables/lobby";
 import { botId } from "./constants";
 import { findLobbyByMessage } from "./messageHelper";
+import { IMessageIdentifier } from "./types/IMessageIdentifier";
 
 export interface LobbyReactionInfo {
   lobby: Lobby;
@@ -29,11 +30,15 @@ export async function getInfoFromLobbyReaction(
   reaction: MessageReaction,
   user: User
 ): Promise<LobbyReactionInfo> {
-  const lobby = await findLobbyByMessage(
-    client.dbClient,
-    reaction.message.channel.id,
-    reaction.message.id
-  );
+  if (!reaction.message.guildId) {
+    throw new Error("No associated guild");
+  }
+  const mId: IMessageIdentifier = {
+    messageId: reaction.message.id,
+    channelId: reaction.message.channel.id,
+    guildId: reaction.message.guildId,
+  };
+  const lobby = await findLobbyByMessage(client.dbClient, mId);
   const guildMember = await fetchGuildMember(reaction, user.id);
   const role = findAndVerifyRole(guildMember, user);
 

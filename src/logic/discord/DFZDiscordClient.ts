@@ -1,4 +1,13 @@
-import { Client, Guild, Intents, NewsChannel, TextChannel } from "discord.js";
+import {
+  Client,
+  Collection,
+  Guild,
+  Intents,
+  NewsChannel,
+  OAuth2Guild,
+  Snowflake,
+  TextChannel,
+} from "discord.js";
 import { readdirSync } from "fs";
 import { dfzGuildId } from "../../misc/constants";
 import {
@@ -12,8 +21,8 @@ import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
 import { LobbyTimeController } from "../lobby/LobbyTimeController";
 import { Lobby } from "../serializables/lobby";
 import { Schedule } from "../serializables/schedule";
-import { ScheduleSerializer } from "../serializers/scheduleSerializer";
-import { TimeConverter } from "../time/TimeConverter";
+import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
+import { TimeInMs } from "../time/TimeConverter";
 import { ChannelManager } from "./DFZChannelManager";
 import { ILobbyMenu } from "./interfaces/ILobbyMenu";
 import { IScheduleInfo } from "./interfaces/IScheduleInfo";
@@ -24,7 +33,6 @@ export class DFZDiscordClient extends Client {
   public timeouts: LobbyTimeout[] = [];
   public lobbyMenus: ILobbyMenu[] = [];
   public slashCommandRegistrar = new SlashCommandRegistrator(this);
-
   private internalTimeouts: NodeJS.Timeout[] = [];
 
   constructor() {
@@ -88,22 +96,26 @@ export class DFZDiscordClient extends Client {
 
   private async fetchRoles() {
     const fetcher = async () => {
-      const guild = await this.getGuild();
-      await guild.roles.fetch();
+      const guildCollection = await this.getGuilds();
+      for await (const guild of guildCollection) {
+        const realGuild = await guild[1].fetch();
+        await realGuild.roles.fetch();
+      }
     };
+
     this.tryActionWithErrorLog(fetcher, "Error fetching roles");
   }
 
   private async fetchSlashCommands() {
     await this.slashCommandRegistrar.registerCommandFiles(this);
     await this.slashCommandRegistrar.tryRegisterSlashCommands();
-    const guild = await this.getGuild();
+    const guild = await this.getDFZGuild();
     await this.slashCommandRegistrar.setCommandPermissions(guild);
   }
 
   private async fetchLobbyMessages() {
     const fetcher = async () => {
-      const guild = await this.getGuild();
+      const guild = await this.getDFZGuild();
       for (const channelId of ChannelManager.lobbyChannels) {
         await this.fetchLobbyMessagesInChannel(guild, channelId);
       }
@@ -111,13 +123,21 @@ export class DFZDiscordClient extends Client {
     this.tryActionWithErrorLog(fetcher, "Error fetching lobby messages");
   }
 
-  private async getGuild() {
+  private async getGuilds(): Promise<Collection<Snowflake, OAuth2Guild>> {
+    return await this.guilds.fetch();
+  }
+
+  private async getDFZGuild() {
     return await this.guilds.fetch(dfzGuildId);
   }
 
   private async fetchLobbyMessagesInChannel(guild: Guild, channelId: string) {
     const gc = await this.findChannel(guild, channelId);
-    const lobbies = await Lobby.getChannelLobbies(this.dbClient, channelId);
+    const lobbies = await Lobby.getChannelLobbies(
+      this.dbClient,
+      guild.id,
+      channelId
+    );
     for (const lobby of lobbies) {
       await gc.messages.fetch(lobby.messageId);
     }
@@ -128,7 +148,7 @@ export class DFZDiscordClient extends Client {
       const schedules = await this.fetchSchedules();
       var fetchedSchedulePosts = this.getUniqueSchedulePosts(schedules);
 
-      var guild = await this.getGuild();
+      var guild = await this.getDFZGuild();
       for (const post of fetchedSchedulePosts) {
         const channel = await this.findChannel(guild, post.channelId);
 
@@ -138,9 +158,19 @@ export class DFZDiscordClient extends Client {
     this.tryActionWithErrorLog(fetcher, "Error fetching schedule messages");
   }
 
-  private async fetchSchedules() {
-    const serializer = new ScheduleSerializer(this.dbClient);
-    return await serializer.get();
+  private async fetchSchedules(): Promise<Schedule[]> {
+    const guilds = await this.getGuilds();
+    const scheduleListOfLists = await Promise.all(
+      guilds.map(async (guild) => {
+        const serializer = new ScheduleSerializer({
+          dbClient: this.dbClient,
+          guildId: guild.id,
+        });
+        return serializer.get();
+      })
+    );
+
+    return Array.prototype.concat.apply([], scheduleListOfLists);
   }
 
   private getUniqueSchedulePosts(schedules: Array<Schedule>): IScheduleInfo[] {
@@ -216,12 +246,16 @@ export class DFZDiscordClient extends Client {
 
   private async setLobbyPostUpdateTimer() {
     const updateFun = async (client: DFZDiscordClient) => {
-      await LobbyTimeController.checkAndUpdateLobbies(client);
+      const guilds = await this.getGuilds();
+      guilds.map(async (guild) => {
+        const realGuild = await guild.fetch();
+        LobbyTimeController.checkAndUpdateLobbies(client, realGuild);
+      });
     };
 
     const intervalFun = this.createIntervalTask(updateFun);
     await intervalFun();
-    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.minToMs));
+    this.internalTimeouts.push(setInterval(intervalFun, TimeInMs.oneMinute));
   }
 
   private async setDeleteDeprecatedSchedulesTimer() {
@@ -230,26 +264,30 @@ export class DFZDiscordClient extends Client {
     };
     const intervalFun = this.createIntervalTask(updateFun);
     await intervalFun();
-    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.hToMs));
+    this.internalTimeouts.push(setInterval(intervalFun, TimeInMs.oneHour));
   }
 
   private async setSchedulePostUpdateTimer() {
     const scheduleWriter = async (client: DFZDiscordClient) => {
-      await postSchedules(client);
+      const collection = await this.getGuilds();
+      collection.map(async (oAuthGuild) => {
+        const guild = await oAuthGuild.fetch();
+        await postSchedules({ client, guild });
+      });
     };
     const intervalFun = this.createIntervalTask(scheduleWriter);
     await intervalFun();
-    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.hToMs));
+    this.internalTimeouts.push(setInterval(intervalFun, TimeInMs.oneHour));
   }
 
   private async setPostLobbyFromScheduleTimer() {
     const lobbyPoster = async (client: DFZDiscordClient) => {
-      const guild = await client.getGuild();
+      const guild = await client.getDFZGuild();
       await insertScheduledLobbies(guild.channels, client.dbClient);
     };
     const intervalFun = this.createIntervalTask(lobbyPoster);
     await intervalFun();
-    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.hToMs));
+    this.internalTimeouts.push(setInterval(intervalFun, TimeInMs.oneHour));
   }
 
   private async setLeaderBoardPostTimer() {
@@ -258,6 +296,6 @@ export class DFZDiscordClient extends Client {
     );
     await ReferrerLeaderBoardHandler.findLeaderBoardMessage(this);
     await intervalFun();
-    this.internalTimeouts.push(setInterval(intervalFun, TimeConverter.hToMs));
+    this.internalTimeouts.push(setInterval(intervalFun, TimeInMs.oneHour));
   }
 }

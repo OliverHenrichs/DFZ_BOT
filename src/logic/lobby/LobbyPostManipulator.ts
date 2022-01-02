@@ -19,7 +19,8 @@ import {
   getRoleMentions,
 } from "../discord/roleManagement";
 import { Lobby } from "../serializables/lobby";
-import { LobbySerializer } from "../serializers/lobbySerializer";
+import { LobbySerializer } from "../serializers/LobbySerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
 import { getTimeString, getZonedTimeFromDateAndRegion } from "../time/timeZone";
 import { LobbyFetchResult } from "./interfaces/LobbyFetchResult";
 import { LobbyPlayer } from "./interfaces/LobbyPlayer";
@@ -42,10 +43,11 @@ export class LobbyPostManipulator {
   ) {
     const lobby = new Lobby(
       options.type,
-      options.time.epoch,
+      options.time,
       options.coaches,
       options.userRoles,
       options.regionRole,
+      "",
       channel.id
     );
     const embed = LobbyPostManipulator.createLobbyEmbedding(lobby, options);
@@ -55,7 +57,11 @@ export class LobbyPostManipulator {
   public static async postLobby(client: DFZDiscordClient, lobby: Lobby) {
     const _embed = LobbyPostManipulator.createLobbyEmbedding(lobby);
 
-    const channel = await ChannelManager.getChannel(client, lobby.channelId);
+    const channel = await ChannelManager.getChannel(
+      client,
+      lobby.channelId,
+      lobby.guildId
+    );
     await LobbyPostManipulator.postLobbyInt(
       channel,
       lobby,
@@ -81,7 +87,8 @@ export class LobbyPostManipulator {
     createLobbyPostReactions(lobby.type, lobbyPostMessage);
 
     // create lobby data in database
-    const serializer = new LobbySerializer(dbClient);
+    const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, dbClient);
+    const serializer = new LobbySerializer(gdbc);
     serializer.insert(lobby);
   }
 
@@ -107,13 +114,10 @@ export class LobbyPostManipulator {
 
     const titleStart = `We host ${getLobbyPostNameByType(lobby.type)} on `;
 
-    let time = getZonedTimeFromDateAndRegion(
-      new Date(lobby.date),
-      lobby.regionId
-    );
+    const time = getZonedTimeFromDateAndRegion(lobby.date, lobby.regionId);
     const timeString = time
       ? getTimeString(time)
-      : new Date(lobby.date).toUTCString();
+      : new Date(lobby.date.epoch).toUTCString();
 
     const titleEnd = LobbyPostManipulator.printOptionalText(lobby.text);
     return titleStart + timeString + titleEnd;

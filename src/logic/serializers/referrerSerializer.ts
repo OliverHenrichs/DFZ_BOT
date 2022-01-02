@@ -1,18 +1,20 @@
-import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { RowDataPacket } from "mysql2/promise";
-import { Referrer } from "../serializables/referrer";
-import { Serializer } from "./serializer";
 import { SQLResultConverter } from "../database/SQLResultConverter";
+import { Referrer } from "../serializables/referrer";
+import { Serializer } from "./Serializer";
+import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
+import { ReferrerSerializerIds } from "./types/ReferrerSerializerIds";
 
 export class ReferrerSerializer extends Serializer<Referrer> {
   tag: string;
 
-  constructor(dbClient: DFZDataBaseClient, tag: string = "") {
+  constructor(gdbc: IGuildDataBaseClient, tag: string = "") {
     super({
-      dbClient: dbClient,
+      dbClient: gdbc.dbClient,
+      guildId: gdbc.guildId,
       table: referrerTable,
       columns: referrerColumns,
-      sortColumn: sortColumnName,
+      sortColumn: ReferrerSerializerIds.refCountColumn,
     });
     this.tag = tag;
   }
@@ -26,15 +28,15 @@ export class ReferrerSerializer extends Serializer<Referrer> {
   }
 
   protected getCondition(): string[] {
-    return [`${idColumnName} = '${this.tag}'`];
+    return [`${ReferrerSerializerIds.tagColumn} = '${this.tag}'`];
   }
 
   protected getSerializableCondition(serializable: Referrer): string[] {
-    return [`${idColumnName} = '${serializable.tag}'`];
+    return [`${ReferrerSerializerIds.tagColumn} = '${serializable.tag}'`];
   }
 
   protected getDeletionIdentifierColumns(): string[] {
-    return [idColumnName];
+    return [ReferrerSerializerIds.tagColumn];
   }
 
   protected getSerializableDeletionValues(referreres: Referrer[]): string[] {
@@ -42,10 +44,10 @@ export class ReferrerSerializer extends Serializer<Referrer> {
   }
 }
 
-const referrerTable = "referrers";
+const referrerTable = ReferrerSerializerIds.table;
 
-const referrerColumns = ["userId", "tag", "referralCount"];
-
-const idColumnName = referrerColumns[1];
-
-const sortColumnName = referrerColumns[2];
+const referrerColumns = [
+  ReferrerSerializerIds.userColumn,
+  ReferrerSerializerIds.tagColumn,
+  ReferrerSerializerIds.refCountColumn,
+];

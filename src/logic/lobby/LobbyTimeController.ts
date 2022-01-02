@@ -1,9 +1,16 @@
-import { Message, MessageEmbed, NewsChannel, TextChannel } from "discord.js";
+import {
+  Guild,
+  Message,
+  MessageEmbed,
+  NewsChannel,
+  TextChannel,
+} from "discord.js";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { ChannelManager } from "../discord/DFZChannelManager";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
 import { Lobby } from "../serializables/lobby";
-import { LobbySerializer } from "../serializers/lobbySerializer";
+import { LobbySerializer } from "../serializers/LobbySerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
 import { LobbyFetchResult } from "./interfaces/LobbyFetchResult";
 import { LobbyPostManipulator } from "./LobbyPostManipulator";
 
@@ -11,18 +18,37 @@ export class LobbyTimeController {
   /**
    *  Update each lobby post and prune deleted and deprecated lobbies
    */
-  public static async checkAndUpdateLobbies(client: DFZDiscordClient) {
-    const serializer = new LobbySerializer(client.dbClient);
-    var lobbies: Lobby[] = await serializer.get();
+  public static async checkAndUpdateLobbies(
+    client: DFZDiscordClient,
+    guild: Guild
+  ) {
+    const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
+      guild,
+      client.dbClient
+    );
+    const serializer = new LobbySerializer(gdbc);
 
+    var lobbies: Lobby[] = await serializer.get();
     for (const lobby of lobbies) {
-      try {
-        await this.checkAndUpdateLobby(lobby, client, serializer);
-      } catch (error) {
-        console.log(
-          `Could not update lobby post of lobby ${JSON.stringify(lobby)}`
-        );
-      }
+      await LobbyTimeController.tryCheckAndUpdateLobby(
+        lobby,
+        client,
+        serializer
+      );
+    }
+  }
+
+  private static async tryCheckAndUpdateLobby(
+    lobby: Lobby,
+    client: DFZDiscordClient,
+    serializer: LobbySerializer
+  ) {
+    try {
+      await this.checkAndUpdateLobby(lobby, client, serializer);
+    } catch (error) {
+      console.log(
+        `Could not update lobby post of lobby ${JSON.stringify(lobby)}`
+      );
     }
   }
 
@@ -92,7 +118,8 @@ export class LobbyTimeController {
       channel,
       "Lobby is deprecated. Did the coach not show up? Pitchforks out! 😾"
     );
-    const serializer = new LobbySerializer(dbClient);
+    const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, dbClient);
+    const serializer = new LobbySerializer(gdbc);
     await serializer.delete([lobby]);
   }
 

@@ -15,7 +15,8 @@ import {
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { LobbyStarter } from "../logic/lobby/LobbyStarter";
 import { Lobby } from "../logic/serializables/lobby";
-import { LobbySerializer } from "../logic/serializers/lobbySerializer";
+import { LobbySerializer } from "../logic/serializers/LobbySerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
 import { RegionDefinitions } from "../logic/time/RegionDefinitions";
 import { TimeConverter } from "../logic/time/TimeConverter";
 import {
@@ -103,7 +104,11 @@ async function handleLobbyRelatedEmoji(
   }
 
   if (changedLobby) {
-    const serializer = new LobbySerializer(client.dbClient);
+    const gdbc = SerializeUtils.getGuildDBClient(
+      lri.lobby.guildId,
+      client.dbClient
+    );
+    const serializer = new LobbySerializer(gdbc);
     serializer.update(lri.lobby);
   }
 }
@@ -245,12 +250,14 @@ async function removeLobbyDelayed(lobby: Lobby, client: DFZDiscordClient) {
 async function handleLobbyStarted(lobby: Lobby, client: DFZDiscordClient) {
   await savePlayerParticipation(
     client,
+    lobby.guildId,
     lobby.users,
     lobby.type,
     getPlayersPerLobbyByLobbyType(lobby.type)
   );
 
-  const serializer = new LobbySerializer(client.dbClient);
+  const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, client.dbClient);
+  const serializer = new LobbySerializer(gdbc);
   await serializer.delete([lobby]);
 }
 
@@ -298,7 +305,8 @@ async function removeLobbyPermantently(
   user: User
 ) {
   await LobbyPostManipulator.cancelLobbyPost(lobby, channel);
-  const serializer = new LobbySerializer(client.dbClient);
+  const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, client.dbClient);
+  const serializer = new LobbySerializer(gdbc);
   serializer.delete([lobby]);
   user.send("❌ I cancelled the lobby.");
   return;

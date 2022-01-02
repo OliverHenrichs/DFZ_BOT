@@ -7,14 +7,15 @@ import { DFZDiscordClient } from "./DFZDiscordClient";
 export class ChannelManager {
   public static async getChannel(
     client: DFZDiscordClient,
-    channelId: string
+    channelId: string,
+    guildId: string = dfzGuildId
   ): Promise<TextChannel | NewsChannel> {
-    const guild = await client.guilds.fetch(dfzGuildId);
+    const guild = await client.guilds.fetch(guildId);
     const channel = await client.findChannel(guild, channelId);
 
     if (!channel || !channel.isText()) {
       throw new Error(
-        `Did not find text channel ${channelId} for guild ${dfzGuildId}`
+        `Did not find text channel ${channelId} for guild ${guildId}`
       );
     }
 

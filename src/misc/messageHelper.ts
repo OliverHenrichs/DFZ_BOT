@@ -1,11 +1,12 @@
-import { Message } from "discord.js";
+import { Guild, Message } from "discord.js";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import {
   getAllRegionNames,
   getRegionalRoleFromString,
 } from "../logic/discord/roleManagement";
 import { Lobby } from "../logic/serializables/lobby";
-import { LobbySerializer } from "../logic/serializers/lobbySerializer";
+import { LobbySerializer } from "../logic/serializers/LobbySerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
 import { ILobbyTimeResult } from "../logic/time/interfaces/LobbyTimeResult";
 import { getLobbyTimeFromMessageString } from "../logic/time/timeZone";
 import {
@@ -17,6 +18,7 @@ import {
   tryoutReactionEmoji,
 } from "./constants";
 import { getNumbersFromString } from "./generics";
+import { IMessageIdentifier } from "./types/IMessageIdentifier";
 
 /**
  * Reacts to message using reply and emoji, then deletes the authors command
@@ -180,14 +182,14 @@ export function getLobbyTypeFromMessage(message: Message): number {
  */
 export async function findLobbyByMessage(
   dbClient: DFZDataBaseClient,
-  channelId: string,
-  messageId: string
+  mId: IMessageIdentifier
 ): Promise<Lobby> {
-  const serializer = new LobbySerializer(dbClient, channelId, messageId);
+  const gdbc = SerializeUtils.getGuildDBClient(mId.guildId, dbClient);
+  const serializer = new LobbySerializer(gdbc, mId.channelId, mId.messageId);
   var lobbies = await serializer.get();
   if (lobbies.length !== 1)
     throw new Error(
-      `Could not find lobby by channelId=${channelId}, messageId=${messageId}`
+      `Could not find lobby by channelId=${mId.channelId}, messageId=${mId.messageId}`
     );
 
   return lobbies[0];
@@ -201,4 +203,14 @@ export function getArguments(message: Message): string[] {
   var content = message.content.split(" ");
   content.shift();
   return content;
+}
+
+export function getGuildFromMessage(message: Message): Guild {
+  if (!message.guild) throw "Only guild messages";
+  return message.guild;
+}
+
+export function getGuildIdFromMessage(message: Message): string {
+  if (!message.guild) throw "Only guild messages";
+  return message.guild.id;
 }

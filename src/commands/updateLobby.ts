@@ -1,4 +1,13 @@
 import { Message, TextBasedChannels } from "discord.js";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import {
+  getBeginnerRolesFromNumbers,
+  getRegionalRoleFromString,
+} from "../logic/discord/roleManagement";
+import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
+import { Lobby } from "../logic/serializables/lobby";
+import { LobbySerializer } from "../logic/serializers/LobbySerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
 import { getLobbyTypeByString, isRoleBasedLobbyType } from "../misc/constants";
 import { getNumbersFromString } from "../misc/generics";
 import {
@@ -7,14 +16,7 @@ import {
   reactNegative,
   reactPositive,
 } from "../misc/messageHelper";
-import {
-  getBeginnerRolesFromNumbers,
-  getRegionalRoleFromString,
-} from "../logic/discord/roleManagement";
-import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
-import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
-import { Lobby } from "../logic/serializables/lobby";
-import { LobbySerializer } from "../logic/serializers/lobbySerializer";
+import { IMessageIdentifier } from "../misc/types/IMessageIdentifier";
 
 /**
  * Checks if lobby exists and updates lobby post depending on message
@@ -38,13 +40,17 @@ async function updateLobbyByMessage(
   dbClient: DFZDataBaseClient
 ) {
   const args = getUpdateArguments(message);
-
   const messageId = args[0];
-  const lobby = await findLobbyByMessage(
-    dbClient,
-    message.channel.id,
-    messageId
-  );
+  if (!message.guildId) {
+    throw new Error("No associated guild");
+  }
+
+  const mId: IMessageIdentifier = {
+    messageId: messageId,
+    channelId: message.channel.id,
+    guildId: message.guildId,
+  };
+  const lobby = await findLobbyByMessage(dbClient, mId);
 
   args.shift();
   updateLobbyParameters(args, lobby);
@@ -144,7 +150,8 @@ async function performLobbyUpdate(
   dbClient: DFZDataBaseClient
 ) {
   try {
-    const serializer = new LobbySerializer(dbClient);
+    const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, dbClient);
+    const serializer = new LobbySerializer(gdbc);
     await serializer.update(lobby);
     await LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
   } catch (e) {

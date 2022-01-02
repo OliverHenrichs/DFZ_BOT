@@ -1,4 +1,6 @@
-export class Player {
+import { Serializable } from "./Serializable";
+
+export class Player extends Serializable {
   userId: string;
   tag: string;
   referredBy: string;
@@ -12,6 +14,7 @@ export class Player {
 
   constructor(
     userId: string = "",
+    guildId: string,
     tag: string = "",
     referredBy: string = "",
     referralLock: number = 0,
@@ -22,6 +25,7 @@ export class Player {
     lobbyCountReplayAnalysis: number = 0,
     offenses: number = 0
   ) {
+    super(guildId);
     this.userId = userId;
     this.tag = tag;
     this.referredBy = referredBy;

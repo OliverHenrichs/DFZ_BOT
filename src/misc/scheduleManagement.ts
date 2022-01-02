@@ -4,6 +4,7 @@ import {
   MessageEmbed,
   MessageReaction,
   NewsChannel,
+  PartialMessage,
   TextBasedChannels,
   TextChannel,
   User,
@@ -26,7 +27,9 @@ import { GoogleCalendarManager } from "../logic/gcalendar/GoogleCalendarManager"
 import { PostLobbyOptions } from "../logic/lobby/interfaces/PostLobbyOptions";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { Schedule } from "../logic/serializables/schedule";
-import { ScheduleSerializer } from "../logic/serializers/scheduleSerializer";
+import { ScheduleSerializer } from "../logic/serializers/ScheduleSerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
+import { IGuildDataBaseClient } from "../logic/serializers/types/IGuildDataBaseClient";
 import { ArbitraryTimeAlgos } from "../logic/time/ArbitraryTimeAlgos";
 import { CalendarDefinitions } from "../logic/time/CalendarDefinitions";
 import { ITime } from "../logic/time/interfaces/Time";
@@ -39,7 +42,9 @@ import {
   NextMondayAndSunday,
   scheduleTimezoneNames_short,
 } from "../logic/time/timeZone";
-import { dfzGuildId, lobbyTypes } from "./constants";
+import { lobbyTypes } from "./constants";
+import { IGuildClient } from "./types/IGuildClient";
+import { IMessageIdentifier } from "./types/IMessageIdentifier";
 import { scheduleReactionEmojis, scheduleTypes } from "./types/scheduleTypes";
 
 const lobbyPostTime = TimeConverter.hToMs * 5; // at the moment 5 hours
@@ -190,12 +195,13 @@ async function writeSchedule(
  */
 export async function findSchedule(
   dbClient: DFZDataBaseClient,
-  messageId: string,
+  message: Message | PartialMessage,
   emojiName: string | null
 ) {
+  const gdbc = SerializeUtils.fromMessagetoGuildDBClient(message, dbClient);
   const serializer = new ScheduleSerializer(
-    dbClient,
-    messageId,
+    gdbc,
+    message.id,
     emojiName ? emojiName : ""
   );
   const schedules = await serializer.get();
@@ -326,7 +332,11 @@ export async function insertScheduledLobbies(
   channels: GuildChannelManager,
   dbClient: DFZDataBaseClient
 ) {
-  const serializer = new ScheduleSerializer(dbClient);
+  const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
+    channels.guild,
+    dbClient
+  );
+  const serializer = new ScheduleSerializer(gdbc);
   const schedules = await serializer.get();
   var now = Date.now();
 
@@ -371,7 +381,11 @@ async function handleScheduleCoachAdd(
 ) {
   return new Promise(async function (resolve, reject) {
     try {
-      const serializer = new ScheduleSerializer(client.dbClient);
+      const gdbc = SerializeUtils.fromScheduletoGuildDBClient(
+        schedule,
+        client.dbClient
+      );
+      const serializer = new ScheduleSerializer(gdbc);
       await serializer.update(schedule);
 
       const guild = reaction.message.guild;
@@ -409,7 +423,11 @@ async function handleScheduleCoachWithdrawal(
         schedule,
         reaction.message.channel
       );
-      const serializer = new ScheduleSerializer(client.dbClient);
+      const gdbc = SerializeUtils.fromScheduletoGuildDBClient(
+        schedule,
+        client.dbClient
+      );
+      const serializer = new ScheduleSerializer(gdbc);
       await serializer.update(schedule);
       user.send("✅ Removed you as coach from the scheduled lobby.");
       resolve("Updated schedules");
@@ -490,10 +508,13 @@ function createScheduleSetup(
  */
 export function createSchedulesInDatabase(
   dbClient: DFZDataBaseClient,
-  messageId: string,
-  channelId: string,
+  messageIdentifier: IMessageIdentifier,
   scheduleSetup: ScheduleSetup
 ) {
+  const serializer = new ScheduleSerializer(
+    SerializeUtils.getGuildDBClient(messageIdentifier.guildId, dbClient)
+  );
+
   var dayBaseIndex = 0;
   for (let i = 0; i < scheduleSetup.regions.length; i++) {
     const region = scheduleSetup.regions[i];
@@ -516,11 +537,11 @@ export function createSchedulesInDatabase(
       }
       const reactionEmoji = scheduleReactionEmojis[dayBaseIndex + j];
 
-      const serializer = new ScheduleSerializer(dbClient);
       serializer.insert(
         new Schedule(
-          channelId,
-          messageId,
+          messageIdentifier.guildId,
+          messageIdentifier.channelId,
+          messageIdentifier.messageId,
           scheduleSetup.type,
           scheduleSetup.coachCount,
           reactionEmoji,
@@ -556,7 +577,14 @@ async function createSchedules(
   var message = await writeSchedule(channel, scheduleSetup);
   if (message === undefined) return;
 
-  createSchedulesInDatabase(dbClient, message.id, channel.id, scheduleSetup);
+  const guildId = channels.guild.id;
+  const scheduleIdentifier: IMessageIdentifier = {
+    channelId: channel.id,
+    messageId: message.id,
+    guildId,
+  };
+
+  createSchedulesInDatabase(dbClient, scheduleIdentifier, scheduleSetup);
 }
 
 interface WeeklyScheduleData {
@@ -609,22 +637,23 @@ const botbashData: WeeklyScheduleData = {
 
 const weeklyScheduleDatas = [botbashData, tryoutData, t3_t4_Data, t1_t2_Data];
 
-export async function postSchedules(client: DFZDiscordClient) {
-  if (!(await weeklyScheduleShouldBePosted(client)))
-    throw "I already posted this week's schedules";
-
-  const guild = await client.guilds.fetch(dfzGuildId);
-  addCurrentWeekSchedule(guild.channels, client.dbClient);
+export async function postSchedules(client: IGuildClient) {
+  if (!(await weeklyScheduleShouldBePosted(client))) return;
+  addCurrentWeekSchedule(client.guild.channels, client.client.dbClient);
 }
 
-async function weeklyScheduleShouldBePosted(client: DFZDiscordClient) {
-  const schedules = await getAllSchedules(client.dbClient);
+async function weeklyScheduleShouldBePosted(guildClient: IGuildClient) {
+  const schedules = await getAllSchedules(guildClient);
   const { monday } = ArbitraryTimeAlgos.getCurrentMondayAndSundayDate();
   return !existsScheduleAfterMonday(schedules, monday);
 }
 
-async function getAllSchedules(dbClient: DFZDataBaseClient) {
-  const serializer = new ScheduleSerializer(dbClient);
+async function getAllSchedules(guildClient: IGuildClient) {
+  const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
+    guildClient.guild,
+    guildClient.client.dbClient
+  );
+  const serializer = new ScheduleSerializer(gdbc);
   return await serializer.get();
 }
 
@@ -661,7 +690,8 @@ async function removeDeprecatedSchedules(
   deprecationDate: Date,
   dbClient: DFZDataBaseClient
 ) {
-  const serializer = new ScheduleSerializer(dbClient);
+  const gdbc: IGuildDataBaseClient = { dbClient, guildId: "" }; // guild id empty, remove all deprecated schedules.
+  const serializer = new ScheduleSerializer(gdbc);
   var schedules = await serializer.get();
 
   var schedulesToRemove: Array<Schedule> = [];
@@ -739,7 +769,7 @@ export async function removeCoachFromSchedule(
 ) {
   var schedule = await findSchedule(
     client.dbClient,
-    reaction.message.id,
+    reaction.message,
     reaction.emoji.name
   );
   if (schedule === undefined) return;
@@ -786,7 +816,7 @@ export async function addCoachToSchedule(
 
   var schedule = await findSchedule(
     client.dbClient,
-    reaction.message.id,
+    reaction.message,
     reaction.emoji.name
   );
   if (schedule === undefined) return;
