@@ -268,7 +268,9 @@ function handleLobbyStart(
   user: User
 ) {
   if (lobby.started) {
-    LobbyPostManipulator.writeLobbyStartPost(lobby, channel);
+    if (lobby.users.length > 0) {
+      LobbyPostManipulator.writeLobbyStartPost(lobby, channel);
+    }
     return;
   }
 

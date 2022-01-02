@@ -8,6 +8,7 @@ import { DFZDiscordClient } from "../discord/DFZDiscordClient";
 import { Lobby } from "../serializables/lobby";
 import { LobbySerializer } from "../serializers/LobbySerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
+import { TimeInMs } from "../time/TimeConverter";
 import { LobbyPostManipulator } from "./LobbyPostManipulator";
 
 export class LobbyStarter {
@@ -79,12 +80,11 @@ export class LobbyStarter {
   }
 
   private testLobbyStartTime(lobby: Lobby, coach: User): boolean {
-    const fiveMinInMs = 300000;
     var timeLeftInMS = lobby.date.epoch - +new Date();
-    if (timeLeftInMS > fiveMinInMs) {
+    if (timeLeftInMS > TimeInMs.fiveMinutes) {
       this.handleEarlyStartAttempt(
         coach,
-        this.msToS(timeLeftInMS - fiveMinInMs)
+        this.getRemainingTimeInMinutes(timeLeftInMS - TimeInMs.fiveMinutes)
       );
       return false;
     }
@@ -92,8 +92,8 @@ export class LobbyStarter {
     return true;
   }
 
-  private msToS(ms: number) {
-    return Math.floor(ms / 60000);
+  private getRemainingTimeInMinutes(milliseconds: number) {
+    return Math.floor(milliseconds / TimeInMs.oneMinute);
   }
 
   private handleEarlyStartAttempt(coach: User, timeLeft: number) {
