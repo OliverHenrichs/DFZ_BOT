@@ -5,7 +5,7 @@ import { ISerializationSettings } from "./types/ISerializationSettings";
 import { SerializerIds } from "./types/SerializerIds";
 
 export abstract class Serializer<T extends Serializable> {
-  settings: ISerializationSettings;
+  protected settings: ISerializationSettings;
 
   constructor(settings: ISerializationSettings) {
     this.settings = settings;
