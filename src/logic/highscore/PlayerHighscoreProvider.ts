@@ -23,7 +23,7 @@ export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
       dbClient: this.dbClient,
     });
     const players = await serializer.getSorted();
-    if (players.length === 0) throw "No highscore player entries.";
+    if (players.length === 0) throw new Error("No highscore player entries.");
     return players;
   }
 

@@ -29,7 +29,7 @@ async function tryApplyUser(message: Message, client: DFZDiscordClient) {
   const gdbc = SerializeUtils.fromGuildtoGuildDBClient(guild, client.dbClient);
   const serializer = new PlayerSerializer(gdbc, message.author.id);
   var player = await serializer.get();
-  if (player.length > 0) throw "You have already signed up";
+  if (player.length > 0) throw new Error("You have already signed up");
 
   const guildClient: IGuildClient = { guild, client };
   const refTag = SQLUtils.escape(getReferralTag(message.content));

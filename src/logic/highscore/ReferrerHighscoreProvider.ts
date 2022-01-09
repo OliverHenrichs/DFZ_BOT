@@ -23,7 +23,8 @@ export class ReferrerHighscoreProvider extends AbstractHighscoreProvider<Referre
       guildId,
     });
     const referrers = await serializer.getSorted();
-    if (referrers.length === 0) throw "No highscore referrer entries.";
+    if (referrers.length === 0)
+      throw new Error("No highscore referrer entries.");
     return referrers;
   }
 

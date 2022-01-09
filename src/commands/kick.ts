@@ -66,7 +66,8 @@ interface KickArguments {
 
 export function getKickeeIndex(lobby: Lobby, userId: string) {
   const kickeeIdx = lobby.users.findIndex((usr) => usr.id === userId);
-  if (kickeeIdx === -1) throw "Did not find player to be kicked given the Id.";
+  if (kickeeIdx === -1)
+    throw new Error("Did not find player to be kicked given the Id.");
   return kickeeIdx;
 }
 

@@ -33,7 +33,7 @@ export class GoogleCalendarManager {
     );
 
     if (GoogleCalendarManager.jwtClient === undefined) {
-      throw "Could not auth with GoogleApi";
+      throw new Error("Could not auth with GoogleApi");
     }
 
     GoogleCalendarManager.jwtClient.authorize().then(() => {
@@ -94,7 +94,7 @@ export class GoogleCalendarManager {
 
     const res = await GoogleCalendarManager.calendar?.events.insert(params);
     if (res === undefined || res.data.id === undefined || res.data.id === null)
-      throw "google calendar insertion returned 'undefined'";
+      throw new Error("google calendar insertion returned 'undefined'");
     return res.data.id;
   }
 
@@ -124,7 +124,8 @@ export class GoogleCalendarManager {
       calendarId: GoogleCalendarManager.getCalendarIDByRegion(schedule.region),
       eventId: schedule.eventId === null ? undefined : schedule.eventId,
     });
-    if (res === undefined) throw "calendar deletion returned 'undefined'";
+    if (res === undefined)
+      throw new Error("calendar deletion returned 'undefined'");
     return undefined;
   }
 
@@ -143,14 +144,18 @@ export class GoogleCalendarManager {
       eventId: schedule.eventId === null ? undefined : schedule.eventId,
     });
     if (calendarResponse === undefined)
-      throw "calendar event update returned 'undefined' while trying to get the event";
+      throw new Error(
+        "calendar event update returned 'undefined' while trying to get the event"
+      );
     const updatedEvent = await GoogleCalendarManager.updateGoogleEvent(
       calendarResponse.data,
       schedule,
       client
     );
     if (updatedEvent === undefined)
-      throw "calendar insertion returned 'undefined' while trying to update the event";
+      throw new Error(
+        "calendar insertion returned 'undefined' while trying to update the event"
+      );
 
     const id = updatedEvent.data.id;
     return id ? id : undefined;
@@ -168,7 +173,9 @@ export class GoogleCalendarManager {
     );
     const res = await GoogleCalendarManager.calendar?.events.update(params);
     if (res === undefined)
-      throw "calendar event update returned 'undefined' while trying to get the event";
+      throw new Error(
+        "calendar event update returned 'undefined' while trying to get the event"
+      );
 
     return res;
   }

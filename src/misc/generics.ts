@@ -42,8 +42,9 @@ function assertPositionsBetweenMinMax(
   min: number = 0,
   max: number = 5
 ) {
-  if (positions.size == 0) throw "You did not provide positions.";
-  if (positions.has(NaN)) throw "One of your positions is not a number.";
+  if (positions.size == 0) throw new Error("You did not provide positions.");
+  if (positions.has(NaN))
+    throw new Error("One of your positions is not a number.");
 
   for (let p of positions) {
     if (p > max) throw `At least one position is greater than ${max}.`;

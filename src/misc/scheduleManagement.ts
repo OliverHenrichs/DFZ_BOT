@@ -389,7 +389,8 @@ async function handleScheduleCoachAdd(
       await serializer.update(schedule);
 
       const guild = reaction.message.guild;
-      if (guild === null) throw "Did not find guild in handleScheduleCoachAdd";
+      if (guild === null)
+        throw new Error("Did not find guild in handleScheduleCoachAdd");
       await insertScheduledLobbies(guild.channels, client.dbClient);
       await module.exports.updateSchedulePost(
         schedule,

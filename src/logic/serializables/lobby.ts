@@ -161,14 +161,15 @@ export class Lobby extends Serializable {
     channel: TextBasedChannels,
     userId: string
   ) {
-    if (this.coaches === undefined) throw "Lobby does not support coaches.";
+    if (this.coaches === undefined)
+      throw new Error("Lobby does not support coaches.");
 
     const coachCount = getCoachCountByLobbyType(this.type);
     if (this.coaches.length >= coachCount)
-      throw "Enough coaches have already signed up.";
+      throw new Error("Enough coaches have already signed up.");
 
     if (this.coaches.find((coach) => coach === userId) !== undefined)
-      throw "You are already signed up as a coach.";
+      throw new Error("You are already signed up as a coach.");
 
     this.coaches.push(userId);
 
@@ -182,7 +183,7 @@ export class Lobby extends Serializable {
   ) {
     const coachIndex = this.coaches.findIndex((coach) => coach === userId);
     if (coachIndex === -1) {
-      throw "You are not signed up as a coach.";
+      throw new Error("You are not signed up as a coach.");
     }
     this.coaches.splice(coachIndex, 1);
 

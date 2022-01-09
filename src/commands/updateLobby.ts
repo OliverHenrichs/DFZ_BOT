@@ -60,7 +60,9 @@ async function updateLobbyByMessage(
 function getUpdateArguments(message: Message) {
   var args = getArguments(message);
   if (args.length == 0)
-    throw "No message ID given. \r\n Add the message ID of the lobby you want to update.";
+    throw new Error(
+      "No message ID given. \r\n Add the message ID of the lobby you want to update."
+    );
 
   return args;
 }
@@ -111,7 +113,7 @@ export function updateLobbyParameters(args: string[], lobby: Lobby) {
     }
   }
 
-  if (!changedLobby) throw "You did not make any changes.";
+  if (!changedLobby) throw new Error("You did not make any changes.");
 }
 
 function updateLobbyTiers(lobby: Lobby, tiers: string) {
@@ -120,7 +122,7 @@ function updateLobbyTiers(lobby: Lobby, tiers: string) {
   const numbers = getNumbersFromString(tiers, minTier, maxTier);
 
   var roles = getBeginnerRolesFromNumbers(numbers);
-  if (roles.length === 0) throw "You provided wrong lobby tiers.";
+  if (roles.length === 0) throw new Error("You provided wrong lobby tiers.");
 
   lobby.beginnerRoleIds = roles;
 }
@@ -139,7 +141,9 @@ function updateLobbyType(lobby: Lobby, maybeType: string) {
   const oldIsRoleBased = isRoleBasedLobbyType(lobbyType);
   const newIsRoleBased = isRoleBasedLobbyType(lobby.type);
   if (oldIsRoleBased !== newIsRoleBased)
-    throw "Cannot change role based lobby type into simple lobby type and vice versa";
+    throw new Error(
+      "Cannot change role based lobby type into simple lobby type and vice versa"
+    );
 
   lobby.type = lobbyType;
 }

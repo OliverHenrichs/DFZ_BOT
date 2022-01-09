@@ -105,7 +105,7 @@ async function getExistingPlayer(
   );
   const serializer = new PlayerSerializer(gdbc, newMember.user.id);
   const players = await serializer.get();
-  if (players.length === 0) throw "No player.";
+  if (players.length === 0) throw new Error("No player.");
   return players[0];
 }
 

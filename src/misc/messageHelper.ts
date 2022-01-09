@@ -152,7 +152,9 @@ export function getTimeFromMessage(
   var args = getArguments(message);
 
   if (args.length <= argumentIndex + 1)
-    throw "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post";
+    throw new Error(
+      "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post"
+    );
 
   return getLobbyTimeFromMessageString(
     args[argumentIndex],
@@ -206,11 +208,11 @@ export function getArguments(message: Message): string[] {
 }
 
 export function getGuildFromMessage(message: Message): Guild {
-  if (!message.guild) throw "Only guild messages";
+  if (!message.guild) throw new Error("Only guild messages");
   return message.guild;
 }
 
 export function getGuildIdFromMessage(message: Message): string {
-  if (!message.guild) throw "Only guild messages";
+  if (!message.guild) throw new Error("Only guild messages");
   return message.guild.id;
 }

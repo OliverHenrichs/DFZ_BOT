@@ -21,7 +21,7 @@ export class CoachHighscoreProvider extends AbstractHighscoreProvider<Coach> {
     const gdbc = SerializeUtils.getGuildDBClient(guildId, this.dbClient);
     const serializer = new CoachSerializer(gdbc);
     const coaches = await serializer.getSorted();
-    if (coaches.length === 0) throw "No highscore coach entries.";
+    if (coaches.length === 0) throw new Error("No highscore coach entries.");
     return coaches;
   }
 
