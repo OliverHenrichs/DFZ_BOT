@@ -13,7 +13,7 @@ import {
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import { removeCoachFromSchedule } from "../misc/scheduleManagement";
+import { removeCoachFromSchedule } from "../logic/lobbyScheduling/scheduleManagement";
 
 function tryCancelLobbyCancel(
   client: DFZDiscordClient,

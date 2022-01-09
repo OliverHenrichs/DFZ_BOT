@@ -33,7 +33,7 @@ import {
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import { addCoachToSchedule } from "../misc/scheduleManagement";
+import { addCoachToSchedule } from "../logic/lobbyScheduling/scheduleManagement";
 import { savePlayerParticipation } from "../misc/tracker";
 import { addUser, getUserIndex } from "../misc/userHelper";
 

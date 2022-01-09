@@ -14,7 +14,7 @@ import {
   insertScheduledLobbies,
   postSchedules,
   tryRemoveDeprecatedSchedules,
-} from "../../misc/scheduleManagement";
+} from "../lobbyScheduling/scheduleManagement";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { ReferrerLeaderBoardHandler } from "../highscore/ReferrerLeaderBoardHandler";
 import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";

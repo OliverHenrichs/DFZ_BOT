@@ -1,5 +1,5 @@
 import { CommandInteraction } from "discord.js";
-import { postSchedules } from "../../../misc/scheduleManagement";
+import { postSchedules } from "../../lobbyScheduling/scheduleManagement";
 import { IGuildClient } from "../../../misc/types/IGuildClient";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { InteractionUtils } from "../Utils/InteractionUtils";
