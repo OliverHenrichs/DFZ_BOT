@@ -1,5 +1,6 @@
 import { Pool } from "mysql2/promise";
 import { CoachSerializerIds } from "../serializers/types/CoachSerializerIds";
+import { GuildSerializerIds } from "../serializers/types/GuildSerializerIds";
 import { LobbySerializerIds } from "../serializers/types/LobbySerializerIds";
 import { PlayerSerializerIds } from "../serializers/types/PlayerSerializerIds";
 import { ReferrerSerializerIds } from "../serializers/types/ReferrerSerializerIds";
@@ -8,42 +9,59 @@ import { SerializerIds } from "../serializers/types/SerializerIds";
 import { ISqlTableColumn } from "./interfaces/SqlTableColumn";
 
 export class SQLTableCreator {
-  static createPlayerTable(dbHandle: Pool) {
-    var json = this.getPlayerTable();
+  public static async tryCreateDataBaseTables(pool: Pool) {
+    try {
+      await SQLTableCreator.createDataBaseTables(pool);
+    } catch (error) {
+      console.log(`Failed creating database tables with error: ${error}`);
+    }
+  }
+
+  private static async createDataBaseTables(pool: Pool) {
+    await SQLTableCreator.createScheduleTable(pool);
+    await SQLTableCreator.createLobbyTable(pool);
+    await SQLTableCreator.createOptionsTable(pool);
+    await SQLTableCreator.createCoachTable(pool);
+    await SQLTableCreator.createPlayerTable(pool);
+    await SQLTableCreator.createReferrerTable(pool);
+    await SQLTableCreator.createGuildTable(pool);
+  }
+
+  private static createPlayerTable(dbHandle: Pool) {
+    const json = this.getPlayerTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createReferrerTable(dbHandle: Pool) {
-    var json = this.getReferrerTable();
+  private static createReferrerTable(dbHandle: Pool) {
+    const json = this.getReferrerTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createCoachTable(dbHandle: Pool) {
-    var json = this.getCoachTable();
+  private static createCoachTable(dbHandle: Pool) {
+    const json = this.getCoachTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createScheduleTable(dbHandle: Pool) {
-    var json = this.getScheduleTable();
+  private static createScheduleTable(dbHandle: Pool) {
+    const json = this.getScheduleTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createLobbyTable(dbHandle: Pool) {
-    var json = this.getLobbyTable();
+  private static createLobbyTable(dbHandle: Pool) {
+    const json = this.getLobbyTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createOptionsTable(dbHandle: Pool) {
-    var json = this.getOptionsTable();
+  private static createOptionsTable(dbHandle: Pool) {
+    const json = this.getOptionsTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  /**
-   * Creates new table in mysql-database
-   * @param {Pool} dbHandle bot database handle
-   * @param {string} tableName name of table
-   * @param {Array<String>} tableColumns names of table columns
-   */
+  private static createGuildTable(dbHandle: Pool) {
+    const json = this.getGuildTable();
+    return this.createTable(dbHandle, json.tableName, json.tableColumns);
+  }
+
   private static async createTable(
     dbHandle: Pool,
     tableName: string,
@@ -97,6 +115,49 @@ export class SQLTableCreator {
         {
           id: CoachSerializerIds.lobbyCountReplayAnalysisColumn,
           type: "int",
+        },
+      ],
+    };
+  }
+
+  private static getGuildTable(): {
+    tableName: string;
+    tableColumns: ISqlTableColumn[];
+  } {
+    return {
+      tableName: GuildSerializerIds.table,
+      tableColumns: [
+        {
+          id: SerializerIds.guild,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.tryoutRole,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.tierRoles,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.coachRoles,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.lesserCoachRoles,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.regionsAndChannels,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.lobbyChannels,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.leaderboardChannel,
+          type: "VARCHAR(255)",
         },
       ],
     };

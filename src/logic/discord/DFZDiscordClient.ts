@@ -11,6 +11,7 @@ import {
 import { readdirSync } from "fs";
 import { dfzGuildId } from "../../misc/constants";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
+import { SQLTableCreator } from "../database/SQLTableCreator";
 import { ReferrerLeaderBoardHandler } from "../highscore/ReferrerLeaderBoardHandler";
 import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
 import { LobbyTimeController } from "../lobby/LobbyTimeController";
@@ -72,7 +73,7 @@ export class DFZDiscordClient extends Client {
   }
 
   private async setupBot() {
-    await this.dbClient.tryCreateDataBaseTables();
+    await SQLTableCreator.tryCreateDataBaseTables(this.dbClient.pool);
     await this.fetchDiscordData();
     await this.setIntervalTasks();
   }

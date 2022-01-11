@@ -23,7 +23,7 @@ export class ReferrerLeaderBoardHandler {
     try {
       await ReferrerLeaderBoardHandler.tryPostLeaderBoard(client);
     } catch (e) {
-      console.log(e);
+      console.warn(e);
     }
   }
 

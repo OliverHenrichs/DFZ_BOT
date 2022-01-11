@@ -21,23 +21,6 @@ export class DFZDataBaseClient {
     });
   }
 
-  public async tryCreateDataBaseTables() {
-    try {
-      await this.createDataBaseTables();
-    } catch (error) {
-      console.log(`Failed creating database tables with error: ${error}`);
-    }
-  }
-
-  private async createDataBaseTables() {
-    await SQLTableCreator.createScheduleTable(this.pool);
-    await SQLTableCreator.createLobbyTable(this.pool);
-    await SQLTableCreator.createOptionsTable(this.pool);
-    await SQLTableCreator.createCoachTable(this.pool);
-    await SQLTableCreator.createPlayerTable(this.pool);
-    await SQLTableCreator.createReferrerTable(this.pool);
-  }
-
   private executeSQLCommand(
     command: string,
     callback: (res: RowDataPacket[]) => void = () => {}
