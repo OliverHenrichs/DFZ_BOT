@@ -2,7 +2,7 @@ import { Guild, Message } from "discord.js";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import {
   getAllRegionNames,
-  getRegionalRoleFromString,
+  getRegionalRoleFromRegionName,
 } from "../logic/discord/roleManagement";
 import { Lobby } from "../logic/serializables/lobby";
 import { LobbySerializer } from "../logic/serializers/LobbySerializer";
@@ -137,7 +137,7 @@ export function getLobbyRegionRoleFromMessage(
   if (args.length <= index)
     throw `Could not get lobby region role from message. Region roles are ${getAllRegionNames()}`;
 
-  return getRegionalRoleFromString(args[index]);
+  return getRegionalRoleFromRegionName(args[index]);
 }
 
 /**

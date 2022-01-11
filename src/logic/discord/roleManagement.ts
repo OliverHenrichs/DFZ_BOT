@@ -168,19 +168,14 @@ export function getAllRegionNames() {
   return RegionDefinitions.regionRoles.map((rid) => getRegionalRoleString(rid));
 }
 
-/**
- * Returns role id corresponding to role string
- * @param {string} roleString
- */
-export function getRegionalRoleFromString(
-  roleString: string | undefined
+export function getRegionalRoleFromRegionName(
+  regionName: string | undefined
 ): string {
-  const regionRole = RegionDefinitions.regions.find(
-    (region) => region.name === roleString
+  const region = RegionDefinitions.regions.find(
+    (region) => region.name === regionName
   );
-  if (!regionRole)
-    throw new Error(`Unknown regional role string ${roleString}`);
-  return regionRole.lobbyChannelId;
+  if (!region) throw new Error(`Unknown region ${regionName}`);
+  return region.role;
 }
 
 /**

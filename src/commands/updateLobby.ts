@@ -2,12 +2,13 @@ import { Message, TextBasedChannels } from "discord.js";
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import {
   getBeginnerRolesFromNumbers,
-  getRegionalRoleFromString,
+  getRegionalRoleFromRegionName,
 } from "../logic/discord/roleManagement";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { Lobby } from "../logic/serializables/lobby";
 import { LobbySerializer } from "../logic/serializers/LobbySerializer";
 import { SerializeUtils } from "../logic/serializers/SerializeUtils";
+import { RegionDefinitions } from "../logic/time/RegionDefinitions";
 import { getLobbyTypeByString, isRoleBasedLobbyType } from "../misc/constants";
 import { getNumbersFromString } from "../misc/generics";
 import {
@@ -128,9 +129,13 @@ function updateLobbyTiers(lobby: Lobby, tiers: string) {
 }
 
 function updateLobbyRegion(lobby: Lobby, region: string) {
-  var regionId = getRegionalRoleFromString(region);
-  if (regionId == undefined)
-    throw `You did not provide a valid region ID. Region IDs are ${getRegionalRoleFromString}`;
+  var regionId = getRegionalRoleFromRegionName(region);
+  if (regionId == undefined) {
+    const regions = RegionDefinitions.regionNames.join(", ");
+    throw new Error(
+      "You did not provide a valid region ID. Region IDs are " + regions
+    );
+  }
 
   lobby.regionId = regionId;
 }

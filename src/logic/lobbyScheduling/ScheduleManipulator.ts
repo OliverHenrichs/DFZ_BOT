@@ -1,207 +1,259 @@
-import { MessageReaction, User } from "discord.js";
+import {
+  EmbedField,
+  Message,
+  MessageEmbed,
+  MessageReaction,
+  TextBasedChannels,
+  User,
+} from "discord.js";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
 import { adminRoles, findRole } from "../discord/roleManagement";
 import { GoogleCalendarManager } from "../gcalendar/GoogleCalendarManager";
 import { Schedule } from "../serializables/schedule";
 import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
-import { findSchedule, insertScheduledLobbies } from "./scheduleManagement";
+import { LobbyScheduler } from "./LobbyScheduler";
+import { IScheduleManipulationData } from "./types/IScheduleManipulationData";
 
 /**
  * Changes schedule state.
  */
 export class ScheduleManipulator {
-  /**
-   * Checks if user is coach in schedule, and if yes, removes them.
-   * Then updates the schedules / google events to reflect this
-   * @param  client discord client (fetching users for rewriting schedule google calendar event)
-   * @param  reaction determines which schedule we update
-   * @param  user the guy who removed the reaction
-   */
-  public static async removeCoachFromSchedule(
-    client: DFZDiscordClient,
-    reaction: MessageReaction,
-    user: User
-  ): Promise<void> {
-    var schedule = await findSchedule(
-      client.dbClient,
-      reaction.message,
-      reaction.emoji.name
-    );
-    if (schedule === undefined) return;
+  private readonly client: DFZDiscordClient;
+  private readonly reaction: MessageReaction;
+  private readonly user: User;
+  private readonly schedule: Schedule;
 
-    var idx = schedule.coaches.findIndex((coach: string) => coach === user.id);
-    if (idx === -1) return;
-
-    // remove coach
-    schedule.coaches.splice(idx, 1);
-
-    // update google event
-    try {
-      await GoogleCalendarManager.editCalendarEvent(schedule, client);
-    } catch (err) {
-      console.log(err);
-    }
-
-    await ScheduleManipulator.handleScheduleCoachWithdrawal(
-      client,
-      reaction,
-      user,
-      schedule
-    );
+  private constructor(data: IScheduleManipulationData, schedule: Schedule) {
+    this.client = data.client;
+    this.reaction = data.reaction;
+    this.user = data.user;
+    this.schedule = schedule;
   }
 
-  /**
-   * Checks if user is coach in schedule, and if not, adds them.
-   * Then updates the schedules / google events to reflect this
-   * @param {DFZDiscordClient} client discord client (fetching users for rewriting schedule google calendar event)
-   * @param {MessageReaction} reaction determines which schedule we update
-   * @param {User} user the guy who removed the reaction
-   */
+  public static async removeCoachFromSchedule(
+    data: IScheduleManipulationData
+  ): Promise<void> {
+    const manipulator = await ScheduleManipulator.createManipulator(data);
+    return manipulator.removeCoachFromScheduleInt();
+  }
+
   public static async addCoachToSchedule(
-    client: DFZDiscordClient,
-    reaction: MessageReaction,
-    user: User
-  ) {
-    const guildMember = await reaction.message.guild?.members.fetch(user.id);
-    if (guildMember === undefined) {
-      user.send("⛔ I could not find your ID in the DotaFromZero Discord.");
+    data: IScheduleManipulationData
+  ): Promise<void> {
+    const manipulator = await ScheduleManipulator.createManipulator(data);
+    return manipulator.addCoachToScheduleInt();
+  }
+
+  private static async createManipulator(
+    data: IScheduleManipulationData
+  ): Promise<ScheduleManipulator> {
+    const schedule = await ScheduleManipulator.findSchedule(data);
+    return new ScheduleManipulator(data, schedule);
+  }
+
+  private async removeCoachFromScheduleInt(): Promise<void> {
+    if (!this.userIsCoach()) return;
+    this.removeCoach();
+    await this.updateGoogleEvent();
+    await this.handleScheduleCoachWithdrawal();
+  }
+
+  private async addCoachToScheduleInt(): Promise<void> {
+    if (!(await this.assertUserHasCoachingPermissions())) return;
+    if (this.userIsCoach()) {
+      this.user.send("⛔ You are already coaching that lobby.");
       return;
+    }
+    this.addCoach();
+    await this.updateOrCreateGoogleEvent();
+    await this.handleScheduleCoachAdd();
+  }
+
+  private async assertUserHasCoachingPermissions(): Promise<boolean> {
+    const guildMember = await this.reaction.message.guild?.members.fetch(
+      this.user.id
+    );
+    if (!guildMember) {
+      this.user.send("⛔ I could not find your ID in your guild.");
+      return false;
     }
 
     const role = findRole(guildMember, adminRoles);
     if (role === undefined || role === null) {
-      user.send("⛔ You cannot interact because you are not a coach.");
-      return;
+      this.user.send("⛔ You cannot interact because you are not a coach.");
+      return false;
     }
 
-    var schedule = await findSchedule(
-      client.dbClient,
-      reaction.message,
-      reaction.emoji.name
-    );
-    if (schedule === undefined) return;
-
-    if (schedule.coaches.find((coach: string) => coach === user.id)) {
-      user.send("⛔ You are already coaching that lobby.");
-      return;
-    }
-
-    schedule.coaches.push(user.id);
-
-    await ScheduleManipulator.updateOrCreateGoogleEvent(client, schedule);
-    await ScheduleManipulator.tryHandleScheduleCoachAdd(
-      client,
-      reaction,
-      user,
-      schedule
-    );
+    return true;
   }
 
-  /**
-   * handles how schedules and calendar events react to coach withdrawal
-   * @param {DFZDiscordClient} client
-   * @param {MessageReaction} reaction
-   * @param {User} user
-   * @param {Schedule} schedule
-   */
-  private static async handleScheduleCoachWithdrawal(
-    client: DFZDiscordClient,
-    reaction: MessageReaction,
-    user: User,
-    schedule: Schedule
-  ) {
-    return new Promise(async function (resolve, reject) {
-      try {
-        schedule.eventId = undefined;
-        await module.exports.updateSchedulePost(
-          schedule,
-          reaction.message.channel
-        );
-        const gdbc = SerializeUtils.fromScheduletoGuildDBClient(
-          schedule,
-          client.dbClient
-        );
-        const serializer = new ScheduleSerializer(gdbc);
-        await serializer.update(schedule);
-        user.send("✅ Removed you as coach from the scheduled lobby.");
-        resolve("Updated schedules");
-      } catch (e) {
-        reject("Failed updating schedule");
-      }
-    });
+  private async handleScheduleCoachWithdrawal(): Promise<void> {
+    this.schedule.eventId = undefined;
+    await this.updateSchedulePost(this.reaction.message.channel);
+    const gdbc = SerializeUtils.fromScheduletoGuildDBClient(
+      this.schedule,
+      this.client.dbClient
+    );
+    const serializer = new ScheduleSerializer(gdbc);
+    await serializer.update(this.schedule);
+    this.user.send("✅ Removed you as coach from the scheduled lobby.");
   }
 
-  private static async updateOrCreateGoogleEvent(
-    client: DFZDiscordClient,
-    schedule: Schedule
-  ) {
+  private async updateGoogleEvent(): Promise<void> {
     try {
-      await ScheduleManipulator.tryUpdateOrCreateGoogleEvent(client, schedule);
+      await GoogleCalendarManager.editCalendarEvent(this.schedule, this.client);
     } catch (err) {
       console.log(err);
     }
   }
 
-  private static async tryUpdateOrCreateGoogleEvent(
-    client: DFZDiscordClient,
-    schedule: Schedule
-  ) {
-    if (schedule.eventId === undefined || schedule.eventId === "No Calendar")
-      schedule.eventId = await GoogleCalendarManager.createCalendarEvent(
-        schedule,
-        client
-      );
-    else
-      schedule.eventId = await GoogleCalendarManager.editCalendarEvent(
-        schedule,
-        client
-      );
-  }
-
-  /**
-   * handles how schedules and calendar events react to addition of a coach
-   * @param {DFZDiscordClient} client
-   * @param {MessageReaction} reaction
-   * @param {User} user
-   * @param {Schedule} schedule
-   */
-  private static async tryHandleScheduleCoachAdd(
-    client: DFZDiscordClient,
-    reaction: MessageReaction,
-    user: User,
-    schedule: Schedule
-  ) {
+  private async updateOrCreateGoogleEvent(): Promise<void> {
     try {
-      await ScheduleManipulator.handleScheduleCoachAdd(
-        schedule,
-        client,
-        reaction,
-        user
-      );
-    } catch (e) {
-      console.warn("Failed updating schedule");
+      await this.tryUpdateOrCreateGoogleEvent();
+    } catch (err) {
+      console.log(err);
     }
   }
 
-  private static async handleScheduleCoachAdd(
-    schedule: Schedule,
-    client: DFZDiscordClient,
-    reaction: MessageReaction,
-    user: User
-  ) {
+  private async tryUpdateOrCreateGoogleEvent(): Promise<void> {
+    const s = this.schedule;
+    if (s.eventId === undefined || s.eventId === "No Calendar")
+      this.schedule.eventId = await GoogleCalendarManager.createCalendarEvent(
+        s,
+        this.client
+      );
+    else
+      this.schedule.eventId = await GoogleCalendarManager.editCalendarEvent(
+        s,
+        this.client
+      );
+  }
+
+  private async handleScheduleCoachAdd(): Promise<void> {
     const gdbc = SerializeUtils.fromScheduletoGuildDBClient(
-      schedule,
-      client.dbClient
+      this.schedule,
+      this.client.dbClient
     );
     const serializer = new ScheduleSerializer(gdbc);
-    await serializer.update(schedule);
+    serializer.update(this.schedule);
 
-    const guild = reaction.message.guild;
+    const guild = this.reaction.message.guild;
     if (guild === null)
       throw new Error("Did not find guild in handleScheduleCoachAdd");
-    await insertScheduledLobbies(guild.channels, client.dbClient);
-    await module.exports.updateSchedulePost(schedule, reaction.message.channel);
-    user.send("✅ Added you as a coach to the scheduled lobby.");
+
+    await LobbyScheduler.insertScheduledLobbies(
+      guild.channels,
+      this.client.dbClient
+    );
+    await this.updateSchedulePost(this.reaction.message.channel);
+    this.user.send("✅ Added you as a coach to the scheduled lobby.");
+  }
+
+  private async updateSchedulePost(channel: TextBasedChannels): Promise<void> {
+    try {
+      const message = await channel.messages.fetch(this.schedule.messageId);
+      if (message === undefined || message === null) return;
+
+      this.updateFieldAndPost(message);
+    } catch (e) {
+      console.log(`Error in UpdateSchedulePost: ${e}`);
+    }
+  }
+
+  private async updateFieldAndPost(message: Message): Promise<boolean> {
+    const old_embed = message.embeds[0];
+    const embedField = this.getEmbedField(old_embed);
+
+    const lines = embedField.field.value.split("\n");
+    const lineIndex = this.getRelevantLineIndex(lines);
+    if (lineIndex === -1) return false;
+
+    this.applyCoachChange(lines, lineIndex);
+
+    var new_embed = new MessageEmbed(old_embed);
+    new_embed.fields[embedField.index].value = lines.join("\n");
+    message.edit({ embeds: [new_embed] });
+    return true;
+  }
+
+  private applyCoachChange(lines: string[], lineIndex: number): void {
+    lines[lineIndex + 1] = "coach 1: " + this.getCoachMention(0);
+    if (this.schedule.coachCount > 1)
+      lines[lineIndex + 2] = "coach 2: " + this.getCoachMention(1);
+  }
+
+  private getCoachMention(index: number): string {
+    return this.schedule.coaches.length > index
+      ? `<@${this.schedule.coaches[index]}>`
+      : "";
+  }
+
+  private getEmbedField(old_embed: MessageEmbed) {
+    const isRelevantEmbed = (field: EmbedField) =>
+      field.value.indexOf(this.schedule.emoji) !== -1;
+    const index = old_embed.fields.findIndex(isRelevantEmbed);
+    if (index === -1) {
+      throw new Error(
+        "Could not find Embed field for schedule emoji " +
+          this.schedule.emoji +
+          "."
+      );
+    }
+    return { field: old_embed.fields[index], index };
+  }
+
+  private getRelevantLineIndex(lines: string[]): number {
+    const filterFun = (line: string, index: number) =>
+      line.indexOf(this.schedule.emoji) !== -1 &&
+      index + this.schedule.coachCount < lines.length;
+    const lineIndex = lines.findIndex(filterFun);
+    if (lineIndex === -1) {
+      throw new Error(
+        "Could not find Line associated with emoji " +
+          this.schedule.emoji +
+          " in Schedule setup."
+      );
+    }
+    return lineIndex;
+  }
+
+  private userIsCoach(): boolean {
+    return (
+      this.schedule.coaches.find((coach: string) => coach === this.user.id) !==
+      undefined
+    );
+  }
+
+  private removeCoach(): void {
+    this.schedule.coaches.splice(this.getCoachIndex(), 1);
+  }
+
+  private getCoachIndex(): number {
+    return this.schedule.coaches.findIndex(
+      (coach: string) => coach === this.user.id
+    );
+  }
+
+  private addCoach(): void {
+    this.schedule.coaches.push(this.user.id);
+  }
+
+  private static async findSchedule(
+    data: IScheduleManipulationData
+  ): Promise<Schedule> {
+    const gdbc = SerializeUtils.fromMessagetoGuildDBClient(
+      data.reaction.message,
+      data.client.dbClient
+    );
+    const emojiName = data.reaction.emoji.name;
+    const serializer = new ScheduleSerializer(
+      gdbc,
+      data.reaction.message.id,
+      emojiName ? emojiName : ""
+    );
+    const schedules = await serializer.get();
+    if (schedules.length !== 1) throw new Error("Did not find schedule");
+    return schedules[0];
   }
 }

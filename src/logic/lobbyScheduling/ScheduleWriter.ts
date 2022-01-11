@@ -23,7 +23,7 @@ export class ScheduleWriter {
     channel: TextBasedChannels,
     scheduleSetup: IScheduleSetup
   ): Promise<Message | undefined> {
-    const fields = ScheduleWriter.createEmbedFields(scheduleSetup);
+    const fields = ScheduleWriter.createScheduleFields(scheduleSetup);
     const embed = ScheduleWriter.createEmbeddings(scheduleSetup, fields);
     return await ScheduleWriter.writeSchedule(channel, embed, fields);
   }
@@ -40,22 +40,13 @@ export class ScheduleWriter {
     );
   }
 
-  private static createEmbedFields(
-    scheduleSetup: IScheduleSetup
-  ): IScheduleFields {
-    return ScheduleWriter.createScheduleFields(scheduleSetup);
-  }
-
   private static async writeSchedule(
     channel: TextBasedChannels,
     embed: MessageEmbed,
     fields: IScheduleFields
   ): Promise<Message> {
     const message = await channel.send({ embeds: [embed] });
-    ScheduleWriter.reactWithScheduleEmojis(
-      message,
-      fields.lastReactionEmojiIndex
-    );
+    ScheduleWriter.reactWithScheduleEmojis(message, fields.reactionCounter);
     return message;
   }
 
@@ -63,27 +54,27 @@ export class ScheduleWriter {
     scheduleSetup: IScheduleSetup
   ): IScheduleFields {
     var dayAcronyms = ScheduleWriter.createDayAcronyms(scheduleSetup);
-    let lastReactionEmojiIndex = 0;
+    const reactionCounter = { counter: 0 };
     const schedules = scheduleSetup.data.map((scheduleDatum, index) => {
       return ScheduleWriter.createScheduleField(
         dayAcronyms[index],
-        lastReactionEmojiIndex,
+        reactionCounter,
         scheduleDatum,
         scheduleSetup
       );
     });
 
-    return { schedules, lastReactionEmojiIndex };
+    return { schedules, reactionCounter: reactionCounter.counter };
   }
 
   private static createScheduleField(
     dayAcronym: string[],
-    lastReactionEmojiIndex: number,
+    reactionCounter: { counter: number },
     scheduleDatum: IScheduleData,
     scheduleSetup: IScheduleSetup
   ) {
     const emojis = ScheduleWriter.getCurrentDayEmoji(
-      lastReactionEmojiIndex,
+      reactionCounter.counter,
       dayAcronym
     );
     const scheduleOptions: IScheduleTextOptions = {
@@ -97,7 +88,7 @@ export class ScheduleWriter {
       timezoneName: scheduleDatum.timezoneShortName,
       coachCount: scheduleSetup.coachCount,
     };
-    lastReactionEmojiIndex += dayAcronym.length;
+    reactionCounter.counter += dayAcronym.length;
     return ScheduleWriter.getScheduleText(scheduleOptions);
   }
 

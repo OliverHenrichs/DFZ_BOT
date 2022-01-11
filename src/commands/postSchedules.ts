@@ -1,7 +1,7 @@
 import { Message } from "discord.js";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
+import { SchedulePoster } from "../logic/lobbyScheduling/SchedulePoster";
 import { reactNegative, reactPositive } from "../misc/messageHelper";
-import { postSchedules } from "../logic/lobbyScheduling/scheduleManagement";
 
 export default async (message: Message, client: DFZDiscordClient) => {
   try {
@@ -13,6 +13,6 @@ export default async (message: Message, client: DFZDiscordClient) => {
 
 async function tryPostSchedules(message: Message, client: DFZDiscordClient) {
   if (!message.guild) throw new Error("Only guild messages");
-  await postSchedules({ client: client, guild: message.guild });
+  await SchedulePoster.postSchedules({ client: client, guild: message.guild });
   reactPositive(message, "I posted this week's schedules");
 }

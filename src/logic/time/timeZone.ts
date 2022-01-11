@@ -80,11 +80,11 @@ export function getScheduledDate(
   day: number,
   timeString: string,
   timezoneName: string
-) {
+): number {
   const hourAndMinute: IValidatedTime =
     StringTimeValidator.validateTimeString(timeString);
   if (hourAndMinute.hour === undefined || hourAndMinute.minute === undefined)
-    return undefined;
+    throw new Error("Invalid time string " + timeString);
 
   // get time zone
   const zone = StringTimeValidator.validateTimeZoneString(timezoneName);
@@ -103,7 +103,9 @@ export function getScheduledDate(
     useUTC: true,
   });
 
-  //var diff = (scheduledDateZoned.epoch - utcDate)/1000;
+  if (!scheduledDateZoned.epoch)
+    throw new Error("No epoch available for scheduled date");
+
   return scheduledDateZoned.epoch;
 }
 

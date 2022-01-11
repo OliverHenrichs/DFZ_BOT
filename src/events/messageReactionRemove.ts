@@ -2,6 +2,7 @@ import { MessageReaction, User } from "discord.js";
 import { ChannelManager } from "../logic/discord/DFZChannelManager";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
 import { adminRoles } from "../logic/discord/roleManagement";
+import { ScheduleManipulator } from "../logic/lobbyScheduling/ScheduleManipulator";
 import { Lobby } from "../logic/serializables/lobby";
 import {
   isSimpleLobbyType,
@@ -13,7 +14,6 @@ import {
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import { removeCoachFromSchedule } from "../logic/lobbyScheduling/scheduleManagement";
 
 function tryCancelLobbyCancel(
   client: DFZDiscordClient,
@@ -107,6 +107,6 @@ async function handleMessageReactionRemove(
   if (!isValidLobbyReaction(reaction, user)) return;
 
   if (ChannelManager.scheduleChannels.includes(reaction.message.channel.id))
-    removeCoachFromSchedule(client, reaction, user);
+    ScheduleManipulator.removeCoachFromSchedule({ client, reaction, user });
   else await handleLobbyRelatedEmoji(client, reaction, user);
 }

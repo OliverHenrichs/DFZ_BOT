@@ -1,6 +1,6 @@
 import { CommandInteraction } from "discord.js";
-import { postSchedules } from "../../lobbyScheduling/scheduleManagement";
 import { IGuildClient } from "../../../misc/types/IGuildClient";
+import { SchedulePoster } from "../../lobbyScheduling/SchedulePoster";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { InteractionUtils } from "../Utils/InteractionUtils";
 import { AbstractExecutor } from "./AbstractExecutor";
@@ -18,7 +18,7 @@ export class PostSchedulesExecutor extends AbstractExecutor {
         client,
         guild: interaction.guild,
       };
-      await postSchedules(guildClient);
+      await SchedulePoster.postSchedules(guildClient);
       InteractionUtils.quitInteraction(
         interaction,
         "I posted this week's schedules"

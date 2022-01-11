@@ -47,7 +47,7 @@ export class LobbyPostManipulator {
       options.coaches,
       options.userRoles,
       options.regionRole,
-      "",
+      options.guildId,
       channel.id
     );
     const embed = LobbyPostManipulator.createLobbyEmbedding(lobby, options);

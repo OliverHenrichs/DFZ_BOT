@@ -14,6 +14,7 @@ import {
 } from "../logic/discord/roleManagement";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { LobbyStarter } from "../logic/lobby/LobbyStarter";
+import { ScheduleManipulator } from "../logic/lobbyScheduling/ScheduleManipulator";
 import { Lobby } from "../logic/serializables/lobby";
 import { LobbySerializer } from "../logic/serializers/LobbySerializer";
 import { SerializeUtils } from "../logic/serializers/SerializeUtils";
@@ -33,7 +34,6 @@ import {
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import { addCoachToSchedule } from "../logic/lobbyScheduling/scheduleManagement";
 import { savePlayerParticipation } from "../misc/tracker";
 import { addUser, getUserIndex } from "../misc/userHelper";
 
@@ -57,7 +57,11 @@ async function handleMessageReactionAdd(
   if (!isValidLobbyReaction(reaction, user)) return;
 
   if (ChannelManager.scheduleChannels.includes(reaction.message.channel.id))
-    return await addCoachToSchedule(client, reaction, user);
+    return await ScheduleManipulator.addCoachToSchedule({
+      client,
+      reaction,
+      user,
+    });
 
   return await handleLobbyRelatedEmoji(client, reaction, user);
 }
@@ -115,12 +119,12 @@ async function handleLobbyRelatedEmoji(
 
 /**
  * Adds user to lobby or adds position to user in lobby
- * @param {User} user discord-user
- * @param {int} position dota-position
- * @param {string} beginnerRole player tier role
- * @param {string} regionRole player region role
- * @param {Lobby} lobby lobby player wants to join
- * @param {Channel} channel text channel of lobby
+ * @param user discord-user
+ * @param position dota-position
+ * @param beginnerRole player tier role
+ * @param regionRole player region role
+ * @param lobby lobby player wants to join
+ * @param channel text channel of lobby
  * @returns true if lobby has been changed, false if not
  */
 function addUserOrPosition(
@@ -130,11 +134,9 @@ function addUserOrPosition(
   regionRole: Role | undefined,
   lobby: Lobby,
   channel: TextBasedChannels
-) {
+): boolean {
   var userIdx = getUserIndex(lobby, user.id);
-  // check if it contains user
   if (userIdx === -1) {
-    // add user
     addUser(
       lobby,
       user.username,
@@ -143,19 +145,13 @@ function addUserOrPosition(
       beginnerRole,
       regionRole
     );
-
-    // update lobby post
     LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
     return true;
   } else {
-    // add position
     var lobbyUser = lobby.users[userIdx];
-
     if (!lobbyUser.positions.includes(position)) {
       lobbyUser.positions.push(position);
       lobbyUser.positions.sort();
-
-      // update lobby post
       LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
       return true;
     }
@@ -181,17 +177,16 @@ function handlePositionEmoji(
 ) {
   if (isSimpleLobbyType(lobby.type)) return false;
 
-  if (lobby.beginnerRoleIds.find((roleId) => roleId == role.id) === undefined) {
+  if (hasLobbyBeginnerRole(lobby, role)) {
     user.send(
       "⛔ You cannot join because you do not have a suitable beginner role."
     );
     return false;
   }
-  // get position
+
   var position = getReactionEmojiPosition(reaction.emoji);
   if (position === 0) return false;
 
-  // get region role
   var regionRole = findRole(guildMember, RegionDefinitions.regionRoles);
 
   return addUserOrPosition(
@@ -204,6 +199,11 @@ function handlePositionEmoji(
   );
 }
 
+function hasLobbyBeginnerRole(lobby: Lobby, role: Role) {
+  return (
+    lobby.beginnerRoleIds.find((roleId) => roleId == role.id) !== undefined
+  );
+}
 /**
  * Checks if player is tryout, and if, then adds player
  * @param {Lobby} lobby lobby to which the user reacted

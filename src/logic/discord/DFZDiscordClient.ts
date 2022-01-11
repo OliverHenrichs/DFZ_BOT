@@ -10,15 +10,13 @@ import {
 } from "discord.js";
 import { readdirSync } from "fs";
 import { dfzGuildId } from "../../misc/constants";
-import {
-  insertScheduledLobbies,
-  postSchedules,
-  tryRemoveDeprecatedSchedules,
-} from "../lobbyScheduling/scheduleManagement";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { ReferrerLeaderBoardHandler } from "../highscore/ReferrerLeaderBoardHandler";
 import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
 import { LobbyTimeController } from "../lobby/LobbyTimeController";
+import { LobbyScheduler } from "../lobbyScheduling/LobbyScheduler";
+import { SchedulePoster } from "../lobbyScheduling/SchedulePoster";
+import { ScheduleRemover } from "../lobbyScheduling/ScheduleRemover";
 import { Lobby } from "../serializables/lobby";
 import { Schedule } from "../serializables/schedule";
 import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
@@ -260,7 +258,7 @@ export class DFZDiscordClient extends Client {
 
   private async setDeleteDeprecatedSchedulesTimer() {
     const updateFun = async (client: DFZDiscordClient) => {
-      await tryRemoveDeprecatedSchedules(client.dbClient);
+      await ScheduleRemover.tryRemoveDeprecatedSchedules(client.dbClient);
     };
     const intervalFun = this.createIntervalTask(updateFun);
     await intervalFun();
@@ -272,7 +270,7 @@ export class DFZDiscordClient extends Client {
       const collection = await this.getGuilds();
       collection.map(async (oAuthGuild) => {
         const guild = await oAuthGuild.fetch();
-        await postSchedules({ client, guild });
+        await SchedulePoster.postSchedules({ client, guild });
       });
     };
     const intervalFun = this.createIntervalTask(scheduleWriter);
@@ -283,7 +281,10 @@ export class DFZDiscordClient extends Client {
   private async setPostLobbyFromScheduleTimer() {
     const lobbyPoster = async (client: DFZDiscordClient) => {
       const guild = await client.getDFZGuild();
-      await insertScheduledLobbies(guild.channels, client.dbClient);
+      await LobbyScheduler.insertScheduledLobbies(
+        guild.channels,
+        client.dbClient
+      );
     };
     const intervalFun = this.createIntervalTask(lobbyPoster);
     await intervalFun();

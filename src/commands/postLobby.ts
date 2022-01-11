@@ -88,7 +88,11 @@ function getRoleBasedLobbyOptions(
   message: Message,
   type: number
 ): PostLobbyOptions {
+  if (!message.guildId) {
+    throw new Error("Message was not posted in guild");
+  }
   return {
+    guildId: message.guildId,
     type: type,
     regionRole: getLobbyRegionRole(message),
     userRoles: getAllowedTiers(message),
@@ -126,7 +130,11 @@ function getNonRoleBasedLobbyOptions(
   message: Message,
   type: number
 ): PostLobbyOptions {
+  if (!message.guildId) {
+    throw new Error("Message was not posted in guild");
+  }
   var options: PostLobbyOptions = {
+    guildId: message.guildId,
     type: type,
     regionRole: "",
     userRoles: [],

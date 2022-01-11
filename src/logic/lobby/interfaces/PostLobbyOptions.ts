@@ -4,6 +4,7 @@ export interface PostLobbyOptions extends LobbyTitleOptions {
   regionRole: string;
   userRoles: string[];
   coaches: string[];
+  guildId: string;
 }
 
 export interface LobbyTitleOptions {
