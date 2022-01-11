@@ -60,20 +60,18 @@ function getTrimmedMessageArguments(message: string) {
   return args;
 }
 
-function getRefTagFromArgs(args: string[]) {
-  var refTag = "";
-  // if it's available then at the 4th position
-  if (args.length > 4 && args[4] !== undefined) {
-    var refTag = args[4].trim();
+function getRefTagFromArgs(args: string[]): string {
+  const refTagPosition = 4;
+  if (args.length > refTagPosition && args[refTagPosition] !== undefined) {
+    return args[refTagPosition].trim();
   }
-  return refTag;
+  return "";
 }
 
 function validateReferralTag(refTag: string): string | undefined {
   var re = /\S+#\d{4,5}/i; // matching user tag syntax asdf#1234
   const match = refTag.match(re);
   if (!match || match.length === 0) return undefined;
-
   return match[0];
 }
 

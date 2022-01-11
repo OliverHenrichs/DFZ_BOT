@@ -22,9 +22,9 @@ export class ScheduleRemover {
   ) {
     const gdbc: IGuildDataBaseClient = { dbClient, guildId: "" }; // guild id empty, remove all deprecated schedules.
     const serializer = new ScheduleSerializer(gdbc);
-    var schedules = await serializer.get();
+    const schedules = await serializer.get();
 
-    var schedulesToRemove: Array<Schedule> = [];
+    const schedulesToRemove: Array<Schedule> = [];
     for (let i = 0; i < schedules.length; i++) {
       var scheduleDate = new Date(parseInt(schedules[i].date));
       if (scheduleDate < deprecationDate) schedulesToRemove.push(schedules[i]);

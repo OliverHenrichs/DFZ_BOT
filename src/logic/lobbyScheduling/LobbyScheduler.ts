@@ -6,7 +6,7 @@ import {
   beginnerRoles,
   getRegionalRoleFromRegionName,
   getRegionalRoleLobbyChannel,
-  getRegionalRoleTimeZoneString,
+  getRegionalRoleTimeZoneName,
   tryoutRole,
 } from "../discord/roleManagement";
 import { PostLobbyOptions } from "../lobby/interfaces/PostLobbyOptions";
@@ -94,7 +94,7 @@ export class LobbyScheduler {
       return;
     }
 
-    const timezoneName = getRegionalRoleTimeZoneString(regionRole),
+    const timezoneName = getRegionalRoleTimeZoneName(regionRole),
       zonedTime = getZonedTimeFromTimeZoneName(
         Number(schedule.date),
         timezoneName

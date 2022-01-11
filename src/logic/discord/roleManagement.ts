@@ -35,12 +35,6 @@ export function getIDsAsNamedRoles(roles: string[]): INamedRole[] {
   });
 }
 
-/**
-		Check if message sender has at least one of the roles given by rolesToCheck
-		@param {Array<Int>} rolesToCheck list of role names to be checked against
-		@param {Discord.Member} member the guild member who is being checked for having certain roles
-		@return the found role or undefined if it didn't find one
-	*/
 export function findRole(
   member: GuildMember,
   rolesToCheck: Array<string>
@@ -69,9 +63,8 @@ export function findRoles(
 }
 
 /**
-		takes a sequence of numbers and returns the respective role names for numbers 0-4
-		@param {Array<Int>} number list of numbers, e.g. [0,1,2,3,4]
-		@return {Array<Int>} list of roles corresponding to given numbers
+		Takes a sequence of numbers and returns the respective role names for numbers 0-4
+		@param number list of numbers, e.g. [0,1,2,3,4]
 	*/
 export function getBeginnerRolesFromNumbers(numbers: Set<number>) {
   var roles: Array<string> = [];
@@ -114,7 +107,7 @@ export function getNumberFromBeginnerRole(roleId: string | undefined) {
 
 /**
  * Returns prefix of given role for name adjustment
- * @param {string} roleId id of regional role to check
+ * @param roleId id of regional role to check
  * @return corresponding regional prefix
  */
 export function getRegionalRolePrefix(roleId: string | undefined) {
@@ -127,10 +120,9 @@ export function getRegionalRolePrefix(roleId: string | undefined) {
 
 /**
  * Returns standard timezone given the region role
- * @param {string} roleId id of regional role to check
- * @return {string} corresponding timezone name
+ * @param roleId id of regional role to check
  */
-export function getRegionalRoleTimeZoneString(roleId: string | undefined) {
+export function getRegionalRoleTimeZoneName(roleId: string | undefined) {
   const region = RegionDefinitions.regions.find(
     (region) => region.role === roleId
   );
