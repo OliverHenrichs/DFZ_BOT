@@ -133,6 +133,7 @@ export abstract class Serializer<T extends Serializable> {
   }
 
   private getCommonSerializableCondition(serializable: Serializable): string[] {
+    if (!serializable.guildId) return [];
     return [`${SerializerIds.guild} = '${serializable.guildId}'`];
   }
 
