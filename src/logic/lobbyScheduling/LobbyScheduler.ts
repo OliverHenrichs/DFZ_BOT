@@ -30,6 +30,9 @@ export class LobbyScheduler {
     this.dbClient = dbClient;
   }
 
+  /**
+   * Inserts all lobbies due in the next x hours that havent been posted yet
+   */
   public static async insertScheduledLobbies(
     channels: GuildChannelManager,
     dbClient: DFZDataBaseClient
@@ -38,9 +41,6 @@ export class LobbyScheduler {
     return scheduler.insertScheduledLobbiesInt();
   }
 
-  /**
-   * Inserts all lobbies due in the next x hours that havent been posted yet
-   */
   private async insertScheduledLobbiesInt() {
     const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
       this.channelManager.guild,
@@ -84,15 +84,7 @@ export class LobbyScheduler {
     const regionRole = getRegionalRoleFromRegionName(schedule.region);
     const type = this.getLobbyType(schedule);
     const beginnerRoles = this.getLobbyBeginnerRoles(type, schedule.type);
-    const channelId = this.getScheduledLobbyChannelId(
-      type,
-      schedule.type,
-      regionRole
-    );
-    const channel = await this.channelManager.fetch(channelId ? channelId : "");
-    if (!channel || !channel.isText()) {
-      return;
-    }
+    const channel = await this.getChannel(schedule, type, regionRole);
 
     const timezoneName = getRegionalRoleTimeZoneName(regionRole),
       zonedTime = getZonedTimeFromTimeZoneName(
@@ -130,6 +122,23 @@ export class LobbyScheduler {
       return lobbyTypes.inhouse;
     }
     return lobbyTypes.unranked;
+  }
+
+  private async getChannel(
+    schedule: Schedule,
+    type: number,
+    regionRole: string
+  ): Promise<TextChannel | NewsChannel> {
+    const channelId = this.getScheduledLobbyChannelId(
+      type,
+      schedule.type,
+      regionRole
+    );
+    const channel = await this.channelManager.fetch(channelId ? channelId : "");
+    if (!channel || !channel.isText()) {
+      throw new Error("Could not find channel for schedule");
+    }
+    return channel;
   }
 
   private getScheduledLobbyChannelId(
