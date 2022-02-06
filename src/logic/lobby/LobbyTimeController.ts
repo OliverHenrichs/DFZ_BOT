@@ -75,7 +75,7 @@ export class LobbyTimeController {
     const lobbyFetchResult = await this.fetchLobbyFromDiscord(lobby, channel);
     if (!lobbyFetchResult) {
       // remove if e.g. an admin deleted the message
-      return await serializer.delete([lobby]);
+      return serializer.delete([lobby]);
     }
 
     const remainingTime = lobby.calculateRemainingTime();

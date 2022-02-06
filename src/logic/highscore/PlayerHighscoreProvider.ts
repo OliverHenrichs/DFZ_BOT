@@ -2,13 +2,13 @@ import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { Player } from "../serializables/player";
 import { PlayerSerializer } from "../serializers/PlayerSerializer";
-import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
+import { AbstractHighScoreProvider } from "./AbstractHighScoreProvider";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
-import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
+import { IHighScoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
 
-export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
+export class PlayerHighscoreProvider extends AbstractHighScoreProvider<Player> {
   constructor(dbClient: DFZDataBaseClient) {
-    const settings: IHighscoreProviderSettings = {
+    const settings: IHighScoreProviderSettings = {
       dbClient: dbClient,
       tableTemplate: tableBasePlayersTemplate,
       userType: HighscoreUserTypes.players,

@@ -1,31 +1,22 @@
-import {
-  Client,
-  Collection,
-  Guild,
-  Intents,
-  NewsChannel,
-  OAuth2Guild,
-  Snowflake,
-  TextChannel,
-} from "discord.js";
-import { readdirSync } from "fs";
-import { dfzGuildId } from "../../misc/constants";
-import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { SQLTableCreator } from "../database/SQLTableCreator";
-import { ReferrerLeaderBoardHandler } from "../highscore/ReferrerLeaderBoardHandler";
-import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
-import { LobbyTimeController } from "../lobby/LobbyTimeController";
-import { LobbyScheduler } from "../lobbyScheduling/LobbyScheduler";
-import { SchedulePoster } from "../lobbyScheduling/SchedulePoster";
-import { ScheduleRemover } from "../lobbyScheduling/ScheduleRemover";
-import { Lobby } from "../serializables/lobby";
-import { Schedule } from "../serializables/schedule";
-import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
-import { TimeInMs } from "../time/TimeConverter";
-import { ChannelManager } from "./DFZChannelManager";
-import { ILobbyMenu } from "./interfaces/ILobbyMenu";
-import { IScheduleInfo } from "./interfaces/IScheduleInfo";
-import { SlashCommandRegistrator } from "./SlashCommandRegistrator";
+import {Client, Collection, Guild, Intents, NewsChannel, OAuth2Guild, Snowflake, TextChannel,} from "discord.js";
+import {readdirSync} from "fs";
+import {dfzGuildId} from "../../misc/constants";
+import {DFZDataBaseClient} from "../database/DFZDataBaseClient";
+import {SQLTableCreator} from "../database/SQLTableCreator";
+import {ReferrerLeaderBoardHandler} from "../highscore/ReferrerLeaderBoardHandler";
+import {LobbyTimeout} from "../lobby/interfaces/LobbyTimeout";
+import {LobbyTimeController} from "../lobby/LobbyTimeController";
+import {LobbyScheduler} from "../lobbyScheduling/LobbyScheduler";
+import {SchedulePoster} from "../lobbyScheduling/SchedulePoster";
+import {ScheduleRemover} from "../lobbyScheduling/ScheduleRemover";
+import {Lobby} from "../serializables/lobby";
+import {Schedule} from "../serializables/schedule";
+import {ScheduleSerializer} from "../serializers/ScheduleSerializer";
+import {TimeInMs} from "../time/TimeConverter";
+import {ChannelManager} from "./DFZChannelManager";
+import {ILobbyMenu} from "./interfaces/ILobbyMenu";
+import {IScheduleInfo} from "./interfaces/IScheduleInfo";
+import {SlashCommandRegistrator} from "./SlashCommandRegistrator";
 
 export class DFZDiscordClient extends Client {
   public dbClient: DFZDataBaseClient;
@@ -102,7 +93,7 @@ export class DFZDiscordClient extends Client {
       }
     };
 
-    this.tryActionWithErrorLog(fetcher, "Error fetching roles");
+    await DFZDiscordClient.tryActionWithErrorLog(fetcher, "Error fetching roles");
   }
 
   private async fetchSlashCommands() {
@@ -119,7 +110,7 @@ export class DFZDiscordClient extends Client {
         await this.fetchLobbyMessagesInChannel(guild, channelId);
       }
     };
-    this.tryActionWithErrorLog(fetcher, "Error fetching lobby messages");
+    await DFZDiscordClient.tryActionWithErrorLog(fetcher, "Error fetching lobby messages");
   }
 
   private async getGuilds(): Promise<Collection<Snowflake, OAuth2Guild>> {
@@ -145,16 +136,16 @@ export class DFZDiscordClient extends Client {
   private async fetchScheduleMessages() {
     const fetcher = async () => {
       const schedules = await this.fetchSchedules();
-      var fetchedSchedulePosts = this.getUniqueSchedulePosts(schedules);
+      const fetchedSchedulePosts = await this.getUniqueSchedulePosts(schedules);
 
-      var guild = await this.getDFZGuild();
+      const guild = await this.getDFZGuild();
       for (const post of fetchedSchedulePosts) {
         const channel = await this.findChannel(guild, post.channelId);
 
-        channel.messages.fetch(post.messageId);
+        await channel.messages.fetch(post.messageId);
       }
     };
-    this.tryActionWithErrorLog(fetcher, "Error fetching schedule messages");
+    await DFZDiscordClient.tryActionWithErrorLog(fetcher, "Error fetching schedule messages");
   }
 
   private async fetchSchedules(): Promise<Schedule[]> {
@@ -172,28 +163,23 @@ export class DFZDiscordClient extends Client {
     return Array.prototype.concat.apply([], scheduleListOfLists);
   }
 
-  private getUniqueSchedulePosts(schedules: Array<Schedule>): IScheduleInfo[] {
-    var fetchedSchedulePosts: IScheduleInfo[] = [];
-
-    for (const schedule of schedules) {
-      this.maybeFetchSchedulePost(schedule, fetchedSchedulePosts);
-    }
-    return fetchedSchedulePosts;
+  private async getUniqueSchedulePosts(schedules: Array<Schedule>): Promise<IScheduleInfo[]> {
+    return schedules.reduce<IScheduleInfo[]>((schedulePosts, schedule) => {
+      return this.maybeAddSchedule(schedule, schedulePosts);
+    }, []);
   }
 
-  private async maybeFetchSchedulePost(
-    schedule: Schedule,
-    fetchedSchedulePosts: IScheduleInfo[]
-  ) {
+  private maybeAddSchedule(schedule: Schedule, fetchedSchedulePosts: IScheduleInfo[]) {
     const containsPost: boolean = this.isScheduleFetched(
-      schedule,
-      fetchedSchedulePosts
+        schedule,
+        fetchedSchedulePosts
     );
     if (!containsPost)
       fetchedSchedulePosts.push({
         messageId: schedule.messageId,
         channelId: schedule.channelId,
       });
+    return fetchedSchedulePosts
   }
 
   private isScheduleFetched(
@@ -232,7 +218,7 @@ export class DFZDiscordClient extends Client {
     };
   }
 
-  private async tryActionWithErrorLog(
+  private static async tryActionWithErrorLog(
     action: () => Promise<void>,
     msg: string
   ) {
@@ -248,7 +234,7 @@ export class DFZDiscordClient extends Client {
       const guilds = await this.getGuilds();
       guilds.map(async (guild) => {
         const realGuild = await guild.fetch();
-        LobbyTimeController.checkAndUpdateLobbies(client, realGuild);
+        await LobbyTimeController.checkAndUpdateLobbies(client, realGuild);
       });
     };
 

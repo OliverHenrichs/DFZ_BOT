@@ -3,13 +3,13 @@ import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { Coach } from "../serializables/coach";
 import { CoachSerializer } from "../serializers/CoachSerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
-import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
+import { AbstractHighScoreProvider } from "./AbstractHighScoreProvider";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
-import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
+import { IHighScoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
 
-export class CoachHighscoreProvider extends AbstractHighscoreProvider<Coach> {
+export class CoachHighscoreProvider extends AbstractHighScoreProvider<Coach> {
   constructor(dbClient: DFZDataBaseClient) {
-    const settings: IHighscoreProviderSettings = {
+    const settings: IHighScoreProviderSettings = {
       dbClient: dbClient,
       tableTemplate: tableBaseCoachesTemplate,
       userType: HighscoreUserTypes.coaches,

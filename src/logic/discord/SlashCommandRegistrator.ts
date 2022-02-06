@@ -18,7 +18,7 @@ export class SlashCommandRegistrator {
 
   public async tryRegisterSlashCommands() {
     try {
-      this.registerSlashCommands();
+      await this.registerSlashCommands();
     } catch (error) {
       console.error(error);
     }

@@ -26,7 +26,7 @@ module.exports = async (
   newMember: GuildMember
 ) => {
   if (!haveRolesChanged(oldMember, newMember)) return;
-  tryUpdateGuildMember(client.dbClient, oldMember, newMember);
+  await tryUpdateGuildMember(client.dbClient, oldMember, newMember);
 };
 
 function haveRolesChanged(oldMember: GuildMember, newMember: GuildMember) {

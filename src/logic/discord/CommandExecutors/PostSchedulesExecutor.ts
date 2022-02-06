@@ -19,12 +19,12 @@ export class PostSchedulesExecutor extends AbstractExecutor {
         guild: interaction.guild,
       };
       await SchedulePoster.postSchedules(guildClient);
-      InteractionUtils.quitInteraction(
-        interaction,
-        "I posted this week's schedules"
+      await InteractionUtils.quitInteraction(
+          interaction,
+          "I posted this week's schedules"
       );
     } catch (error) {
-      InteractionUtils.quitInteraction(interaction, error as string);
+      await InteractionUtils.quitInteraction(interaction, error as string);
     }
   }
 }

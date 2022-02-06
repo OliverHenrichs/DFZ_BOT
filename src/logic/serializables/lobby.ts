@@ -17,7 +17,9 @@ import { LobbySerializer } from "../serializers/LobbySerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
 import { ITime } from "../time/interfaces/Time";
 import { TimeConverter } from "../time/TimeConverter";
+import { getZonedTimeFromTimeZoneName } from "../time/timeZone";
 import { Serializable } from "./Serializable";
+import { ILobbyOptions } from "./types/ILobbyOptions";
 
 export class Lobby extends Serializable {
   public type: number;
@@ -30,32 +32,36 @@ export class Lobby extends Serializable {
   public messageId: string;
   public started: boolean = false;
   public text: string;
+  constructor(options?: ILobbyOptions) {
+    super(options ? options.guildId : "");
+    if (!options) {
+      this.type = -1;
+      this.date = getZonedTimeFromTimeZoneName(new Date(), "Europe/Brussels");
+      this.users = [];
+      this.coaches = [];
+      this.beginnerRoleIds = [];
+      this.regionId = "";
+      this.channelId = "";
+      this.messageId = "";
+      this.text = "";
+      return;
+    }
 
-  constructor(
-    type: number,
-    date: ITime,
-    coaches: Array<string> = [],
-    beginnerRoleIds: Array<string> = [],
-    regionId: string = "",
-    guildId: string,
-    channelId: string = "",
-    messageId: string = "",
-    text: string = ""
-  ) {
-    super(guildId);
-    this.type = type;
-    this.date = date;
+    this.type = options.type;
+    this.date = options.date;
     this.users = [];
-    this.coaches = coaches;
-    this.beginnerRoleIds = beginnerRoleIds;
-    this.regionId = regionId;
-    this.channelId = channelId;
-    this.messageId = messageId;
-    this.text = text;
+    this.coaches = options.coaches ? options.coaches : [];
+    this.beginnerRoleIds = options.beginnerRoleIds
+      ? options.beginnerRoleIds
+      : [];
+    this.regionId = options.regionId ? options.regionId : "";
+    this.channelId = options.channelId ? options.channelId : "";
+    this.messageId = options.messageId ? options.messageId : "";
+    this.text = options.text ? options.text : "";
   }
 
   public calculateRemainingTime(): IRemainingTime {
-    var res = {
+    const res = {
       totalMs: this.date.epoch - Date.now(),
       minutes: -1,
       hours: -1,
@@ -91,23 +97,19 @@ export class Lobby extends Serializable {
       );
   }
 
-  /**
-   * manages removal of reaction in lobby post (position removal or player removal if last position)
-   * @param {Pool} dbHandle
-   * @param {MessageReaction} reaction reaction that was removed
-   * @param {Lobby} lobby lobby that we look at
-   * @param {User} user user who removed the reaction
-   */
-  public async updatePlayerInLobby(
+  // TODO: refactor me (polymorphic, reaction out, ...)
+  public async updatePlayerInLobbyDueToReactionRemoval(
     dbClient: DFZDataBaseClient,
     reaction: MessageReaction,
     user: User
   ) {
-    // check reaction emojis
-    var position = -1;
+    const lobbyUser: LobbyPlayer | undefined = getUser(this, user.id);
+    if (lobbyUser === undefined) return;
 
-    // for simple lobbies just check '✅'
+    let position = -1;
+
     if (isSimpleLobbyType(this.type)) {
+      // for simple lobbies just check '✅'
       if (reaction.emoji.name !== tryoutReactionEmoji) return;
     } else {
       // for role based lobbies check positions
@@ -117,27 +119,8 @@ export class Lobby extends Serializable {
         return;
     }
 
-    // check if lobby contains user
-    var lobbyUser: LobbyPlayer | undefined = getUser(this, user.id);
-    if (lobbyUser === undefined) return;
-
-    // for simple lobbies, always remove
-    var removeUser = true;
-
-    // if positions are relevant, remove positions
-    if (isRoleBasedLobbyType(this.type)) {
-      // remove user position
-      lobbyUser.positions = lobbyUser.positions.filter((_position) => {
-        return _position != position;
-      });
-
-      // do not remove user if some positions are left
-      if (lobbyUser.positions.length !== 0) removeUser = false;
-    }
-
-    // remove user if necessary
-    if (removeUser === true) {
-      var idx = this.users.findIndex((_user) => _user.id == user.id);
+    if (this.shouldRemoveUser(lobbyUser, position)) {
+      const idx = this.users.findIndex((_user) => _user.id == user.id);
       this.users.splice(idx, 1);
     }
 
@@ -148,14 +131,21 @@ export class Lobby extends Serializable {
     await this.updateLobbyPostAndDBEntry(reaction.message.channel, dbClient);
   }
 
-  /**
-   * Adds coach to existing lobby
-   * @param {Pool} dbHandle
-   * @param {Channel} channel
-   * @param {Lobby} lobby
-   * @param {string} userId
-   * @returns true if successful, false if not
-   */
+  private shouldRemoveUser(lobbyUser: LobbyPlayer, position: number) {
+    if (!isRoleBasedLobbyType(this.type)) {
+      // for simple lobbies, always remove
+      return true;
+    }
+
+    // remove user position
+    lobbyUser.positions = lobbyUser.positions.filter((_position) => {
+      return _position != position;
+    });
+
+    // do not remove user if some positions are left
+    return lobbyUser.positions.length === 0;
+  }
+
   public async addCoach(
     dbClient: DFZDataBaseClient,
     channel: TextBasedChannels,

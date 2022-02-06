@@ -50,40 +50,38 @@ export class LobbyScheduler {
     const schedules = await serializer.get();
 
     for (const schedule of schedules) {
-      if (!this.shouldPostScheduleLobby(schedule)) continue;
+      if (!LobbyScheduler.shouldPostScheduleLobby(schedule)) continue;
       schedule.lobbyPosted = true;
       await this.createScheduledLobby(schedule);
       await serializer.update(schedule);
     }
   }
 
-  private shouldPostScheduleLobby(schedule: Schedule) {
+  private static shouldPostScheduleLobby(schedule: Schedule) {
     if (schedule.coaches.length === 0)
       // only post lobbies for which we have coaches
       return false;
 
     if (schedule.lobbyPosted)
-      // dont double post
+      // don't double post
       return false;
 
-    var now = Date.now();
-    var diff = Number(schedule.date) - now;
+    const now = Date.now();
+    const diff = Number(schedule.date) - now;
     if (diff < 0)
-      // dont post lobbies that are in the past
+      // don't post lobbies that are in the past
       return false;
 
     const lobbyPostTime = TimeConverter.hToMs * 5; // at the moment 5 hours
-    if (diff > lobbyPostTime)
-      // dont post lobbies that are too far in the future
-      return false;
+    return diff <= lobbyPostTime;
 
-    return true;
+
   }
 
   private async createScheduledLobby(schedule: Schedule) {
     const regionRole = getRegionalRoleFromRegionName(schedule.region);
-    const type = this.getLobbyType(schedule);
-    const beginnerRoles = this.getLobbyBeginnerRoles(type, schedule.type);
+    const type = LobbyScheduler.getLobbyType(schedule);
+    const beginnerRoles = LobbyScheduler.getLobbyBeginnerRoles(type, schedule.type);
     const channel = await this.getChannel(schedule, type, regionRole);
 
     const timezoneName = getRegionalRoleTimeZoneName(regionRole),
@@ -92,7 +90,7 @@ export class LobbyScheduler {
         timezoneName
       );
 
-    var options: PostLobbyOptions = {
+    const options: PostLobbyOptions = {
       type: type,
       regionRole: regionRole,
       userRoles: beginnerRoles,
@@ -108,10 +106,10 @@ export class LobbyScheduler {
       options
     );
 
-    this.informCoachesOfSchedulePost(schedule, channel, zonedTime);
+    await LobbyScheduler.informCoachesOfSchedulePost(schedule, channel, zonedTime);
   }
 
-  private getLobbyType(schedule: Schedule) {
+  private static getLobbyType(schedule: Schedule) {
     if (schedule.type === scheduleTypes.tryout) {
       return lobbyTypes.tryout;
     }
@@ -129,7 +127,7 @@ export class LobbyScheduler {
     type: number,
     regionRole: string
   ): Promise<TextChannel | NewsChannel> {
-    const channelId = this.getScheduledLobbyChannelId(
+    const channelId = LobbyScheduler.getScheduledLobbyChannelId(
       type,
       schedule.type,
       regionRole
@@ -141,7 +139,7 @@ export class LobbyScheduler {
     return channel;
   }
 
-  private getScheduledLobbyChannelId(
+  private static getScheduledLobbyChannelId(
     lobbyType: number,
     scheduleType: string,
     lobbyRegionRole: string | undefined
@@ -158,7 +156,7 @@ export class LobbyScheduler {
     }
   }
 
-  private getLobbyBeginnerRoles(lobbyType: number, scheduleType: string) {
+  private static getLobbyBeginnerRoles(lobbyType: number, scheduleType: string) {
     switch (lobbyType) {
       case lobbyTypes.tryout:
         return [tryoutRole];
@@ -171,18 +169,18 @@ export class LobbyScheduler {
     }
   }
 
-  private async informCoachesOfSchedulePost(
+  private static async informCoachesOfSchedulePost(
     schedule: Schedule,
     channel: TextChannel | NewsChannel,
     zonedTime: ITime
   ) {
-    schedule.coaches.forEach(async (coachId) => {
+    for (const coachId of schedule.coaches) {
       const coach = await channel.guild.members.fetch(coachId);
-      coach.send(
-        `I just posted tonight's ${
-          schedule.region
-        } lobby starting *${getTimeString(zonedTime)}*.\nYou are coaching 👍`
+      await coach.send(
+          `I just posted tonight's ${
+              schedule.region
+          } lobby starting *${getTimeString(zonedTime)}*.\nYou are coaching 👍`
       );
-    });
+    }
   }
 }

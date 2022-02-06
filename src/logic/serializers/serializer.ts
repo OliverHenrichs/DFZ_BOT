@@ -1,152 +1,157 @@
-import { RowDataPacket } from "mysql2/promise";
-import { IColumnsAndValues } from "../database/interfaces/ColumnsAndValues";
-import { Serializable } from "../serializables/Serializable";
-import { ISerializationSettings } from "./types/ISerializationSettings";
-import { SerializerIds } from "./types/SerializerIds";
+import {RowDataPacket} from "mysql2/promise";
+import {IColumnsAndValues} from "../database/interfaces/ColumnsAndValues";
+import {Serializable} from "../serializables/Serializable";
+import {ISerializationSettings} from "./types/ISerializationSettings";
+import {SerializerIds} from "./types/SerializerIds";
 
 export abstract class Serializer<T extends Serializable> {
-  protected settings: ISerializationSettings;
+    protected settings: ISerializationSettings;
 
-  constructor(settings: ISerializationSettings) {
-    this.settings = settings;
+    protected constructor(settings: ISerializationSettings) {
+        this.settings = settings;
 
-    this.getExecutor = this.getExecutor.bind(this);
-    this.getTypeArrayFromSQLResponse =
-      this.getTypeArrayFromSQLResponse.bind(this);
-    this.getSerializableCondition = this.getSerializableCondition.bind(this);
-    this.getSortedExecutor = this.getSortedExecutor.bind(this);
-  }
+        this.getExecutor = this.getExecutor.bind(this);
+        this.getTypeArrayFromSQLResponse =
+            this.getTypeArrayFromSQLResponse.bind(this);
+        this.getSerializableCondition = this.getSerializableCondition.bind(this);
+        this.getSortedExecutor = this.getSortedExecutor.bind(this);
+    }
 
-  public insert(serializable: Serializable): void {
-    const insertionData = this.createInsertionData(serializable);
-    this.settings.dbClient.insertRow(this.settings.table, insertionData);
-  }
+    private static generateCommonDBData(serializable: Serializable): IColumnsAndValues {
+        return {
+            columnName: SerializerIds.guild,
+            value: serializable.guildId,
+        };
+    }
 
-  public get(): Promise<T[]> {
-    return new Promise<T[]>(this.getExecutor);
-  }
+    private static commonIdentifierColumns(): string[] {
+        return [SerializerIds.guild];
+    }
 
-  public getSorted(sortColumn: string = ""): Promise<T[]> {
-    if (sortColumn.length > 0) this.settings.sortColumn = sortColumn;
-    return new Promise<T[]>(this.getSortedExecutor);
-  }
+    private static getCommonSerializableCondition(serializable: Serializable): string[] {
+        if (!serializable.guildId) return [];
+        return [`${SerializerIds.guild} = '${serializable.guildId}'`];
+    }
 
-  public update(serializable: Serializable): void {
-    const insertionData = this.createInsertionData(serializable);
-    const conditions = this.getSerializableCondition(serializable).concat(
-      this.getCommonSerializableCondition(serializable)
-    );
-    this.settings.dbClient.updateRows(
-      this.settings.table,
-      insertionData,
-      conditions
-    );
-  }
+    public insert(serializable: Serializable): void {
+        const insertionData = this.createInsertionData(serializable);
+        this.settings.dbClient.insertRow(this.settings.table, insertionData);
+    }
 
-  public delete(serializables: Serializable[]): void {
-    const deletionColumns = this.createDeletionColumns();
-    const deletionValues = this.createDeletionValues(serializables);
+    public get(): Promise<T[]> {
+        return new Promise<T[]>(this.getExecutor);
+    }
 
-    this.settings.dbClient.deleteRows(
-      this.settings.table,
-      deletionColumns,
-      deletionValues
-    );
-  }
+    public getSorted(sortColumn: string = ""): Promise<T[]> {
+        if (sortColumn.length > 0) this.settings.sortColumn = sortColumn;
+        return new Promise<T[]>(this.getSortedExecutor);
+    }
 
-  private createDeletionColumns() {
-    const specificIdentifierColumns = this.getDeletionIdentifierColumns();
-    const commonIdentifierColumns = this.commonIdentifierColumns();
-    return specificIdentifierColumns.concat(commonIdentifierColumns);
-  }
+    public update(serializable: Serializable): void {
+        const insertionData = this.createInsertionData(serializable);
+        const conditions = this.getSerializableCondition(serializable).concat(
+            Serializer.getCommonSerializableCondition(serializable)
+        );
+        this.settings.dbClient.updateRows(
+            this.settings.table,
+            insertionData,
+            conditions
+        );
+    }
 
-  private createDeletionValues(serializables: Serializable[]): string[] {
-    const serializableValues =
-      this.getSerializableDeletionValues(serializables);
-    return serializableValues.map((value, index) => {
-      return value + `, '${serializables[index].guildId}'`;
-    });
-  }
+    public delete(serializables: Serializable[]): void {
+        const deletionColumns = this.createDeletionColumns();
+        const deletionValues = this.createDeletionValues(serializables);
 
-  private getExecutor(
-    resolve: (value: T[] | PromiseLike<T[]>) => void,
-    _reject: (reason?: any) => void
-  ): void {
-    const conditions = this.getCondition();
-    conditions.push(...this.getGuildCondition());
+        this.settings.dbClient.deleteRows(
+            this.settings.table,
+            deletionColumns,
+            deletionValues
+        );
+    }
 
-    this.settings.dbClient.selectRows(
-      this.settings.table,
-      this.settings.columns,
-      conditions,
-      (res: RowDataPacket[]) => {
-        resolve(this.getTypeArrayFromSQLResponse(res));
-      }
-    );
-  }
+    protected abstract getTypeArrayFromSQLResponse(
+        response: RowDataPacket[]
+    ): T[];
 
-  private getSortedExecutor(
-    resolve: (value: T[] | PromiseLike<T[]>) => void,
-    _reject: (reason?: any) => void
-  ): void {
-    this.settings.dbClient.getSortedTable(
-      this.settings.table,
-      this.settings.sortColumn,
-      (res: RowDataPacket[]) => {
-        resolve(this.getTypeArrayFromSQLResponse(res));
-      }
-    );
-  }
+    protected abstract getSerializableCondition(
+        serializable: Serializable
+    ): string[];
 
-  private createInsertionData(serializable: Serializable) {
-    const dbValues = this.getSerializeValues(serializable);
-    const serializableData = this.generateSerializableDBData(dbValues);
-    const commonData = this.generateCommonDBData(serializable);
-    return serializableData.concat(commonData);
-  }
+    protected abstract getCondition(): string[];
 
-  private generateSerializableDBData(values: string[]): IColumnsAndValues[] {
-    return this.settings.columns.map((col, idx) => {
-      return {
-        columnName: col,
-        value: values[idx],
-      };
-    });
-  }
+    protected abstract getSerializeValues(serializable: Serializable): string[];
 
-  private generateCommonDBData(serializable: Serializable): IColumnsAndValues {
-    return {
-      columnName: SerializerIds.guild,
-      value: serializable.guildId,
-    };
-  }
+    protected abstract getDeletionIdentifierColumns(): string[];
 
-  private getGuildCondition(): string[] {
-    var conditions = [];
-    if (this.settings.guildId !== "")
-      conditions.push(`${SerializerIds.guild} = '${this.settings.guildId}'`);
-    return conditions;
-  }
+    protected abstract getSerializableDeletionValues(
+        serializables: Serializable[]
+    ): string[];
 
-  private commonIdentifierColumns(): string[] {
-    return [SerializerIds.guild];
-  }
+    private createDeletionColumns() {
+        const specificIdentifierColumns = this.getDeletionIdentifierColumns();
+        const commonIdentifierColumns = Serializer.commonIdentifierColumns();
+        return specificIdentifierColumns.concat(commonIdentifierColumns);
+    }
 
-  private getCommonSerializableCondition(serializable: Serializable): string[] {
-    if (!serializable.guildId) return [];
-    return [`${SerializerIds.guild} = '${serializable.guildId}'`];
-  }
+    private createDeletionValues(serializables: Serializable[]): string[] {
+        const serializableValues =
+            this.getSerializableDeletionValues(serializables);
+        return serializableValues.map((value, index) => {
+            return value + `, '${serializables[index].guildId}'`;
+        });
+    }
 
-  protected abstract getTypeArrayFromSQLResponse(
-    response: RowDataPacket[]
-  ): T[];
-  protected abstract getSerializableCondition(
-    serializable: Serializable
-  ): string[];
-  protected abstract getCondition(): string[];
-  protected abstract getSerializeValues(serializable: Serializable): string[];
-  protected abstract getDeletionIdentifierColumns(): string[];
-  protected abstract getSerializableDeletionValues(
-    serializables: Serializable[]
-  ): string[];
+    private getExecutor(
+        resolve: (value: T[] | PromiseLike<T[]>) => void,
+        _reject: (reason?: any) => void
+    ): void {
+        const conditions = this.getCondition();
+        conditions.push(...this.getGuildCondition());
+
+        this.settings.dbClient.selectRows(
+            this.settings.table,
+            this.settings.columns,
+            conditions,
+            (res: RowDataPacket[]) => {
+                resolve(this.getTypeArrayFromSQLResponse(res));
+            }
+        );
+    }
+
+    private getSortedExecutor(
+        resolve: (value: T[] | PromiseLike<T[]>) => void,
+        _reject: (reason?: any) => void
+    ): void {
+        this.settings.dbClient.getSortedTable(
+            this.settings.table,
+            this.settings.sortColumn,
+            (res: RowDataPacket[]) => {
+                resolve(this.getTypeArrayFromSQLResponse(res));
+            }
+        );
+    }
+
+    private createInsertionData(serializable: Serializable) {
+        const dbValues = this.getSerializeValues(serializable);
+        const serializableData = this.generateSerializableDBData(dbValues);
+        const commonData = Serializer.generateCommonDBData(serializable);
+        return serializableData.concat(commonData);
+    }
+
+    private generateSerializableDBData(values: string[]): IColumnsAndValues[] {
+        return this.settings.columns.map((col, idx) => {
+            return {
+                columnName: col,
+                value: values[idx],
+            };
+        });
+    }
+
+    private getGuildCondition(): string[] {
+        const conditions = [];
+        if (this.settings.guildId !== "")
+            conditions.push(`${SerializerIds.guild} = '${this.settings.guildId}'`);
+        return conditions;
+    }
 }

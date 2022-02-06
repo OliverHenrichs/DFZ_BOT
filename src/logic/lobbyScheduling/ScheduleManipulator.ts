@@ -62,7 +62,7 @@ export class ScheduleManipulator {
   private async addCoachToScheduleInt(): Promise<void> {
     if (!(await this.assertUserHasCoachingPermissions())) return;
     if (this.userIsCoach()) {
-      this.user.send("⛔ You are already coaching that lobby.");
+      await this.user.send("⛔ You are already coaching that lobby.");
       return;
     }
     this.addCoach();
@@ -75,13 +75,13 @@ export class ScheduleManipulator {
       this.user.id
     );
     if (!guildMember) {
-      this.user.send("⛔ I could not find your ID in your guild.");
+      await this.user.send("⛔ I could not find your ID in your guild.");
       return false;
     }
 
     const role = findRole(guildMember, adminRoles);
     if (role === undefined || role === null) {
-      this.user.send("⛔ You cannot interact because you are not a coach.");
+      await this.user.send("⛔ You cannot interact because you are not a coach.");
       return false;
     }
 
@@ -97,7 +97,7 @@ export class ScheduleManipulator {
     );
     const serializer = new ScheduleSerializer(gdbc);
     await serializer.update(this.schedule);
-    this.user.send("✅ Removed you as coach from the scheduled lobby.");
+    await this.user.send("✅ Removed you as coach from the scheduled lobby.");
   }
 
   private async updateGoogleEvent(): Promise<void> {
@@ -147,7 +147,7 @@ export class ScheduleManipulator {
       this.client.dbClient
     );
     await this.updateSchedulePost(this.reaction.message.channel);
-    this.user.send("✅ Added you as a coach to the scheduled lobby.");
+    await this.user.send("✅ Added you as a coach to the scheduled lobby.");
   }
 
   private async updateSchedulePost(channel: TextBasedChannels): Promise<void> {
@@ -155,7 +155,7 @@ export class ScheduleManipulator {
       const message = await channel.messages.fetch(this.schedule.messageId);
       if (message === undefined || message === null) return;
 
-      this.updateFieldAndPost(message);
+      await this.updateFieldAndPost(message);
     } catch (e) {
       console.log(`Error in UpdateSchedulePost: ${e}`);
     }
@@ -173,7 +173,7 @@ export class ScheduleManipulator {
 
     var new_embed = new MessageEmbed(old_embed);
     new_embed.fields[embedField.index].value = lines.join("\n");
-    message.edit({ embeds: [new_embed] });
+    await message.edit({embeds: [new_embed]});
     return true;
   }
 

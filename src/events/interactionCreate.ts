@@ -108,7 +108,7 @@ async function handleSelect(
   selector: SelectMenuInteraction
 ): Promise<void> {
   const updatedLobbyMenuOptions = await updateMenuWithSelect(client, selector);
-  selector.update(updatedLobbyMenuOptions);
+  await selector.update(updatedLobbyMenuOptions);
 }
 
 async function updateMenuWithSelect(

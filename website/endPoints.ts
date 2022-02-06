@@ -7,9 +7,9 @@ interface EndPointNames {
 }
 
 export async function registerEndpoints(ws: Website) {
-  addIndexRoot(ws);
-  addJoinRoot(ws);
-  addHallOfFameRoot(ws);
+  await addIndexRoot(ws);
+  await addJoinRoot(ws);
+  await addHallOfFameRoot(ws);
 }
 
 async function addIndexRoot(ws: Website) {
@@ -20,7 +20,7 @@ async function addIndexRoot(ws: Website) {
   const dataFun = () => {
     return { referrers: ws.referrerList };
   };
-  setEndPoint(ws, names, dataFun);
+  await setEndPoint(ws, names, dataFun);
 }
 
 async function addJoinRoot(ws: Website) {
@@ -28,7 +28,7 @@ async function addJoinRoot(ws: Website) {
     endPoint: "/join",
     view: "joinLink",
   };
-  setEndPoint(ws, names);
+  await setEndPoint(ws, names);
 }
 
 async function addHallOfFameRoot(ws: Website) {
@@ -39,7 +39,7 @@ async function addHallOfFameRoot(ws: Website) {
   const dataFun = () => {
     return { coaches: ws.coachList };
   };
-  setEndPoint(ws, names, dataFun);
+  await setEndPoint(ws, names, dataFun);
 }
 
 async function setEndPoint(

@@ -66,7 +66,7 @@ export class ReferrerLeaderBoardHandler {
       HighscoreUserTypes.referrers,
       dbClient
     ) as ReferrerHighscoreProvider;
-    return highscoreProvider.generateHighscore(referrers);
+    return highscoreProvider.generateHighScore(referrers);
   }
 
   private static async postUpdatedEmbedding(

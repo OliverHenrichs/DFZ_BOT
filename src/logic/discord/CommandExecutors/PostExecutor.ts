@@ -37,16 +37,15 @@ export class PostExecutor extends AbstractExecutor {
 
     const freeText = interaction.options.getString(CommandOptionNames.freeText);
 
-    const newLobby = new Lobby(
-      lobbyType,
-      time,
-      interaction.member ? [interaction.member.user.id] : [],
-      [getDefaultBeginnerRoleByLobbyType(lobbyType)],
-      getDefaultRegionRoleByLobbyType(lobbyType),
-      interaction.guildId ? interaction.guildId : "",
-      "",
-      freeText ? freeText : ""
-    );
+    const newLobby = new Lobby({
+      date: time,
+      type: lobbyType,
+      guildId: interaction.guildId ? interaction.guildId : "",
+      beginnerRoleIds: [getDefaultBeginnerRoleByLobbyType(lobbyType)],
+      regionId: getDefaultRegionRoleByLobbyType(lobbyType),
+      coaches: interaction.member ? [interaction.member.user.id] : [],
+      text: freeText ? freeText : "",
+    });
 
     interaction
       .editReply({

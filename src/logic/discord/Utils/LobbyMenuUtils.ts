@@ -1,25 +1,20 @@
-import { userMention } from "@discordjs/builders";
-import {
-  Interaction,
-  InteractionUpdateOptions,
-  MessageActionRow,
-  SelectMenuInteraction,
-} from "discord.js";
-import { kickMultiplePlayers } from "../../../commands/kick";
-import { lobbyTypes } from "../../../misc/constants";
-import { findLobbyByMessage } from "../../../misc/messageHelper";
-import { IMessageIdentifier } from "../../../misc/types/IMessageIdentifier";
-import { LobbyPostManipulator } from "../../lobby/LobbyPostManipulator";
-import { Lobby } from "../../serializables/lobby";
-import { KickExecutor } from "../CommandExecutors/KickExecutor";
-import { SelectMenuUtils } from "../CommandExecutors/SelectMenuUtils";
-import { UpdateExecutor } from "../CommandExecutors/UpdateExecutor";
-import { DFZDiscordClient } from "../DFZDiscordClient";
-import { ILobbyMenu } from "../interfaces/ILobbyMenu";
-import { LobbyMenuType } from "../interfaces/LobbyMenuType";
-import { SelectorCustomIds } from "../interfaces/SelectorCustomIds";
-import { tryoutRole } from "../roleManagement";
-import { CommonMenuUtils } from "./CommonMenuUtils";
+import {userMention} from "@discordjs/builders";
+import {Interaction, InteractionUpdateOptions, MessageActionRow, SelectMenuInteraction,} from "discord.js";
+import {kickMultiplePlayers} from "../../../commands/kick";
+import {lobbyTypes} from "../../../misc/constants";
+import {findLobbyByMessage} from "../../../misc/messageHelper";
+import {IMessageIdentifier} from "../../../misc/types/IMessageIdentifier";
+import {LobbyPostManipulator} from "../../lobby/LobbyPostManipulator";
+import {Lobby} from "../../serializables/lobby";
+import {KickExecutor} from "../CommandExecutors/KickExecutor";
+import {SelectMenuUtils} from "../CommandExecutors/SelectMenuUtils";
+import {UpdateExecutor} from "../CommandExecutors/UpdateExecutor";
+import {DFZDiscordClient} from "../DFZDiscordClient";
+import {ILobbyMenu} from "../interfaces/ILobbyMenu";
+import {LobbyMenuType} from "../interfaces/LobbyMenuType";
+import {SelectorCustomIds} from "../interfaces/SelectorCustomIds";
+import {tryoutRole} from "../roleManagement";
+import {CommonMenuUtils} from "./CommonMenuUtils";
 
 export class LobbyMenuUtils {
   public static async updateLobbyMenu(
@@ -84,17 +79,13 @@ export class LobbyMenuUtils {
   ): Promise<InteractionUpdateOptions> {
     switch (selector.customId) {
       case SelectorCustomIds.player:
-        this.kick(lobby, selector.values);
+        await kickMultiplePlayers(lobby, selector.values);
     }
     return {
       content:
         "Will kick the following players: " +
         selector.values.map((user) => userMention(user)).join(", "),
     };
-  }
-
-  private static kick(lobby: Lobby, playerIDs: string[]) {
-    kickMultiplePlayers(lobby, playerIDs);
   }
 
   public static setLobbyRegion(lobby: Lobby, regionRoleId: string): void {

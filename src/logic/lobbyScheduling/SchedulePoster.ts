@@ -30,19 +30,19 @@ export class SchedulePoster {
 
   public static async postSchedules(client: IGuildClient) {
     const schedulePoster = new SchedulePoster(client);
-    schedulePoster.postSchedulesInt();
+    await schedulePoster.postSchedulesInt();
   }
 
   private async postSchedulesInt() {
     if (!(await this.weeklyScheduleShouldBePosted())) return;
-    this.addCurrentWeekSchedule();
+    await this.addCurrentWeekSchedule();
   }
 
-  private addCurrentWeekSchedule() {
-    var mondayAndSunday: NextMondayAndSunday =
-      ArbitraryTimeAlgos.getCurrentMondayAndSundayDate();
+  private async addCurrentWeekSchedule() {
+    const mondayAndSunday: NextMondayAndSunday =
+        ArbitraryTimeAlgos.getCurrentMondayAndSundayDate();
     for (const data of weeklyScheduleDatas)
-      this.createSchedules(data, mondayAndSunday);
+      await this.createSchedules(data, mondayAndSunday);
   }
 
   private async createSchedules(
@@ -106,11 +106,11 @@ export class SchedulePoster {
   }
 
   verifyTimes(times: string[][]) {
-    this.verifyAndCompleteArray(times);
+    SchedulePoster.verifyAndCompleteArray(times);
   }
 
   verifyDays(days: number[][]) {
-    this.verifyAndCompleteArray(days);
+    SchedulePoster.verifyAndCompleteArray(days);
   }
 
   verifyDayAndTimeLengths(days: number[][], times: string[][]) {
@@ -122,7 +122,7 @@ export class SchedulePoster {
     return true;
   }
 
-  private verifyAndCompleteArray<T>(arr: Array<T>) {
+  private static verifyAndCompleteArray<T>(arr: Array<T>) {
     const numRegions = RegionDefinitions.regions.length;
     if (arr.length === 1) {
       // one item for each region => duplicate for other regions
@@ -140,7 +140,7 @@ export class SchedulePoster {
     const serializer = new ScheduleSerializer(
       SerializeUtils.getGuildDBClient(messageIdentifier.guildId, dbClient)
     );
-    var dayBaseIndex = 0;
+    let dayBaseIndex = 0;
     scheduleSetup.data.forEach((datum) => {
       this.insertDailyScheduleDatum(
         datum,

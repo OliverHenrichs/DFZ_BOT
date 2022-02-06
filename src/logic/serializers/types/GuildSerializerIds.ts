@@ -10,4 +10,7 @@ export enum GuildSerializerIds {
   regionsAndChannels = "regions",
   lobbyChannels = "lobby",
   leaderboardChannel = "leaderboard",
+
+  schedules = "schedules",
 }
+6;

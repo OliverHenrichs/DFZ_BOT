@@ -2,13 +2,13 @@ import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { Referrer } from "../serializables/referrer";
 import { ReferrerSerializer } from "../serializers/ReferrerSerializer";
-import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
+import { AbstractHighScoreProvider } from "./AbstractHighScoreProvider";
 import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
-import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
+import { IHighScoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
 
-export class ReferrerHighscoreProvider extends AbstractHighscoreProvider<Referrer> {
+export class ReferrerHighscoreProvider extends AbstractHighScoreProvider<Referrer> {
   constructor(dbClient: DFZDataBaseClient) {
-    const settings: IHighscoreProviderSettings = {
+    const settings: IHighScoreProviderSettings = {
       dbClient: dbClient,
       tableTemplate: tableBaseReferrersTemplate,
       userType: HighscoreUserTypes.referrers,
