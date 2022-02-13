@@ -1,6 +1,7 @@
 {{>smallHeader}}
-<title >The place to start Dota!</title>
-<meta name="Description" content="Here you can create an application message for the discord server and find its invitation link.">
+<title>The place to start Dota!</title>
+<meta name="Description"
+      content="Here you can create an application message for the discord server and find its invitation link.">
 <div class="dfz-abstract-container main-container">
     <div class="fade-in-animation-scroll">
         <h1>How to join the community</h1>
@@ -29,10 +30,10 @@
                 <tr>
                     <td class="bigTableCell">Which region do you play?</td>
                     <td class="smallTableCell"><select class="dfz-select" id="region" name="Region">
-                            <option value="EU">EU</option>
-                            <option value="NA">NA</option>
-                            <option value="SEA">SEA</option>
-                        </select>
+                        <option value="EU">EU</option>
+                        <option value="NA">NA</option>
+                        <option value="SEA">SEA</option>
+                    </select>
                     </td>
                 </tr>
                 <tr>
@@ -51,13 +52,13 @@
                 <tr>
                     <td class="bigTableCell">
                         <button class="button margin-top-bottom filled-button autoFontSize"
-                            onclick="copyToClipboard('joinMessage')">
+                                onclick="copyToClipboard('joinMessage')">
                             <span class="visible-when-large">Copy to clipboard</span>
                             <span class="visible-when-small">Copy</span>
                         </button>
                     </td>
                     <td class="smallTableCell"><textarea class="dfz-textarea" id="joinMessage" placeholder=""
-                            disabled> </textarea> </td>
+                                                         disabled> </textarea></td>
                 </tr>
             </table>
         </div>
@@ -93,14 +94,14 @@
     document.addEventListener("DOMContentLoaded", function () {
         const params = new URLSearchParams(window.location.search)
 
-        var referralName = params.get('name');
-        var referralNumber = params.get('number');
+        const referralName = params.get('name');
+        const referralNumber = params.get('number');
         let referralTag = document.getElementById("referralTag");
         if (referralName && referralNumber) {
             referralTag.value = referralName + '#' + referralNumber;
         }
 
-        var inputs = [];
+        const inputs = [];
         inputs.push(document.getElementById("userName"));
         inputs.push(document.getElementById("dotaId"));
         inputs.push(document.getElementById("gameHours"));
@@ -110,12 +111,12 @@
         inputs.forEach(input => {
             input.oninput = function () {
                 document.getElementById("joinMessage").value =
-                    "!apply" + ' '
-                    + document.getElementById("userName").value + ', '
-                    + document.getElementById("dotaId").value + ', '
-                    + document.getElementById("gameHours").value + ', '
-                    + document.getElementById("region").value + ', '
-                    + document.getElementById("referralTag").value;
+                        "!apply" + ' '
+                        + document.getElementById("userName").value + ', '
+                        + document.getElementById("dotaId").value + ', '
+                        + document.getElementById("gameHours").value + ', '
+                        + document.getElementById("region").value + ', '
+                        + document.getElementById("referralTag").value;
             }
         })
     });

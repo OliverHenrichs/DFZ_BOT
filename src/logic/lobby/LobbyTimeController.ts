@@ -28,7 +28,7 @@ export class LobbyTimeController {
     );
     const serializer = new LobbySerializer(gdbc);
 
-    var lobbies: Lobby[] = await serializer.get();
+    const lobbies: Lobby[] = await serializer.get();
     for (const lobby of lobbies) {
       await LobbyTimeController.tryCheckAndUpdateLobby(
         lobby,
@@ -126,14 +126,11 @@ export class LobbyTimeController {
   private static async getMessageFromChannel(
     channel: TextChannel | NewsChannel,
     messageId: string
-  ) {
-    return new Promise<Message | undefined>(function (resolve, reject) {
-      channel.messages
-        .fetch(messageId)
-        .then((message) => {
-          resolve(message);
-        })
-        .catch((err) => resolve(undefined));
-    });
+  ): Promise<Message | undefined> {
+    try {
+      return channel.messages.fetch(messageId);
+    } catch (e) {
+      return undefined;
+    }
   }
 }

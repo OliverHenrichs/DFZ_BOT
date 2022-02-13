@@ -17,6 +17,14 @@ export class ReferrerHighscoreProvider extends AbstractHighScoreProvider<Referre
     super(settings);
   }
 
+  private static addReferrerRowToTable(
+    tableBase: Array<IFieldElement>,
+    referrer: Referrer
+  ) {
+    tableBase[0].value = tableBase[0].value + "\r\n" + referrer.tag;
+    tableBase[1].value = tableBase[1].value + "\r\n" + referrer.referralCount;
+  }
+
   protected async getUsersFromDatabase(guildId: string) {
     const serializer = new ReferrerSerializer({
       dbClient: this.dbClient,
@@ -29,15 +37,7 @@ export class ReferrerHighscoreProvider extends AbstractHighScoreProvider<Referre
   }
 
   protected rowAdder(user: Referrer): void {
-    this.addReferrerRowToTable(this.resultTable, user);
-  }
-
-  private addReferrerRowToTable(
-    tableBase: Array<IFieldElement>,
-    referrer: Referrer
-  ) {
-    tableBase[0].value = tableBase[0].value + "\r\n" + referrer.tag;
-    tableBase[1].value = tableBase[1].value + "\r\n" + referrer.referralCount;
+    ReferrerHighscoreProvider.addReferrerRowToTable(this.resultTable, user);
   }
 }
 

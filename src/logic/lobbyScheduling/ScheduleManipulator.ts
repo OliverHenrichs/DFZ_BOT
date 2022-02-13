@@ -171,7 +171,7 @@ export class ScheduleManipulator {
 
     this.applyCoachChange(lines, lineIndex);
 
-    var new_embed = new MessageEmbed(old_embed);
+    const new_embed = new MessageEmbed(old_embed);
     new_embed.fields[embedField.index].value = lines.join("\n");
     await message.edit({embeds: [new_embed]});
     return true;

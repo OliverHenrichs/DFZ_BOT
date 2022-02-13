@@ -13,4 +13,4 @@ export enum GuildSerializerIds {
 
   schedules = "schedules",
 }
-6;
+

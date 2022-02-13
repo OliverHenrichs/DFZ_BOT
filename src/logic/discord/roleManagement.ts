@@ -49,8 +49,8 @@ export function findRole(
 }
 
 /**
-  Return all roles matching the rolesToCheck role IDs
-*/
+ Return all roles matching the rolesToCheck role IDs
+ */
 export function findRoles(
   member: GuildMember,
   rolesToCheck: Array<string>
@@ -63,11 +63,10 @@ export function findRoles(
 }
 
 /**
-		Takes a sequence of numbers and returns the respective role names for numbers 0-4
-		@param number list of numbers, e.g. [0,1,2,3,4]
-	*/
+ Takes a sequence of numbers and returns the respective role names for numbers 0-4
+ */
 export function getBeginnerRolesFromNumbers(numbers: Set<number>) {
-  var roles: Array<string> = [];
+  const roles: Array<string> = [];
   numbers.forEach((num) => {
     if (num == 0) roles.push(beginnerRoles[0]);
     else if (num == 1) roles.push(beginnerRoles[1]);
@@ -82,10 +81,10 @@ export function getBeginnerRolesFromNumbers(numbers: Set<number>) {
 }
 
 /**
-		Returns number corresponding to role (Beginner Tier 1 => 1, 2 => 2 , ...)
-		@param roleId id of given role
-		@return corresponding number
-	*/
+ Returns number corresponding to role (Beginner Tier 1 => 1, 2 => 2 , ...)
+ @param roleId id of given role
+ @return corresponding number
+ */
 export function getNumberFromBeginnerRole(roleId: string | undefined) {
   switch (roleId) {
     case beginnerRoles[0]:
@@ -171,10 +170,10 @@ export function getRegionalRoleFromRegionName(
 }
 
 /**
-		takes a sequence of roles and returns the role mention-strings
-		@param roles list of roles
-		@return list of corresponding role strings
-	*/
+ takes a sequence of roles and returns the role mention-strings
+ @param roles list of roles
+ @return list of corresponding role strings
+ */
 export function getRoleMentions(roles: Array<string>) {
   return roles
     .map((tier) => {

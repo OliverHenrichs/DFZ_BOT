@@ -1,24 +1,16 @@
-import { Collection, GuildMember, Role } from "discord.js";
-import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
-import { SQLUtils } from "../logic/database/SQLUtils";
-import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-import {
-  beginnerRoles,
-  findRole,
-  findRoles,
-  getRegionalRolePrefix,
-} from "../logic/discord/roleManagement";
-import { Player } from "../logic/serializables/player";
-import { PlayerSerializer } from "../logic/serializers/PlayerSerializer";
-import { ReferrerSerializer } from "../logic/serializers/ReferrerSerializer";
-import { SerializeUtils } from "../logic/serializers/SerializeUtils";
-import { RegionDefinitions } from "../logic/time/RegionDefinitions";
+import {Collection, GuildMember, Role} from "discord.js";
+import {DFZDataBaseClient} from "../logic/database/DFZDataBaseClient";
+import {SQLUtils} from "../logic/database/SQLUtils";
+import {DFZDiscordClient} from "../logic/discord/DFZDiscordClient";
+import {beginnerRoles, findRole, findRoles, getRegionalRolePrefix,} from "../logic/discord/roleManagement";
+import {Player} from "../logic/serializables/player";
+import {PlayerSerializer} from "../logic/serializers/PlayerSerializer";
+import {ReferrerSerializer} from "../logic/serializers/ReferrerSerializer";
+import {SerializeUtils} from "../logic/serializers/SerializeUtils";
+import {RegionDefinitions} from "../logic/time/RegionDefinitions";
 
 /**
- * Handles role and nickname changes
- * @param {Discord.Client} client discord client
- * @param {GuildMember} oldMember The member before the update
- * @param {GuildMember} newMember The member after the update
+ * Handles role and nickname changes.
  */
 module.exports = async (
   client: DFZDiscordClient,
@@ -57,7 +49,7 @@ async function updateNickname(member: GuildMember) {
 }
 
 function getRoleBasedPrefixes(roles: Collection<string, Role>) {
-  var prefixes: string[] = [];
+  const prefixes: string[] = [];
   roles.forEach((role) => {
     const prefix = getRegionalRolePrefix(role.id);
     if (prefix !== "") prefixes.push(prefix);
@@ -75,8 +67,8 @@ async function handleFirstBeginnerRole(
 }
 
 function isSuitableBeginner(oldMember: GuildMember, newMember: GuildMember) {
-  var oldRole = findRole(oldMember, beginnerRoles);
-  var newRole = findRole(newMember, beginnerRoles);
+  const oldRole = findRole(oldMember, beginnerRoles);
+  const newRole = findRole(newMember, beginnerRoles);
   return oldRole === undefined && newRole !== undefined;
 }
 

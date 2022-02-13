@@ -15,16 +15,16 @@ export async function saveCoachParticipation(
   coaches: Array<string>,
   lobbyType: number
 ) {
-  var isTryout = lobbyType === lobbyTypes.tryout;
-  var isReplayAnalysis = lobbyType === lobbyTypes.replayAnalysis;
-  var isNormal = !isTryout && !isReplayAnalysis;
+  let isTryout = lobbyType === lobbyTypes.tryout;
+  const isReplayAnalysis = lobbyType === lobbyTypes.replayAnalysis;
+  const isNormal = !isTryout && !isReplayAnalysis;
   const gdbc: IGuildDataBaseClient = {
     guildId,
     dbClient,
   };
 
   for (let i = 0; i < coaches.length; i++) {
-    var coachId = coaches[i];
+    const coachId = coaches[i];
     const serializer = new CoachSerializer(gdbc, coachId);
     const dBCoachList = await serializer.get();
 
@@ -40,7 +40,7 @@ export async function saveCoachParticipation(
         )
       );
     } else {
-      var dBCoach = dBCoachList[0];
+      const dBCoach = dBCoachList[0];
       dBCoach.lobbyCount += 1;
 
       if (isTryout) dBCoach.lobbyCountTryout += 1;
@@ -59,12 +59,12 @@ export async function savePlayerParticipation(
   lobbyType: number,
   playersPerLobby: number
 ) {
-  var isReplayAnalysis = lobbyType === lobbyTypes.replayAnalysis;
-  var isUnranked = lobbyType === lobbyTypes.unranked;
-  var is5v5 = lobbyType === lobbyTypes.inhouse;
-  var isBotbash = lobbyType === lobbyTypes.botbash;
+  const isReplayAnalysis = lobbyType === lobbyTypes.replayAnalysis;
+  const isUnranked = lobbyType === lobbyTypes.unranked;
+  const is5v5 = lobbyType === lobbyTypes.inhouse;
+  const isBotbash = lobbyType === lobbyTypes.botbash;
 
-  var referredBy = "",
+  const referredBy = "",
     referralLock = 0,
     lobbyCount = 1;
 
@@ -79,7 +79,7 @@ export async function savePlayerParticipation(
     const players = await serializer.get();
 
     if (players.length === 0) {
-      var user = await client.users.fetch(uid);
+      const user = await client.users.fetch(uid);
       await serializer.insert(
         new Player(
           user.id,

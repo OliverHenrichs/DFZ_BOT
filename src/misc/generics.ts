@@ -6,11 +6,9 @@ export function coinFlip() {
 /**
  * Shuffles array in place.
  * thx @ https://stackoverflow.com/questions/6274339/how-can-i-shuffle-an-array
- * @param {Array} a items An array containing the items.
- * @param return the shuffled array
  */
 export function shuffle<T>(array: Array<T>) {
-  var i, j, copy;
+  let i, j, copy;
   for (i = array.length - 1; i > 0; i--) {
     j = Math.floor(Math.random() * (i + 1));
     copy = array[i];
@@ -21,11 +19,7 @@ export function shuffle<T>(array: Array<T>) {
 }
 
 /**
- * Retrieves a sequence of unique integer values from a string containing comma-separated values
- * @param stringWithCommaSeperatedNumbers string like this "5,6,8"
- * @param {int} min min allowed number
- * @param {int} max max allowed number
- * @return {[boolean, set<int>, string]}[true if success, unique numbers, error message if not success]
+ * Retrieves a sequence of unique integer values from a string containing comma-separated values.
  */
 export function getNumbersFromString(
   csvString: string,
@@ -54,7 +48,7 @@ function assertPositionsBetweenMinMax(
 
 function getUniqueSortedNumbersFromCSVString(csvString: string) {
   const strings: string[] = csvString.split(",");
-  var numbers = strings.map((s) => Number(s));
+  const numbers = strings.map((s) => Number(s));
   numbers.sort();
   return new Set(numbers);
 }

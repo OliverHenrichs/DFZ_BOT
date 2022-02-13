@@ -1,19 +1,28 @@
 {{>header}}
 <title>The place to start Dota!</title>
 <meta name="Description"
-    content="We are a Discord-based community dedicated to give you a great start into your Dota2-adventure. Check out dotafromzero.com/join on how to join our community.">
+      content="We are a Discord-based community dedicated to give you a great start into your Dota2-adventure. Check out dotafromzero.com/join on how to join our community.">
 <div class="dfz-abstract-container">
     <div class="fade-in-animation-scroll">
         <h1>THE PLACE TO START DOTA</h1>
 
         <div class="button-container">
-            <a href="//dotafromzero.com/join" target="_blank"><button
-                    class="button margin-top-bottom hollow-button">SIGN
-                    UP</button></a>
-            <a href="#recruiting-section"><button class="button margin-top-bottom filled-button">RECRUIT A
-                    FRIEND</button></a>
-            <a href="/halloffame"><button class="button margin-top-bottom hollow-button">HALL OF
-                    FAME</button></a>
+            <a href="//dotafromzero.com/join" target="_blank">
+                <button
+                        class="button margin-top-bottom hollow-button">SIGN
+                    UP
+                </button>
+            </a>
+            <a href="#recruiting-section">
+                <button class="button margin-top-bottom filled-button">RECRUIT A
+                    FRIEND
+                </button>
+            </a>
+            <a href="/halloffame">
+                <button class="button margin-top-bottom hollow-button">HALL OF
+                    FAME
+                </button>
+            </a>
         </div>
     </div>
     <div class="section">
@@ -161,13 +170,13 @@
             <tr>
                 <td class="bigTableCell">
                     <button class="button margin-top-bottom filled-button autoFontSize"
-                        onclick="copyToClipboard('referralLink')">
+                            onclick="copyToClipboard('referralLink')">
                         <span class="visible-when-large">Copy to clipboard</span>
                         <span class="visible-when-small">Copy</span>
                     </button>
                 </td>
                 <td class="smallTableCell"><textarea class="dfz-textarea" id="referralLink" placeholder=""
-                        disabled> </textarea> </td>
+                                                     disabled> </textarea></td>
             </tr>
         </table>
         <p>Share your referral-link with Dota-Beginners.</p>
@@ -180,10 +189,10 @@
                 <td>Referrals</td>
             </tr>
             {{#each referrers}}
-            <tr class="text-box-accent">
-                <td>{{this.tag}}</td>
-                <td>{{this.referralCount}}</td>
-            </tr>
+                <tr class="text-box-accent">
+                    <td>{{this.tag}}</td>
+                    <td>{{this.referralCount}}</td>
+                </tr>
             {{/each}}
         </table>
         {{!-- <iframe class="dfz-yt-frame"
@@ -197,8 +206,8 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("userName").oninput = function () {
-            var tagParts = document.getElementById("userName").value.split('#');
-            var link = "https://dotafromzero.com/join?name=";
+            const tagParts = document.getElementById("userName").value.split('#');
+            let link = "https://dotafromzero.com/join?name=";
             if (tagParts.length !== 2) {
                 document.getElementById("referralLink").value = "Incorrect tag. Tag has form 'name'#'number'";
                 return;

@@ -35,7 +35,7 @@ export class ScheduleSerializer extends Serializer<Schedule> {
   }
 
   protected getCondition(): string[] {
-    var conditions = [];
+    const conditions = [];
     if (this.messageId !== "")
       conditions.push(
         `${ScheduleSerializerIds.messageColumn} = '${this.messageId}'`

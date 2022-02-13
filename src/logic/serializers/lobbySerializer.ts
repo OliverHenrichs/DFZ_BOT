@@ -36,7 +36,7 @@ export class LobbySerializer extends Serializer<Lobby> {
   }
 
   protected getCondition(): string[] {
-    var conditions = [];
+    const conditions = [];
     if (this.channelId !== "")
       conditions.push(
         `${LobbySerializerIds.channelColumn} = '${this.channelId}'`

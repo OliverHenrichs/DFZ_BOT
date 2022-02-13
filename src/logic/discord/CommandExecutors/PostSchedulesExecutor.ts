@@ -12,6 +12,7 @@ export class PostSchedulesExecutor extends AbstractExecutor {
   ): Promise<void> {
     try {
       if (!interaction.guild) {
+        // noinspection ExceptionCaughtLocallyJS
         throw new Error("No associated guild");
       }
       const guildClient: IGuildClient = {
@@ -20,8 +21,8 @@ export class PostSchedulesExecutor extends AbstractExecutor {
       };
       await SchedulePoster.postSchedules(guildClient);
       await InteractionUtils.quitInteraction(
-          interaction,
-          "I posted this week's schedules"
+        interaction,
+        "I posted this week's schedules"
       );
     } catch (error) {
       await InteractionUtils.quitInteraction(interaction, error as string);

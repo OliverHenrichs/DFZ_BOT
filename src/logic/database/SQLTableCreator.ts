@@ -67,7 +67,7 @@ export class SQLTableCreator {
     tableName: string,
     tableColumns: Array<ISqlTableColumn>
   ) {
-    var command = this.createCreateTableCommand(tableName, tableColumns);
+    const command = this.createCreateTableCommand(tableName, tableColumns);
     return dbHandle.execute(command);
   }
 
@@ -75,7 +75,7 @@ export class SQLTableCreator {
     tableName: string,
     tableColumns: Array<ISqlTableColumn>
   ) {
-    var command = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
+    let command = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
     command += tableName + "_id INT AUTO_INCREMENT, ";
 
     tableColumns.forEach((col) => {

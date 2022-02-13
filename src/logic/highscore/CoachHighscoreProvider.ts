@@ -17,6 +17,18 @@ export class CoachHighscoreProvider extends AbstractHighScoreProvider<Coach> {
     super(settings);
   }
 
+  private static addCoachRowToTable(
+    tableBase: Array<IFieldElement>,
+    coach: Coach
+  ) {
+    tableBase[0].value = tableBase[0].value + "\r\n<@" + coach.userId + ">";
+    tableBase[1].value = tableBase[1].value + "\r\n" + coach.lobbyCount;
+    tableBase[2].value = tableBase[2].value + "\r\n" + coach.lobbyCountNormal;
+    tableBase[3].value = tableBase[3].value + "\r\n" + coach.lobbyCountTryout;
+    tableBase[4].value =
+      tableBase[4].value + "\r\n" + coach.lobbyCountReplayAnalysis;
+  }
+
   protected async getUsersFromDatabase(guildId: string) {
     const gdbc = SerializeUtils.getGuildDBClient(guildId, this.dbClient);
     const serializer = new CoachSerializer(gdbc);
@@ -26,16 +38,7 @@ export class CoachHighscoreProvider extends AbstractHighScoreProvider<Coach> {
   }
 
   protected rowAdder(coach: Coach): void {
-    this.addCoachRowToTable(this.resultTable, coach);
-  }
-
-  private addCoachRowToTable(tableBase: Array<IFieldElement>, coach: Coach) {
-    tableBase[0].value = tableBase[0].value + "\r\n<@" + coach.userId + ">";
-    tableBase[1].value = tableBase[1].value + "\r\n" + coach.lobbyCount;
-    tableBase[2].value = tableBase[2].value + "\r\n" + coach.lobbyCountNormal;
-    tableBase[3].value = tableBase[3].value + "\r\n" + coach.lobbyCountTryout;
-    tableBase[4].value =
-      tableBase[4].value + "\r\n" + coach.lobbyCountReplayAnalysis;
+    CoachHighscoreProvider.addCoachRowToTable(this.resultTable, coach);
   }
 }
 

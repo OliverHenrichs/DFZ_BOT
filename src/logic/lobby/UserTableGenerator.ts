@@ -9,6 +9,7 @@ import { TableGenerator } from "./TableGenerator";
 export class UserTableGenerator extends TableGenerator {
   users: LobbyPlayer[];
   playersPerLobby: number;
+
   constructor(
     users: LobbyPlayer[],
     lobbyType: number,
@@ -19,13 +20,43 @@ export class UserTableGenerator extends TableGenerator {
     this.users = users;
   }
 
+  private static createUserTableBase(): Array<IFieldElement> {
+    return [
+      {
+        name: "Name",
+        value: "",
+        inline: true,
+      },
+      {
+        name: "Position",
+        value: "",
+        inline: true,
+      },
+      {
+        name: "Tier",
+        value: "",
+        inline: true,
+      },
+    ];
+  }
+
+  private static createUserTableBench(): Array<IFieldElement> {
+    return [
+      {
+        name: "Bench",
+        value: "If people leave, you get pushed up",
+        inline: false,
+      },
+    ].concat(UserTableGenerator.createUserTableBase());
+  }
+
   public generate(): IFieldElement[] {
     if (this.users.length == 0) {
       return [];
     }
 
-    var mainTable = this.createUserTableBase();
-    var benchTable = this.createUserTableBench();
+    const mainTable = UserTableGenerator.createUserTableBase();
+    const benchTable = UserTableGenerator.createUserTableBench();
 
     return this.fillUserTable(mainTable, benchTable);
   }
@@ -34,7 +65,7 @@ export class UserTableGenerator extends TableGenerator {
     mainTable: IFieldElement[],
     benchTable: IFieldElement[]
   ) {
-    var userIndex = 0;
+    let userIndex = 0;
     this.users.forEach((user) => {
       this.handleUserAddition(user, mainTable, benchTable, userIndex);
       userIndex++;
@@ -96,35 +127,5 @@ export class UserTableGenerator extends TableGenerator {
       startIndex,
       mention
     );
-  }
-
-  private createUserTableBench(): Array<IFieldElement> {
-    return [
-      {
-        name: "Bench",
-        value: "If people leave, you get pushed up",
-        inline: false,
-      },
-    ].concat(this.createUserTableBase());
-  }
-
-  private createUserTableBase(): Array<IFieldElement> {
-    return [
-      {
-        name: "Name",
-        value: "",
-        inline: true,
-      },
-      {
-        name: "Position",
-        value: "",
-        inline: true,
-      },
-      {
-        name: "Tier",
-        value: "",
-        inline: true,
-      },
-    ];
   }
 }

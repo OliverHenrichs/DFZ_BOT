@@ -9,7 +9,7 @@ export function tryGetSSLCredentials(): SSLCredentials {
 }
 
 function getSSLCredentials(): SSLCredentials {
-  var credentials: SSLCredentials = {
+  const credentials: SSLCredentials = {
     key: "",
     cert: "",
     ca: "",

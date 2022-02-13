@@ -15,13 +15,13 @@ export const scheduleTimezoneNames_short = getTimeZoneShortNames(
 );
 
 export function getTimeZoneShortNames(timezoneNames: Array<string>) {
-  var date = Date.now();
-  var timezoneShortNames: Array<string> = [];
+  const date = Date.now();
+  const timezoneShortNames: Array<string> = [];
   timezoneNames.forEach((name) => {
     const zone = StringTimeValidator.validateTimeZoneString(name);
 
     // get correct time zone abbreviation
-    var abbr = tZ.getUTCOffset(date, zone).abbreviation;
+    let abbr = tZ.getUTCOffset(date, zone).abbreviation;
     if (abbr === "+08") abbr = "SGT";
     else if (abbr !== undefined && (abbr[0] === "+" || abbr[0] === "-"))
       abbr = "UTC" + abbr;
@@ -46,7 +46,7 @@ export interface NextMondayAndSunday {
 }
 
 export function getTimeZoneStringFromRegion(_region: string) {
-  var idx = RegionDefinitions.regions.findIndex((region) => {
+  let idx = RegionDefinitions.regions.findIndex((region) => {
     return region.name === _region;
   });
   if (idx === -1) idx = 0;
@@ -90,8 +90,8 @@ export function getScheduledDate(
   const zone = StringTimeValidator.validateTimeZoneString(timezoneName);
 
   // set date
-  var scheduledDate = new Date(mondayDate);
-  var newDate = scheduledDate.getDate() + (day == 0 ? 6 : day - 1);
+  const scheduledDate = new Date(mondayDate);
+  const newDate = scheduledDate.getDate() + (day == 0 ? 6 : day - 1);
   scheduledDate.setDate(newDate);
   scheduledDate.setHours(hourAndMinute.hour);
   scheduledDate.setMinutes(
@@ -99,7 +99,7 @@ export function getScheduledDate(
   ); // remove time zone offset of server, offset given in minutes
 
   // transform into correct time zone
-  var scheduledDateZoned = tZ.setTimeZone(scheduledDate, zone, {
+  const scheduledDateZoned = tZ.setTimeZone(scheduledDate, zone, {
     useUTC: true,
   });
 
@@ -135,12 +135,12 @@ export function calculateLobbyTime(
   zone: ITimeZoneInfo,
   hourAndMinute: IValidatedTime
 ): Date {
-  var date = new Date();
-  var zonedDate = tZ.getZonedTime(date, zone);
+  const date = new Date();
+  const zonedDate = tZ.getZonedTime(date, zone);
   if (zonedDate.epoch === undefined) throw `Could not get zoned time`;
 
   // check if hour, minute has already past in their time zone
-  var timeDif =
+  let timeDif =
     (hourAndMinute.hour - zonedDate.hours) * TimeConverter.hToMs +
     (hourAndMinute.minute - zonedDate.minutes) * TimeConverter.minToMs;
   if (timeDif < 0) timeDif = TimeConverter.dayToMs + timeDif; // go for next day if it did

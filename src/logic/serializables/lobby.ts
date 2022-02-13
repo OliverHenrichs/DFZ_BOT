@@ -6,7 +6,6 @@ import {
   isSimpleLobbyType,
   tryoutReactionEmoji,
 } from "../../misc/constants";
-import { getUser } from "../../misc/userHelper";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
@@ -32,6 +31,7 @@ export class Lobby extends Serializable {
   public messageId: string;
   public started: boolean = false;
   public text: string;
+
   constructor(options?: ILobbyOptions) {
     super(options ? options.guildId : "");
     if (!options) {
@@ -58,6 +58,16 @@ export class Lobby extends Serializable {
     this.channelId = options.channelId ? options.channelId : "";
     this.messageId = options.messageId ? options.messageId : "";
     this.text = options.text ? options.text : "";
+  }
+
+  public static async getChannelLobbies(
+    dbClient: DFZDataBaseClient,
+    guildId: string,
+    channelId: string
+  ) {
+    const gdbc = SerializeUtils.getGuildDBClient(guildId, dbClient);
+    const serializer = new LobbySerializer(gdbc, channelId);
+    return await serializer.get();
   }
 
   public calculateRemainingTime(): IRemainingTime {
@@ -103,7 +113,7 @@ export class Lobby extends Serializable {
     reaction: MessageReaction,
     user: User
   ) {
-    const lobbyUser: LobbyPlayer | undefined = getUser(this, user.id);
+    const lobbyUser: LobbyPlayer | undefined = this.getUser(user.id);
     if (lobbyUser === undefined) return;
 
     let position = -1;
@@ -129,21 +139,6 @@ export class Lobby extends Serializable {
     }
 
     await this.updateLobbyPostAndDBEntry(reaction.message.channel, dbClient);
-  }
-
-  private shouldRemoveUser(lobbyUser: LobbyPlayer, position: number) {
-    if (!isRoleBasedLobbyType(this.type)) {
-      // for simple lobbies, always remove
-      return true;
-    }
-
-    // remove user position
-    lobbyUser.positions = lobbyUser.positions.filter((_position) => {
-      return _position != position;
-    });
-
-    // do not remove user if some positions are left
-    return lobbyUser.positions.length === 0;
   }
 
   public async addCoach(
@@ -180,13 +175,26 @@ export class Lobby extends Serializable {
     await this.updateLobbyPostAndDBEntry(channel, dbClient);
   }
 
-  public static async getChannelLobbies(
-    dbClient: DFZDataBaseClient,
-    guildId: string,
-    channelId: string
-  ) {
-    const gdbc = SerializeUtils.getGuildDBClient(guildId, dbClient);
-    const serializer = new LobbySerializer(gdbc, channelId);
-    return await serializer.get();
+  public getUserIndex(userId: string) {
+    return this.users.findIndex((user) => user.id == userId);
+  }
+
+  private shouldRemoveUser(lobbyUser: LobbyPlayer, position: number) {
+    if (!isRoleBasedLobbyType(this.type)) {
+      // for simple lobbies, always remove
+      return true;
+    }
+
+    // remove user position
+    lobbyUser.positions = lobbyUser.positions.filter((_position) => {
+      return _position != position;
+    });
+
+    // do not remove user if some positions are left
+    return lobbyUser.positions.length === 0;
+  }
+
+  private getUser(userId: string) {
+    return this.users.find((user) => user.id == userId);
   }
 }

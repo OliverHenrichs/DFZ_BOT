@@ -26,7 +26,7 @@ export class ScheduleRemover {
 
     const schedulesToRemove: Array<Schedule> = [];
     for (let i = 0; i < schedules.length; i++) {
-      var scheduleDate = new Date(parseInt(schedules[i].date));
+      const scheduleDate = new Date(parseInt(schedules[i].date));
       if (scheduleDate < deprecationDate) schedulesToRemove.push(schedules[i]);
     }
 

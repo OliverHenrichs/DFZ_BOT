@@ -3,7 +3,7 @@ import { GoogleCalendarManager } from "./src/logic/gcalendar/GoogleCalendarManag
 import { TimeInMs } from "./src/logic/time/TimeConverter";
 import Website from "./website/website";
 
-var website = {};
+let website = {};
 const client = new DFZDiscordClient();
 client
   .login(process.env.BOT_TOKEN)

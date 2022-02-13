@@ -6,6 +6,7 @@ import { TableGenerator } from "./TableGenerator";
 export class TeamsTableGenerator extends TableGenerator {
   users: LobbyPlayer[][];
   lobbyType: number;
+
   constructor(
     users: LobbyPlayer[][],
     lobbyType: number,
@@ -16,45 +17,7 @@ export class TeamsTableGenerator extends TableGenerator {
     this.users = users;
   }
 
-  public generate(): IFieldElement[] {
-    switch (this.lobbyType) {
-      case lobbyTypes.inhouse:
-        return this.createInhouseTeams();
-      case lobbyTypes.unranked:
-      case lobbyTypes.botbash:
-      case lobbyTypes.tryout:
-        return this.createFivePeopleTeam();
-      default:
-        return [];
-    }
-  }
-
-  private createInhouseTeams() {
-    var tableBaseInhouse = this.createInhouseTableBase();
-    for (let pos = 0; pos < 5; pos++) {
-      var players = this.users[pos];
-      const teamAIndex = 1;
-      const teamBIndex = 5;
-      this.addUserToTeam(
-        tableBaseInhouse,
-        teamAIndex,
-        players[0],
-        pos + 1,
-        this.mentionPlayers
-      );
-      this.addUserToTeam(
-        tableBaseInhouse,
-        teamBIndex,
-        players[1],
-        pos + 1,
-        this.mentionPlayers
-      );
-    }
-
-    return tableBaseInhouse;
-  }
-
-  private createInhouseTableBase() {
+  private static createInhouseTableBase() {
     return [
       {
         name: "Side",
@@ -99,25 +62,7 @@ export class TeamsTableGenerator extends TableGenerator {
     ];
   }
 
-  private createFivePeopleTeam() {
-    var tableBase = this.createOneTeamTableBase();
-
-    const teamIndex = 0;
-    for (let pos = 0; pos < 5; pos++) {
-      var players = this.users[pos];
-      this.addUserToTeam(
-        tableBase,
-        teamIndex,
-        players[0],
-        pos + 1,
-        this.mentionPlayers
-      );
-    }
-
-    return tableBase;
-  }
-
-  private createOneTeamTableBase() {
+  private static createOneTeamTableBase() {
     return [
       {
         name: "Name",
@@ -135,5 +80,61 @@ export class TeamsTableGenerator extends TableGenerator {
         inline: true,
       },
     ];
+  }
+
+  public generate(): IFieldElement[] {
+    switch (this.lobbyType) {
+      case lobbyTypes.inhouse:
+        return this.createInhouseTeams();
+      case lobbyTypes.unranked:
+      case lobbyTypes.botbash:
+      case lobbyTypes.tryout:
+        return this.createFivePeopleTeam();
+      default:
+        return [];
+    }
+  }
+
+  private createInhouseTeams() {
+    const tableBaseInhouse = TeamsTableGenerator.createInhouseTableBase();
+    for (let pos = 0; pos < 5; pos++) {
+      const players = this.users[pos];
+      const teamAIndex = 1;
+      const teamBIndex = 5;
+      this.addUserToTeam(
+        tableBaseInhouse,
+        teamAIndex,
+        players[0],
+        pos + 1,
+        this.mentionPlayers
+      );
+      this.addUserToTeam(
+        tableBaseInhouse,
+        teamBIndex,
+        players[1],
+        pos + 1,
+        this.mentionPlayers
+      );
+    }
+
+    return tableBaseInhouse;
+  }
+
+  private createFivePeopleTeam() {
+    const tableBase = TeamsTableGenerator.createOneTeamTableBase();
+
+    const teamIndex = 0;
+    for (let pos = 0; pos < 5; pos++) {
+      const players = this.users[pos];
+      this.addUserToTeam(
+        tableBase,
+        teamIndex,
+        players[0],
+        pos + 1,
+        this.mentionPlayers
+      );
+    }
+
+    return tableBase;
   }
 }

@@ -17,6 +17,20 @@ export class PlayerHighscoreProvider extends AbstractHighScoreProvider<Player> {
     super(settings);
   }
 
+  private static addPlayerRowToTable(
+    tableBase: Array<IFieldElement>,
+    player: Player
+  ) {
+    tableBase[0].value = tableBase[0].value + "\r\n<@" + player.userId + ">";
+    tableBase[1].value = tableBase[1].value + "\r\n" + player.lobbyCount;
+    tableBase[2].value =
+      tableBase[2].value + "\r\n" + player.lobbyCountUnranked;
+    tableBase[3].value = tableBase[3].value + "\r\n" + player.lobbyCount5v5;
+    tableBase[4].value = tableBase[4].value + "\r\n" + player.lobbyCountBotBash;
+    tableBase[5].value =
+      tableBase[5].value + "\r\n" + player.lobbyCountReplayAnalysis;
+  }
+
   protected async getUsersFromDatabase(guildId: string) {
     const serializer = new PlayerSerializer({
       guildId,
@@ -28,18 +42,7 @@ export class PlayerHighscoreProvider extends AbstractHighScoreProvider<Player> {
   }
 
   protected rowAdder(user: Player): void {
-    this.addPlayerRowToTable(this.resultTable, user);
-  }
-
-  private addPlayerRowToTable(tableBase: Array<IFieldElement>, player: Player) {
-    tableBase[0].value = tableBase[0].value + "\r\n<@" + player.userId + ">";
-    tableBase[1].value = tableBase[1].value + "\r\n" + player.lobbyCount;
-    tableBase[2].value =
-      tableBase[2].value + "\r\n" + player.lobbyCountUnranked;
-    tableBase[3].value = tableBase[3].value + "\r\n" + player.lobbyCount5v5;
-    tableBase[4].value = tableBase[4].value + "\r\n" + player.lobbyCountBotBash;
-    tableBase[5].value =
-      tableBase[5].value + "\r\n" + player.lobbyCountReplayAnalysis;
+    PlayerHighscoreProvider.addPlayerRowToTable(this.resultTable, user);
   }
 }
 

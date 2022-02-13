@@ -12,6 +12,7 @@ export class GoogleCalendarManager {
   public static jwtClient: Auth.JWT | undefined = undefined;
   public static calendar: calendar_v3.Calendar | undefined = undefined;
   public static calendarAvailable = true;
+  private static noCalendarReaction = "Google calendar not available";
 
   public static login() {
     try {
@@ -20,27 +21,6 @@ export class GoogleCalendarManager {
       console.log(e);
       GoogleCalendarManager.calendarAvailable = false;
     }
-  }
-
-  private static tryLogin() {
-    const privateKey = require("../../../service_key.json");
-
-    GoogleCalendarManager.jwtClient = new Auth.JWT(
-      privateKey.client_email,
-      undefined,
-      privateKey.private_key,
-      GoogleCalendarManager.calendarURI
-    );
-
-    if (GoogleCalendarManager.jwtClient === undefined) {
-      throw new Error("Could not auth with GoogleApi");
-    }
-
-    GoogleCalendarManager.jwtClient.authorize().then(() => {
-      console.log("Successfully connected to Google API!");
-      if (GoogleCalendarManager.jwtClient !== undefined)
-        GoogleCalendarManager.calendar = google.calendar({ version: "v3" });
-    });
   }
 
   public static async createCalendarEvent(
@@ -63,6 +43,39 @@ export class GoogleCalendarManager {
     );
 
     return GoogleCalendarManager.insertEvent(event, schedule);
+  }
+
+  public static async editCalendarEvent(
+    schedule: Schedule,
+    client: Client
+  ): Promise<string | undefined> {
+    if (!GoogleCalendarManager.calendarAvailable)
+      throw new Error(GoogleCalendarManager.noCalendarReaction);
+
+    if (schedule.coaches.length === 0)
+      return GoogleCalendarManager.deleteEvent(schedule);
+    else return GoogleCalendarManager.updateEvent(schedule, client);
+  }
+
+  private static tryLogin() {
+    const privateKey = require("../../../service_key.json");
+
+    GoogleCalendarManager.jwtClient = new Auth.JWT(
+      privateKey.client_email,
+      undefined,
+      privateKey.private_key,
+      GoogleCalendarManager.calendarURI
+    );
+
+    if (GoogleCalendarManager.jwtClient === undefined) {
+      throw new Error("Could not auth with GoogleApi");
+    }
+
+    GoogleCalendarManager.jwtClient.authorize().then(() => {
+      console.log("Successfully connected to Google API!");
+      if (GoogleCalendarManager.jwtClient !== undefined)
+        GoogleCalendarManager.calendar = google.calendar({ version: "v3" });
+    });
   }
 
   private static createTimedEvent(
@@ -96,20 +109,6 @@ export class GoogleCalendarManager {
     if (res === undefined || res.data.id === undefined || res.data.id === null)
       throw new Error("google calendar insertion returned 'undefined'");
     return res.data.id;
-  }
-
-  private static noCalendarReaction = "Google calendar not available";
-
-  public static async editCalendarEvent(
-    schedule: Schedule,
-    client: Client
-  ): Promise<string | undefined> {
-    if (!GoogleCalendarManager.calendarAvailable)
-      throw new Error(GoogleCalendarManager.noCalendarReaction);
-
-    if (schedule.coaches.length === 0)
-      return GoogleCalendarManager.deleteEvent(schedule);
-    else return GoogleCalendarManager.updateEvent(schedule, client);
   }
 
   /**
@@ -228,17 +227,17 @@ export class GoogleCalendarManager {
     schedule: Schedule,
     client: Client
   ): Promise<string> {
-    var coach1 = await client.users.fetch(schedule.coaches[0]);
-    var coachesString = coach1.username;
+    const coach1 = await client.users.fetch(schedule.coaches[0]);
+    let coachesString = coach1.username;
     if (schedule.coaches.length > 1) {
-      var coach2 = await client.users.fetch(schedule.coaches[1]);
+      const coach2 = await client.users.fetch(schedule.coaches[1]);
       coachesString += " and " + coach2.username;
     }
     return `Coached by ${coachesString}`;
   }
 
   private static createEventSummary(schedule: Schedule): string {
-    var lobbyTypeName = "";
+    let lobbyTypeName = "";
     switch (schedule.type) {
       case scheduleTypes.tryout:
         lobbyTypeName = getLobbyNameByType(lobbyTypes.tryout);

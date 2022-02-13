@@ -1,7 +1,7 @@
 import { Client } from "discord.js";
 
-var counter = 0;
-var maxCounter = 3;
+let counter = 0;
+const maxCounter = 3;
 /**
  * Emitted whenever the client has encountered an error; exits after maxCounter errors
  * @param {Client} _client discord client

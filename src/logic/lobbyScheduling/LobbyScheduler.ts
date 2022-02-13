@@ -31,7 +31,7 @@ export class LobbyScheduler {
   }
 
   /**
-   * Inserts all lobbies due in the next x hours that havent been posted yet
+   * Inserts all lobbies due in the next x hours that haven't been posted yet
    */
   public static async insertScheduledLobbies(
     channels: GuildChannelManager,
@@ -39,22 +39,6 @@ export class LobbyScheduler {
   ) {
     const scheduler = new LobbyScheduler(channels, dbClient);
     return scheduler.insertScheduledLobbiesInt();
-  }
-
-  private async insertScheduledLobbiesInt() {
-    const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
-      this.channelManager.guild,
-      this.dbClient
-    );
-    const serializer = new ScheduleSerializer(gdbc);
-    const schedules = await serializer.get();
-
-    for (const schedule of schedules) {
-      if (!LobbyScheduler.shouldPostScheduleLobby(schedule)) continue;
-      schedule.lobbyPosted = true;
-      await this.createScheduledLobby(schedule);
-      await serializer.update(schedule);
-    }
   }
 
   private static shouldPostScheduleLobby(schedule: Schedule) {
@@ -74,14 +58,92 @@ export class LobbyScheduler {
 
     const lobbyPostTime = TimeConverter.hToMs * 5; // at the moment 5 hours
     return diff <= lobbyPostTime;
+  }
 
+  private static getLobbyType(schedule: Schedule) {
+    if (schedule.type === scheduleTypes.tryout) {
+      return lobbyTypes.tryout;
+    }
+    if (schedule.type === scheduleTypes.botbash) {
+      return lobbyTypes.botbash;
+    }
+    if (schedule.coachCount === 2 && schedule.coaches.length > 1) {
+      return lobbyTypes.inhouse;
+    }
+    return lobbyTypes.unranked;
+  }
 
+  private static getScheduledLobbyChannelId(
+    lobbyType: number,
+    scheduleType: string,
+    lobbyRegionRole: string | undefined
+  ): string | undefined {
+    switch (lobbyType) {
+      case lobbyTypes.tryout:
+        return process.env.BOT_LOBBY_CHANNEL_TRYOUT;
+      case lobbyTypes.botbash:
+        return process.env.BOT_LOBBY_CHANNEL_BOTBASH;
+      default:
+        if (scheduleType === scheduleTypes.lobbyt3)
+          return process.env.BOT_LOBBY_CHANNEL_T3;
+        else return getRegionalRoleLobbyChannel(lobbyRegionRole);
+    }
+  }
+
+  private static getLobbyBeginnerRoles(
+    lobbyType: number,
+    scheduleType: string
+  ) {
+    switch (lobbyType) {
+      case lobbyTypes.tryout:
+        return [tryoutRole];
+      case lobbyTypes.botbash:
+        return beginnerRoles.slice(0, 2);
+      default:
+        if (scheduleType === scheduleTypes.lobbyt3)
+          return beginnerRoles.slice(3, 5);
+        else return beginnerRoles.slice(1, 3);
+    }
+  }
+
+  private static async informCoachesOfSchedulePost(
+    schedule: Schedule,
+    channel: TextChannel | NewsChannel,
+    zonedTime: ITime
+  ) {
+    for (const coachId of schedule.coaches) {
+      const coach = await channel.guild.members.fetch(coachId);
+      await coach.send(
+        `I just posted tonight's ${
+          schedule.region
+        } lobby starting *${getTimeString(zonedTime)}*.\nYou are coaching 👍`
+      );
+    }
+  }
+
+  private async insertScheduledLobbiesInt() {
+    const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
+      this.channelManager.guild,
+      this.dbClient
+    );
+    const serializer = new ScheduleSerializer(gdbc);
+    const schedules = await serializer.get();
+
+    for (const schedule of schedules) {
+      if (!LobbyScheduler.shouldPostScheduleLobby(schedule)) continue;
+      schedule.lobbyPosted = true;
+      await this.createScheduledLobby(schedule);
+      await serializer.update(schedule);
+    }
   }
 
   private async createScheduledLobby(schedule: Schedule) {
     const regionRole = getRegionalRoleFromRegionName(schedule.region);
     const type = LobbyScheduler.getLobbyType(schedule);
-    const beginnerRoles = LobbyScheduler.getLobbyBeginnerRoles(type, schedule.type);
+    const beginnerRoles = LobbyScheduler.getLobbyBeginnerRoles(
+      type,
+      schedule.type
+    );
     const channel = await this.getChannel(schedule, type, regionRole);
 
     const timezoneName = getRegionalRoleTimeZoneName(regionRole),
@@ -106,20 +168,11 @@ export class LobbyScheduler {
       options
     );
 
-    await LobbyScheduler.informCoachesOfSchedulePost(schedule, channel, zonedTime);
-  }
-
-  private static getLobbyType(schedule: Schedule) {
-    if (schedule.type === scheduleTypes.tryout) {
-      return lobbyTypes.tryout;
-    }
-    if (schedule.type === scheduleTypes.botbash) {
-      return lobbyTypes.botbash;
-    }
-    if (schedule.coachCount === 2 && schedule.coaches.length > 1) {
-      return lobbyTypes.inhouse;
-    }
-    return lobbyTypes.unranked;
+    await LobbyScheduler.informCoachesOfSchedulePost(
+      schedule,
+      channel,
+      zonedTime
+    );
   }
 
   private async getChannel(
@@ -137,50 +190,5 @@ export class LobbyScheduler {
       throw new Error("Could not find channel for schedule");
     }
     return channel;
-  }
-
-  private static getScheduledLobbyChannelId(
-    lobbyType: number,
-    scheduleType: string,
-    lobbyRegionRole: string | undefined
-  ): string | undefined {
-    switch (lobbyType) {
-      case lobbyTypes.tryout:
-        return process.env.BOT_LOBBY_CHANNEL_TRYOUT;
-      case lobbyTypes.botbash:
-        return process.env.BOT_LOBBY_CHANNEL_BOTBASH;
-      default:
-        if (scheduleType === scheduleTypes.lobbyt3)
-          return process.env.BOT_LOBBY_CHANNEL_T3;
-        else return getRegionalRoleLobbyChannel(lobbyRegionRole);
-    }
-  }
-
-  private static getLobbyBeginnerRoles(lobbyType: number, scheduleType: string) {
-    switch (lobbyType) {
-      case lobbyTypes.tryout:
-        return [tryoutRole];
-      case lobbyTypes.botbash:
-        return beginnerRoles.slice(0, 2);
-      default:
-        if (scheduleType === scheduleTypes.lobbyt3)
-          return beginnerRoles.slice(3, 5);
-        else return beginnerRoles.slice(1, 3);
-    }
-  }
-
-  private static async informCoachesOfSchedulePost(
-    schedule: Schedule,
-    channel: TextChannel | NewsChannel,
-    zonedTime: ITime
-  ) {
-    for (const coachId of schedule.coaches) {
-      const coach = await channel.guild.members.fetch(coachId);
-      await coach.send(
-          `I just posted tonight's ${
-              schedule.region
-          } lobby starting *${getTimeString(zonedTime)}*.\nYou are coaching 👍`
-      );
-    }
   }
 }

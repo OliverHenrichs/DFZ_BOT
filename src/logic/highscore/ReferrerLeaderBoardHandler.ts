@@ -18,6 +18,8 @@ import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
 import providerFactory from "./factories/HighscoreProviderFactory";
 import { ReferrerHighscoreProvider } from "./ReferrerHighscoreProvider";
 
+let messageId: string;
+
 export class ReferrerLeaderBoardHandler {
   public static async postReferralLeaderboard(client: DFZDiscordClient) {
     try {
@@ -115,4 +117,4 @@ export class ReferrerLeaderBoardHandler {
   }
 }
 
-var messageId: string = "";
+messageId = "";

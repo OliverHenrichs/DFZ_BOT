@@ -39,11 +39,10 @@ export class SelectMenuUtils {
       maxValues: 1,
       selectOptions: await Promise.all(
         ChannelManager.lobbyChannels.map(async (channel) => {
-          const option = await SlashCommandHelper.getChannelSelectOptions(
+          return await SlashCommandHelper.getChannelSelectOptions(
             channel,
             client
           );
-          return option;
         })
       ),
     });
