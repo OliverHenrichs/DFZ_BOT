@@ -25,6 +25,7 @@ import { ChannelManager } from "./DFZChannelManager";
 import { ILobbyMenu } from "./interfaces/ILobbyMenu";
 import { IScheduleInfo } from "./interfaces/IScheduleInfo";
 import { SlashCommandRegistrator } from "./SlashCommandRegistrator";
+import { ErrorMessages } from "./interfaces/ErrorMessages";
 
 export class DFZDiscordClient extends Client {
   public dbClient: DFZDataBaseClient;
@@ -71,7 +72,7 @@ export class DFZDiscordClient extends Client {
   ): Promise<TextChannel | NewsChannel> {
     const channel = await guild.channels.fetch(channelId);
     if (!channel || !channel.isText()) {
-      throw new Error("Did not find channel when fetching messages");
+      throw new Error(ErrorMessages.messageFetching);
     }
 
     return channel;
@@ -118,7 +119,7 @@ export class DFZDiscordClient extends Client {
 
     await DFZDiscordClient.tryActionWithErrorLog(
       fetcher,
-      "Error fetching roles"
+      ErrorMessages.roleFetching
     );
   }
 
@@ -138,7 +139,7 @@ export class DFZDiscordClient extends Client {
     };
     await DFZDiscordClient.tryActionWithErrorLog(
       fetcher,
-      "Error fetching lobby messages"
+      ErrorMessages.lobbyFetching
     );
   }
 
@@ -176,7 +177,7 @@ export class DFZDiscordClient extends Client {
     };
     await DFZDiscordClient.tryActionWithErrorLog(
       fetcher,
-      "Error fetching schedule messages"
+      ErrorMessages.scheduleFetching
     );
   }
 
@@ -237,8 +238,8 @@ export class DFZDiscordClient extends Client {
     return async () => {
       try {
         await taskFun(this);
-      } catch {
-        (err: string) => console.log(err);
+      } catch (err) {
+        console.log(err);
       }
     };
   }

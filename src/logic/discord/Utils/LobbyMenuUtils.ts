@@ -27,7 +27,6 @@ export class LobbyMenuUtils {
   ): Promise<InteractionUpdateOptions> {
     const menu = CommonMenuUtils.getMenu(client, selector);
     const lobby = CommonMenuUtils.assertMenuHasLobby(menu);
-
     switch (menu.type) {
       case MenuType.post:
         return this.updatePostLobbyMenu(selector, lobby);
@@ -93,10 +92,6 @@ export class LobbyMenuUtils {
   }
 
   public static setLobbyRegion(lobby: Lobby, regionRoleId: string): void {
-    console.log(
-      "Setting lobby region from " + lobby.regionId + " to " + regionRoleId
-    );
-
     lobby.regionId = regionRoleId;
   }
 
