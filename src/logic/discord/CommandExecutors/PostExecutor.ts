@@ -5,7 +5,7 @@ import { Lobby } from "../../serializables/lobby";
 import { getTimeFromInteraction } from "../../time/timeZone";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { CommandOptionNames } from "../interfaces/CommandOptionNames";
-import { LobbyMenuType } from "../interfaces/LobbyMenuType";
+import { MenuType } from "../interfaces/MenuType";
 import { SlashCommandIds } from "../interfaces/SlashCommandsIds";
 import { tryoutRole } from "../roleManagement";
 import { SlashCommandHelper } from "../SlashCommandHelper";
@@ -13,55 +13,6 @@ import { AbstractExecutor } from "./AbstractExecutor";
 import { SelectMenuUtils } from "./SelectMenuUtils";
 
 export class PostExecutor extends AbstractExecutor {
-  public async execute(
-    client: DFZDiscordClient,
-    interaction: CommandInteraction
-  ): Promise<void> {
-    const lobbyType = interaction.options.getNumber(CommandOptionNames.type);
-    if (lobbyType === null) {
-      throw new Error("You did not provide a lobby type.");
-    }
-
-    const rows = await PostExecutor.addPostRows(client, interaction, lobbyType);
-    rows.push(
-      await SlashCommandHelper.addGoAndCancelButtons(
-        SlashCommandIds.post,
-        "Post"
-      )
-    );
-
-    const time = getTimeFromInteraction(interaction);
-    if (!time) {
-      throw new Error("Received invalid time from command.");
-    }
-
-    const freeText = interaction.options.getString(CommandOptionNames.freeText);
-
-    const newLobby = new Lobby({
-      date: time,
-      type: lobbyType,
-      guildId: interaction.guildId ? interaction.guildId : "",
-      beginnerRoleIds: [getDefaultBeginnerRoleByLobbyType(lobbyType)],
-      regionId: getDefaultRegionRoleByLobbyType(lobbyType),
-      coaches: interaction.member ? [interaction.member.user.id] : [],
-      text: freeText ? freeText : "",
-    });
-
-    interaction
-      .editReply({
-        content: "Set Further options and press post\n\nCurrent Lobby-setup:",
-        embeds: [LobbyPostManipulator.createLobbyEmbedding(newLobby)],
-        components: rows,
-      })
-      .then((message) => {
-        client.lobbyMenus.push({
-          type: LobbyMenuType.post,
-          lobby: newLobby,
-          id: message.id,
-        });
-      });
-  }
-
   public static async addPostRows(
     client: DFZDiscordClient,
     interaction: Interaction,
@@ -107,6 +58,55 @@ export class PostExecutor extends AbstractExecutor {
         SelectMenuUtils.createChannelOptionsSelectMenu,
       ],
     });
+  }
+
+  public async execute(
+    client: DFZDiscordClient,
+    interaction: CommandInteraction
+  ): Promise<void> {
+    const lobbyType = interaction.options.getNumber(CommandOptionNames.type);
+    if (lobbyType === null) {
+      throw new Error("You did not provide a lobby type.");
+    }
+
+    const rows = await PostExecutor.addPostRows(client, interaction, lobbyType);
+    rows.push(
+      await SlashCommandHelper.addGoAndCancelButtons(
+        SlashCommandIds.post,
+        "Post"
+      )
+    );
+
+    const time = getTimeFromInteraction(interaction);
+    if (!time) {
+      throw new Error("Received invalid time from command.");
+    }
+
+    const freeText = interaction.options.getString(CommandOptionNames.freeText);
+
+    const newLobby = new Lobby({
+      date: time,
+      type: lobbyType,
+      guildId: interaction.guildId ? interaction.guildId : "",
+      beginnerRoleIds: [getDefaultBeginnerRoleByLobbyType(lobbyType)],
+      regionId: getDefaultRegionRoleByLobbyType(lobbyType),
+      coaches: interaction.member ? [interaction.member.user.id] : [],
+      text: freeText ? freeText : "",
+    });
+
+    interaction
+      .editReply({
+        content: "Set Further options and press post\n\nCurrent Lobby-setup:",
+        embeds: [LobbyPostManipulator.createLobbyEmbedding(newLobby)],
+        components: rows,
+      })
+      .then((message) => {
+        client.slashCommandMenus.push({
+          type: MenuType.post,
+          lobby: newLobby,
+          id: message.id,
+        });
+      });
   }
 }
 

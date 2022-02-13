@@ -4,7 +4,7 @@ import { Coach } from "../serializables/coach";
 import { CoachSerializer } from "../serializers/CoachSerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
 import { AbstractHighScoreProvider } from "./AbstractHighScoreProvider";
-import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
+import { HighScoreUserTypes } from "./enums/HighScoreUserTypes";
 import { IHighScoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
 
 export class CoachHighscoreProvider extends AbstractHighScoreProvider<Coach> {
@@ -12,7 +12,7 @@ export class CoachHighscoreProvider extends AbstractHighScoreProvider<Coach> {
     const settings: IHighScoreProviderSettings = {
       dbClient: dbClient,
       tableTemplate: tableBaseCoachesTemplate,
-      userType: HighscoreUserTypes.coaches,
+      userType: HighScoreUserTypes.coaches,
     };
     super(settings);
   }

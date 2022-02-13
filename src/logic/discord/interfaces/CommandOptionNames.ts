@@ -8,4 +8,5 @@ export enum CommandOptionNames {
   timezone = "timezone",
   freeText = "freetext",
   message = "message",
+  playerOrCoach = "player_or_coach",
 }

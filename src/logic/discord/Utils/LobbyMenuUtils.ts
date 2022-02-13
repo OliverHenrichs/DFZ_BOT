@@ -1,20 +1,24 @@
-import {userMention} from "@discordjs/builders";
-import {Interaction, InteractionUpdateOptions, MessageActionRow, SelectMenuInteraction,} from "discord.js";
-import {kickMultiplePlayers} from "../../../commands/kick";
-import {lobbyTypes} from "../../../misc/constants";
-import {findLobbyByMessage} from "../../../misc/messageHelper";
-import {IMessageIdentifier} from "../../../misc/types/IMessageIdentifier";
-import {LobbyPostManipulator} from "../../lobby/LobbyPostManipulator";
-import {Lobby} from "../../serializables/lobby";
-import {KickExecutor} from "../CommandExecutors/KickExecutor";
-import {SelectMenuUtils} from "../CommandExecutors/SelectMenuUtils";
-import {UpdateExecutor} from "../CommandExecutors/UpdateExecutor";
-import {DFZDiscordClient} from "../DFZDiscordClient";
-import {ILobbyMenu} from "../interfaces/ILobbyMenu";
-import {LobbyMenuType} from "../interfaces/LobbyMenuType";
-import {SelectorCustomIds} from "../interfaces/SelectorCustomIds";
-import {tryoutRole} from "../roleManagement";
-import {CommonMenuUtils} from "./CommonMenuUtils";
+import { userMention } from "@discordjs/builders";
+import {
+  Interaction,
+  InteractionUpdateOptions,
+  MessageActionRow,
+  SelectMenuInteraction,
+} from "discord.js";
+import { lobbyTypes } from "../../../misc/constants";
+import { findLobbyByMessage } from "../../../misc/messageHelper";
+import { IMessageIdentifier } from "../../../misc/types/IMessageIdentifier";
+import { LobbyPostManipulator } from "../../lobby/LobbyPostManipulator";
+import { Lobby } from "../../serializables/lobby";
+import { KickExecutor } from "../CommandExecutors/KickExecutor";
+import { SelectMenuUtils } from "../CommandExecutors/SelectMenuUtils";
+import { UpdateExecutor } from "../CommandExecutors/UpdateExecutor";
+import { DFZDiscordClient } from "../DFZDiscordClient";
+import { ILobbyMenu } from "../interfaces/ILobbyMenu";
+import { MenuType } from "../interfaces/MenuType";
+import { SelectorCustomIds } from "../interfaces/SelectorCustomIds";
+import { tryoutRole } from "../roleManagement";
+import { CommonMenuUtils } from "./CommonMenuUtils";
 
 export class LobbyMenuUtils {
   public static async updateLobbyMenu(
@@ -25,11 +29,11 @@ export class LobbyMenuUtils {
     const lobby = CommonMenuUtils.assertMenuHasLobby(menu);
 
     switch (menu.type) {
-      case LobbyMenuType.post:
+      case MenuType.post:
         return this.updatePostLobbyMenu(selector, lobby);
-      case LobbyMenuType.update:
+      case MenuType.update:
         return await this.updateUpdateLobbyMenu(client, selector, lobby);
-      case LobbyMenuType.kick:
+      case MenuType.kick:
         return await this.updateKickLobbyMenu(client, selector, lobby);
     }
   }
@@ -79,7 +83,7 @@ export class LobbyMenuUtils {
   ): Promise<InteractionUpdateOptions> {
     switch (selector.customId) {
       case SelectorCustomIds.player:
-        await kickMultiplePlayers(lobby, selector.values);
+        await lobby.kickPlayers(selector.values);
     }
     return {
       content:
@@ -128,11 +132,11 @@ export class LobbyMenuUtils {
   ): Promise<InteractionUpdateOptions> {
     const menu = CommonMenuUtils.getMenu(client, selector);
     switch (menu.type) {
-      case LobbyMenuType.update:
+      case MenuType.update:
         return await this.createUpdateLobbyMenu(client, selector, menu);
-      case LobbyMenuType.kick:
+      case MenuType.kick:
         return await this.createKickMenu(client, selector, menu);
-      case LobbyMenuType.post:
+      case MenuType.post:
       default:
         return {};
     }
@@ -158,24 +162,6 @@ export class LobbyMenuUtils {
     );
   }
 
-  private static async getLobbySpecificKickOptions(
-    client: DFZDiscordClient,
-    selector: SelectMenuInteraction,
-    lobby: Lobby
-  ) {
-    if (lobby.users.length === 0) {
-      throw new Error("No players in lobby to kick.");
-    }
-
-    const kickRow = await LobbyMenuUtils.addKickRow(client, selector);
-    const kickButtonRow = await KickExecutor.getKickButtonRow(true);
-
-    return {
-      components: [kickRow, kickButtonRow],
-      content: "Choose players to be kicked:",
-    };
-  }
-
   public static async createUpdateLobbyMenu(
     client: DFZDiscordClient,
     selector: SelectMenuInteraction,
@@ -192,6 +178,38 @@ export class LobbyMenuUtils {
       selector,
       lobby
     );
+  }
+
+  public static addOrReplaceLobbyMenu(
+    client: DFZDiscordClient,
+    selector: SelectMenuInteraction,
+    menu: ILobbyMenu
+  ) {
+    const idx = CommonMenuUtils.getMenuIndex(client, selector.message.id);
+
+    if (idx === -1) {
+      client.slashCommandMenus.push(menu);
+    } else {
+      client.slashCommandMenus[idx] = menu;
+    }
+  }
+
+  private static async getLobbySpecificKickOptions(
+    client: DFZDiscordClient,
+    selector: SelectMenuInteraction,
+    lobby: Lobby
+  ) {
+    if (lobby.users.length === 0) {
+      throw new Error("No players in lobby to kick.");
+    }
+
+    const kickRow = await LobbyMenuUtils.addKickRow(client, selector);
+    const kickButtonRow = await KickExecutor.getKickButtonRow(true);
+
+    return {
+      components: [kickRow, kickButtonRow],
+      content: "Choose players to be kicked:",
+    };
   }
 
   private static async updateLobbyMenuFromSelector(
@@ -287,20 +305,6 @@ export class LobbyMenuUtils {
       interaction,
       SelectMenuUtils.createKickPlayerSelectMenu
     );
-  }
-
-  public static addOrReplaceLobbyMenu(
-    client: DFZDiscordClient,
-    selector: SelectMenuInteraction,
-    menu: ILobbyMenu
-  ) {
-    const idx = CommonMenuUtils.getMenuIndex(client, selector.message.id);
-
-    if (idx === -1) {
-      client.lobbyMenus.push(menu);
-    } else {
-      client.lobbyMenus[idx] = menu;
-    }
   }
 
   private static createInteractionUpdateOptions(

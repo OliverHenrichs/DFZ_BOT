@@ -39,7 +39,7 @@ export class CommonMenuUtils {
   }
 
   public static getMenuIndex(client: DFZDiscordClient, messageId: string) {
-    return client.lobbyMenus.findIndex((menu) => menu.id === messageId);
+    return client.slashCommandMenus.findIndex((menu) => menu.id === messageId);
   }
 
   private static findMenu(
@@ -53,7 +53,7 @@ export class CommonMenuUtils {
     client: DFZDiscordClient,
     messageId: string
   ) {
-    return client.lobbyMenus.find((menu) => menu.id === messageId);
+    return client.slashCommandMenus.find((menu) => menu.id === messageId);
   }
 
   private static removeMenuByIndex(
@@ -61,6 +61,6 @@ export class CommonMenuUtils {
     messageIndex: string
   ) {
     const idx = CommonMenuUtils.getMenuIndex(client, messageIndex);
-    if (idx !== -1) client.lobbyMenus.slice(idx, 1);
+    if (idx !== -1) client.slashCommandMenus.slice(idx, 1);
   }
 }

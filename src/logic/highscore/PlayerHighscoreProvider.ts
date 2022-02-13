@@ -3,7 +3,7 @@ import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { Player } from "../serializables/player";
 import { PlayerSerializer } from "../serializers/PlayerSerializer";
 import { AbstractHighScoreProvider } from "./AbstractHighScoreProvider";
-import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
+import { HighScoreUserTypes } from "./enums/HighScoreUserTypes";
 import { IHighScoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
 
 export class PlayerHighscoreProvider extends AbstractHighScoreProvider<Player> {
@@ -11,7 +11,7 @@ export class PlayerHighscoreProvider extends AbstractHighScoreProvider<Player> {
     const settings: IHighScoreProviderSettings = {
       dbClient: dbClient,
       tableTemplate: tableBasePlayersTemplate,
-      userType: HighscoreUserTypes.players,
+      userType: HighScoreUserTypes.players,
     };
 
     super(settings);

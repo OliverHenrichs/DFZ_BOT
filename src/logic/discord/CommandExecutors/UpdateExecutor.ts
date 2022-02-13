@@ -1,36 +1,12 @@
 import { CommandInteraction, Interaction, MessageActionRow } from "discord.js";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { SlashCommandIds } from "../interfaces/SlashCommandsIds";
-import { LobbyMenuType } from "../interfaces/LobbyMenuType";
+import { MenuType } from "../interfaces/MenuType";
 import { SlashCommandHelper } from "../SlashCommandHelper";
 import { AbstractExecutor } from "./AbstractExecutor";
 import { SelectMenuUtils } from "./SelectMenuUtils";
 
 export class UpdateExecutor extends AbstractExecutor {
-  public async execute(
-    client: DFZDiscordClient,
-    interaction: CommandInteraction
-  ): Promise<void> {
-    this.fetchChannel(client, interaction);
-
-    const components = await UpdateExecutor.getUpdateComponents(
-      client,
-      interaction
-    );
-
-    interaction
-      .editReply({
-        content: "Choose lobby and update its parameters",
-        components: components,
-      })
-      .then((message) => {
-        client.lobbyMenus.push({
-          type: LobbyMenuType.update,
-          id: message.id,
-        });
-      });
-  }
-
   public static async getUpdateComponents(
     client: DFZDiscordClient,
     interaction: Interaction,
@@ -69,5 +45,29 @@ export class UpdateExecutor extends AbstractExecutor {
       "Update",
       enabled
     );
+  }
+
+  public async execute(
+    client: DFZDiscordClient,
+    interaction: CommandInteraction
+  ): Promise<void> {
+    this.fetchChannel(client, interaction);
+
+    const components = await UpdateExecutor.getUpdateComponents(
+      client,
+      interaction
+    );
+
+    interaction
+      .editReply({
+        content: "Choose lobby and update its parameters",
+        components: components,
+      })
+      .then((message) => {
+        client.slashCommandMenus.push({
+          type: MenuType.update,
+          id: message.id,
+        });
+      });
   }
 }

@@ -10,7 +10,6 @@ import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
 import { Lobby } from "../serializables/lobby";
 import { ChannelManager as DFZChannelManager } from "./DFZChannelManager";
 import { DFZDiscordClient } from "./DFZDiscordClient";
-import { INamedRole } from "./interfaces/INamedRole";
 import { ISelectMenuOptions } from "./interfaces/ISelectMenuOptions";
 
 export class SlashCommandHelper {
@@ -57,11 +56,6 @@ export class SlashCommandHelper {
     return this.getSelectOption(lobbyType, value);
   }
 
-  public static getNumberAsSelectOption(num: number): MessageSelectOptionData {
-    const numberAsString = num.toString();
-    return this.getSelectOption(numberAsString, numberAsString);
-  }
-
   public static async getChannelSelectOptions(
     channelId: string,
     client: DFZDiscordClient
@@ -83,12 +77,6 @@ export class SlashCommandHelper {
     );
   }
 
-  public static getOptionChoicesByNamedRole(
-    namedRoles: INamedRole[]
-  ): [string, string][] {
-    return namedRoles.map((namedRole) => [namedRole.name, namedRole.id]);
-  }
-
   public static getOptionChoices<T>(
     keys: string[],
     valueGetter: (key: string) => T
@@ -97,8 +85,8 @@ export class SlashCommandHelper {
     return this.createChoiceList<T>(keys, values);
   }
 
-  public static getOptionStringChoices(keyVals: string[]) {
-    return this.createChoiceList<string>(keyVals, keyVals);
+  public static getOptionStringChoices(values: string[]) {
+    return this.createChoiceList<string>(values, values);
   }
 
   public static getOptionNumberChoices(choiceValueList: number[]) {
@@ -121,7 +109,7 @@ export class SlashCommandHelper {
     return typeChoiceList;
   }
 
-  private static getSelectOption(
+  public static getSelectOption(
     label: string,
     value: string
   ): MessageSelectOptionData {

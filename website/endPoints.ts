@@ -18,7 +18,7 @@ async function addIndexRoot(ws: Website) {
     view: "index",
   };
   const dataFun = () => {
-    return { referrers: ws.referrerList };
+    return {};
   };
   await setEndPoint(ws, names, dataFun);
 }

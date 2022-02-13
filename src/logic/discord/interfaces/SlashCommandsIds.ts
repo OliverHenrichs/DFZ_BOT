@@ -4,4 +4,5 @@ export const SlashCommandIds = {
   update: "update",
   kick: "kick",
   postSchedules: "schedules",
+  highScore: "highscore",
 };

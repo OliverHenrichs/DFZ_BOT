@@ -179,6 +179,20 @@ export class Lobby extends Serializable {
     return this.users.findIndex((user) => user.id == userId);
   }
 
+  public async kickPlayers(userIDs: string[]) {
+    userIDs.forEach((id) => {
+      const idx = this.getKickeeIndex(id);
+      this.users.splice(idx, 1);
+    });
+  }
+
+  private getKickeeIndex(userId: string) {
+    const kickeeIdx = this.users.findIndex((usr) => usr.id === userId);
+    if (kickeeIdx === -1)
+      throw new Error("Did not find player to be kicked given the Id.");
+    return kickeeIdx;
+  }
+
   private shouldRemoveUser(lobbyUser: LobbyPlayer, position: number) {
     if (!isRoleBasedLobbyType(this.type)) {
       // for simple lobbies, always remove

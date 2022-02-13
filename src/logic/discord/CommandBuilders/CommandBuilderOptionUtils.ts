@@ -6,6 +6,7 @@ import { ChannelManager } from "../DFZChannelManager";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { CommandOptionNames } from "../interfaces/CommandOptionNames";
 import { SlashCommandHelper } from "../SlashCommandHelper";
+import { HighScoreUserTypes } from "../../highscore/enums/HighScoreUserTypes";
 
 export class CommandBuilderOptionUtils {
   public static addFreeTextOption(builder: SlashCommandBuilder) {
@@ -64,6 +65,22 @@ export class CommandBuilderOptionUtils {
           .setRequired(true)
           .addChoices(this.getTimeZoneChoices())
       );
+  }
+
+  public static addCoachPlayerOption(builder: SlashCommandBuilder) {
+    builder.addStringOption((option) =>
+      option
+        .setName(CommandOptionNames.playerOrCoach)
+        .setDescription("Highscore for players or for coaches?")
+        .setRequired(true)
+        .addChoices(this.addCoachPlayerChoices())
+    );
+  }
+
+  private static addCoachPlayerChoices() {
+    return SlashCommandHelper.getOptionStringChoices(
+      Object.keys(HighScoreUserTypes)
+    );
   }
 
   private static getOptionTypeChoices() {

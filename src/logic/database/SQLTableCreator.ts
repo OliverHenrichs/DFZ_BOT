@@ -3,7 +3,6 @@ import { CoachSerializerIds } from "../serializers/types/CoachSerializerIds";
 import { GuildSerializerIds } from "../serializers/types/GuildSerializerIds";
 import { LobbySerializerIds } from "../serializers/types/LobbySerializerIds";
 import { PlayerSerializerIds } from "../serializers/types/PlayerSerializerIds";
-import { ReferrerSerializerIds } from "../serializers/types/ReferrerSerializerIds";
 import { ScheduleSerializerIds } from "../serializers/types/ScheduleSerializerIds";
 import { SerializerIds } from "../serializers/types/SerializerIds";
 import { ISqlTableColumn } from "./interfaces/SqlTableColumn";
@@ -23,17 +22,11 @@ export class SQLTableCreator {
     await SQLTableCreator.createOptionsTable(pool);
     await SQLTableCreator.createCoachTable(pool);
     await SQLTableCreator.createPlayerTable(pool);
-    await SQLTableCreator.createReferrerTable(pool);
     await SQLTableCreator.createGuildTable(pool);
   }
 
   private static createPlayerTable(dbHandle: Pool) {
     const json = this.getPlayerTable();
-    return this.createTable(dbHandle, json.tableName, json.tableColumns);
-  }
-
-  private static createReferrerTable(dbHandle: Pool) {
-    const json = this.getReferrerTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
@@ -212,33 +205,6 @@ export class SQLTableCreator {
         },
         {
           id: PlayerSerializerIds.offensesColumn,
-          type: "int",
-        },
-      ],
-    };
-  }
-
-  private static getReferrerTable(): {
-    tableName: string;
-    tableColumns: ISqlTableColumn[];
-  } {
-    return {
-      tableName: ReferrerSerializerIds.table,
-      tableColumns: [
-        {
-          id: SerializerIds.guild,
-          type: "VARCHAR(255)",
-        },
-        {
-          id: ReferrerSerializerIds.userColumn,
-          type: "VARCHAR(255)",
-        },
-        {
-          id: ReferrerSerializerIds.tagColumn,
-          type: "VARCHAR(255)",
-        },
-        {
-          id: ReferrerSerializerIds.refCountColumn,
           type: "int",
         },
       ],

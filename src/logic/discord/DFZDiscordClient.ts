@@ -12,7 +12,6 @@ import { readdirSync } from "fs";
 import { dfzGuildId } from "../../misc/constants";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { SQLTableCreator } from "../database/SQLTableCreator";
-import { ReferrerLeaderBoardHandler } from "../highscore/ReferrerLeaderBoardHandler";
 import { LobbyTimeout } from "../lobby/interfaces/LobbyTimeout";
 import { LobbyTimeController } from "../lobby/LobbyTimeController";
 import { LobbyScheduler } from "../lobbyScheduling/LobbyScheduler";
@@ -30,7 +29,7 @@ import { SlashCommandRegistrator } from "./SlashCommandRegistrator";
 export class DFZDiscordClient extends Client {
   public dbClient: DFZDataBaseClient;
   public timeouts: LobbyTimeout[] = [];
-  public lobbyMenus: ILobbyMenu[] = [];
+  public slashCommandMenus: ILobbyMenu[] = [];
   public slashCommandRegistrar = new SlashCommandRegistrator(this);
   private internalTimeouts: NodeJS.Timeout[] = [];
 
@@ -106,7 +105,6 @@ export class DFZDiscordClient extends Client {
     await this.setDeleteDeprecatedSchedulesTimer();
     await this.setSchedulePostUpdateTimer();
     await this.setPostLobbyFromScheduleTimer();
-    await this.setLeaderBoardPostTimer();
   }
 
   private async fetchRoles() {
@@ -290,15 +288,6 @@ export class DFZDiscordClient extends Client {
       );
     };
     const intervalFun = this.createIntervalTask(lobbyPoster);
-    await intervalFun();
-    this.internalTimeouts.push(setInterval(intervalFun, TimeInMs.oneHour));
-  }
-
-  private async setLeaderBoardPostTimer() {
-    const intervalFun = this.createIntervalTask(
-      ReferrerLeaderBoardHandler.postReferralLeaderboard
-    );
-    await ReferrerLeaderBoardHandler.findLeaderBoardMessage(this);
     await intervalFun();
     this.internalTimeouts.push(setInterval(intervalFun, TimeInMs.oneHour));
   }

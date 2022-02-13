@@ -5,10 +5,7 @@ import http from "http";
 import https from "https";
 import { DFZDiscordClient } from "../src/logic/discord/DFZDiscordClient";
 import { Coach } from "../src/logic/serializables/coach";
-import { Referrer } from "../src/logic/serializables/referrer";
 import { CoachSerializer } from "../src/logic/serializers/CoachSerializer";
-import { ReferrerSerializer } from "../src/logic/serializers/ReferrerSerializer";
-import { SerializeUtils } from "../src/logic/serializers/SerializeUtils";
 import { TimeInMs } from "../src/logic/time/TimeConverter";
 import { dfzGuildId } from "../src/misc/constants";
 import { registerEndpoints } from "./endPoints";
@@ -18,7 +15,6 @@ import { tryGetSSLCredentials } from "./ssl";
 export default class Website {
   app: Express;
   coachList: Coach[] = [];
-  referrerList: Referrer[] = [];
   useHttps: boolean = false;
   private client: DFZDiscordClient;
   private httpServer: http.Server | undefined;
@@ -39,7 +35,7 @@ export default class Website {
     this.app = express();
     setupMiddleWares(this.app);
     void registerEndpoints(this);
-    void this.setupHallOfFame();
+    void this.setupCoachHallOfFame();
 
     this.trySetupHttps();
     this.setupHttp();
@@ -79,25 +75,6 @@ export default class Website {
     this.httpServer.listen(port, () => {
       console.log(`HTTP Server running on port ${port}`);
     });
-  }
-
-  private async setupHallOfFame() {
-    await this.setupReferrerHallOfFame();
-    await this.setupCoachHallOfFame();
-  }
-
-  private async setupReferrerHallOfFame() {
-    await this.updateReferrerList();
-    setInterval(this.updateReferrerList.bind(this), TimeInMs.twoHours);
-  }
-
-  private async updateReferrerList() {
-    const gdbc = SerializeUtils.getGuildDBClient(
-      dfzGuildId,
-      this.client.dbClient
-    );
-    const serializer = new ReferrerSerializer(gdbc);
-    this.referrerList = await serializer.getSorted();
   }
 
   private async setupCoachHallOfFame() {

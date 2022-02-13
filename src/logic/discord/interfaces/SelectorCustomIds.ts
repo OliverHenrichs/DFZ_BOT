@@ -6,4 +6,5 @@ export const SelectorCustomIds = {
   type: "LOBBY_TYPE",
   lobby: "LOBBY_CHOICE",
   player: "LOBBY_PLAYER",
+  playerOrCoaches: "PLAYER_OR_COACH",
 };
