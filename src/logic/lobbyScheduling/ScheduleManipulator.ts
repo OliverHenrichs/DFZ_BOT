@@ -1,19 +1,11 @@
-import {
-  EmbedField,
-  Message,
-  MessageEmbed,
-  MessageReaction,
-  TextBasedChannels,
-  User,
-} from "discord.js";
-import { DFZDiscordClient } from "../discord/DFZDiscordClient";
-import { adminRoles, findRole } from "../discord/roleManagement";
-import { GoogleCalendarManager } from "../gcalendar/GoogleCalendarManager";
-import { Schedule } from "../serializables/schedule";
-import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
-import { SerializeUtils } from "../serializers/SerializeUtils";
-import { LobbyScheduler } from "./LobbyScheduler";
-import { IScheduleManipulationData } from "./types/IScheduleManipulationData";
+import {EmbedField, Message, MessageEmbed, MessageReaction, TextBasedChannels, User,} from "discord.js";
+import {DFZDiscordClient} from "../discord/DFZDiscordClient";
+import {adminRoles, findRole} from "../discord/roleManagement";
+import {Schedule} from "../serializables/schedule";
+import {ScheduleSerializer} from "../serializers/ScheduleSerializer";
+import {SerializeUtils} from "../serializers/SerializeUtils";
+import {LobbyScheduler} from "./LobbyScheduler";
+import {IScheduleManipulationData} from "./types/IScheduleManipulationData";
 
 /**
  * Changes schedule state.
@@ -52,10 +44,27 @@ export class ScheduleManipulator {
     return new ScheduleManipulator(data, schedule);
   }
 
+  private static async findSchedule(
+    data: IScheduleManipulationData
+  ): Promise<Schedule> {
+    const gdbc = SerializeUtils.fromMessagetoGuildDBClient(
+      data.reaction.message,
+      data.client.dbClient
+    );
+    const emojiName = data.reaction.emoji.name;
+    const serializer = new ScheduleSerializer(
+      gdbc,
+      data.reaction.message.id,
+      emojiName ? emojiName : ""
+    );
+    const schedules = await serializer.get();
+    if (schedules.length !== 1) throw new Error("Did not find schedule");
+    return schedules[0];
+  }
+
   private async removeCoachFromScheduleInt(): Promise<void> {
     if (!this.userIsCoach()) return;
     this.removeCoach();
-    await this.updateGoogleEvent();
     await this.handleScheduleCoachWithdrawal();
   }
 
@@ -66,7 +75,6 @@ export class ScheduleManipulator {
       return;
     }
     this.addCoach();
-    await this.updateOrCreateGoogleEvent();
     await this.handleScheduleCoachAdd();
   }
 
@@ -81,7 +89,9 @@ export class ScheduleManipulator {
 
     const role = findRole(guildMember, adminRoles);
     if (role === undefined || role === null) {
-      await this.user.send("⛔ You cannot interact because you are not a coach.");
+      await this.user.send(
+        "⛔ You cannot interact because you are not a coach."
+      );
       return false;
     }
 
@@ -98,36 +108,6 @@ export class ScheduleManipulator {
     const serializer = new ScheduleSerializer(gdbc);
     await serializer.update(this.schedule);
     await this.user.send("✅ Removed you as coach from the scheduled lobby.");
-  }
-
-  private async updateGoogleEvent(): Promise<void> {
-    try {
-      await GoogleCalendarManager.editCalendarEvent(this.schedule, this.client);
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  private async updateOrCreateGoogleEvent(): Promise<void> {
-    try {
-      await this.tryUpdateOrCreateGoogleEvent();
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
-  private async tryUpdateOrCreateGoogleEvent(): Promise<void> {
-    const s = this.schedule;
-    if (s.eventId === undefined || s.eventId === "No Calendar")
-      this.schedule.eventId = await GoogleCalendarManager.createCalendarEvent(
-        s,
-        this.client
-      );
-    else
-      this.schedule.eventId = await GoogleCalendarManager.editCalendarEvent(
-        s,
-        this.client
-      );
   }
 
   private async handleScheduleCoachAdd(): Promise<void> {
@@ -173,7 +153,7 @@ export class ScheduleManipulator {
 
     const new_embed = new MessageEmbed(old_embed);
     new_embed.fields[embedField.index].value = lines.join("\n");
-    await message.edit({embeds: [new_embed]});
+    await message.edit({ embeds: [new_embed] });
     return true;
   }
 
@@ -237,23 +217,5 @@ export class ScheduleManipulator {
 
   private addCoach(): void {
     this.schedule.coaches.push(this.user.id);
-  }
-
-  private static async findSchedule(
-    data: IScheduleManipulationData
-  ): Promise<Schedule> {
-    const gdbc = SerializeUtils.fromMessagetoGuildDBClient(
-      data.reaction.message,
-      data.client.dbClient
-    );
-    const emojiName = data.reaction.emoji.name;
-    const serializer = new ScheduleSerializer(
-      gdbc,
-      data.reaction.message.id,
-      emojiName ? emojiName : ""
-    );
-    const schedules = await serializer.get();
-    if (schedules.length !== 1) throw new Error("Did not find schedule");
-    return schedules[0];
   }
 }
