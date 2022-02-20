@@ -1,10 +1,10 @@
 import { RowDataPacket } from "mysql2/promise";
 import { SQLResultConverter } from "../database/SQLResultConverter";
-import { Schedule } from "../serializables/schedule";
+import { Schedule } from "../serializables/Schedule";
 import { Serializer } from "./Serializer";
-import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
-import { ScheduleSerializerIds } from "./types/ScheduleSerializerIds";
-import { SerializerIds } from "./types/SerializerIds";
+import { IGuildDataBaseClient } from "./interfaces/IGuildDataBaseClient";
+import { ScheduleSerializerIds } from "./enums/ScheduleSerializerIds";
+import { SerializerIds } from "./enums/SerializerIds";
 
 export class ScheduleSerializer extends Serializer<Schedule> {
   emoji: string;

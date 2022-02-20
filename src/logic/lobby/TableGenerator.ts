@@ -1,5 +1,5 @@
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
-import { LobbyPlayer } from "./interfaces/LobbyPlayer";
+import { ILobbyPlayer } from "./interfaces/ILobbyPlayer";
 
 export abstract class TableGenerator {
   mentionPlayers: boolean = false;
@@ -10,7 +10,7 @@ export abstract class TableGenerator {
 
   private static addUserNameToUserTable(
     tableBase: Array<IFieldElement>,
-    user: LobbyPlayer,
+    user: ILobbyPlayer,
     startIndex = 0,
     mention = false
   ) {
@@ -30,7 +30,7 @@ ${positions.length === 1 && positions[0] === -1 ? "-" : positions.join(", ")}`;
 
   private static addTierToUserTable(
     tableBase: Array<IFieldElement>,
-    user: LobbyPlayer,
+    user: ILobbyPlayer,
     startIndex = 0
   ) {
     tableBase[startIndex + 2].value = `${tableBase[startIndex + 2].value}
@@ -50,7 +50,7 @@ ${user.tier.name}`;
   protected addUserToTeam(
     tableBase: Array<IFieldElement>,
     index: number,
-    player: LobbyPlayer,
+    player: ILobbyPlayer,
     position: number,
     mention: boolean
   ) {
@@ -65,7 +65,7 @@ ${user.tier.name}`;
 
   protected addUserWithPositionsToUserTable(
     tableBase: Array<IFieldElement>,
-    user: LobbyPlayer,
+    user: ILobbyPlayer,
     positions: Array<number>,
     startIndex = 0,
     mention = false

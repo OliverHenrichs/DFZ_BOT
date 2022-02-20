@@ -1,12 +1,12 @@
 import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
 import { SQLUtils } from "../logic/database/SQLUtils";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-import { LobbyPlayer } from "../logic/lobby/interfaces/LobbyPlayer";
-import { Coach } from "../logic/serializables/coach";
-import { Player } from "../logic/serializables/player";
+import { ILobbyPlayer } from "../logic/lobby/interfaces/ILobbyPlayer";
+import { Coach } from "../logic/serializables/Coach";
+import { Player } from "../logic/serializables/Player";
 import { CoachSerializer } from "../logic/serializers/CoachSerializer";
 import { PlayerSerializer } from "../logic/serializers/PlayerSerializer";
-import { IGuildDataBaseClient } from "../logic/serializers/types/IGuildDataBaseClient";
+import { IGuildDataBaseClient } from "../logic/serializers/interfaces/IGuildDataBaseClient";
 import { lobbyTypes } from "./constants";
 
 export async function saveCoachParticipation(
@@ -55,7 +55,7 @@ export async function saveCoachParticipation(
 export async function savePlayerParticipation(
   client: DFZDiscordClient,
   guildId: string,
-  users: Array<LobbyPlayer>,
+  users: Array<ILobbyPlayer>,
   lobbyType: number,
   playersPerLobby: number
 ) {

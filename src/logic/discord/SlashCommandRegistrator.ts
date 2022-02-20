@@ -4,7 +4,7 @@ import { ApplicationCommand, Collection, Guild } from "discord.js";
 import fs from "fs";
 import { botId, botToken, dfzGuildId } from "../../misc/constants";
 import { DFZDiscordClient } from "./DFZDiscordClient";
-import { adminRoles } from "./roleManagement";
+import { adminRoles } from "./RoleManagement";
 
 export class SlashCommandRegistrator {
   client: DFZDiscordClient;

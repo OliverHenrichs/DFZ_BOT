@@ -1,9 +1,9 @@
 import { RowDataPacket } from "mysql2/promise";
 import { SQLResultConverter } from "../database/SQLResultConverter";
-import { Player } from "../serializables/player";
+import { Player } from "../serializables/Player";
 import { Serializer } from "./Serializer";
-import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
-import { PlayerSerializerIds } from "./types/PlayerSerializerIds";
+import { IGuildDataBaseClient } from "./interfaces/IGuildDataBaseClient";
+import { PlayerSerializerIds } from "./enums/PlayerSerializerIds";
 
 export class PlayerSerializer extends Serializer<Player> {
   userId: string;

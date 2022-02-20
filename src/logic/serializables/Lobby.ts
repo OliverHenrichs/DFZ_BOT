@@ -8,22 +8,22 @@ import {
 } from "../../misc/constants";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
-import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
-import { IRemainingTime } from "../lobby/interfaces/RemainingTime";
+import { ILobbyPlayer } from "../lobby/interfaces/ILobbyPlayer";
+import { IRemainingTime } from "../lobby/interfaces/IRemainingTime";
 import { LobbyPostManipulator } from "../lobby/LobbyPostManipulator";
 import { UserTableGenerator } from "../lobby/UserTableGenerator";
 import { LobbySerializer } from "../serializers/LobbySerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
-import { ITime } from "../time/interfaces/Time";
+import { ITime } from "../time/interfaces/ITime";
 import { TimeConverter } from "../time/TimeConverter";
-import { getZonedTimeFromTimeZoneName } from "../time/timeZone";
+import { getZonedTimeFromTimeZoneName } from "../time/TimeZone";
 import { Serializable } from "./Serializable";
-import { ILobbyOptions } from "./types/ILobbyOptions";
+import { ILobbyOptions } from "./interfaces/ILobbyOptions";
 
 export class Lobby extends Serializable {
   public type: number;
   public date: ITime;
-  public users: Array<LobbyPlayer>;
+  public users: Array<ILobbyPlayer>;
   public coaches: Array<string>;
   public beginnerRoleIds: Array<string>;
   public regionId: string;
@@ -113,7 +113,7 @@ export class Lobby extends Serializable {
     reaction: MessageReaction,
     user: User
   ) {
-    const lobbyUser: LobbyPlayer | undefined = this.getUser(user.id);
+    const lobbyUser: ILobbyPlayer | undefined = this.getUser(user.id);
     if (lobbyUser === undefined) return;
 
     let position = -1;
@@ -193,7 +193,7 @@ export class Lobby extends Serializable {
     return kickeeIdx;
   }
 
-  private shouldRemoveUser(lobbyUser: LobbyPlayer, position: number) {
+  private shouldRemoveUser(lobbyUser: ILobbyPlayer, position: number) {
     if (!isRoleBasedLobbyType(this.type)) {
       // for simple lobbies, always remove
       return true;

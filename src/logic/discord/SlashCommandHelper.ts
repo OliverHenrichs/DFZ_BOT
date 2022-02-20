@@ -6,8 +6,8 @@ import {
   Role,
 } from "discord.js";
 import { getLobbyNameByType, getLobbyTypeByString } from "../../misc/constants";
-import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
-import { Lobby } from "../serializables/lobby";
+import { ILobbyPlayer } from "../lobby/interfaces/ILobbyPlayer";
+import { Lobby } from "../serializables/Lobby";
 import { ChannelManager as DFZChannelManager } from "./DFZChannelManager";
 import { DFZDiscordClient } from "./DFZDiscordClient";
 import { ISelectMenuOptions } from "./interfaces/ISelectMenuOptions";
@@ -64,7 +64,7 @@ export class SlashCommandHelper {
     return this.getSelectOption(channel.name, channelId);
   }
 
-  public static getUserSelectOptions(user: LobbyPlayer) {
+  public static getUserSelectOptions(user: ILobbyPlayer) {
     return this.getSelectOption(user.name, user.id);
   }
 

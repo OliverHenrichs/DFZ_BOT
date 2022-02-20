@@ -1,12 +1,17 @@
-import {Collection, GuildMember, Role} from "discord.js";
-import {DFZDataBaseClient} from "../logic/database/DFZDataBaseClient";
-import {SQLUtils} from "../logic/database/SQLUtils";
-import {DFZDiscordClient} from "../logic/discord/DFZDiscordClient";
-import {beginnerRoles, findRole, findRoles, getRegionalRolePrefix,} from "../logic/discord/roleManagement";
-import {Player} from "../logic/serializables/player";
-import {PlayerSerializer} from "../logic/serializers/PlayerSerializer";
-import {SerializeUtils} from "../logic/serializers/SerializeUtils";
-import {RegionDefinitions} from "../logic/time/RegionDefinitions";
+import { Collection, GuildMember, Role } from "discord.js";
+import { DFZDataBaseClient } from "../logic/database/DFZDataBaseClient";
+import { SQLUtils } from "../logic/database/SQLUtils";
+import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
+import {
+  beginnerRoles,
+  findRole,
+  findRoles,
+  getRegionalRolePrefix,
+} from "../logic/discord/RoleManagement";
+import { Player } from "../logic/serializables/Player";
+import { PlayerSerializer } from "../logic/serializers/PlayerSerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
+import { RegionDefinitions } from "../logic/time/RegionDefinitions";
 
 /**
  * Handles role and nickname changes.

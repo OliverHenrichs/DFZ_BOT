@@ -4,7 +4,7 @@ import { IMessageIdentifier } from "../../misc/types/IMessageIdentifier";
 import { scheduleReactionEmojis } from "../../misc/types/scheduleTypes";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
-import { Schedule } from "../serializables/schedule";
+import { Schedule } from "../serializables/Schedule";
 import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
 import { ArbitraryTimeAlgos } from "../time/ArbitraryTimeAlgos";
@@ -13,7 +13,7 @@ import {
   getScheduledDate,
   NextMondayAndSunday,
   scheduleTimezoneNames_short,
-} from "../time/timeZone";
+} from "../time/TimeZone";
 import { ScheduleWriter } from "./ScheduleWriter";
 import { IScheduleData, IScheduleSetup } from "./types/IScheduleSetup";
 import { IWeeklyScheduleData } from "./types/IWeeklyScheduleData";
@@ -33,6 +33,33 @@ export class SchedulePoster {
     await schedulePoster.postSchedulesInt();
   }
 
+  private static verifyAndCompleteArray<T>(arr: Array<T>) {
+    const numRegions = RegionDefinitions.regions.length;
+    if (arr.length === 1) {
+      // one item for each region => duplicate for other regions
+      for (let i = 0; i < numRegions - 1; i++) arr.push(arr[0]);
+    } else if (arr.length !== numRegions) {
+      throw new Error("Array length does not meet region count");
+    }
+  }
+
+  verifyTimes(times: string[][]) {
+    SchedulePoster.verifyAndCompleteArray(times);
+  }
+
+  verifyDays(days: number[][]) {
+    SchedulePoster.verifyAndCompleteArray(days);
+  }
+
+  verifyDayAndTimeLengths(days: number[][], times: string[][]) {
+    for (let i = 0; i < RegionDefinitions.regions.length; i++) {
+      if (times[i].length !== days[i].length) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   private async postSchedulesInt() {
     if (!(await this.weeklyScheduleShouldBePosted())) return;
     await this.addCurrentWeekSchedule();
@@ -40,7 +67,7 @@ export class SchedulePoster {
 
   private async addCurrentWeekSchedule() {
     const mondayAndSunday: NextMondayAndSunday =
-        ArbitraryTimeAlgos.getCurrentMondayAndSundayDate();
+      ArbitraryTimeAlgos.getCurrentMondayAndSundayDate();
     for (const data of weeklyScheduleDatas)
       await this.createSchedules(data, mondayAndSunday);
   }
@@ -103,33 +130,6 @@ export class SchedulePoster {
         timezoneShortName: scheduleTimezoneNames_short[i],
       };
     });
-  }
-
-  verifyTimes(times: string[][]) {
-    SchedulePoster.verifyAndCompleteArray(times);
-  }
-
-  verifyDays(days: number[][]) {
-    SchedulePoster.verifyAndCompleteArray(days);
-  }
-
-  verifyDayAndTimeLengths(days: number[][], times: string[][]) {
-    for (let i = 0; i < RegionDefinitions.regions.length; i++) {
-      if (times[i].length !== days[i].length) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  private static verifyAndCompleteArray<T>(arr: Array<T>) {
-    const numRegions = RegionDefinitions.regions.length;
-    if (arr.length === 1) {
-      // one item for each region => duplicate for other regions
-      for (let i = 0; i < numRegions - 1; i++) arr.push(arr[0]);
-    } else if (arr.length !== numRegions) {
-      throw new Error("Array length does not meet region count");
-    }
   }
 
   private createSchedulesInDatabase(

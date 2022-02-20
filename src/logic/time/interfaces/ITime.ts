@@ -1,4 +1,4 @@
-import { ITimeZoneOffset } from "./TimeZoneOffset";
+import { ITimeZoneOffset } from "./ITimeZoneOffset";
 
 export interface ITime {
   year: number;

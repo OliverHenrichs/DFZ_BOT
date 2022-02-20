@@ -1,5 +1,5 @@
 import { MessageComponentInteraction } from "discord.js";
-import { Lobby } from "../../serializables/lobby";
+import { Lobby } from "../../serializables/Lobby";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { ILobbyMenu } from "../interfaces/ILobbyMenu";
 

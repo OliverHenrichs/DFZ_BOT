@@ -1,10 +1,10 @@
 import { CommandInteraction } from "discord.js";
-import { CommandOptionNames } from "../discord/interfaces/CommandOptionNames";
+import { CommandOptionNames } from "../discord/enums/CommandOptionNames";
 import { CalendarDefinitions } from "./CalendarDefinitions";
-import { ILobbyTimeResult } from "./interfaces/LobbyTimeResult";
-import { ITime } from "./interfaces/Time";
-import { ITimeZoneInfo } from "./interfaces/TimeZoneInfo";
-import { IValidatedTime } from "./interfaces/ValidatedTime";
+import { ILobbyTimeResult } from "./interfaces/ILobbyTimeResult";
+import { ITime } from "./interfaces/ITime";
+import { ITimeZoneInfo } from "./interfaces/ITimeZoneInfo";
+import { IValidatedTime } from "./interfaces/IValidatedTime";
 import { RegionDefinitions } from "./RegionDefinitions";
 import { StringTimeValidator } from "./StringTimeValidator";
 import { TimeConverter } from "./TimeConverter";

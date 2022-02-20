@@ -1,14 +1,14 @@
 import { lobbyTypes } from "../../misc/constants";
-import { LobbyPlayer } from "./interfaces/LobbyPlayer";
+import { ILobbyPlayer } from "./interfaces/ILobbyPlayer";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { TableGenerator } from "./TableGenerator";
 
 export class TeamsTableGenerator extends TableGenerator {
-  users: LobbyPlayer[][];
+  users: ILobbyPlayer[][];
   lobbyType: number;
 
   constructor(
-    users: LobbyPlayer[][],
+    users: ILobbyPlayer[][],
     lobbyType: number,
     mentionPlayers: boolean = false
   ) {

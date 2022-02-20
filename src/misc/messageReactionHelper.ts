@@ -6,8 +6,8 @@ import {
   beginnerRoles,
   findRole,
   tryoutRole,
-} from "../logic/discord/roleManagement";
-import { Lobby } from "../logic/serializables/lobby";
+} from "../logic/discord/RoleManagement";
+import { Lobby } from "../logic/serializables/Lobby";
 import { botId } from "./constants";
 import { findLobbyByMessage } from "./messageHelper";
 import { IMessageIdentifier } from "./types/IMessageIdentifier";

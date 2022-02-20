@@ -2,7 +2,7 @@ import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { EmbeddingCreator } from "../discord/EmbeddingCreator";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
 import { HighScoreUserTypes } from "./enums/HighScoreUserTypes";
-import { IHighScoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
+import { IHighScoreProviderSettings } from "./interfaces/IHighscoreProviderSettings";
 
 export abstract class AbstractHighScoreProvider<T> {
   protected dbClient: DFZDataBaseClient;

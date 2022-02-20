@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { SlashCommandIds } from "../interfaces/SlashCommandsIds";
+import { SlashCommandIds } from "../enums/SlashCommandsIds";
 
 export class UpdateSlashCommandBuilder extends SlashCommandBuilder {
   constructor() {

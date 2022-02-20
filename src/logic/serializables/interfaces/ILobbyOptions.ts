@@ -1,4 +1,4 @@
-import { ITime } from "../../time/interfaces/Time";
+import { ITime } from "../../time/interfaces/ITime";
 
 export interface ILobbyOptions {
   type: number;

@@ -5,7 +5,7 @@ import {
 } from "../../misc/constants";
 import { saveCoachParticipation } from "../../misc/tracker";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
-import { Lobby } from "../serializables/lobby";
+import { Lobby } from "../serializables/Lobby";
 import { LobbySerializer } from "../serializers/LobbySerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
 import { TimeInMs } from "../time/TimeConverter";
@@ -27,7 +27,9 @@ export class LobbyStarter {
     try {
       return await this.startLobby(coach, channel);
     } catch (error) {
-      await coach.send(`Encountered an error when starting the lobby: ${error}`);
+      await coach.send(
+        `Encountered an error when starting the lobby: ${error}`
+      );
       return false;
     }
   }
@@ -36,7 +38,7 @@ export class LobbyStarter {
     coach: User,
     channel: TextBasedChannels
   ): Promise<boolean> {
-    if (!await LobbyStarter.testLobbyStartTime(this.lobby, coach)) {
+    if (!(await LobbyStarter.testLobbyStartTime(this.lobby, coach))) {
       return false;
     }
 
@@ -79,12 +81,17 @@ export class LobbyStarter {
     await serializer.update(this.lobby);
   }
 
-  private static async testLobbyStartTime(lobby: Lobby, coach: User): Promise<boolean> {
+  private static async testLobbyStartTime(
+    lobby: Lobby,
+    coach: User
+  ): Promise<boolean> {
     const timeLeftInMS = lobby.date.epoch - +new Date();
     if (timeLeftInMS > TimeInMs.fiveMinutes) {
       await LobbyStarter.handleEarlyStartAttempt(
         coach,
-        LobbyStarter.getRemainingTimeInMinutes(timeLeftInMS - TimeInMs.fiveMinutes)
+        LobbyStarter.getRemainingTimeInMinutes(
+          timeLeftInMS - TimeInMs.fiveMinutes
+        )
       );
       return false;
     }
@@ -104,12 +111,12 @@ export class LobbyStarter {
 
   private async handleNoPlayers(coach: User, channel: TextBasedChannels) {
     await LobbyPostManipulator.cancelLobbyPost(
-        this.lobby,
-        channel,
-        "Nobody showed up!"
+      this.lobby,
+      channel,
+      "Nobody showed up!"
     );
     await coach.send(
-        "🔒 I started the lobby. Nobody signed up tho, so just play some Dotes instead 😎"
+      "🔒 I started the lobby. Nobody signed up tho, so just play some Dotes instead 😎"
     );
   }
 
@@ -129,9 +136,8 @@ export class LobbyStarter {
     try {
       const user = await this.client.users.fetch(userId);
       if (user !== undefined) await user.send(message);
-
-    }catch (e) {
-      console.log("Error notifying players. Errormessage: " + e)
+    } catch (e) {
+      console.log("Error notifying players. Errormessage: " + e);
     }
   }
 

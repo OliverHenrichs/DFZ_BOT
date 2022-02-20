@@ -1,6 +1,6 @@
 import { Message, MessageEmbed } from "discord.js";
 
-export interface LobbyFetchResult {
+export interface ILobbyFetchResult {
   message: Message;
   embed: MessageEmbed;
 }

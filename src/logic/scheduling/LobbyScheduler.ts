@@ -8,15 +8,15 @@ import {
   getRegionalRoleLobbyChannel,
   getRegionalRoleTimeZoneName,
   tryoutRole,
-} from "../discord/roleManagement";
-import { PostLobbyOptions } from "../lobby/interfaces/PostLobbyOptions";
+} from "../discord/RoleManagement";
+import { IPostLobbyOptions } from "../lobby/interfaces/IPostLobbyOptions";
 import { LobbyPostManipulator } from "../lobby/LobbyPostManipulator";
-import { Schedule } from "../serializables/schedule";
+import { Schedule } from "../serializables/Schedule";
 import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
-import { ITime } from "../time/interfaces/Time";
+import { ITime } from "../time/interfaces/ITime";
 import { TimeConverter } from "../time/TimeConverter";
-import { getTimeString, getZonedTimeFromTimeZoneName } from "../time/timeZone";
+import { getTimeString, getZonedTimeFromTimeZoneName } from "../time/TimeZone";
 
 export class LobbyScheduler {
   private readonly channelManager: GuildChannelManager;
@@ -152,7 +152,7 @@ export class LobbyScheduler {
         timezoneName
       );
 
-    const options: PostLobbyOptions = {
+    const options: IPostLobbyOptions = {
       type: type,
       regionRole: regionRole,
       userRoles: beginnerRoles,

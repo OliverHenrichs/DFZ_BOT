@@ -1,7 +1,7 @@
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { Schedule } from "../serializables/schedule";
+import { Schedule } from "../serializables/Schedule";
 import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
-import { IGuildDataBaseClient } from "../serializers/types/IGuildDataBaseClient";
+import { IGuildDataBaseClient } from "../serializers/interfaces/IGuildDataBaseClient";
 import { TimeConverter } from "../time/TimeConverter";
 
 export class ScheduleRemover {

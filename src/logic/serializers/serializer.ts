@@ -1,8 +1,8 @@
 import { RowDataPacket } from "mysql2/promise";
-import { IColumnsAndValues } from "../database/interfaces/ColumnsAndValues";
+import { IColumnsAndValues } from "../database/interfaces/IColumnsAndValues";
 import { Serializable } from "../serializables/Serializable";
-import { ISerializationSettings } from "./types/ISerializationSettings";
-import { SerializerIds } from "./types/SerializerIds";
+import { ISerializationSettings } from "./interfaces/ISerializationSettings";
+import { SerializerIds } from "./enums/SerializerIds";
 
 export abstract class Serializer<T extends Serializable> {
   protected settings: ISerializationSettings;

@@ -1,11 +1,11 @@
 import { Pool } from "mysql2/promise";
-import { CoachSerializerIds } from "../serializers/types/CoachSerializerIds";
-import { GuildSerializerIds } from "../serializers/types/GuildSerializerIds";
-import { LobbySerializerIds } from "../serializers/types/LobbySerializerIds";
-import { PlayerSerializerIds } from "../serializers/types/PlayerSerializerIds";
-import { ScheduleSerializerIds } from "../serializers/types/ScheduleSerializerIds";
-import { SerializerIds } from "../serializers/types/SerializerIds";
-import { ISqlTableColumn } from "./interfaces/SqlTableColumn";
+import { CoachSerializerIds } from "../serializers/enums/CoachSerializerIds";
+import { GuildSerializerIds } from "../serializers/enums/GuildSerializerIds";
+import { LobbySerializerIds } from "../serializers/enums/LobbySerializerIds";
+import { PlayerSerializerIds } from "../serializers/enums/PlayerSerializerIds";
+import { ScheduleSerializerIds } from "../serializers/enums/ScheduleSerializerIds";
+import { SerializerIds } from "../serializers/enums/SerializerIds";
+import { ISqlTableColumn } from "./interfaces/ISqlTableColumn";
 
 export class SQLTableCreator {
   public static async tryCreateDataBaseTables(pool: Pool) {

@@ -1,17 +1,17 @@
-export interface LobbyPlayer {
+export interface ILobbyPlayer {
   name: string;
   id: string;
   positions: Array<number>;
-  tier: LobbyTier;
-  region: LobbyRegion;
+  tier: ILobbyTier;
+  region: ILobbyRegion;
 }
 
-interface LobbyRegion {
+interface ILobbyRegion {
   id: string;
   name: string | number;
 }
 
-interface LobbyTier {
+interface ILobbyTier {
   id: string;
   number: number;
   name: string;

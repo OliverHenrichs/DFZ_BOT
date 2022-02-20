@@ -1,6 +1,6 @@
 import { CommandInteraction } from "discord.js";
 import { IGuildClient } from "../../../misc/types/IGuildClient";
-import { SchedulePoster } from "../../lobbyScheduling/SchedulePoster";
+import { SchedulePoster } from "../../scheduling/SchedulePoster";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { InteractionUtils } from "../Utils/InteractionUtils";
 import { AbstractExecutor } from "./AbstractExecutor";

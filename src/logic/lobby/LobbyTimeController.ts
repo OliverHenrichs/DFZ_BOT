@@ -8,10 +8,10 @@ import {
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { ChannelManager } from "../discord/DFZChannelManager";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
-import { Lobby } from "../serializables/lobby";
+import { Lobby } from "../serializables/Lobby";
 import { LobbySerializer } from "../serializers/LobbySerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
-import { LobbyFetchResult } from "./interfaces/LobbyFetchResult";
+import { ILobbyFetchResult } from "./interfaces/ILobbyFetchResult";
 import { LobbyPostManipulator } from "./LobbyPostManipulator";
 
 export class LobbyTimeController {
@@ -94,7 +94,7 @@ export class LobbyTimeController {
   private static async fetchLobbyFromDiscord(
     lobby: Lobby,
     channel: TextChannel | NewsChannel
-  ): Promise<LobbyFetchResult | undefined> {
+  ): Promise<ILobbyFetchResult | undefined> {
     const message = await this.getMessageFromChannel(channel, lobby.messageId);
     if (message === undefined) {
       return undefined;

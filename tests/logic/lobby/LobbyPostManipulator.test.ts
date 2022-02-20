@@ -1,13 +1,11 @@
 import { expect } from "chai";
 import { DFZDiscordClient } from "../../../src/logic/discord/DFZDiscordClient";
 import { LobbyPostManipulator } from "../../../src/logic/lobby/LobbyPostManipulator";
-import { Lobby } from "../../../src/logic/serializables/lobby";
-import { ITime } from "../../../src/logic/time/interfaces/Time";
+import { Lobby } from "../../../src/logic/serializables/Lobby";
 
 describe("LobbyPostManipulator tests", () => {
   const client = new DFZDiscordClient();
-  client.
-  const lobbyTime: ITime = {
+  const lobbyTime = {
     day: 16,
     year: 2022,
     zone: {

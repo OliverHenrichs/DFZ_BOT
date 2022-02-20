@@ -10,10 +10,10 @@ build/
 
 #files
 
-save.json
-save_test.json
-credentials.json
-service_key.json
+private/saves/save.json
+private/saves/save_test.json
+private/gcal/credentials.json
+private/gcal/service_key.json
 token.json
 visits.sqlite
 **/*.js

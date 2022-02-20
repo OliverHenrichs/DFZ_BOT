@@ -1,9 +1,9 @@
 import { RowDataPacket } from "mysql2/promise";
 import { SQLResultConverter } from "../database/SQLResultConverter";
-import { Coach } from "../serializables/coach";
+import { Coach } from "../serializables/Coach";
 import { Serializer } from "./Serializer";
-import { CoachSerializerIds } from "./types/CoachSerializerIds";
-import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
+import { CoachSerializerIds } from "./enums/CoachSerializerIds";
+import { IGuildDataBaseClient } from "./interfaces/IGuildDataBaseClient";
 
 export class CoachSerializer extends Serializer<Coach> {
   userId: string;

@@ -1,11 +1,11 @@
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
-import { Coach } from "../serializables/coach";
+import { Coach } from "../serializables/Coach";
 import { CoachSerializer } from "../serializers/CoachSerializer";
 import { SerializeUtils } from "../serializers/SerializeUtils";
 import { AbstractHighScoreProvider } from "./AbstractHighScoreProvider";
 import { HighScoreUserTypes } from "./enums/HighScoreUserTypes";
-import { IHighScoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
+import { IHighScoreProviderSettings } from "./interfaces/IHighscoreProviderSettings";
 
 export class CoachHighscoreProvider extends AbstractHighScoreProvider<Coach> {
   constructor(dbClient: DFZDataBaseClient) {

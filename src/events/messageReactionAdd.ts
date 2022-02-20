@@ -11,11 +11,11 @@ import {
   adminRoles,
   beginnerRoles,
   findRole,
-} from "../logic/discord/roleManagement";
+} from "../logic/discord/RoleManagement";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { LobbyStarter } from "../logic/lobby/LobbyStarter";
-import { ScheduleManipulator } from "../logic/lobbyScheduling/ScheduleManipulator";
-import { Lobby } from "../logic/serializables/lobby";
+import { ScheduleManipulator } from "../logic/scheduling/ScheduleManipulator";
+import { Lobby } from "../logic/serializables/Lobby";
 import { LobbySerializer } from "../logic/serializers/LobbySerializer";
 import { SerializeUtils } from "../logic/serializers/SerializeUtils";
 import { RegionDefinitions } from "../logic/time/RegionDefinitions";

@@ -4,7 +4,7 @@ import { CalendarDefinitions } from "../../time/CalendarDefinitions";
 import { RegionDefinitions } from "../../time/RegionDefinitions";
 import { ChannelManager } from "../DFZChannelManager";
 import { DFZDiscordClient } from "../DFZDiscordClient";
-import { CommandOptionNames } from "../interfaces/CommandOptionNames";
+import { CommandOptionNames } from "../enums/CommandOptionNames";
 import { SlashCommandHelper } from "../SlashCommandHelper";
 import { HighScoreUserTypes } from "../../highscore/enums/HighScoreUserTypes";
 

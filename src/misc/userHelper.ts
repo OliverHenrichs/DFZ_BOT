@@ -1,16 +1,16 @@
-import {Role} from "discord.js";
-import {getNumberFromBeginnerRole} from "../logic/discord/roleManagement";
-import {LobbyPlayer} from "../logic/lobby/interfaces/LobbyPlayer";
-import {PositionPlayers} from "../logic/lobby/interfaces/PositionPlayers";
-import {Lobby} from "../logic/serializables/lobby";
-import {lobbyTypes} from "./constants";
-import {coinFlip, shuffle} from "./generics";
+import { Role } from "discord.js";
+import { getNumberFromBeginnerRole } from "../logic/discord/RoleManagement";
+import { ILobbyPlayer } from "../logic/lobby/interfaces/ILobbyPlayer";
+import { IPositionPlayers } from "../logic/lobby/interfaces/IPositionPlayers";
+import { Lobby } from "../logic/serializables/Lobby";
+import { lobbyTypes } from "./constants";
+import { coinFlip, shuffle } from "./generics";
 
 /**
  * Returns an array of positions with all players having that position in each of the arrays.
  */
-function getPlayersPerPosition(_users: LobbyPlayer[]) {
-  const playersPerPosition: PositionPlayers[] = [];
+function getPlayersPerPosition(_users: ILobbyPlayer[]) {
+  const playersPerPosition: IPositionPlayers[] = [];
   for (let position = 1; position < 6; position++) {
     playersPerPosition.push({
       pos: position,
@@ -35,8 +35,8 @@ function getPlayersPerPosition(_users: LobbyPlayer[]) {
  * @param {list} openUsers users in the lobby
  */
 function createInhouseTeams(
-  playerPositionMap: LobbyPlayer[][],
-  openUsers: LobbyPlayer[]
+  playerPositionMap: ILobbyPlayer[][],
+  openUsers: ILobbyPlayer[]
 ) {
   // now sort by tier
   openUsers.sort(coinFlip() ? tier_sorter : reverse_tier_sorter);
@@ -64,7 +64,7 @@ function createInhouseTeams(
         playerPositionMap[pos] = [openUsers[0], openUsers[1]];
       } else {
         // we have one player for this position => fill from remaining player pool, try to take same tier
-        let other: LobbyPlayer | undefined = openUsers.find(
+        let other: ILobbyPlayer | undefined = openUsers.find(
           (user) =>
             user.id != players[0].id && user.tier.id == players[0].tier.id
         );
@@ -159,8 +159,8 @@ function createInhouseTeams(
 }
 
 function createNonCompetitionTeams(
-  playerPositionMap: LobbyPlayer[][],
-  openUsers: LobbyPlayer[]
+  playerPositionMap: ILobbyPlayer[][],
+  openUsers: ILobbyPlayer[]
 ) {
   const playersPerPosition = getPlayersPerPosition(openUsers);
   while (true) {
@@ -215,7 +215,7 @@ export function addUser(
   regionRole: Role | undefined
 ) {
   // create user
-  const user: LobbyPlayer = {
+  const user: ILobbyPlayer = {
     name: name,
     id: id,
     positions: positions,
@@ -246,8 +246,8 @@ export function addUser(
   lobby.users.push(user);
 }
 
-export function createTeams(users: LobbyPlayer[], lobbyType: number) {
-  const playerPositionMap: LobbyPlayer[][] = [[], [], [], [], []]; // all positions empty; for 1 team every pos gets one player, for two teams two players
+export function createTeams(users: ILobbyPlayer[], lobbyType: number) {
+  const playerPositionMap: ILobbyPlayer[][] = [[], [], [], [], []]; // all positions empty; for 1 team every pos gets one player, for two teams two players
   const openUsers = users;
 
   // randomize users to not have e.g. first person to subscribe be pos 1 guaranteed etc.
@@ -266,11 +266,11 @@ export function createTeams(users: LobbyPlayer[], lobbyType: number) {
   return playerPositionMap;
 }
 
-function tier_sorter(a: LobbyPlayer, b: LobbyPlayer) {
+function tier_sorter(a: ILobbyPlayer, b: ILobbyPlayer) {
   return b.tier.number - a.tier.number;
 }
 
-function reverse_tier_sorter(a: LobbyPlayer, b: LobbyPlayer) {
+function reverse_tier_sorter(a: ILobbyPlayer, b: ILobbyPlayer) {
   return a.tier.number - b.tier.number;
 }
 
@@ -289,8 +289,8 @@ function swap<T>(arr: Array<T>, x: number, y: number) {
   return arr;
 }
 
-function filterByPosition(users: LobbyPlayer[], position: number) {
-  function _filter(value: LobbyPlayer): value is LobbyPlayer {
+function filterByPosition(users: ILobbyPlayer[], position: number) {
+  function _filter(value: ILobbyPlayer): value is ILobbyPlayer {
     return value.positions.includes(position);
   }
 

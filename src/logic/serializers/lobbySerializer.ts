@@ -1,10 +1,10 @@
 import { RowDataPacket } from "mysql2/promise";
 import { SQLResultConverter } from "../database/SQLResultConverter";
-import { Lobby } from "../serializables/lobby";
+import { Lobby } from "../serializables/Lobby";
 import { Serializer } from "./Serializer";
-import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
-import { LobbySerializerIds } from "./types/LobbySerializerIds";
-import { SerializerIds } from "./types/SerializerIds";
+import { IGuildDataBaseClient } from "./interfaces/IGuildDataBaseClient";
+import { LobbySerializerIds } from "./enums/LobbySerializerIds";
+import { SerializerIds } from "./enums/SerializerIds";
 
 export class LobbySerializer extends Serializer<Lobby> {
   channelId: string;

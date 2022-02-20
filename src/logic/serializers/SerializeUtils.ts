@@ -1,8 +1,8 @@
 import { Guild, Message, PartialMessage } from "discord.js";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { Player } from "../serializables/player";
-import { Schedule } from "../serializables/schedule";
-import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
+import { Player } from "../serializables/Player";
+import { Schedule } from "../serializables/Schedule";
+import { IGuildDataBaseClient } from "./interfaces/IGuildDataBaseClient";
 
 export namespace SerializeUtils {
   export function fromPlayertoGuildDBClient(

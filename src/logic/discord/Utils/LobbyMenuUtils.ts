@@ -9,15 +9,15 @@ import { lobbyTypes } from "../../../misc/constants";
 import { findLobbyByMessage } from "../../../misc/messageHelper";
 import { IMessageIdentifier } from "../../../misc/types/IMessageIdentifier";
 import { LobbyPostManipulator } from "../../lobby/LobbyPostManipulator";
-import { Lobby } from "../../serializables/lobby";
+import { Lobby } from "../../serializables/Lobby";
 import { KickExecutor } from "../CommandExecutors/KickExecutor";
 import { SelectMenuUtils } from "../CommandExecutors/SelectMenuUtils";
 import { UpdateExecutor } from "../CommandExecutors/UpdateExecutor";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { ILobbyMenu } from "../interfaces/ILobbyMenu";
-import { MenuType } from "../interfaces/MenuType";
-import { SelectorCustomIds } from "../interfaces/SelectorCustomIds";
-import { tryoutRole } from "../roleManagement";
+import { MenuType } from "../enums/MenuType";
+import { SelectorCustomIds } from "../enums/SelectorCustomIds";
+import { tryoutRole } from "../RoleManagement";
 import { CommonMenuUtils } from "./CommonMenuUtils";
 
 export class LobbyMenuUtils {

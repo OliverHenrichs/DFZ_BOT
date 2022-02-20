@@ -1,7 +1,7 @@
 import { CommandInteraction, Interaction, MessageActionRow } from "discord.js";
 import { DFZDiscordClient } from "../DFZDiscordClient";
-import { SlashCommandIds } from "../interfaces/SlashCommandsIds";
-import { MenuType } from "../interfaces/MenuType";
+import { SlashCommandIds } from "../enums/SlashCommandsIds";
+import { MenuType } from "../enums/MenuType";
 import { SlashCommandHelper } from "../SlashCommandHelper";
 import { AbstractExecutor } from "./AbstractExecutor";
 import { SelectMenuUtils } from "./SelectMenuUtils";

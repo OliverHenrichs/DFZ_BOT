@@ -1,11 +1,18 @@
-import {EmbedField, Message, MessageEmbed, MessageReaction, TextBasedChannels, User,} from "discord.js";
-import {DFZDiscordClient} from "../discord/DFZDiscordClient";
-import {adminRoles, findRole} from "../discord/roleManagement";
-import {Schedule} from "../serializables/schedule";
-import {ScheduleSerializer} from "../serializers/ScheduleSerializer";
-import {SerializeUtils} from "../serializers/SerializeUtils";
-import {LobbyScheduler} from "./LobbyScheduler";
-import {IScheduleManipulationData} from "./types/IScheduleManipulationData";
+import {
+  EmbedField,
+  Message,
+  MessageEmbed,
+  MessageReaction,
+  TextBasedChannels,
+  User,
+} from "discord.js";
+import { DFZDiscordClient } from "../discord/DFZDiscordClient";
+import { adminRoles, findRole } from "../discord/RoleManagement";
+import { Schedule } from "../serializables/Schedule";
+import { ScheduleSerializer } from "../serializers/ScheduleSerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
+import { LobbyScheduler } from "./LobbyScheduler";
+import { IScheduleManipulationData } from "./types/IScheduleManipulationData";
 
 /**
  * Changes schedule state.

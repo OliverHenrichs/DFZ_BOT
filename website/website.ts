@@ -4,7 +4,7 @@ import { Express } from "express-serve-static-core";
 import http from "http";
 import https from "https";
 import { DFZDiscordClient } from "../src/logic/discord/DFZDiscordClient";
-import { Coach } from "../src/logic/serializables/coach";
+import { Coach } from "../src/logic/serializables/Coach";
 import { CoachSerializer } from "../src/logic/serializers/CoachSerializer";
 import { TimeInMs } from "../src/logic/time/TimeConverter";
 import { dfzGuildId } from "../src/misc/constants";

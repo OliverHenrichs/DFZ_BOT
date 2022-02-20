@@ -3,15 +3,15 @@ import {
   getPlayersPerLobbyByLobbyType,
 } from "../../misc/constants";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
-import { LobbyPlayer } from "./interfaces/LobbyPlayer";
+import { ILobbyPlayer } from "./interfaces/ILobbyPlayer";
 import { TableGenerator } from "./TableGenerator";
 
 export class UserTableGenerator extends TableGenerator {
-  users: LobbyPlayer[];
+  users: ILobbyPlayer[];
   playersPerLobby: number;
 
   constructor(
-    users: LobbyPlayer[],
+    users: ILobbyPlayer[],
     lobbyType: number,
     mentionPlayers: boolean = false
   ) {
@@ -84,7 +84,7 @@ export class UserTableGenerator extends TableGenerator {
   }
 
   private handleUserAddition(
-    user: LobbyPlayer,
+    user: ILobbyPlayer,
     mainTable: IFieldElement[],
     benchTable: IFieldElement[],
     userIndex: number
@@ -116,7 +116,7 @@ export class UserTableGenerator extends TableGenerator {
 
   private addToUserTable(
     tableBase: Array<IFieldElement>,
-    user: LobbyPlayer,
+    user: ILobbyPlayer,
     startIndex = 0,
     mention = false
   ) {

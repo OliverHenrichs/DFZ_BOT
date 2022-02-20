@@ -1,18 +1,18 @@
 import {Guild, Message} from "discord.js";
 import {DFZDataBaseClient} from "../logic/database/DFZDataBaseClient";
-import {getAllRegionNames, getRegionalRoleFromRegionName,} from "../logic/discord/roleManagement";
-import {Lobby} from "../logic/serializables/lobby";
+import {getAllRegionNames, getRegionalRoleFromRegionName,} from "../logic/discord/RoleManagement";
+import {Lobby} from "../logic/serializables/Lobby";
 import {LobbySerializer} from "../logic/serializers/LobbySerializer";
 import {SerializeUtils} from "../logic/serializers/SerializeUtils";
-import {ILobbyTimeResult} from "../logic/time/interfaces/LobbyTimeResult";
-import {getLobbyTimeFromMessageString} from "../logic/time/timeZone";
+import {ILobbyTimeResult} from "../logic/time/interfaces/ILobbyTimeResult";
+import {getLobbyTimeFromMessageString} from "../logic/time/TimeZone";
 import {
-    getLobbyTypeByString,
-    isSimpleLobbyType,
-    lobbyManagementReactionEmojis,
-    lobbyTypeKeysString,
-    positionReactionEmojis,
-    tryoutReactionEmoji,
+  getLobbyTypeByString,
+  isSimpleLobbyType,
+  lobbyManagementReactionEmojis,
+  lobbyTypeKeysString,
+  positionReactionEmojis,
+  tryoutReactionEmoji,
 } from "./constants";
 import {getNumbersFromString} from "./generics";
 import {IMessageIdentifier} from "./types/IMessageIdentifier";
@@ -24,39 +24,37 @@ import {IReactionData} from "./types/IReactionData";
  * @param data
  * @param emoji Emoji to react with.
  */
-async function reactToMessageAndDeleteIt(
-    data: IReactionData,
-    emoji: string,
-) {
-    await data.message.react(emoji);
+async function reactToMessageAndDeleteIt(data: IReactionData, emoji: string) {
+  await data.message.react(emoji);
 
-    if (data.deleteMessage && data.message.channel.type !== "DM")
-        setTimeout(() => data.message.delete(), 5 * TimeInMs.oneSecond);
+  if (data.deleteMessage && data.message.channel.type !== "DM")
+    setTimeout(() => data.message.delete(), 5 * TimeInMs.oneSecond);
 
+  if (data.reply == "") return;
 
-    if (data.reply == "") return;
-
-    try {
-        await data.message.author.send(`\`${data.message.content}\`` + `\n${emoji} ${data.reply}`);
-    } catch (err) {
-        await data.message.reply(
-            `Cannot send messages to ${data.message.author.username}. Enable direct messages in privacy settings to receive bot replies.`
-        );
-    }
+  try {
+    await data.message.author.send(
+      `\`${data.message.content}\`` + `\n${emoji} ${data.reply}`
+    );
+  } catch (err) {
+    await data.message.reply(
+      `Cannot send messages to ${data.message.author.username}. Enable direct messages in privacy settings to receive bot replies.`
+    );
+  }
 }
 
 /**
  * Creates a negative reaction and deletes the message that has been reacted to
  */
 export async function reactNegative(data: IReactionData) {
-    await reactToMessageAndDeleteIt(data, "⛔");
+  await reactToMessageAndDeleteIt(data, "⛔");
 }
 
 /**
  * Creates a positive reaction and deletes the message that has been reacted to
  */
 export async function reactPositive(data: IReactionData) {
-    await reactToMessageAndDeleteIt(data, "✅");
+  await reactToMessageAndDeleteIt(data, "✅");
 }
 
 /**
@@ -64,18 +62,21 @@ export async function reactPositive(data: IReactionData) {
  * @param lobbyType
  * @param message
  */
-export async function createLobbyPostReactions(lobbyType: number, message: Message) {
-    if (isSimpleLobbyType(lobbyType)) {
-        await message.react(tryoutReactionEmoji);
-    } else {
-        for (let idx = 0; idx < positionReactionEmojis.length; idx++) {
-            await message.react(positionReactionEmojis[idx]);
-        }
+export async function createLobbyPostReactions(
+  lobbyType: number,
+  message: Message
+) {
+  if (isSimpleLobbyType(lobbyType)) {
+    await message.react(tryoutReactionEmoji);
+  } else {
+    for (let idx = 0; idx < positionReactionEmojis.length; idx++) {
+      await message.react(positionReactionEmojis[idx]);
     }
+  }
 
-    for (let idx = 0; idx < lobbyManagementReactionEmojis.length; idx++) {
-        await message.react(lobbyManagementReactionEmojis[idx]);
-    }
+  for (let idx = 0; idx < lobbyManagementReactionEmojis.length; idx++) {
+    await message.react(lobbyManagementReactionEmojis[idx]);
+  }
 }
 
 /**
@@ -87,29 +88,29 @@ export async function createLobbyPostReactions(lobbyType: number, message: Messa
  * @return [true if success, unique numbers, error message if not success]
  */
 export function getNumbersFromMessage(
-    message: Message,
-    index: number,
-    min = 0,
-    max = 5
+  message: Message,
+  index: number,
+  min = 0,
+  max = 5
 ) {
-    const args = getArguments(message);
+  const args = getArguments(message);
 
-    if (args.length <= index)
-        throw `You need to provide a list of numbers ranging from ${min} to ${max}`;
+  if (args.length <= index)
+    throw `You need to provide a list of numbers ranging from ${min} to ${max}`;
 
-    return getNumbersFromString(args[index]);
+  return getNumbersFromString(args[index]);
 }
 
 export function getLobbyRegionRoleFromMessage(
-    message: Message,
-    index: number
+  message: Message,
+  index: number
 ): string {
-    const args = getArguments(message);
+  const args = getArguments(message);
 
-    if (args.length <= index)
-        throw `Could not get lobby region role from message. Region roles are ${getAllRegionNames()}`;
+  if (args.length <= index)
+    throw `Could not get lobby region role from message. Region roles are ${getAllRegionNames()}`;
 
-    return getRegionalRoleFromRegionName(args[index]);
+  return getRegionalRoleFromRegionName(args[index]);
 }
 
 /**
@@ -118,20 +119,20 @@ export function getLobbyRegionRoleFromMessage(
  * @param argumentIndex
  */
 export function getTimeFromMessage(
-    message: Message,
-    argumentIndex: number
+  message: Message,
+  argumentIndex: number
 ): ILobbyTimeResult {
-    const args = getArguments(message);
+  const args = getArguments(message);
 
-    if (args.length <= argumentIndex + 1)
-        throw new Error(
-            "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post"
-        );
-
-    return getLobbyTimeFromMessageString(
-        args[argumentIndex],
-        args[argumentIndex + 1]
+  if (args.length <= argumentIndex + 1)
+    throw new Error(
+      "you need to provide a valid full hour time (e.g. 9pm CET, 6am GMT+2, ...) in your post"
     );
+
+  return getLobbyTimeFromMessageString(
+    args[argumentIndex],
+    args[argumentIndex + 1]
+  );
 }
 
 /**
@@ -140,11 +141,11 @@ export function getTimeFromMessage(
  * @param {Message} message message from which to derive lobby type
  */
 export function getLobbyTypeFromMessage(message: Message): number {
-    const args = getArguments(message);
-    if (args.length === 0) {
-        throw `No lobby type given. Lobby types are (${lobbyTypeKeysString})`;
-    }
-    return getLobbyTypeByString(args[0]);
+  const args = getArguments(message);
+  if (args.length === 0) {
+    throw `No lobby type given. Lobby types are (${lobbyTypeKeysString})`;
+  }
+  return getLobbyTypeByString(args[0]);
 }
 
 /**
@@ -154,18 +155,18 @@ export function getLobbyTypeFromMessage(message: Message): number {
  *  @param mId
  */
 export async function findLobbyByMessage(
-    dbClient: DFZDataBaseClient,
-    mId: IMessageIdentifier
+  dbClient: DFZDataBaseClient,
+  mId: IMessageIdentifier
 ): Promise<Lobby> {
-    const gdbc = SerializeUtils.getGuildDBClient(mId.guildId, dbClient);
-    const serializer = new LobbySerializer(gdbc, mId.channelId, mId.messageId);
-    const lobbies = await serializer.get();
-    if (lobbies.length !== 1)
-        throw new Error(
-            `Could not find lobby by channelId=${mId.channelId}, messageId=${mId.messageId}`
-        );
+  const gdbc = SerializeUtils.getGuildDBClient(mId.guildId, dbClient);
+  const serializer = new LobbySerializer(gdbc, mId.channelId, mId.messageId);
+  const lobbies = await serializer.get();
+  if (lobbies.length !== 1)
+    throw new Error(
+      `Could not find lobby by channelId=${mId.channelId}, messageId=${mId.messageId}`
+    );
 
-    return lobbies[0];
+  return lobbies[0];
 }
 
 /**
@@ -173,17 +174,17 @@ export async function findLobbyByMessage(
  * @param {Message} message
  */
 export function getArguments(message: Message): string[] {
-    const content = message.content.split(" ");
-    content.shift();
-    return content;
+  const content = message.content.split(" ");
+  content.shift();
+  return content;
 }
 
 export function getGuildFromMessage(message: Message): Guild {
-    if (!message.guild) throw new Error("Only guild messages");
-    return message.guild;
+  if (!message.guild) throw new Error("Only guild messages");
+  return message.guild;
 }
 
 export function getGuildIdFromMessage(message: Message): string {
-    if (!message.guild) throw new Error("Only guild messages");
-    return message.guild.id;
+  if (!message.guild) throw new Error("Only guild messages");
+  return message.guild.id;
 }

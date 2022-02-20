@@ -1,5 +1,5 @@
 import { createPool, Pool, RowDataPacket } from "mysql2/promise";
-import { IColumnsAndValues } from "./interfaces/ColumnsAndValues";
+import { IColumnsAndValues } from "./interfaces/IColumnsAndValues";
 
 export class DFZDataBaseClient {
   pool: Pool;

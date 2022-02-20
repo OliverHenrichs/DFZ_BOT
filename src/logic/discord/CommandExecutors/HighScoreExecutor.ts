@@ -2,7 +2,7 @@ import { CommandInteraction } from "discord.js";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { AbstractExecutor } from "./AbstractExecutor";
 import HighscoreProviderFactory from "../../highscore/factories/HighscoreProviderFactory";
-import { CommandOptionNames } from "../interfaces/CommandOptionNames";
+import { CommandOptionNames } from "../enums/CommandOptionNames";
 import { HighScoreUserTypes } from "../../highscore/enums/HighScoreUserTypes";
 
 export class HighScoreExecutor extends AbstractExecutor {

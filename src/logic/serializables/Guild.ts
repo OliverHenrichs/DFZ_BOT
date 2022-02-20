@@ -1,6 +1,6 @@
 import { Serializable } from "./Serializable";
-import { IGuildOptions } from "./types/IGuildOptions";
-import { IRegionAndChannel } from "./types/IRegionAndChannel";
+import { IGuildOptions } from "./interfaces/IGuildOptions";
+import { IRegionAndChannel } from "./interfaces/IRegionAndChannel";
 
 export class Guild extends Serializable {
   public coachRoles: string[] = [];

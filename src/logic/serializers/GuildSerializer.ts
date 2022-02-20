@@ -2,9 +2,9 @@ import { RowDataPacket } from "mysql2/promise";
 import { SQLResultConverter } from "../database/SQLResultConverter";
 import { Guild } from "../serializables/Guild";
 import { Serializer } from "./Serializer";
-import { GuildSerializerIds } from "./types/GuildSerializerIds";
-import { IGuildDataBaseClient } from "./types/IGuildDataBaseClient";
-import { SerializerIds } from "./types/SerializerIds";
+import { GuildSerializerIds } from "./enums/GuildSerializerIds";
+import { IGuildDataBaseClient } from "./interfaces/IGuildDataBaseClient";
+import { SerializerIds } from "./enums/SerializerIds";
 
 export class GuildSerializer extends Serializer<Guild> {
   constructor(gdbc: IGuildDataBaseClient) {

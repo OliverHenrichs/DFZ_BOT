@@ -7,19 +7,19 @@ import {
   MessageSelectMenu,
 } from "discord.js";
 import { lobbyTypeKeys } from "../../../misc/constants";
-import { Lobby } from "../../serializables/lobby";
+import { Lobby } from "../../serializables/Lobby";
 import { RegionDefinitions } from "../../time/RegionDefinitions";
 import { ChannelManager } from "../DFZChannelManager";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { IMenuRowOptions } from "../interfaces/IMenuRowOptions";
-import { SelectorCustomIds } from "../interfaces/SelectorCustomIds";
+import { SelectorCustomIds } from "../enums/SelectorCustomIds";
 import {
   adminRoles,
   beginnerRoles,
   getAdminRoles,
   getBeginnerRoles,
   getRegionRoles,
-} from "../roleManagement";
+} from "../RoleManagement";
 import { SlashCommandHelper } from "../SlashCommandHelper";
 import { CommonMenuUtils } from "../Utils/CommonMenuUtils";
 

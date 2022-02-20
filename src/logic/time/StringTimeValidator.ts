@@ -1,6 +1,6 @@
 import tZ = require("timezone-support");
-import { ITimeZoneInfo } from "./interfaces/TimeZoneInfo";
-import { IValidatedTime } from "./interfaces/ValidatedTime";
+import { ITimeZoneInfo } from "./interfaces/ITimeZoneInfo";
+import { IValidatedTime } from "./interfaces/IValidatedTime";
 
 export class StringTimeValidator {
   public static validateTimeString(timeString: string): IValidatedTime {

@@ -11,13 +11,13 @@ import {
 import { AbstractExecutor } from "../logic/discord/CommandExecutors/AbstractExecutor";
 import { ChannelManager } from "../logic/discord/DFZChannelManager";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-import { SelectorCustomIds } from "../logic/discord/interfaces/SelectorCustomIds";
-import { SlashCommandIds } from "../logic/discord/interfaces/SlashCommandsIds";
+import { SelectorCustomIds } from "../logic/discord/enums/SelectorCustomIds";
+import { SlashCommandIds } from "../logic/discord/enums/SlashCommandsIds";
 import { CommonMenuUtils } from "../logic/discord/Utils/CommonMenuUtils";
 import { InteractionUtils } from "../logic/discord/Utils/InteractionUtils";
 import { LobbyMenuUtils } from "../logic/discord/Utils/LobbyMenuUtils";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
-import { Lobby } from "../logic/serializables/lobby";
+import { Lobby } from "../logic/serializables/Lobby";
 import { RegionDefinitions } from "../logic/time/RegionDefinitions";
 import { lobbyTypes } from "../misc/constants";
 
@@ -29,7 +29,7 @@ module.exports = async function (
     await tryToInteract(client, interaction);
   } catch (error) {
     if (interaction instanceof MessageComponentInteraction)
-      await replyAndEndInteraction(
+      await updatePost(
         interaction,
         `Failed interaction: ${error}\nPlease try again ;-)`
       );
@@ -82,7 +82,7 @@ async function handleButton(
 ): Promise<void> {
   if (pressedCancelButton(interaction)) {
     await CommonMenuUtils.removeMenu(client, interaction);
-    return await replyAndEndInteraction(interaction, "Cancelled lobby menu.");
+    return await updatePost(interaction, "Cancelled lobby menu.");
   }
 
   if (pressedPostButton(interaction)) {
@@ -97,7 +97,7 @@ async function handleButton(
     return await tryUpdateLobbyAfterKick(client, interaction);
   }
 
-  await replyAndEndInteraction(
+  await updatePost(
     interaction,
     "Pressed button, but I failed to make sense of it."
   );
@@ -126,7 +126,7 @@ async function updateMenuWithSelect(
   }
 }
 
-async function replyAndEndInteraction(
+async function updatePost(
   interaction: MessageComponentInteraction,
   infoText: string,
   embed?: MessageEmbed
@@ -138,21 +138,32 @@ async function replyAndEndInteraction(
   });
 }
 
+async function followUpAndEndInteraction(
+  interaction: MessageComponentInteraction,
+  infoText: string,
+  embed?: MessageEmbed
+): Promise<void> {
+  await interaction.followUp({
+    content: infoText,
+    components: [],
+    embeds: embed ? [embed] : [],
+    ephemeral: true,
+  });
+}
+
 async function tryPostLobby(
   client: DFZDiscordClient,
   interaction: MessageComponentInteraction
 ): Promise<void> {
   let lobby = await CommonMenuUtils.getMenuLobby(client, interaction);
   lobby.channelId = getLobbyChannel(lobby);
+  const infoText =
+    "Posting the lobby in channel " +
+    channelMention(lobby.channelId) +
+    ". \nLobby reads:";
+  const embedding = LobbyPostManipulator.createLobbyEmbedding(lobby);
+  await updatePost(interaction, infoText, embedding);
   await LobbyPostManipulator.postLobby(client, lobby);
-
-  await replyAndEndInteraction(
-    interaction,
-    "Posted the lobby in channel " +
-      channelMention(lobby.channelId) +
-      ". \nPosted lobby reads:",
-    LobbyPostManipulator.createLobbyEmbedding(lobby)
-  );
   await CommonMenuUtils.removeMenu(client, interaction);
 }
 
@@ -168,7 +179,7 @@ async function tryUpdateLobby(
   const lobby = await CommonMenuUtils.getMenuLobby(client, interaction);
   await lobby.updateLobbyPostAndDBEntry(channel, client.dbClient);
 
-  await replyAndEndInteraction(
+  await updatePost(
     interaction,
     "Updated lobby in channel " +
       channelMention(lobby.channelId) +
@@ -190,7 +201,7 @@ async function tryUpdateLobbyAfterKick(
   const lobby = await CommonMenuUtils.getMenuLobby(client, interaction);
   await lobby.updateLobbyPostAndDBEntry(channel, client.dbClient);
 
-  await replyAndEndInteraction(interaction, "I kicked the selected player(s)");
+  await updatePost(interaction, "I kicked the selected player(s)");
   await CommonMenuUtils.removeMenu(client, interaction);
 }
 
