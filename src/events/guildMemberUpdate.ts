@@ -7,17 +7,14 @@ import {
   findRole,
   findRoles,
   getRegionalRolePrefix,
-} from "../logic/discord/roleManagement";
-import { Player } from "../logic/serializables/player";
-import { PlayerSerializer } from "../logic/serializers/playerSerializer";
-import { ReferrerSerializer } from "../logic/serializers/referrerSerializer";
+} from "../logic/discord/RoleManagement";
+import { Player } from "../logic/serializables/Player";
+import { PlayerSerializer } from "../logic/serializers/PlayerSerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
 import { RegionDefinitions } from "../logic/time/RegionDefinitions";
 
 /**
- * Handles role and nickname changes
- * @param {Discord.Client} client discord client
- * @param {GuildMember} oldMember The member before the update
- * @param {GuildMember} newMember The member after the update
+ * Handles role and nickname changes.
  */
 module.exports = async (
   client: DFZDiscordClient,
@@ -25,7 +22,7 @@ module.exports = async (
   newMember: GuildMember
 ) => {
   if (!haveRolesChanged(oldMember, newMember)) return;
-  tryUpdateGuildMember(client.dbClient, oldMember, newMember);
+  await tryUpdateGuildMember(client.dbClient, oldMember, newMember);
 };
 
 function haveRolesChanged(oldMember: GuildMember, newMember: GuildMember) {
@@ -56,7 +53,7 @@ async function updateNickname(member: GuildMember) {
 }
 
 function getRoleBasedPrefixes(roles: Collection<string, Role>) {
-  var prefixes: string[] = [];
+  const prefixes: string[] = [];
   roles.forEach((role) => {
     const prefix = getRegionalRolePrefix(role.id);
     if (prefix !== "") prefixes.push(prefix);
@@ -70,43 +67,49 @@ async function handleFirstBeginnerRole(
   newMember: GuildMember
 ) {
   if (!isSuitableBeginner(oldMember, newMember)) return;
-  await insertOrUpdatePlayerAndAwardReferral(dbClient, newMember);
+  await maybeInsertPlayer(dbClient, newMember);
 }
 
 function isSuitableBeginner(oldMember: GuildMember, newMember: GuildMember) {
-  var oldRole = findRole(oldMember, beginnerRoles);
-  var newRole = findRole(newMember, beginnerRoles);
+  const oldRole = findRole(oldMember, beginnerRoles);
+  const newRole = findRole(newMember, beginnerRoles);
   return oldRole === undefined && newRole !== undefined;
 }
 
-async function insertOrUpdatePlayerAndAwardReferral(
+async function maybeInsertPlayer(
   dbClient: DFZDataBaseClient,
   newMember: GuildMember
 ) {
-  const player = await getExistingPlayer(dbClient, newMember);
-  if (!player) {
-    await insertPlayer(dbClient, newMember);
-  } else if (hasReferrer(player)) {
-    await updatePlayer(player, dbClient);
-    await awardPointToReferrer(player, dbClient);
+  if (!(await playerExists(dbClient, newMember))) {
+    insertPlayer(dbClient, newMember);
   }
 }
 
-async function getExistingPlayer(
+async function playerExists(
   dbClient: DFZDataBaseClient,
   newMember: GuildMember
-): Promise<Player | undefined> {
-  const serializer = new PlayerSerializer(dbClient, newMember.user.id);
+): Promise<boolean> {
+  const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
+    newMember.guild,
+    dbClient
+  );
+  const serializer = new PlayerSerializer(gdbc, newMember.user.id);
   const players = await serializer.get();
-  if (players.length === 0) return undefined;
-  return players[0];
+  return players.length > 0;
 }
 
-function insertPlayer(dbClient: DFZDataBaseClient, newMember: GuildMember) {
-  const serializer = new PlayerSerializer(dbClient, newMember.user.id);
-  serializer.insert(
-    new Player(newMember.user.id, SQLUtils.escape(newMember.user.tag))
+function insertPlayer(
+  dbClient: DFZDataBaseClient,
+  newMember: GuildMember
+): void {
+  const uid = newMember.user.id;
+  const gid = newMember.guild.id;
+  const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
+    newMember.guild,
+    dbClient
   );
+  const serializer = new PlayerSerializer(gdbc, uid);
+  serializer.insert(new Player(uid, gid, SQLUtils.escape(newMember.user.tag)));
 }
 
 function hasReferrer(player: Player) {
@@ -114,32 +117,11 @@ function hasReferrer(player: Player) {
 }
 
 async function updatePlayer(player: Player, dbClient: DFZDataBaseClient) {
+  const gdbc = SerializeUtils.fromPlayertoGuildDBClient(player, dbClient);
   player.referralLock = 1;
   const playerSerializer = new PlayerSerializer(
-    dbClient,
+    gdbc,
     SQLUtils.escape(player.referredBy)
   );
   playerSerializer.update(player);
-}
-
-async function awardPointToReferrer(
-  player: Player,
-  dbClient: DFZDataBaseClient
-) {
-  const serializer = new ReferrerSerializer(
-    dbClient,
-    SQLUtils.escape(player.referredBy)
-  );
-  const referrer = await getReferrer(serializer);
-
-  referrer.referralCount += 1;
-
-  serializer.update(referrer);
-}
-
-async function getReferrer(serializer: ReferrerSerializer) {
-  const referrers = await serializer.get();
-  if (referrers.length === 0)
-    throw new Error("Could not find referrer when trying to award point");
-  return referrers[0];
 }

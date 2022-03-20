@@ -1,23 +1,26 @@
-import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { RowDataPacket } from "mysql2/promise";
-import { Schedule } from "../serializables/schedule";
-import { Serializer } from "./serializer";
 import { SQLResultConverter } from "../database/SQLResultConverter";
+import { Schedule } from "../serializables/Schedule";
+import { Serializer } from "./Serializer";
+import { IGuildDataBaseClient } from "./interfaces/IGuildDataBaseClient";
+import { ScheduleSerializerIds } from "./enums/ScheduleSerializerIds";
+import { SerializerIds } from "./enums/SerializerIds";
 
 export class ScheduleSerializer extends Serializer<Schedule> {
   emoji: string;
   messageId: string;
 
   constructor(
-    dbClient: DFZDataBaseClient,
+    gdbc: IGuildDataBaseClient,
     messageId: string = "",
     emoji: string = ""
   ) {
     super({
-      dbClient: dbClient,
+      dbClient: gdbc.dbClient,
+      guildId: gdbc.guildId,
       table: scheduleTable,
       columns: scheduleColumns,
-      sortColumn: messageColumn,
+      sortColumn: ScheduleSerializerIds.messageColumn,
     });
     this.messageId = messageId;
     this.emoji = emoji;
@@ -32,22 +35,28 @@ export class ScheduleSerializer extends Serializer<Schedule> {
   }
 
   protected getCondition(): string[] {
-    var conditions = [];
+    const conditions = [];
     if (this.messageId !== "")
-      conditions.push(`${messageColumn} = '${this.messageId}'`);
-    if (this.emoji !== "") conditions.push(`${emojiColumn} = '${this.emoji}'`);
+      conditions.push(
+        `${ScheduleSerializerIds.messageColumn} = '${this.messageId}'`
+      );
+    if (this.emoji !== "")
+      conditions.push(`${ScheduleSerializerIds.emojiColumn} = '${this.emoji}'`);
     return conditions;
   }
 
   protected getSerializableCondition(serializable: Schedule): string[] {
     return [
-      `${messageColumn} = '${serializable.messageId}'`,
-      `${emojiColumn} = '${serializable.emoji}'`,
+      `${ScheduleSerializerIds.messageColumn} = '${serializable.messageId}'`,
+      `${ScheduleSerializerIds.emojiColumn} = '${serializable.emoji}'`,
     ];
   }
 
   protected getDeletionIdentifierColumns(): string[] {
-    return [messageColumn, emojiColumn];
+    return [
+      ScheduleSerializerIds.messageColumn,
+      ScheduleSerializerIds.emojiColumn,
+    ];
   }
 
   protected getSerializableDeletionValues(schedulees: Schedule[]): string[] {
@@ -57,7 +66,9 @@ export class ScheduleSerializer extends Serializer<Schedule> {
   }
 }
 
-const scheduleTable = "schedules";
-const scheduleColumns = ["message_id", "emoji", "data"];
-const messageColumn = scheduleColumns[0];
-const emojiColumn = scheduleColumns[1];
+const scheduleTable = ScheduleSerializerIds.table;
+const scheduleColumns = [
+  ScheduleSerializerIds.messageColumn,
+  ScheduleSerializerIds.emojiColumn,
+  SerializerIds.dataColumn,
+];

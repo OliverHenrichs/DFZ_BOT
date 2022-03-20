@@ -6,10 +6,11 @@ import {
   beginnerRoles,
   findRole,
   tryoutRole,
-} from "../logic/discord/roleManagement";
-import { Lobby } from "../logic/serializables/lobby";
+} from "../logic/discord/RoleManagement";
+import { Lobby } from "../logic/serializables/Lobby";
 import { botId } from "./constants";
 import { findLobbyByMessage } from "./messageHelper";
+import { IMessageIdentifier } from "./types/IMessageIdentifier";
 
 export interface LobbyReactionInfo {
   lobby: Lobby;
@@ -17,25 +18,22 @@ export interface LobbyReactionInfo {
   role: Role;
 }
 
-/**
- * Extracts affected lobby, user who sent the message reaction and their role from a message reaction
- * returns false if the reaction does not fit the pattern
- * @param {DFZDiscordClient} client
- * @param {Discord.MessageReaction} reaction
- * @param {Discord.User} reaction
- */
 export async function getInfoFromLobbyReaction(
   client: DFZDiscordClient,
   reaction: MessageReaction,
   user: User
 ): Promise<LobbyReactionInfo> {
-  const lobby = await findLobbyByMessage(
-    client.dbClient,
-    reaction.message.channel.id,
-    reaction.message.id
-  );
+  if (!reaction.message.guildId) {
+    throw new Error("No associated guild");
+  }
+  const mId: IMessageIdentifier = {
+    messageId: reaction.message.id,
+    channelId: reaction.message.channel.id,
+    guildId: reaction.message.guildId,
+  };
+  const lobby = await findLobbyByMessage(client.dbClient, mId);
   const guildMember = await fetchGuildMember(reaction, user.id);
-  const role = findAndVerifyRole(guildMember, user);
+  const role = await findAndVerifyRole(guildMember, user);
 
   return {
     lobby: lobby,
@@ -51,14 +49,14 @@ async function fetchGuildMember(reaction: MessageReaction, userId: string) {
   return guildMember;
 }
 
-function findAndVerifyRole(guildMember: GuildMember, user: User) {
+async function findAndVerifyRole(guildMember: GuildMember, user: User) {
   const role = findRole(
     guildMember,
     beginnerRoles.concat(adminRoles, [tryoutRole])
   );
 
   if (role === undefined || role === null) {
-    user.send(
+    await user.send(
       "⛔ You cannot interact because you do not have the appropriate role."
     );
     throw new Error(
@@ -84,8 +82,5 @@ export function isValidLobbyReaction(
   if (reaction.message.channel === undefined) return false;
 
   // Ignore messages outside of bot channels
-  if (!ChannelManager.isWatchingChannel(reaction.message.channel.id))
-    return false;
-
-  return true;
+  return ChannelManager.isWatchingChannel(reaction.message.channel.id);
 }

@@ -6,11 +6,10 @@ import {
   Role,
 } from "discord.js";
 import { getLobbyNameByType, getLobbyTypeByString } from "../../misc/constants";
-import { LobbyPlayer } from "../lobby/interfaces/LobbyPlayer";
-import { Lobby } from "../serializables/lobby";
+import { ILobbyPlayer } from "../lobby/interfaces/ILobbyPlayer";
+import { Lobby } from "../serializables/Lobby";
 import { ChannelManager as DFZChannelManager } from "./DFZChannelManager";
 import { DFZDiscordClient } from "./DFZDiscordClient";
-import { INamedRole } from "./interfaces/INamedRole";
 import { ISelectMenuOptions } from "./interfaces/ISelectMenuOptions";
 
 export class SlashCommandHelper {
@@ -57,11 +56,6 @@ export class SlashCommandHelper {
     return this.getSelectOption(lobbyType, value);
   }
 
-  public static getNumberAsSelectOption(num: number): MessageSelectOptionData {
-    const numberAsString = num.toString();
-    return this.getSelectOption(numberAsString, numberAsString);
-  }
-
   public static async getChannelSelectOptions(
     channelId: string,
     client: DFZDiscordClient
@@ -70,7 +64,7 @@ export class SlashCommandHelper {
     return this.getSelectOption(channel.name, channelId);
   }
 
-  public static getUserSelectOptions(user: LobbyPlayer) {
+  public static getUserSelectOptions(user: ILobbyPlayer) {
     return this.getSelectOption(user.name, user.id);
   }
 
@@ -78,15 +72,9 @@ export class SlashCommandHelper {
     return this.getSelectOption(
       getLobbyNameByType(lobby.type) +
         " lobby at " +
-        new Date(lobby.date).toTimeString(),
+        new Date(lobby.date.epoch).toTimeString(),
       lobby.messageId
     );
-  }
-
-  public static getOptionChoicesByNamedRole(
-    namedRoles: INamedRole[]
-  ): [string, string][] {
-    return namedRoles.map((namedRole) => [namedRole.name, namedRole.id]);
   }
 
   public static getOptionChoices<T>(
@@ -97,8 +85,8 @@ export class SlashCommandHelper {
     return this.createChoiceList<T>(keys, values);
   }
 
-  public static getOptionStringChoices(keyVals: string[]) {
-    return this.createChoiceList<string>(keyVals, keyVals);
+  public static getOptionStringChoices(values: string[]) {
+    return this.createChoiceList<string>(values, values);
   }
 
   public static getOptionNumberChoices(choiceValueList: number[]) {
@@ -121,7 +109,7 @@ export class SlashCommandHelper {
     return typeChoiceList;
   }
 
-  private static getSelectOption(
+  public static getSelectOption(
     label: string,
     value: string
   ): MessageSelectOptionData {

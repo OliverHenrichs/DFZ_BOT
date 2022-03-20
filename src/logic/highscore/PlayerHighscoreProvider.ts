@@ -1,34 +1,26 @@
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
-import { Player } from "../serializables/player";
-import { PlayerSerializer } from "../serializers/playerSerializer";
-import { AbstractHighscoreProvider } from "./AbstractHighscoreProvider";
-import { HighscoreUserTypes } from "./enums/HighscoreUserTypes";
-import { IHighscoreProviderSettings } from "./interfaces/HighscoreProviderSettings";
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
+import { Player } from "../serializables/Player";
+import { PlayerSerializer } from "../serializers/PlayerSerializer";
+import { AbstractHighScoreProvider } from "./AbstractHighScoreProvider";
+import { HighScoreUserTypes } from "./enums/HighScoreUserTypes";
+import { IHighScoreProviderSettings } from "./interfaces/IHighscoreProviderSettings";
 
-export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
+export class PlayerHighscoreProvider extends AbstractHighScoreProvider<Player> {
   constructor(dbClient: DFZDataBaseClient) {
-    const settings: IHighscoreProviderSettings = {
+    const settings: IHighScoreProviderSettings = {
       dbClient: dbClient,
       tableTemplate: tableBasePlayersTemplate,
-      userType: HighscoreUserTypes.players,
+      userType: HighScoreUserTypes.players,
     };
 
     super(settings);
   }
 
-  protected async getUsersFromDatabase() {
-    const serializer = new PlayerSerializer(this.dbClient);
-    const players = await serializer.getSorted();
-    if (players.length === 0) throw "No highscore player entries.";
-    return players;
-  }
-
-  protected rowAdder(user: Player): void {
-    this.addPlayerRowToTable(this.resultTable, user);
-  }
-
-  private addPlayerRowToTable(tableBase: Array<IFieldElement>, player: Player) {
+  private static addPlayerRowToTable(
+    tableBase: Array<IFieldElement>,
+    player: Player
+  ) {
     tableBase[0].value = tableBase[0].value + "\r\n<@" + player.userId + ">";
     tableBase[1].value = tableBase[1].value + "\r\n" + player.lobbyCount;
     tableBase[2].value =
@@ -37,6 +29,20 @@ export class PlayerHighscoreProvider extends AbstractHighscoreProvider<Player> {
     tableBase[4].value = tableBase[4].value + "\r\n" + player.lobbyCountBotBash;
     tableBase[5].value =
       tableBase[5].value + "\r\n" + player.lobbyCountReplayAnalysis;
+  }
+
+  protected async getUsersFromDatabase(guildId: string) {
+    const serializer = new PlayerSerializer({
+      guildId,
+      dbClient: this.dbClient,
+    });
+    const players = await serializer.getSorted();
+    if (players.length === 0) throw new Error("No highscore player entries.");
+    return players;
+  }
+
+  protected rowAdder(user: Player): void {
+    PlayerHighscoreProvider.addPlayerRowToTable(this.resultTable, user);
   }
 }
 

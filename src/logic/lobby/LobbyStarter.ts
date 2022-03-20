@@ -1,12 +1,14 @@
-import { User, TextBasedChannels } from "discord.js";
+import { TextBasedChannels, User } from "discord.js";
 import {
-  getPlayersPerLobbyByLobbyType,
   getLobbyNameByType,
+  getPlayersPerLobbyByLobbyType,
 } from "../../misc/constants";
 import { saveCoachParticipation } from "../../misc/tracker";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
-import { Lobby } from "../serializables/lobby";
-import { LobbySerializer } from "../serializers/lobbySerializer";
+import { Lobby } from "../serializables/Lobby";
+import { LobbySerializer } from "../serializers/LobbySerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
+import { TimeInMs } from "../time/TimeConverter";
 import { LobbyPostManipulator } from "./LobbyPostManipulator";
 
 export class LobbyStarter {
@@ -25,7 +27,9 @@ export class LobbyStarter {
     try {
       return await this.startLobby(coach, channel);
     } catch (error) {
-      coach.send(`Encountered an error when starting the lobby: ${error}`);
+      await coach.send(
+        `Encountered an error when starting the lobby: ${error}`
+      );
       return false;
     }
   }
@@ -34,19 +38,19 @@ export class LobbyStarter {
     coach: User,
     channel: TextBasedChannels
   ): Promise<boolean> {
-    if (!this.testLobbyStartTime(this.lobby, coach)) {
+    if (!(await LobbyStarter.testLobbyStartTime(this.lobby, coach))) {
       return false;
     }
 
     if (!this.playersShowedUp()) {
-      this.handleNoPlayers(coach, channel);
+      await this.handleNoPlayers(coach, channel);
       return true;
     }
 
     LobbyPostManipulator.writeLobbyStartPost(this.lobby, channel);
 
-    this.notifyPlayers();
-    this.notifyCoach(coach);
+    await this.notifyPlayers();
+    await LobbyStarter.notifyCoach(coach);
 
     await LobbyPostManipulator.tryUpdateLobbyPostTitle(
       this.lobby.messageId,
@@ -56,6 +60,7 @@ export class LobbyStarter {
 
     await saveCoachParticipation(
       this.client.dbClient,
+      this.lobby.guildId,
       this.lobby.coaches,
       this.lobby.type
     );
@@ -67,17 +72,26 @@ export class LobbyStarter {
 
   private async updateDatabase() {
     this.lobby.started = true;
-    const serializer = new LobbySerializer(this.client.dbClient);
+
+    const gdbc = SerializeUtils.getGuildDBClient(
+      this.lobby.guildId,
+      this.client.dbClient
+    );
+    const serializer = new LobbySerializer(gdbc);
     await serializer.update(this.lobby);
   }
 
-  private testLobbyStartTime(lobby: Lobby, coach: User): boolean {
-    const fiveMinInMs = 300000;
-    var timeLeftInMS = lobby.date - +new Date();
-    if (timeLeftInMS > fiveMinInMs) {
-      this.handleEarlyStartAttempt(
+  private static async testLobbyStartTime(
+    lobby: Lobby,
+    coach: User
+  ): Promise<boolean> {
+    const timeLeftInMS = lobby.date.epoch - +new Date();
+    if (timeLeftInMS > TimeInMs.fiveMinutes) {
+      await LobbyStarter.handleEarlyStartAttempt(
         coach,
-        this.msToS(timeLeftInMS - fiveMinInMs)
+        LobbyStarter.getRemainingTimeInMinutes(
+          timeLeftInMS - TimeInMs.fiveMinutes
+        )
       );
       return false;
     }
@@ -85,48 +99,46 @@ export class LobbyStarter {
     return true;
   }
 
-  private msToS(ms: number) {
-    return Math.floor(ms / 60000);
+  private static getRemainingTimeInMinutes(milliseconds: number) {
+    return Math.floor(milliseconds / TimeInMs.oneMinute);
   }
 
-  private handleEarlyStartAttempt(coach: User, timeLeft: number) {
-    coach.send(
+  private static async handleEarlyStartAttempt(coach: User, timeLeft: number) {
+    await coach.send(
       "It's not time to start the lobby yet (" + timeLeft + " min to go)."
     );
   }
 
-  private handleNoPlayers(coach: User, channel: TextBasedChannels) {
-    LobbyPostManipulator.cancelLobbyPost(
+  private async handleNoPlayers(coach: User, channel: TextBasedChannels) {
+    await LobbyPostManipulator.cancelLobbyPost(
       this.lobby,
       channel,
       "Nobody showed up!"
     );
-    coach.send(
+    await coach.send(
       "🔒 I started the lobby. Nobody signed up tho, so just play some Dotes instead 😎"
     );
   }
 
-  private notifyCoach(coach: User) {
-    coach.send("🔒 I started the lobby.");
+  private static async notifyCoach(coach: User): Promise<void> {
+    await coach.send("🔒 I started the lobby.");
   }
 
-  private notifyPlayers() {
+  private async notifyPlayers() {
     const message = this.getPlayerNotificationMessage();
     const playerCount = getPlayersPerLobbyByLobbyType(this.lobby.type);
     for (let i = 0; i < Math.min(this.lobby.users.length, playerCount); i++) {
-      this.notifyUser(this.lobby.users[i].id, message);
+      await this.notifyUser(this.lobby.users[i].id, message);
     }
   }
 
-  private notifyUser(userId: string, message: string) {
-    this.client.users
-      .fetch(userId)
-      .then((user) => {
-        if (user !== undefined) user.send(message);
-      })
-      .catch((err) =>
-        console.log("Error notifying players. Errormessage: " + err)
-      );
+  private async notifyUser(userId: string, message: string) {
+    try {
+      const user = await this.client.users.fetch(userId);
+      if (user !== undefined) await user.send(message);
+    } catch (e) {
+      console.log("Error notifying players. Errormessage: " + e);
+    }
   }
 
   private getPlayerNotificationMessage() {

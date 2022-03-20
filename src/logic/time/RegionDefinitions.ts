@@ -29,6 +29,7 @@ export class RegionDefinitions {
   ];
 
   static regionRoles = RegionDefinitions.regions.map((region) => region.role);
+  static regionNames = RegionDefinitions.regions.map((region) => region.name);
 
   static allTimeZoneNames = [
     "Europe/Brussels",

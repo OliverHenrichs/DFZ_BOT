@@ -1,49 +1,66 @@
 import { Pool } from "mysql2/promise";
-import { ISqlTableColumn } from "./interfaces/SqlTableColumn";
+import { CoachSerializerIds } from "../serializers/enums/CoachSerializerIds";
+import { GuildSerializerIds } from "../serializers/enums/GuildSerializerIds";
+import { LobbySerializerIds } from "../serializers/enums/LobbySerializerIds";
+import { PlayerSerializerIds } from "../serializers/enums/PlayerSerializerIds";
+import { ScheduleSerializerIds } from "../serializers/enums/ScheduleSerializerIds";
+import { SerializerIds } from "../serializers/enums/SerializerIds";
+import { ISqlTableColumn } from "./interfaces/ISqlTableColumn";
 
 export class SQLTableCreator {
-  static createPlayerTable(dbHandle: Pool) {
-    var json = this.getPlayerTable();
+  public static async tryCreateDataBaseTables(pool: Pool) {
+    try {
+      await SQLTableCreator.createDataBaseTables(pool);
+    } catch (error) {
+      console.log(`Failed creating database tables with error: ${error}`);
+    }
+  }
+
+  private static async createDataBaseTables(pool: Pool) {
+    await SQLTableCreator.createScheduleTable(pool);
+    await SQLTableCreator.createLobbyTable(pool);
+    await SQLTableCreator.createOptionsTable(pool);
+    await SQLTableCreator.createCoachTable(pool);
+    await SQLTableCreator.createPlayerTable(pool);
+    await SQLTableCreator.createGuildTable(pool);
+  }
+
+  private static createPlayerTable(dbHandle: Pool) {
+    const json = this.getPlayerTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createReferrerTable(dbHandle: Pool) {
-    var json = this.getReferrerTable();
+  private static createCoachTable(dbHandle: Pool) {
+    const json = this.getCoachTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createCoachTable(dbHandle: Pool) {
-    var json = this.getCoachTable();
+  private static createScheduleTable(dbHandle: Pool) {
+    const json = this.getScheduleTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createScheduleTable(dbHandle: Pool) {
-    var json = this.getScheduleTable();
+  private static createLobbyTable(dbHandle: Pool) {
+    const json = this.getLobbyTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createLobbyTable(dbHandle: Pool) {
-    var json = this.getLobbyTable();
+  private static createOptionsTable(dbHandle: Pool) {
+    const json = this.getOptionsTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  static createOptionsTable(dbHandle: Pool) {
-    var json = this.getOptionsTable();
+  private static createGuildTable(dbHandle: Pool) {
+    const json = this.getGuildTable();
     return this.createTable(dbHandle, json.tableName, json.tableColumns);
   }
 
-  /**
-   * Creates new table in mysql-database
-   * @param {Pool} dbHandle bot database handle
-   * @param {string} tableName name of table
-   * @param {Array<String>} tableColumns names of table columns
-   */
   private static async createTable(
     dbHandle: Pool,
     tableName: string,
     tableColumns: Array<ISqlTableColumn>
   ) {
-    var command = this.createCreateTableCommand(tableName, tableColumns);
+    const command = this.createCreateTableCommand(tableName, tableColumns);
     return dbHandle.execute(command);
   }
 
@@ -51,7 +68,7 @@ export class SQLTableCreator {
     tableName: string,
     tableColumns: Array<ISqlTableColumn>
   ) {
-    var command = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
+    let command = `CREATE TABLE IF NOT EXISTS ${tableName} (`;
     command += tableName + "_id INT AUTO_INCREMENT, ";
 
     tableColumns.forEach((col) => {
@@ -66,27 +83,74 @@ export class SQLTableCreator {
     tableColumns: ISqlTableColumn[];
   } {
     return {
-      tableName: "coaches",
+      tableName: CoachSerializerIds.table,
       tableColumns: [
         {
-          id: "userId",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "lobbyCount",
+          id: CoachSerializerIds.userColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: CoachSerializerIds.lobbyCountColumn,
           type: "int",
         },
         {
-          id: "lobbyCountTryout",
+          id: CoachSerializerIds.lobbyCountTryoutColumn,
           type: "int",
         },
         {
-          id: "lobbyCountNormal",
+          id: CoachSerializerIds.lobbyCountNormalColumn,
           type: "int",
         },
         {
-          id: "lobbyCountReplayAnalysis",
+          id: CoachSerializerIds.lobbyCountReplayAnalysisColumn,
           type: "int",
+        },
+      ],
+    };
+  }
+
+  private static getGuildTable(): {
+    tableName: string;
+    tableColumns: ISqlTableColumn[];
+  } {
+    return {
+      tableName: GuildSerializerIds.table,
+      tableColumns: [
+        {
+          id: SerializerIds.guild,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.tryoutRole,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.tierRoles,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.coachRoles,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.lesserCoachRoles,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.regionsAndChannels,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.lobbyChannels,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: GuildSerializerIds.leaderboardChannel,
+          type: "VARCHAR(255)",
         },
       ],
     };
@@ -97,69 +161,50 @@ export class SQLTableCreator {
     tableColumns: ISqlTableColumn[];
   } {
     return {
-      tableName: "players",
+      tableName: PlayerSerializerIds.table,
       tableColumns: [
         {
-          id: "userId",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "tag",
+          id: PlayerSerializerIds.userColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "referredBy",
+          id: PlayerSerializerIds.tagColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "referralLock",
+          id: PlayerSerializerIds.referredByColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: PlayerSerializerIds.referralLockColumn,
           type: "TINYINT(1)",
         },
         {
-          id: "lobbyCount",
+          id: PlayerSerializerIds.lobbyCountColumn,
           type: "int",
         },
         {
-          id: "lobbyCountUnranked",
+          id: PlayerSerializerIds.lobbyCountUnrankedColumn,
           type: "int",
         },
         {
-          id: "lobbyCountBotBash",
+          id: PlayerSerializerIds.lobbyCountBotBashColumn,
           type: "int",
         },
         {
-          id: "lobbyCount5v5",
+          id: PlayerSerializerIds.lobbyCount5v5Column,
           type: "int",
         },
         {
-          id: "lobbyCountReplayAnalysis",
+          id: PlayerSerializerIds.lobbyCountReplayAnalysisColumn,
           type: "int",
         },
         {
-          id: "offenses",
-          type: "int",
-        },
-      ],
-    };
-  }
-
-  private static getReferrerTable(): {
-    tableName: string;
-    tableColumns: ISqlTableColumn[];
-  } {
-    return {
-      tableName: "referrers",
-      tableColumns: [
-        {
-          id: "userId",
-          type: "VARCHAR(255)",
-        },
-        {
-          id: "tag",
-          type: "VARCHAR(255)",
-        },
-        {
-          id: "referralCount",
+          id: PlayerSerializerIds.offensesColumn,
           type: "int",
         },
       ],
@@ -174,15 +219,19 @@ export class SQLTableCreator {
       tableName: "schedules",
       tableColumns: [
         {
-          id: "emoji",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "message_id",
+          id: ScheduleSerializerIds.emojiColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "data",
+          id: ScheduleSerializerIds.messageColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: SerializerIds.dataColumn,
           type: "JSON",
         },
       ],
@@ -194,18 +243,22 @@ export class SQLTableCreator {
     tableColumns: ISqlTableColumn[];
   } {
     return {
-      tableName: "lobbies",
+      tableName: LobbySerializerIds.table,
       tableColumns: [
         {
-          id: "channel_id",
+          id: SerializerIds.guild,
           type: "VARCHAR(255)",
         },
         {
-          id: "message_id",
+          id: LobbySerializerIds.channelColumn,
           type: "VARCHAR(255)",
         },
         {
-          id: "data",
+          id: LobbySerializerIds.messageColumn,
+          type: "VARCHAR(255)",
+        },
+        {
+          id: SerializerIds.dataColumn,
           type: "JSON",
         },
       ],

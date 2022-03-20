@@ -1,8 +1,8 @@
-import { Lobby } from "../../serializables/lobby";
-import { LobbyMenuType } from "./LobbyMenuType";
+import { Lobby } from "../../serializables/Lobby";
+import { MenuType } from "../enums/MenuType";
 
 export interface ILobbyMenu {
-  type: LobbyMenuType;
+  type: MenuType;
   lobby?: Lobby;
   id: string;
 }

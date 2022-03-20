@@ -1,6 +1,5 @@
 import { MessageComponentInteraction } from "discord.js";
-import { Lobby } from "../../serializables/lobby";
-import { TimeConverter } from "../../time/TimeConverter";
+import { Lobby } from "../../serializables/Lobby";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { ILobbyMenu } from "../interfaces/ILobbyMenu";
 
@@ -26,20 +25,6 @@ export class CommonMenuUtils {
     return menu;
   }
 
-  private static findMenu(
-    client: DFZDiscordClient,
-    interaction: MessageComponentInteraction
-  ) {
-    return CommonMenuUtils.findMenuByMessageId(client, interaction.message.id);
-  }
-
-  private static findMenuByMessageId(
-    client: DFZDiscordClient,
-    messageId: string
-  ) {
-    return client.lobbyMenus.find((menu) => menu.id === messageId);
-  }
-
   public static assertMenuHasLobby(menu: ILobbyMenu): Lobby {
     const lobby = menu.lobby;
     if (!lobby) throw new Error("Menu has no lobby");
@@ -53,24 +38,29 @@ export class CommonMenuUtils {
     CommonMenuUtils.removeMenuByIndex(client, interaction.message.id);
   }
 
+  public static getMenuIndex(client: DFZDiscordClient, messageId: string) {
+    return client.slashCommandMenus.findIndex((menu) => menu.id === messageId);
+  }
+
+  private static findMenu(
+    client: DFZDiscordClient,
+    interaction: MessageComponentInteraction
+  ) {
+    return CommonMenuUtils.findMenuByMessageId(client, interaction.message.id);
+  }
+
+  private static findMenuByMessageId(
+    client: DFZDiscordClient,
+    messageId: string
+  ) {
+    return client.slashCommandMenus.find((menu) => menu.id === messageId);
+  }
+
   private static removeMenuByIndex(
     client: DFZDiscordClient,
     messageIndex: string
   ) {
     const idx = CommonMenuUtils.getMenuIndex(client, messageIndex);
-    if (idx !== -1) client.lobbyMenus.slice(idx, 1);
-  }
-
-  public static getMenuIndex(client: DFZDiscordClient, messageId: string) {
-    return client.lobbyMenus.findIndex((menu) => menu.id === messageId);
-  }
-
-  public static pushMenu(menu: ILobbyMenu, client: DFZDiscordClient) {
-    client.lobbyMenus.push(menu);
-    setTimeout(() => {
-      console.log("Removing menu " + menu.id);
-
-      CommonMenuUtils.removeMenuByIndex(client, menu.id);
-    }, TimeConverter.minToMs);
+    if (idx !== -1) client.slashCommandMenus.slice(idx, 1);
   }
 }

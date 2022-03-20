@@ -1,19 +1,28 @@
 {{>header}}
 <title>The place to start Dota!</title>
 <meta name="Description"
-    content="We are a Discord-based community dedicated to give you a great start into your Dota2-adventure. Check out dotafromzero.com/join on how to join our community.">
+      content="We are a Discord-based community dedicated to give you a great start into your Dota2-adventure. Check out dotafromzero.com/join on how to join our community.">
 <div class="dfz-abstract-container">
     <div class="fade-in-animation-scroll">
         <h1>THE PLACE TO START DOTA</h1>
 
         <div class="button-container">
-            <a href="//dotafromzero.com/join" target="_blank"><button
-                    class="button margin-top-bottom hollow-button">SIGN
-                    UP</button></a>
-            <a href="#recruiting-section"><button class="button margin-top-bottom filled-button">RECRUIT A
-                    FRIEND</button></a>
-            <a href="/halloffame"><button class="button margin-top-bottom hollow-button">HALL OF
-                    FAME</button></a>
+            <a href="//dotafromzero.com/join" target="_blank">
+                <button
+                        class="button margin-top-bottom hollow-button">SIGN
+                    UP
+                </button>
+            </a>
+            <a href="#recruiting-section">
+                <button class="button margin-top-bottom filled-button">RECRUIT A
+                    FRIEND
+                </button>
+            </a>
+            <a href="/halloffame">
+                <button class="button margin-top-bottom hollow-button">HALL OF
+                    FAME
+                </button>
+            </a>
         </div>
     </div>
     <div class="section">
@@ -142,53 +151,6 @@
             </div>
         </div>
     </div>
-    <div id="recruiting-section" class="section accent">
-        <h1>RECRUIT A FRIEND</h1>
-
-        <h2>Create a referral link</h2>
-        <table class="dfz-table">
-            <tr>
-                <td class="bigTableCell">Your
-                    <span id="popUpTag" class="popUpOnHover">
-                        Discord tag
-                    </span>
-                    <div id="tagImageContainer" class="modalImage" style="bottom:0px;">
-                        <img src="/discord-tag.gif" style="width:100%;max-width:700px">
-                    </div>
-                </td>
-                <td class="smallTableCell"><input id="userName" class="dfz-small-input" placeholder="name#1234"></td>
-            </tr>
-            <tr>
-                <td class="bigTableCell">
-                    <button class="button margin-top-bottom filled-button autoFontSize"
-                        onclick="copyToClipboard('referralLink')">
-                        <span class="visible-when-large">Copy to clipboard</span>
-                        <span class="visible-when-small">Copy</span>
-                    </button>
-                </td>
-                <td class="smallTableCell"><textarea class="dfz-textarea" id="referralLink" placeholder=""
-                        disabled> </textarea> </td>
-            </tr>
-        </table>
-        <p>Share your referral-link with Dota-Beginners.</p>
-        <p>If new players join DFZ and finish their tryout game using your Discord Tag as referral, your referral count
-            goes up.</p>
-        <h1>REFERRAL HALL OF FAME</h1>
-        <table>
-            <tr class="text-box-accent">
-                <td>Discord-Tag</td>
-                <td>Referrals</td>
-            </tr>
-            {{#each referrers}}
-            <tr class="text-box-accent">
-                <td>{{this.tag}}</td>
-                <td>{{this.referralCount}}</td>
-            </tr>
-            {{/each}}
-        </table>
-        {{!-- <iframe class="dfz-yt-frame"
-            src="https://www.youtube.com/embed/jPTXe2VxP0g?rel=0&controls=1&autoplay=0&mute=0&start=0"></iframe> --}}
-    </div>
 </div>
 
 {{>about}}
@@ -197,8 +159,8 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("userName").oninput = function () {
-            var tagParts = document.getElementById("userName").value.split('#');
-            var link = "https://dotafromzero.com/join?name=";
+            const tagParts = document.getElementById("userName").value.split('#');
+            let link = "https://dotafromzero.com/join?name=";
             if (tagParts.length !== 2) {
                 document.getElementById("referralLink").value = "Incorrect tag. Tag has form 'name'#'number'";
                 return;

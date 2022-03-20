@@ -1,5 +1,6 @@
 import { CommandInteraction } from "discord.js";
-import { postSchedules } from "../../../misc/scheduleManagement";
+import { IGuildClient } from "../../../misc/types/IGuildClient";
+import { SchedulePoster } from "../../scheduling/SchedulePoster";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { InteractionUtils } from "../Utils/InteractionUtils";
 import { AbstractExecutor } from "./AbstractExecutor";
@@ -10,13 +11,21 @@ export class PostSchedulesExecutor extends AbstractExecutor {
     interaction: CommandInteraction
   ): Promise<void> {
     try {
-      await postSchedules(client);
-      InteractionUtils.quitInteraction(
+      if (!interaction.guild) {
+        // noinspection ExceptionCaughtLocallyJS
+        throw new Error("No associated guild");
+      }
+      const guildClient: IGuildClient = {
+        client,
+        guild: interaction.guild,
+      };
+      await SchedulePoster.postSchedules(guildClient);
+      await InteractionUtils.quitInteraction(
         interaction,
         "I posted this week's schedules"
       );
     } catch (error) {
-      InteractionUtils.quitInteraction(interaction, error as string);
+      await InteractionUtils.quitInteraction(interaction, error as string);
     }
   }
 }

@@ -1,18 +1,20 @@
 import { RowDataPacket } from "mysql2/promise";
-import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { SQLResultConverter } from "../database/SQLResultConverter";
-import { Coach } from "../serializables/coach";
-import { Serializer } from "./serializer";
+import { Coach } from "../serializables/Coach";
+import { Serializer } from "./Serializer";
+import { CoachSerializerIds } from "./enums/CoachSerializerIds";
+import { IGuildDataBaseClient } from "./interfaces/IGuildDataBaseClient";
 
 export class CoachSerializer extends Serializer<Coach> {
   userId: string;
 
-  constructor(dbClient: DFZDataBaseClient, userId: string = "") {
+  constructor(gdbc: IGuildDataBaseClient, userId: string = "") {
     super({
-      dbClient: dbClient,
-      table: coachTable,
+      dbClient: gdbc.dbClient,
+      guildId: gdbc.guildId,
+      table: CoachSerializerIds.table,
       columns: coachColumns,
-      sortColumn: standardSortColumn,
+      sortColumn: CoachSerializerIds.lobbyCountColumn,
     });
     this.userId = userId;
   }
@@ -32,17 +34,19 @@ export class CoachSerializer extends Serializer<Coach> {
   }
 
   protected getCondition(): string[] {
-    return [`${idColumnName} = '${this.userId}'`];
+    return [`${CoachSerializerIds.userColumn} = '${this.userId}'`];
   }
 
   protected getSerializableCondition(serializable: Coach): string[] {
     return [
-      `${idColumnName} = '${serializable ? serializable.userId : this.userId}'`,
+      `${CoachSerializerIds.userColumn} = '${
+        serializable ? serializable.userId : this.userId
+      }'`,
     ];
   }
 
   protected getDeletionIdentifierColumns(): string[] {
-    return [idColumnName];
+    return [CoachSerializerIds.userColumn];
   }
 
   protected getSerializableDeletionValues(coaches: Coach[]): string[] {
@@ -50,15 +54,10 @@ export class CoachSerializer extends Serializer<Coach> {
   }
 }
 
-const coachTable = "coaches";
-
 const coachColumns = [
-  "userId",
-  "lobbyCount",
-  "lobbyCountTryout",
-  "lobbyCountNormal",
-  "lobbyCountReplayAnalysis",
+  CoachSerializerIds.userColumn,
+  CoachSerializerIds.lobbyCountColumn,
+  CoachSerializerIds.lobbyCountTryoutColumn,
+  CoachSerializerIds.lobbyCountNormalColumn,
+  CoachSerializerIds.lobbyCountReplayAnalysisColumn,
 ];
-
-const idColumnName = coachColumns[0];
-const standardSortColumn = coachColumns[1];

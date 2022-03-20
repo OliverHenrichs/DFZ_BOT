@@ -17,19 +17,32 @@ import { EmbeddingCreator } from "../discord/EmbeddingCreator";
 import {
   getRegionalRoleString,
   getRoleMentions,
-} from "../discord/roleManagement";
-import { Lobby } from "../serializables/lobby";
-import { LobbySerializer } from "../serializers/lobbySerializer";
-import { getTimeString, getZonedTimeFromDateAndRegion } from "../time/timeZone";
-import { LobbyFetchResult } from "./interfaces/LobbyFetchResult";
-import { LobbyPlayer } from "./interfaces/LobbyPlayer";
+} from "../discord/RoleManagement";
+import { Lobby } from "../serializables/Lobby";
+import { LobbySerializer } from "../serializers/LobbySerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
+import { getTimeString, getZonedTimeFromDateAndRegion } from "../time/TimeZone";
+import { ILobbyFetchResult } from "./interfaces/ILobbyFetchResult";
+import { ILobbyPlayer } from "./interfaces/ILobbyPlayer";
 import {
-  LobbyTitleOptions,
-  PostLobbyOptions,
-} from "./interfaces/PostLobbyOptions";
-import { IRemainingTime } from "./interfaces/RemainingTime";
+  ILobbyTitleOptions,
+  IPostLobbyOptions,
+} from "./interfaces/IPostLobbyOptions";
+import { IRemainingTime } from "./interfaces/IRemainingTime";
 import { TeamsTableGenerator } from "./TeamTableGenerator";
 import { UserTableGenerator } from "./UserTableGenerator";
+
+const footerStringBeginner =
+  "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\nClick again to remove a position.\nRemove all positions to withdraw from the lobby.";
+
+const footerStringTryout =
+  "Join lobby by clicking ✅ below.\nClick again to withdraw.";
+
+const footerStringMeeting =
+  "Join meeting by clicking ✅ below.\nClick again to withdraw.";
+
+const footerStringReplayAnalysis =
+  "Join session by clicking ✅ below.\nClick again to withdraw.";
 
 /**
  * Does all the work regarding updating / creating lobby posts in discord channels
@@ -38,16 +51,17 @@ export class LobbyPostManipulator {
   public static async postLobby_deprecated(
     dbClient: DFZDataBaseClient,
     channel: TextBasedChannels,
-    options: PostLobbyOptions
+    options: IPostLobbyOptions
   ) {
-    const lobby = new Lobby(
-      options.type,
-      options.time.epoch,
-      options.coaches,
-      options.userRoles,
-      options.regionRole,
-      channel.id
-    );
+    const lobby = new Lobby({
+      date: options.time,
+      type: options.type,
+      guildId: options.guildId,
+      beginnerRoleIds: options.userRoles,
+      regionId: options.regionRole,
+      coaches: options.coaches,
+      channelId: channel.id,
+    });
     const embed = LobbyPostManipulator.createLobbyEmbedding(lobby, options);
     await LobbyPostManipulator.postLobbyInt(channel, lobby, embed, dbClient);
   }
@@ -55,13 +69,112 @@ export class LobbyPostManipulator {
   public static async postLobby(client: DFZDiscordClient, lobby: Lobby) {
     const _embed = LobbyPostManipulator.createLobbyEmbedding(lobby);
 
-    const channel = await ChannelManager.getChannel(client, lobby.channelId);
+    const channel = await ChannelManager.getChannel(
+      client,
+      lobby.channelId,
+      lobby.guildId
+    );
     await LobbyPostManipulator.postLobbyInt(
       channel,
       lobby,
       _embed,
       client.dbClient
     );
+  }
+
+  public static createLobbyEmbedding(
+    lobby: Lobby,
+    options?: IPostLobbyOptions
+  ) {
+    const title = this.createLobbyPostTitle(lobby, options);
+    const text = LobbyPostManipulator.getLobbyPostText(
+      lobby.beginnerRoleIds,
+      lobby.type,
+      lobby.regionId,
+      lobby.coaches
+    );
+    const footer = this.getLobbyPostFooter(lobby.type, lobby.regionId);
+    return EmbeddingCreator.create(title, text, footer);
+  }
+
+  public static async cancelLobbyPost(
+    lobby: Lobby,
+    channel: TextBasedChannels,
+    reason: string = ""
+  ) {
+    await this.tryUpdateLobbyPostTitle(
+      lobby.messageId,
+      channel,
+      "[⛔ Lobby cancelled! 😢]\n" +
+        `${reason !== "" ? `Reason: ${reason}` : ""}`
+    );
+  }
+
+  public static async tryUpdateLobbyPostTitle(
+    messageId: string,
+    channel: TextBasedChannels,
+    titleUpdate: string,
+    unpin = true
+  ) {
+    try {
+      await this.updateLobbyPostTitle(messageId, channel, titleUpdate, unpin);
+    } catch (e) {
+      console.log(`Error in updateLobbyPostTitle:\n${e}`);
+    }
+  }
+
+  public static writeLobbyStartPost(lobby: Lobby, channel: TextBasedChannels) {
+    const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
+    this.createLobbyStartPost(lobby, channel, playersPerLobby);
+  }
+
+  /**
+   *  Update lobby post to account for current lobby state
+   *  @param lobby lobby state
+   *  @param channel message channel
+   */
+  public static async tryUpdateLobbyPost(
+    lobby: Lobby,
+    channel: TextBasedChannels
+  ) {
+    try {
+      await this.updateLobbyPost(lobby, channel);
+    } catch (e) {
+      console.log(`Error in updateLobbyPost: ${e}`);
+    }
+  }
+
+  public static getLobbyPostText(
+    lobbyUserRoles: string[],
+    lobbyType: number,
+    lobbyRegionRole: string,
+    coaches: string[]
+  ) {
+    return (
+      "for " +
+      getRoleMentions(lobbyUserRoles) +
+      this.getCoachMentions(lobbyType, coaches) +
+      (isRoleBasedLobbyType(lobbyType)
+        ? "\nRegion: " + roleMention(lobbyRegionRole)
+        : "")
+    );
+  }
+
+  public static async updateLobbyPostDescription(
+    fetchResult: ILobbyFetchResult,
+    remainingTime: IRemainingTime
+  ) {
+    const description = this.pruneEmbedDescription(fetchResult.embed);
+    this.updateDescriptionTime(
+      description,
+      remainingTime,
+      remainingTime.totalMs > 0
+    );
+
+    const new_embed = new MessageEmbed(fetchResult.embed);
+    new_embed.description = description.join("\n");
+
+    await fetchResult.message.edit({ embeds: [new_embed] });
   }
 
   private static async postLobbyInt(
@@ -74,32 +187,31 @@ export class LobbyPostManipulator {
       content: getRoleMentions(lobby.beginnerRoleIds),
       embeds: [embed],
     });
+
+    const remainingTime = lobby.calculateRemainingTime();
+
+    await LobbyPostManipulator.updateLobbyPostDescription(
+      { embed, message: lobbyPostMessage },
+      remainingTime
+    );
     lobbyPostMessage.pin();
     lobby.messageId = lobbyPostMessage.id;
-
-    // add emojis
-    createLobbyPostReactions(lobby.type, lobbyPostMessage);
-
-    // create lobby data in database
-    const serializer = new LobbySerializer(dbClient);
-    serializer.insert(lobby);
+    await createLobbyPostReactions(lobby.type, lobbyPostMessage);
+    LobbyPostManipulator.createLobbyDataInDb(lobby, dbClient);
   }
 
-  public static createLobbyEmbedding(lobby: Lobby, options?: PostLobbyOptions) {
-    var title = this.createLobbyPostTitle(lobby, options);
-    var text = LobbyPostManipulator.getLobbyPostText(
-      lobby.beginnerRoleIds,
-      lobby.type,
-      lobby.regionId,
-      lobby.coaches
-    );
-    var footer = this.getLobbyPostFooter(lobby.type, lobby.regionId);
-    return EmbeddingCreator.create(title, text, footer);
+  private static createLobbyDataInDb(
+    lobby: Lobby,
+    dbClient: DFZDataBaseClient
+  ) {
+    const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, dbClient);
+    const serializer = new LobbySerializer(gdbc);
+    serializer.insert(lobby);
   }
 
   private static createLobbyPostTitle(
     lobby: Lobby,
-    options?: LobbyTitleOptions
+    options?: ILobbyTitleOptions
   ) {
     if (options) {
       return this.createOptionsBasedLobbyPostTitle(options);
@@ -107,20 +219,17 @@ export class LobbyPostManipulator {
 
     const titleStart = `We host ${getLobbyPostNameByType(lobby.type)} on `;
 
-    let time = getZonedTimeFromDateAndRegion(
-      new Date(lobby.date),
-      lobby.regionId
-    );
+    const time = getZonedTimeFromDateAndRegion(lobby.date, lobby.regionId);
     const timeString = time
       ? getTimeString(time)
-      : new Date(lobby.date).toUTCString();
+      : new Date(lobby.date.epoch).toUTCString();
 
     const titleEnd = LobbyPostManipulator.printOptionalText(lobby.text);
     return titleStart + timeString + titleEnd;
   }
 
   private static createOptionsBasedLobbyPostTitle(
-    options: LobbyTitleOptions
+    options: ILobbyTitleOptions
   ): string {
     const titleStart = `We host ${getLobbyPostNameByType(options.type)} on `;
     const timeString = getTimeString(options.time);
@@ -135,7 +244,7 @@ export class LobbyPostManipulator {
   }
 
   private static getLobbyPostFooter(type: number, regionRole: string) {
-    var res = "";
+    let res = "";
     if (isRoleBasedLobbyType(type)) {
       res += `${footerStringBeginner} \n\nPlayers from ${getRegionalRoleString(
         regionRole
@@ -154,42 +263,16 @@ export class LobbyPostManipulator {
     return res;
   }
 
-  public static async cancelLobbyPost(
-    lobby: Lobby,
-    channel: TextBasedChannels,
-    reason: string = ""
-  ) {
-    this.tryUpdateLobbyPostTitle(
-      lobby.messageId,
-      channel,
-      "[⛔ Lobby cancelled! 😢]\n" +
-        `${reason !== "" ? `Reason: ${reason}` : ""}`
-    );
-  }
-
-  public static async tryUpdateLobbyPostTitle(
-    messageId: string,
-    channel: TextBasedChannels,
-    titleUpdate: string,
-    unpin = true
-  ) {
-    try {
-      this.updateLobbyPostTitle(messageId, channel, titleUpdate, unpin);
-    } catch (e) {
-      console.log(`Error in updateLobbyPostTitle:\n${e}`);
-    }
-  }
-
   private static async updateLobbyPostTitle(
     messageId: string,
     channel: TextBasedChannels,
     titleUpdate: string,
-    unpin = true
+    unpin: boolean = true
   ) {
     const message = await channel.messages.fetch(messageId);
-    if (unpin === true) message.unpin();
+    if (unpin) await message.unpin();
     const newEmbed = this.createEmbedWithNewTitle(message, titleUpdate);
-    message.edit({ embeds: [newEmbed] });
+    await message.edit({ embeds: [newEmbed] });
   }
 
   private static createEmbedWithNewTitle(
@@ -197,15 +280,10 @@ export class LobbyPostManipulator {
     titleUpdate: string
   ): MessageEmbed {
     const old_embed: MessageEmbed = message.embeds[0];
-    var newEmbedTitle = titleUpdate + "\n~~" + old_embed.title + "~~";
+    let newEmbedTitle = titleUpdate + "\n~~" + old_embed.title + "~~";
     if (newEmbedTitle.length > 256) newEmbedTitle = newEmbedTitle.slice(0, 256);
 
     return new MessageEmbed(old_embed).setTitle(newEmbedTitle);
-  }
-
-  public static writeLobbyStartPost(lobby: Lobby, channel: TextBasedChannels) {
-    const playersPerLobby = getPlayersPerLobbyByLobbyType(lobby.type);
-    this.createLobbyStartPost(lobby, channel, playersPerLobby);
   }
 
   private static createLobbyStartPost(
@@ -213,8 +291,8 @@ export class LobbyPostManipulator {
     channel: TextBasedChannels,
     playersPerLobby: number
   ) {
-    var userSets: LobbyPlayer[][] = [];
-    var userSet: LobbyPlayer[] = [];
+    const userSets: ILobbyPlayer[][] = [];
+    const userSet: ILobbyPlayer[] = [];
 
     this.fillUserSets(lobby, playersPerLobby, userSets, userSet);
 
@@ -233,8 +311,8 @@ export class LobbyPostManipulator {
   private static fillUserSets(
     lobby: Lobby,
     playersPerLobby: number,
-    userSets: LobbyPlayer[][],
-    userSet: LobbyPlayer[]
+    userSets: ILobbyPlayer[][],
+    userSet: ILobbyPlayer[]
   ) {
     for (let i = 0; i < lobby.users.length; i++) {
       // add in batches of lobbyTypePlayerCount
@@ -250,7 +328,7 @@ export class LobbyPostManipulator {
   private static postIncompleteTeam(
     channel: TextBasedChannels,
     lobby: Lobby,
-    userSet: LobbyPlayer[]
+    userSet: ILobbyPlayer[]
   ) {
     const title = this.getIncompleteTeamPostTitle(lobby.type);
     const tableGenerator = new UserTableGenerator(userSet, lobby.type, true);
@@ -266,14 +344,14 @@ export class LobbyPostManipulator {
   private static createAndPostCompleteTeams(
     channel: TextBasedChannels,
     lobby: Lobby,
-    userSets: LobbyPlayer[][]
+    userSets: ILobbyPlayer[][]
   ) {
-    var counter = 0;
+    let counter = 0;
     const embeds: MessageEmbed[] = [];
     userSets.forEach((us) => {
-      var teams = createTeams(us, lobby.type);
+      const teams = createTeams(us, lobby.type);
       const tableGenerator = new TeamsTableGenerator(teams, lobby.type, true);
-      var teamTable = tableGenerator.generate();
+      const teamTable = tableGenerator.generate();
 
       const embed = EmbeddingCreator.create(
         this.getCompleteTeamPostTitle(lobby.type, ++counter),
@@ -287,7 +365,10 @@ export class LobbyPostManipulator {
     channel.send({ embeds: embeds });
   }
 
-  private static postBench(channel: TextBasedChannels, userSet: LobbyPlayer[]) {
+  private static postBench(
+    channel: TextBasedChannels,
+    userSet: ILobbyPlayer[]
+  ) {
     const embed = EmbeddingCreator.create(
       "Today's bench",
       "",
@@ -307,7 +388,7 @@ export class LobbyPostManipulator {
   }
 
   private static getCompleteTeamPostTitle(type: number, counter: number) {
-    var res = getLobbyNameByType(type);
+    let res = getLobbyNameByType(type);
     if (type === lobbyTypes.replayAnalysis) res += " session starts now";
     else if (type === lobbyTypes.meeting) res += " starts now";
     else
@@ -317,7 +398,7 @@ export class LobbyPostManipulator {
     return res;
   }
 
-  private static generateBenchTable(userSet: LobbyPlayer[]) {
+  private static generateBenchTable(userSet: ILobbyPlayer[]) {
     const anyNumberOfPlayers = -1;
     const mentionPlayers = true;
     const tableGenerator = new UserTableGenerator(
@@ -328,28 +409,12 @@ export class LobbyPostManipulator {
     return tableGenerator.generate();
   }
 
-  /**
-   *  Update lobby post to account for current lobby state
-   *  @param lobby lobby state
-   *  @param channel message channel
-   */
-  public static async tryUpdateLobbyPost(
-    lobby: Lobby,
-    channel: TextBasedChannels
-  ) {
-    try {
-      await this.updateLobbyPost(lobby, channel);
-    } catch (e) {
-      console.log(`Error in updateLobbyPost: ${e}`);
-    }
-  }
-
   private static async updateLobbyPost(
     lobby: Lobby,
     channel: TextBasedChannels
   ) {
     const message = await channel.messages.fetch(lobby.messageId);
-    var embed = LobbyPostManipulator.updateLobbyEmbed(message, lobby);
+    const embed = LobbyPostManipulator.updateLobbyEmbed(message, lobby);
     await message.edit({
       content: getRoleMentions(lobby.beginnerRoleIds),
       embeds: [embed],
@@ -357,7 +422,7 @@ export class LobbyPostManipulator {
   }
 
   private static updateLobbyEmbed(message: Message, lobby: Lobby) {
-    var embed = new MessageEmbed(
+    const embed = new MessageEmbed(
       message.embeds.length > 0 ? message.embeds[0] : undefined
     );
     embed.title = this.updateLobbyTypeInPostTitle(lobby, embed);
@@ -381,22 +446,6 @@ export class LobbyPostManipulator {
     return (
       `We host ${getLobbyPostNameByType(lobby.type)} on ` +
       embed.title?.split(" on ")[1]
-    );
-  }
-
-  public static getLobbyPostText(
-    lobbyUserRoles: string[],
-    lobbyType: number,
-    lobbyRegionRole: string,
-    coaches: string[]
-  ) {
-    return (
-      "for " +
-      getRoleMentions(lobbyUserRoles) +
-      this.getCoachMentions(lobbyType, coaches) +
-      (isRoleBasedLobbyType(lobbyType)
-        ? "\nRegion: " + roleMention(lobbyRegionRole)
-        : "")
     );
   }
 
@@ -429,13 +478,17 @@ export class LobbyPostManipulator {
     ${remainingTime.hours > 0 ? `${remainingTime.hours}h ` : ""}\
     ${remainingTime.minutes}min ${isPrior ? "" : " ago"}`;
 
-    typeof description === "string"
-      ? (description += "\n" + addition)
-      : description.push(addition);
+    if (typeof description === "string") {
+      description += "\n" + addition;
+    } else {
+      description.push(addition);
+    }
+
+    return description;
   }
 
   private static pruneEmbedDescription(embed: MessageEmbed): string[] {
-    var description = embed.description?.split("\n");
+    const description = embed.description?.split("\n");
     if (description === undefined || description.length === 0) {
       return [];
     }
@@ -449,33 +502,7 @@ export class LobbyPostManipulator {
 
     return description;
   }
-
-  public static async updateLobbyPostDescription(
-    fetchResult: LobbyFetchResult,
-    remainingTime: IRemainingTime
-  ) {
-    var description = this.pruneEmbedDescription(fetchResult.embed);
-    this.updateDescriptionTime(
-      description,
-      remainingTime,
-      remainingTime.totalMs > 0
-    );
-
-    var new_embed = new MessageEmbed(fetchResult.embed);
-    new_embed.description = description.join("\n");
-
-    await fetchResult.message.edit({ embeds: [new_embed] });
-  }
 }
-
-var footerStringBeginner =
-  "Join lobby by clicking 1️⃣, 2️⃣, ... at ingame positions you want.\nClick again to remove a position.\nRemove all positions to withdraw from the lobby.";
-var footerStringTryout =
-  "Join lobby by clicking ✅ below.\nClick again to withdraw.";
-var footerStringReplayAnalysis =
-  "Join session by clicking ✅ below.\nClick again to withdraw.";
-var footerStringMeeting =
-  "Join meeting by clicking ✅ below.\nClick again to withdraw.";
 
 const remainingLobbyTimeStartString = "Time to lobby: ";
 const alreadyStartedLobbyTimeStartString = "Lobby started ";

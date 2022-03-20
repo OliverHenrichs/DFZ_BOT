@@ -1,11 +1,42 @@
 import { IFieldElement } from "../discord/interfaces/IFieldElement";
-import { LobbyPlayer } from "./interfaces/LobbyPlayer";
+import { ILobbyPlayer } from "./interfaces/ILobbyPlayer";
 
 export abstract class TableGenerator {
   mentionPlayers: boolean = false;
-  constructor(mentionPlayers: boolean) {
+
+  protected constructor(mentionPlayers: boolean) {
     this.mentionPlayers = mentionPlayers;
   }
+
+  private static addUserNameToUserTable(
+    tableBase: Array<IFieldElement>,
+    user: ILobbyPlayer,
+    startIndex = 0,
+    mention = false
+  ) {
+    tableBase[startIndex].value = `${tableBase[startIndex].value}\r\n${
+      user.region.name !== "" ? `[${user.region.name}]` : ""
+    }${mention ? `<@${user.id}>` : user.name}`;
+  }
+
+  private static addUserPositionsToUserTable(
+    tableBase: Array<IFieldElement>,
+    positions: Array<number>,
+    startIndex = 0
+  ) {
+    tableBase[startIndex + 1].value = `${tableBase[startIndex + 1].value}
+${positions.length === 1 && positions[0] === -1 ? "-" : positions.join(", ")}`;
+  }
+
+  private static addTierToUserTable(
+    tableBase: Array<IFieldElement>,
+    user: ILobbyPlayer,
+    startIndex = 0
+  ) {
+    tableBase[startIndex + 2].value = `${tableBase[startIndex + 2].value}
+${user.tier.name}`;
+  }
+
   abstract generate(): IFieldElement[];
 
   /**
@@ -19,7 +50,7 @@ export abstract class TableGenerator {
   protected addUserToTeam(
     tableBase: Array<IFieldElement>,
     index: number,
-    player: LobbyPlayer,
+    player: ILobbyPlayer,
     position: number,
     mention: boolean
   ) {
@@ -34,44 +65,19 @@ export abstract class TableGenerator {
 
   protected addUserWithPositionsToUserTable(
     tableBase: Array<IFieldElement>,
-    user: LobbyPlayer,
+    user: ILobbyPlayer,
     positions: Array<number>,
     startIndex = 0,
     mention = false
   ) {
-    this.addUserNameToUserTable(tableBase, user, startIndex, mention);
+    TableGenerator.addUserNameToUserTable(tableBase, user, startIndex, mention);
 
-    this.addUserPositionsToUserTable(tableBase, positions, startIndex);
+    TableGenerator.addUserPositionsToUserTable(
+      tableBase,
+      positions,
+      startIndex
+    );
 
-    this.addTierToUserTable(tableBase, user, startIndex);
-  }
-
-  private addUserNameToUserTable(
-    tableBase: Array<IFieldElement>,
-    user: LobbyPlayer,
-    startIndex = 0,
-    mention = false
-  ) {
-    tableBase[startIndex].value = `${tableBase[startIndex].value}\r\n${
-      user.region.name !== "" ? `[${user.region.name}]` : ""
-    }${mention ? `<@${user.id}>` : user.name}`;
-  }
-
-  private addUserPositionsToUserTable(
-    tableBase: Array<IFieldElement>,
-    positions: Array<number>,
-    startIndex = 0
-  ) {
-    tableBase[startIndex + 1].value = `${tableBase[startIndex + 1].value}
-${positions.length === 1 && positions[0] === -1 ? "-" : positions.join(", ")}`;
-  }
-
-  private addTierToUserTable(
-    tableBase: Array<IFieldElement>,
-    user: LobbyPlayer,
-    startIndex = 0
-  ) {
-    tableBase[startIndex + 2].value = `${tableBase[startIndex + 2].value}
-${user.tier.name}`;
+    TableGenerator.addTierToUserTable(tableBase, user, startIndex);
   }
 }

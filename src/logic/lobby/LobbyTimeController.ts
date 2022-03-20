@@ -1,28 +1,54 @@
-import { Message, MessageEmbed, NewsChannel, TextChannel } from "discord.js";
+import {
+  Guild,
+  Message,
+  MessageEmbed,
+  NewsChannel,
+  TextChannel,
+} from "discord.js";
 import { DFZDataBaseClient } from "../database/DFZDataBaseClient";
 import { ChannelManager } from "../discord/DFZChannelManager";
 import { DFZDiscordClient } from "../discord/DFZDiscordClient";
-import { Lobby } from "../serializables/lobby";
-import { LobbySerializer } from "../serializers/lobbySerializer";
-import { LobbyFetchResult } from "./interfaces/LobbyFetchResult";
+import { Lobby } from "../serializables/Lobby";
+import { LobbySerializer } from "../serializers/LobbySerializer";
+import { SerializeUtils } from "../serializers/SerializeUtils";
+import { ILobbyFetchResult } from "./interfaces/ILobbyFetchResult";
 import { LobbyPostManipulator } from "./LobbyPostManipulator";
 
 export class LobbyTimeController {
   /**
    *  Update each lobby post and prune deleted and deprecated lobbies
    */
-  public static async checkAndUpdateLobbies(client: DFZDiscordClient) {
-    const serializer = new LobbySerializer(client.dbClient);
-    var lobbies: Lobby[] = await serializer.get();
+  public static async checkAndUpdateLobbies(
+    client: DFZDiscordClient,
+    guild: Guild
+  ) {
+    const gdbc = SerializeUtils.fromGuildtoGuildDBClient(
+      guild,
+      client.dbClient
+    );
+    const serializer = new LobbySerializer(gdbc);
 
+    const lobbies: Lobby[] = await serializer.get();
     for (const lobby of lobbies) {
-      try {
-        await this.checkAndUpdateLobby(lobby, client, serializer);
-      } catch (error) {
-        console.log(
-          `Could not update lobby post of lobby ${JSON.stringify(lobby)}`
-        );
-      }
+      await LobbyTimeController.tryCheckAndUpdateLobby(
+        lobby,
+        client,
+        serializer
+      );
+    }
+  }
+
+  private static async tryCheckAndUpdateLobby(
+    lobby: Lobby,
+    client: DFZDiscordClient,
+    serializer: LobbySerializer
+  ) {
+    try {
+      await this.checkAndUpdateLobby(lobby, client, serializer);
+    } catch (error) {
+      console.log(
+        `Could not update lobby post of lobby ${JSON.stringify(lobby)}`
+      );
     }
   }
 
@@ -49,7 +75,7 @@ export class LobbyTimeController {
     const lobbyFetchResult = await this.fetchLobbyFromDiscord(lobby, channel);
     if (!lobbyFetchResult) {
       // remove if e.g. an admin deleted the message
-      return await serializer.delete([lobby]);
+      return serializer.delete([lobby]);
     }
 
     const remainingTime = lobby.calculateRemainingTime();
@@ -68,7 +94,7 @@ export class LobbyTimeController {
   private static async fetchLobbyFromDiscord(
     lobby: Lobby,
     channel: TextChannel | NewsChannel
-  ): Promise<LobbyFetchResult | undefined> {
+  ): Promise<ILobbyFetchResult | undefined> {
     const message = await this.getMessageFromChannel(channel, lobby.messageId);
     if (message === undefined) {
       return undefined;
@@ -92,21 +118,19 @@ export class LobbyTimeController {
       channel,
       "Lobby is deprecated. Did the coach not show up? Pitchforks out! 😾"
     );
-    const serializer = new LobbySerializer(dbClient);
+    const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, dbClient);
+    const serializer = new LobbySerializer(gdbc);
     await serializer.delete([lobby]);
   }
 
   private static async getMessageFromChannel(
     channel: TextChannel | NewsChannel,
     messageId: string
-  ) {
-    return new Promise<Message | undefined>(function (resolve, reject) {
-      channel.messages
-        .fetch(messageId)
-        .then((message) => {
-          resolve(message);
-        })
-        .catch((err) => resolve(undefined));
-    });
+  ): Promise<Message | undefined> {
+    try {
+      return channel.messages.fetch(messageId);
+    } catch (e) {
+      return undefined;
+    }
   }
 }

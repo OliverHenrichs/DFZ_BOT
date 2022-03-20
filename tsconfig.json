@@ -13,7 +13,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-	  "allowUnreachableCode": false
+	  "allowUnreachableCode": false,
+    "types": [
+      "mocha",
+      "node"
+    ]
   },
   "include": ["./src/**/*", "./website/**/*", "index.ts"]
 }

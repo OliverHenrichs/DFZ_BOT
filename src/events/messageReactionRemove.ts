@@ -1,8 +1,9 @@
 import { MessageReaction, User } from "discord.js";
 import { ChannelManager } from "../logic/discord/DFZChannelManager";
 import { DFZDiscordClient } from "../logic/discord/DFZDiscordClient";
-import { adminRoles } from "../logic/discord/roleManagement";
-import { Lobby } from "../logic/serializables/lobby";
+import { adminRoles } from "../logic/discord/RoleManagement";
+import { ScheduleManipulator } from "../logic/scheduling/ScheduleManipulator";
+import { Lobby } from "../logic/serializables/Lobby";
 import {
   isSimpleLobbyType,
   lobbyManagementReactionEmojis,
@@ -13,9 +14,8 @@ import {
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import { removeCoachFromSchedule } from "../misc/scheduleManagement";
 
-function tryCancelLobbyCancel(
+async function tryCancelLobbyCancel(
   client: DFZDiscordClient,
   lobby: Lobby,
   user: User
@@ -25,17 +25,19 @@ function tryCancelLobbyCancel(
   );
   if (timeout) {
     clearTimeout(timeout.timeout);
-    user.send("✅ I will no longer cancel the lobby.");
+    await user.send("✅ I will no longer cancel the lobby.");
   }
 }
 
-function handleCoachReaction(
+async function handleCoachReaction(
   client: DFZDiscordClient,
   reaction: MessageReaction,
   lobby: Lobby,
   user: User
 ) {
-  if (reaction.message.channel.type === "DM") return;
+  if (reaction.message.channel.type === "DM") {
+    return;
+  }
 
   switch (reaction.emoji.name) {
     case lobbyManagementReactionEmojis[2]:
@@ -48,12 +50,16 @@ function handleCoachReaction(
       break;
 
     case lobbyManagementReactionEmojis[1]:
-      tryCancelLobbyCancel(client, lobby, user);
+      await tryCancelLobbyCancel(client, lobby, user);
       break;
 
     case tryoutReactionEmoji:
       if (isSimpleLobbyType(lobby.type))
-        lobby.updatePlayerInLobby(client.dbClient, reaction, user);
+        await lobby.updatePlayerInLobbyDueToReactionRemoval(
+          client.dbClient,
+          reaction,
+          user
+        );
       break;
   }
 }
@@ -76,8 +82,13 @@ async function handleLobbyRelatedEmoji(
   );
 
   if (adminRoles.includes(lri.role.id))
-    handleCoachReaction(client, reaction, lri.lobby, user);
-  else lri.lobby.updatePlayerInLobby(client.dbClient, reaction, user);
+    await handleCoachReaction(client, reaction, lri.lobby, user);
+  else
+    await lri.lobby.updatePlayerInLobbyDueToReactionRemoval(
+      client.dbClient,
+      reaction,
+      user
+    );
 }
 
 /**
@@ -107,6 +118,10 @@ async function handleMessageReactionRemove(
   if (!isValidLobbyReaction(reaction, user)) return;
 
   if (ChannelManager.scheduleChannels.includes(reaction.message.channel.id))
-    removeCoachFromSchedule(client, reaction, user);
+    await ScheduleManipulator.removeCoachFromSchedule({
+      client,
+      reaction,
+      user,
+    });
   else await handleLobbyRelatedEmoji(client, reaction, user);
 }

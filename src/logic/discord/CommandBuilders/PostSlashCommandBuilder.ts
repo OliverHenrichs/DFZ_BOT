@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from "@discordjs/builders";
-import { SlashCommandIds } from "../interfaces/SlashCommandsIds";
-import { CommandBuilderOptionUtils } from "./CommandBuilderOptionUtils";
+import { SlashCommandIds } from "../enums/SlashCommandsIds";
+import { CommandBuilderOptionUtils } from "../Utils/CommandBuilderOptionUtils";
 
 export class PostSlashCommandBuilder extends SlashCommandBuilder {
   constructor() {

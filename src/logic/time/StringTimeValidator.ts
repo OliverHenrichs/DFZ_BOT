@@ -1,6 +1,6 @@
 import tZ = require("timezone-support");
-import { ITimeZoneInfo } from "./interfaces/TimeZoneInfo";
-import { IValidatedTime } from "./interfaces/ValidatedTime";
+import { ITimeZoneInfo } from "./interfaces/ITimeZoneInfo";
+import { IValidatedTime } from "./interfaces/IValidatedTime";
 
 export class StringTimeValidator {
   public static validateTimeString(timeString: string): IValidatedTime {
@@ -10,11 +10,20 @@ export class StringTimeValidator {
     return this.convertTo24hTime(parsedTime);
   }
 
+  public static validateTimeZoneString(timeZoneName: string): ITimeZoneInfo {
+    try {
+      const name = this.fixTimeZoneName(timeZoneName);
+      return tZ.findTimeZone(name);
+    } catch (err) {
+      throw new Error("Invalid time zone name " + timeZoneName + ".");
+    }
+  }
+
   private static parseTime(timeString: string): I_AMPMTime {
     // check length
     const l = timeString.length;
     if (l !== 6 && l !== 7) this.throwTimeStringError();
-    var res: I_AMPMTime = {
+    const res: I_AMPMTime = {
       hour: -1,
       minute: 0,
       ampm: "",
@@ -49,7 +58,7 @@ export class StringTimeValidator {
 
   private static convertTo24hTime(ampmTime: I_AMPMTime): IValidatedTime {
     const isAM = ampmTime.ampm === "am";
-    var time = {
+    const time = {
       hour: ampmTime.hour,
       minute: ampmTime.minute,
     };
@@ -61,15 +70,6 @@ export class StringTimeValidator {
     return time;
   }
 
-  public static validateTimeZoneString(timeZoneName: string): ITimeZoneInfo {
-    try {
-      const name = this.fixTimeZoneName(timeZoneName);
-      return tZ.findTimeZone(name);
-    } catch (err) {
-      throw new Error("Invalid time zone name " + timeZoneName + ".");
-    }
-  }
-
   private static fixTimeZoneName(name: string): string {
     if (!name.startsWith("GMT")) return name;
     if (name.length <= 4) return "Etc/" + name;
@@ -78,9 +78,9 @@ export class StringTimeValidator {
      * POSIX-Definition causes GMT+X to be GMT-X and vice versa...
      * In order to not confuse the user we exchange + and - here
      */
-    var sign = name[3];
-    if (sign === "+") return "Etc/GMT-" + name.substr(4);
-    else if (sign === "-") return "Etc/GMT+" + name.substr(4);
+    const sign = name[3];
+    if (sign === "+") return "Etc/GMT-" + name.substring(4);
+    else if (sign === "-") return "Etc/GMT+" + name.substring(4);
 
     return name; // not recognized
   }

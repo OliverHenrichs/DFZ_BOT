@@ -1,20 +1,15 @@
-import * as dotenv from "dotenv";
-dotenv.config();
-
 import { DFZDiscordClient } from "./src/logic/discord/DFZDiscordClient";
-import { GoogleCalendarManager } from "./src/logic/gcalendar/GoogleCalendarManager";
+import { TimeInMs } from "./src/logic/time/TimeConverter";
 import Website from "./website/website";
 
+let website = {};
 const client = new DFZDiscordClient();
-
-var website = {};
-
 client
   .login(process.env.BOT_TOKEN)
   .then(() => {
-    website = new Website(client);
-  })
-  .then(() => {
-    GoogleCalendarManager.login();
+    const websiteCreator = () => {
+      website = new Website(client);
+    };
+    setTimeout(websiteCreator, TimeInMs.oneMinute);
   })
   .catch((err: any) => console.log(err));

@@ -5,19 +5,19 @@ import {
   MessageActionRow,
   SelectMenuInteraction,
 } from "discord.js";
-import { kickMultiplePlayers } from "../../../commands/kick";
 import { lobbyTypes } from "../../../misc/constants";
 import { findLobbyByMessage } from "../../../misc/messageHelper";
+import { IMessageIdentifier } from "../../../misc/types/IMessageIdentifier";
 import { LobbyPostManipulator } from "../../lobby/LobbyPostManipulator";
-import { Lobby } from "../../serializables/lobby";
+import { Lobby } from "../../serializables/Lobby";
 import { KickExecutor } from "../CommandExecutors/KickExecutor";
 import { SelectMenuUtils } from "../CommandExecutors/SelectMenuUtils";
 import { UpdateExecutor } from "../CommandExecutors/UpdateExecutor";
 import { DFZDiscordClient } from "../DFZDiscordClient";
 import { ILobbyMenu } from "../interfaces/ILobbyMenu";
-import { LobbyMenuType } from "../interfaces/LobbyMenuType";
-import { SelectorCustomIds } from "../interfaces/SelectorCustomIds";
-import { tryoutRole } from "../roleManagement";
+import { MenuType } from "../enums/MenuType";
+import { SelectorCustomIds } from "../enums/SelectorCustomIds";
+import { tryoutRole } from "../RoleManagement";
 import { CommonMenuUtils } from "./CommonMenuUtils";
 
 export class LobbyMenuUtils {
@@ -27,13 +27,12 @@ export class LobbyMenuUtils {
   ): Promise<InteractionUpdateOptions> {
     const menu = CommonMenuUtils.getMenu(client, selector);
     const lobby = CommonMenuUtils.assertMenuHasLobby(menu);
-
     switch (menu.type) {
-      case LobbyMenuType.post:
+      case MenuType.post:
         return this.updatePostLobbyMenu(selector, lobby);
-      case LobbyMenuType.update:
+      case MenuType.update:
         return await this.updateUpdateLobbyMenu(client, selector, lobby);
-      case LobbyMenuType.kick:
+      case MenuType.kick:
         return await this.updateKickLobbyMenu(client, selector, lobby);
     }
   }
@@ -83,7 +82,7 @@ export class LobbyMenuUtils {
   ): Promise<InteractionUpdateOptions> {
     switch (selector.customId) {
       case SelectorCustomIds.player:
-        this.kick(lobby, selector.values);
+        await lobby.kickPlayers(selector.values);
     }
     return {
       content:
@@ -92,15 +91,7 @@ export class LobbyMenuUtils {
     };
   }
 
-  private static kick(lobby: Lobby, playerIDs: string[]) {
-    kickMultiplePlayers(lobby, playerIDs);
-  }
-
   public static setLobbyRegion(lobby: Lobby, regionRoleId: string): void {
-    console.log(
-      "Setting lobby region from " + lobby.regionId + " to " + regionRoleId
-    );
-
     lobby.regionId = regionRoleId;
   }
 
@@ -136,11 +127,11 @@ export class LobbyMenuUtils {
   ): Promise<InteractionUpdateOptions> {
     const menu = CommonMenuUtils.getMenu(client, selector);
     switch (menu.type) {
-      case LobbyMenuType.update:
+      case MenuType.update:
         return await this.createUpdateLobbyMenu(client, selector, menu);
-      case LobbyMenuType.kick:
+      case MenuType.kick:
         return await this.createKickMenu(client, selector, menu);
-      case LobbyMenuType.post:
+      case MenuType.post:
       default:
         return {};
     }
@@ -166,24 +157,6 @@ export class LobbyMenuUtils {
     );
   }
 
-  private static async getLobbySpecificKickOptions(
-    client: DFZDiscordClient,
-    selector: SelectMenuInteraction,
-    lobby: Lobby
-  ) {
-    if (lobby.users.length === 0) {
-      throw new Error("No players in lobby to kick.");
-    }
-
-    const kickRow = await LobbyMenuUtils.addKickRow(client, selector);
-    const kickButtonRow = await KickExecutor.getKickButtonRow(true);
-
-    return {
-      components: [kickRow, kickButtonRow],
-      content: "Choose players to be kicked:",
-    };
-  }
-
   public static async createUpdateLobbyMenu(
     client: DFZDiscordClient,
     selector: SelectMenuInteraction,
@@ -202,21 +175,56 @@ export class LobbyMenuUtils {
     );
   }
 
+  public static addOrReplaceLobbyMenu(
+    client: DFZDiscordClient,
+    selector: SelectMenuInteraction,
+    menu: ILobbyMenu
+  ) {
+    const idx = CommonMenuUtils.getMenuIndex(client, selector.message.id);
+
+    if (idx === -1) {
+      client.slashCommandMenus.push(menu);
+    } else {
+      client.slashCommandMenus[idx] = menu;
+    }
+  }
+
+  private static async getLobbySpecificKickOptions(
+    client: DFZDiscordClient,
+    selector: SelectMenuInteraction,
+    lobby: Lobby
+  ) {
+    if (lobby.users.length === 0) {
+      throw new Error("No players in lobby to kick.");
+    }
+
+    const kickRow = await LobbyMenuUtils.addKickRow(client, selector);
+    const kickButtonRow = await KickExecutor.getKickButtonRow(true);
+
+    return {
+      components: [kickRow, kickButtonRow],
+      content: "Choose players to be kicked:",
+    };
+  }
+
   private static async updateLobbyMenuFromSelector(
     selector: SelectMenuInteraction,
     client: DFZDiscordClient,
     menu: ILobbyMenu
   ) {
+    if (!selector.guildId) {
+      throw new Error("No associated guild");
+    }
     const lobbyMessageId = selector.values[0];
-    const lobby = await findLobbyByMessage(
-      client.dbClient,
-      selector.channelId,
-      lobbyMessageId
-    );
+    const mId: IMessageIdentifier = {
+      messageId: lobbyMessageId,
+      channelId: selector.channelId,
+      guildId: selector.guildId,
+    };
 
-    menu.lobby = lobby;
+    menu.lobby = await findLobbyByMessage(client.dbClient, mId);
     this.addOrReplaceLobbyMenu(client, selector, menu);
-    return lobby;
+    return menu.lobby;
   }
 
   private static async getLobbyTypeSpecificOptions(
@@ -292,20 +300,6 @@ export class LobbyMenuUtils {
       interaction,
       SelectMenuUtils.createKickPlayerSelectMenu
     );
-  }
-
-  public static addOrReplaceLobbyMenu(
-    client: DFZDiscordClient,
-    selector: SelectMenuInteraction,
-    menu: ILobbyMenu
-  ) {
-    const idx = CommonMenuUtils.getMenuIndex(client, selector.message.id);
-
-    if (idx === -1) {
-      client.lobbyMenus.push(menu);
-    } else {
-      client.lobbyMenus[idx] = menu;
-    }
   }
 
   private static createInteractionUpdateOptions(

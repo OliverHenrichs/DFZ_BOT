@@ -4,7 +4,7 @@ import { ApplicationCommand, Collection, Guild } from "discord.js";
 import fs from "fs";
 import { botId, botToken, dfzGuildId } from "../../misc/constants";
 import { DFZDiscordClient } from "./DFZDiscordClient";
-import { adminRoles } from "./roleManagement";
+import { adminRoles } from "./RoleManagement";
 
 export class SlashCommandRegistrator {
   client: DFZDiscordClient;
@@ -18,16 +18,10 @@ export class SlashCommandRegistrator {
 
   public async tryRegisterSlashCommands() {
     try {
-      this.registerSlashCommands();
+      await this.registerSlashCommands();
     } catch (error) {
       console.error(error);
     }
-  }
-
-  private async registerSlashCommands() {
-    await this.rest.put(Routes.applicationGuildCommands(botId, dfzGuildId), {
-      body: this.commands.map((value) => value.data),
-    });
   }
 
   public async setCommandPermissions(guild: Guild) {
@@ -43,8 +37,24 @@ export class SlashCommandRegistrator {
     });
   }
 
+  public async registerCommandFiles(client: DFZDiscordClient) {
+    const commandFiles = fs.readdirSync(`${__dirname}/../../slashCommands/`);
+    for (const file of commandFiles) {
+      const commandCreator = require(`${__dirname}/../../slashCommands/${file}`);
+      const commandData = await commandCreator.create(client);
+
+      this.commands.set(commandCreator.name, commandData);
+    }
+  }
+
+  private async registerSlashCommands() {
+    await this.rest.put(Routes.applicationGuildCommands(botId, dfzGuildId), {
+      body: this.commands.map((value) => value.data),
+    });
+  }
+
   private addCommandPermission(
-    cmd: ApplicationCommand<{}>,
+    cmd: ApplicationCommand,
     fullPermissions: any[]
   ) {
     const commandPermission: any = {
@@ -64,15 +74,5 @@ export class SlashCommandRegistrator {
         permission: true,
       });
     });
-  }
-
-  public async registerCommandFiles(client: DFZDiscordClient) {
-    const commandFiles = fs.readdirSync(`${__dirname}/../../slashCommands/`);
-    for (const file of commandFiles) {
-      const commandCreator = require(`${__dirname}/../../slashCommands/${file}`);
-      const commandData = await commandCreator.create(client);
-
-      this.commands.set(commandCreator.name, commandData);
-    }
   }
 }

@@ -1,4 +1,7 @@
 import { GuildEmoji, ReactionEmoji } from "discord.js";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 export const botToken: string = process.env.BOT_TOKEN
   ? process.env.BOT_TOKEN
@@ -39,7 +42,7 @@ export const lobbyTypePlayerCount = {
 export const anyNumberOfPlayers = -1;
 
 export function getPlayersPerLobbyByLobbyType(type: number) {
-  var lobbyTypeKey = (
+  const lobbyTypeKey = (
     Object.keys(lobbyTypes) as Array<keyof typeof lobbyTypes>
   ).find((typeKey) => lobbyTypes[typeKey] === type);
   if (lobbyTypeKey) return lobbyTypePlayerCount[lobbyTypeKey];
@@ -133,7 +136,7 @@ export function getLobbyPostNameByType(lobbyType: number): string | undefined {
 export function getReactionEmojiPosition(
   reactionEmoji: GuildEmoji | ReactionEmoji
 ) {
-  var idx = positionReactionEmojis.findIndex((type) => {
+  const idx = positionReactionEmojis.findIndex((type) => {
     return reactionEmoji.name === type;
   });
 

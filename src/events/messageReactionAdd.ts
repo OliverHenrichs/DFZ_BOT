@@ -11,11 +11,13 @@ import {
   adminRoles,
   beginnerRoles,
   findRole,
-} from "../logic/discord/roleManagement";
+} from "../logic/discord/RoleManagement";
 import { LobbyPostManipulator } from "../logic/lobby/LobbyPostManipulator";
 import { LobbyStarter } from "../logic/lobby/LobbyStarter";
-import { Lobby } from "../logic/serializables/lobby";
-import { LobbySerializer } from "../logic/serializers/lobbySerializer";
+import { ScheduleManipulator } from "../logic/scheduling/ScheduleManipulator";
+import { Lobby } from "../logic/serializables/Lobby";
+import { LobbySerializer } from "../logic/serializers/LobbySerializer";
+import { SerializeUtils } from "../logic/serializers/SerializeUtils";
 import { RegionDefinitions } from "../logic/time/RegionDefinitions";
 import { TimeConverter } from "../logic/time/TimeConverter";
 import {
@@ -32,9 +34,8 @@ import {
   isValidLobbyReaction,
   LobbyReactionInfo,
 } from "../misc/messageReactionHelper";
-import { addCoachToSchedule } from "../misc/scheduleManagement";
 import { savePlayerParticipation } from "../misc/tracker";
-import { addUser, getUserIndex } from "../misc/userHelper";
+import { addUser } from "../misc/userHelper";
 
 module.exports = async (
   client: DFZDiscordClient,
@@ -56,7 +57,11 @@ async function handleMessageReactionAdd(
   if (!isValidLobbyReaction(reaction, user)) return;
 
   if (ChannelManager.scheduleChannels.includes(reaction.message.channel.id))
-    return await addCoachToSchedule(client, reaction, user);
+    return await ScheduleManipulator.addCoachToSchedule({
+      client,
+      reaction,
+      user,
+    });
 
   return await handleLobbyRelatedEmoji(client, reaction, user);
 }
@@ -78,11 +83,11 @@ async function handleLobbyRelatedEmoji(
     user
   );
 
-  var changedLobby: boolean = false;
+  let changedLobby: boolean = false;
 
   // handle adding users
   if (isKnownPositionEmoji(reaction.emoji))
-    changedLobby = handlePositionEmoji(
+    changedLobby = await handlePositionEmoji(
       lri.lobby,
       user,
       reaction,
@@ -90,10 +95,15 @@ async function handleLobbyRelatedEmoji(
       lri.member
     );
   else if (isKnownSimpleLobbyEmoji(reaction.emoji))
-    changedLobby = handleSimpleLobbyEmoji(lri.lobby, user, reaction, lri.role);
+    changedLobby = await handleSimpleLobbyEmoji(
+      lri.lobby,
+      user,
+      reaction,
+      lri.role
+    );
   else if (isKnownLobbyManagementEmoji(reaction.emoji)) {
     // handle lobby management => will delete lobby if x-ed or started => no need to update => just return
-    return handleLobbyManagementEmoji(
+    return await handleLobbyManagementEmoji(
       client,
       lri.lobby,
       user,
@@ -103,33 +113,35 @@ async function handleLobbyRelatedEmoji(
   }
 
   if (changedLobby) {
-    const serializer = new LobbySerializer(client.dbClient);
+    const gdbc = SerializeUtils.getGuildDBClient(
+      lri.lobby.guildId,
+      client.dbClient
+    );
+    const serializer = new LobbySerializer(gdbc);
     serializer.update(lri.lobby);
   }
 }
 
 /**
  * Adds user to lobby or adds position to user in lobby
- * @param {User} user discord-user
- * @param {int} position dota-position
- * @param {string} beginnerRole player tier role
- * @param {string} regionRole player region role
- * @param {Lobby} lobby lobby player wants to join
- * @param {Channel} channel text channel of lobby
+ * @param user discord-user
+ * @param position dota-position
+ * @param beginnerRole player tier role
+ * @param regionRole player region role
+ * @param lobby lobby player wants to join
+ * @param channel text channel of lobby
  * @returns true if lobby has been changed, false if not
  */
-function addUserOrPosition(
+async function addUserOrPosition(
   user: User,
   position: number,
   beginnerRole: Role,
   regionRole: Role | undefined,
   lobby: Lobby,
   channel: TextBasedChannels
-) {
-  var userIdx = getUserIndex(lobby, user.id);
-  // check if it contains user
+): Promise<boolean> {
+  const userIdx = lobby.getUserIndex(user.id);
   if (userIdx === -1) {
-    // add user
     addUser(
       lobby,
       user.username,
@@ -138,20 +150,14 @@ function addUserOrPosition(
       beginnerRole,
       regionRole
     );
-
-    // update lobby post
-    LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
+    await LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
     return true;
   } else {
-    // add position
-    var lobbyUser = lobby.users[userIdx];
-
+    const lobbyUser = lobby.users[userIdx];
     if (!lobbyUser.positions.includes(position)) {
       lobbyUser.positions.push(position);
       lobbyUser.positions.sort();
-
-      // update lobby post
-      LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
+      await LobbyPostManipulator.tryUpdateLobbyPost(lobby, channel);
       return true;
     }
   }
@@ -167,7 +173,7 @@ function addUserOrPosition(
  * @param {GuildMember} guildMember member of the user
  * @returns true if lobby was changed
  */
-function handlePositionEmoji(
+async function handlePositionEmoji(
   lobby: Lobby,
   user: User,
   reaction: MessageReaction,
@@ -176,26 +182,31 @@ function handlePositionEmoji(
 ) {
   if (isSimpleLobbyType(lobby.type)) return false;
 
-  if (lobby.beginnerRoleIds.find((roleId) => roleId == role.id) === undefined) {
-    user.send(
+  if (hasLobbyBeginnerRole(lobby, role)) {
+    await user.send(
       "⛔ You cannot join because you do not have a suitable beginner role."
     );
     return false;
   }
-  // get position
-  var position = getReactionEmojiPosition(reaction.emoji);
+
+  const position = getReactionEmojiPosition(reaction.emoji);
   if (position === 0) return false;
 
-  // get region role
-  var regionRole = findRole(guildMember, RegionDefinitions.regionRoles);
+  const regionRole = findRole(guildMember, RegionDefinitions.regionRoles);
 
-  return addUserOrPosition(
+  return await addUserOrPosition(
     user,
     position,
     role,
     regionRole,
     lobby,
     reaction.message.channel
+  );
+}
+
+function hasLobbyBeginnerRole(lobby: Lobby, role: Role) {
+  return (
+    lobby.beginnerRoleIds.find((roleId) => roleId == role.id) !== undefined
   );
 }
 
@@ -207,16 +218,18 @@ function handlePositionEmoji(
  * @param {string} role role of the user
  * @returns true if lobby was changed
  */
-function handleSimpleLobbyEmoji(
+async function handleSimpleLobbyEmoji(
   lobby: Lobby,
   user: User,
   reaction: MessageReaction,
   role: Role
-) {
+): Promise<boolean> {
   if (!isSimpleLobbyType(lobby.type)) return false;
 
   if (lobby.type === lobbyTypes.tryout && role.id !== process.env.TRYOUT) {
-    user.send("⛔ You cannot join because you do not have the tryout role.");
+    await user.send(
+      "⛔ You cannot join because you do not have the tryout role."
+    );
     return false;
   }
 
@@ -224,11 +237,13 @@ function handleSimpleLobbyEmoji(
     lobby.type === lobbyTypes.replayAnalysis &&
     beginnerRoles.find((tr: string) => tr === role.id) === undefined
   ) {
-    user.send("⛔ You cannot join because you do not have a beginner role.");
+    await user.send(
+      "⛔ You cannot join because you do not have a beginner role."
+    );
     return false;
   }
 
-  return addUserOrPosition(
+  return await addUserOrPosition(
     user,
     -1,
     role,
@@ -245,33 +260,36 @@ async function removeLobbyDelayed(lobby: Lobby, client: DFZDiscordClient) {
 async function handleLobbyStarted(lobby: Lobby, client: DFZDiscordClient) {
   await savePlayerParticipation(
     client,
+    lobby.guildId,
     lobby.users,
     lobby.type,
     getPlayersPerLobbyByLobbyType(lobby.type)
   );
 
-  const serializer = new LobbySerializer(client.dbClient);
+  const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, client.dbClient);
+  const serializer = new LobbySerializer(gdbc);
   await serializer.delete([lobby]);
 }
 
-function handleLobbyStart(
+async function handleLobbyStart(
   client: DFZDiscordClient,
   lobby: Lobby,
   channel: TextBasedChannels,
   user: User
 ) {
   if (lobby.started) {
-    LobbyPostManipulator.writeLobbyStartPost(lobby, channel);
+    if (lobby.users.length > 0) {
+      LobbyPostManipulator.writeLobbyStartPost(lobby, channel);
+    }
     return;
   }
 
   const lobbyInteractor = new LobbyStarter(client, lobby);
-  lobbyInteractor.tryStartLobby(user, channel).then((hasStarted) => {
-    if (hasStarted) removeLobbyDelayed(lobby, client);
-  });
+  if (await lobbyInteractor.tryStartLobby(user, channel))
+    await removeLobbyDelayed(lobby, client);
 }
 
-function handleLobbyCancel(
+async function handleLobbyCancel(
   client: DFZDiscordClient,
   lobby: Lobby,
   channel: TextBasedChannels,
@@ -286,7 +304,7 @@ function handleLobbyCancel(
     user
   );
   client.timeouts.push({ lobby: lobby, timeout: to });
-  user.send(
+  await user.send(
     "I will cancel the lobby in 2 minutes. Press ❌ again to cancel the cancellation"
   );
 }
@@ -298,24 +316,25 @@ async function removeLobbyPermantently(
   user: User
 ) {
   await LobbyPostManipulator.cancelLobbyPost(lobby, channel);
-  const serializer = new LobbySerializer(client.dbClient);
+  const gdbc = SerializeUtils.getGuildDBClient(lobby.guildId, client.dbClient);
+  const serializer = new LobbySerializer(gdbc);
   serializer.delete([lobby]);
-  user.send("❌ I cancelled the lobby.");
+  await user.send("❌ I cancelled the lobby.");
   return;
 }
 
-function handleCoachAdd(
+async function handleCoachAdd(
   client: DFZDiscordClient,
   lobby: Lobby,
   channel: TextBasedChannels,
   user: User
 ) {
-  lobby
-    .addCoach(client.dbClient, channel, user.id)
-    .then(() => user.send("✅ Added you as a coach!"))
-    .catch((error: string) =>
-      user.send("⛔ I did not add you as a coach. Reason: " + error)
-    );
+  try {
+    await lobby.addCoach(client.dbClient, channel, user.id);
+    await user.send("✅ Added you as a coach!");
+  } catch (e) {
+    await user.send("⛔ I did not add you as a coach. Reason: " + e);
+  }
 }
 
 /**
@@ -334,7 +353,7 @@ async function handleLobbyManagementEmoji(
   role: Role
 ) {
   if (adminRoles.find((roleId: string) => roleId == role.id) === undefined) {
-    user.send("⛔ Only Coaches can use these functions.");
+    await user.send("⛔ Only Coaches can use these functions.");
     return;
   }
 
@@ -346,11 +365,11 @@ async function handleLobbyManagementEmoji(
 
   switch (reaction.emoji.name) {
     case "🔒":
-      return handleLobbyStart(client, lobby, channel, user);
+      return await handleLobbyStart(client, lobby, channel, user);
     case "❌":
-      return handleLobbyCancel(client, lobby, channel, user);
+      return await handleLobbyCancel(client, lobby, channel, user);
     case "🧑‍🏫":
-      return handleCoachAdd(client, lobby, channel, user);
+      return await handleCoachAdd(client, lobby, channel, user);
     default:
       break;
   }
